@@ -1,0 +1,223 @@
+@import './notes-module/index.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Vitalhealth Core Tokens */
+    --background: 210 40% 98.5%;
+    /* Soft Tinted Canvas */
+    --surface: 0 0% 100%;
+    /* Pure White Surface */
+    --foreground: 222 47% 11%;
+    /* Deep Slate Text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 231 80% 55%;
+    /* Linear-style Indigo */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96.1%;
+    /* Muted Grey-Blue */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --danger: 0 84% 60%;
+
+    --border: 214 32% 91%;
+    /* High-Contrast Border */
+    --input: 214 32% 91%;
+    --ring: 231 80% 55%;
+
+    /* Standardized Corners */
+    --radius: 0.75rem;
+    /* Legend base */
+    --radius-card: 24px;
+    --radius-input: 12px;
+    --radius-button: 10px;
+
+    /* Premium Depth */
+    --shadow-soft: 0 4px 20px -4px rgba(0, 0, 0, 0.03);
+    --shadow-elevated: 0 20px 50px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark {
+    --background: 222 84% 2%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 4%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 4%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 226 100% 70%;
+    --primary-foreground: 222 84% 2%;
+
+    --secondary: 222 47% 10%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 47% 10%;
+    --muted-foreground: 215 20% 65.1%;
+
+    --accent: 222 47% 10%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 47% 12%;
+    --input: 222 47% 12%;
+    --ring: 226 100% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    text-rendering: auto;
+    /* Eliminate sub-pixel scaling artifacts */
+    transform: none !important;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Debug Contrast Mode Overlay */
+.debug-contrast * {
+  outline: 1px solid rgba(255, 0, 0, 0.15) !important;
+}
+
+.debug-contrast [class*="text-slate-400"],
+.debug-contrast [class*="text-white/40"],
+.debug-contrast [class*="text-white/30"] {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  outline: 2px solid #ef4444 !important;
+}
+
+.debug-contrast [class*="border-border/10"],
+.debug-contrast [class*="border-white/5"] {
+  outline: 2px solid #f59e0b !important;
+}
+
+@media print {
+  @page {
+    size: letter;
+    margin: 0.3in 0.22in 0.5in 0.22in;
+    /* Unified multi-page margins (Top, Right, Bottom, Left) */
+  }
+
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .document-page {
+    background: white !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    /* Margin handled by @page for consistency across pages */
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    position: relative !important;
+    color: #1e293b !important;
+    min-height: 0 !important;
+  }
+
+  .document-canvas-wrapper {
+    padding: 0 !important;
+    background: white !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* Global UI hides - Targeted */
+  aside,
+  nav,
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  #root,
+  [class*="MainLayout"],
+  .main-layout,
+  main,
+  #review-workspace-root,
+  #record-scroll-container,
+  .clio-notes-new,
+  [class*="flex-1"] {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color: #1e293b !important;
+  }
+
+  /* Preserve Global Brand/Hierarchy Colors */
+  .text-slate-900,
+  .text-slate-800 {
+    color: #1e293b !important;
+  }
+
+  .text-slate-600,
+  .text-slate-500 {
+    color: #64748b !important;
+  }
+
+  .text-slate-400 {
+    color: #94a3b8 !important;
+  }
+
+  .text-slate-200 {
+    color: #cbd5e1 !important;
+  }
+
+  /* Force global visibility */
+  * {
+    overflow: visible !important;
+  }
+}

@@ -1,0 +1,661 @@
+import { useState, useMemo, useEffect } from 'react';
+import type { ClioNote, Template } from '../types';
+import { storage } from '../lib/storage';
+import { DEFAULT_TEMPLATES, TCM_DOMAINS } from '../lib/constants';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'sonner';
+import { Save, CheckCircle2, CheckCircle, X } from 'lucide-react';
+import SignatureModal from './SignatureModal';
+import { useProviderTimeConflicts } from '../hooks/useProviderTimeConflicts';
+import { TimeConflictBanner } from './TimeConflictBanner';
+
+const getValueByPath = (obj: any, path: string) => {
+    if (!path) return undefined;
+    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+};
+
+const formatValueForPrint = (value: any): string | null => {
+    if (value == null) return null;
+    if (typeof value === "string") {
+        const v = value.trim();
+        if (!v || v === "not_reported") return null;
+        return v;
+    }
+    if (typeof value === "number") return String(value);
+    if (typeof value === "boolean") return value ? "yes" : "no";
+
+    if (Array.isArray(value)) {
+        if (!value.length) return null;
+        if (value.every(x => typeof x === "string" || typeof x === "number")) {
+            return value.map(String).join("\n");
+        }
+    }
+    return null;
+};
+
+const isValidLayout = (layout: any): layout is any[] => {
+    if (!Array.isArray(layout)) return false;
+    return layout.every(section =>
+        typeof section === 'object' &&
+        section !== null &&
+        typeof section.title === 'string' &&
+        Array.isArray(section.fields) &&
+        section.fields.every((field: any) =>
+            typeof field === 'object' &&
+            field !== null &&
+            typeof field.label === 'string' &&
+            typeof field.path === 'string'
+        )
+    );
+};
+
+const setValueByPath = (obj: any, path: string, value: any) => {
+    if (!path) return obj;
+    const parts = path.split('.');
+    const next = { ...obj };
+    let current = next;
+    for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        const currentVal = current[part];
+        current[part] = Array.isArray(currentVal) ? [...currentVal] : (currentVal ? { ...currentVal } : {});
+        current = current[part];
+    }
+    current[parts[parts.length - 1]] = value;
+    return next;
+};
+
+const getMiamiTodayString = () => {
+    return new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric'
+    }).format(new Date());
+};
+
+const PrintLabel = ({ children }: { children: React.ReactNode }) => (
+    <div className="text-[10px] font-medium uppercase tracking-wider text-[#1a1a1a] mb-1 print-border-b pb-0.5 mt-6 first:mt-0">
+        {children}
+    </div>
+);
+
+const SectionHeader = ({ title }: { title: string }) => (
+    <div className="border-y-[0.5px] border-[#a3a3a3] py-0.5 my-2">
+        <h2 className="text-[11px] font-bold text-[#1a1a1a] tracking-tight uppercase px-0.5 font-sans leading-none">{title}</h2>
+    </div>
+);
+
+const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField }: any) => {
+    const val = getValueByPath(mergedNote, domain.path);
+    const isChecked = val === true || val === "yes" || val === "X" || val === "x" || (typeof val === "string" && val.trim() !== "" && val !== "no" && val !== "false");
+
+    return (
+        <div
+            onClick={() => isEditMode && handleUpdateField(domain.path, isChecked ? "" : "yes")}
+            className={`flex items-start gap-1.5 py-0.5 transition-opacity group cursor-pointer ${isEditMode ? 'hover:opacity-80' : ''}`}
+        >
+            {/* Custom Checkbox: 10x10, Hairline Stroke, Precise Alignment */}
+            <div className={`mt-[2px] w-2.5 h-2.5 flex items-center justify-center shrink-0 border-[0.5px] border-[#1a1a1a] bg-white`}>
+                {isChecked ? (
+                    <svg viewBox="0 0 12 12" className="w-[10px] h-[10px] fill-current text-[#1a1a1a]">
+                        <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="0.75" fill="none" />
+                    </svg>
+                ) : null}
+            </div>
+            <span className={`text-[10px] font-normal leading-tight select-none text-[#1a1a1a] pt-[0.5px]`}>
+                {domain.label}
+            </span>
+        </div>
+    );
+};
+
+const CustomPrintHeader = ({ note }: { note: ClioNote }) => {
+    const dos = (() => {
+        const raw = note.encounter?.dos_date || (note as any).meta?.visitDate;
+        if (!raw) return "No Date";
+        try {
+            const dateObj = new Date(raw);
+            if (isNaN(dateObj.getTime())) return raw;
+            return dateObj.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        } catch (e) {
+            return raw;
+        }
+    })();
+
+    return (
+        <div className="flex justify-between items-end w-full mb-2 print-border-b pb-1.5">
+            <div className="flex flex-col">
+                <h1 className="text-[18px] font-medium text-[#1a1a1a] leading-tight tracking-tight font-sans">Progress Note</h1>
+                <p className="text-[9px] text-[#404040] font-sans mt-0.5">DOS: {dos}</p>
+            </div>
+            <div className="flex flex-col items-end">
+                <div className="flex flex-col items-center">
+                    <div className="relative flex items-center">
+                        <span className="text-[26px] font-serif font-black text-[#005696] leading-[0.6]">^</span>
+                        <span className="text-[20px] font-serif font-bold text-[#005696] leading-none tracking-tighter ml-[-3px]">Arc</span>
+                    </div>
+                    <span className="text-[8px] font-sans font-bold text-[#005696] uppercase tracking-[0.14em] mt-0.5">Mental Health</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CustomPrintFooter = ({ note }: { note: ClioNote }) => (
+    <div className="print-only-footer hidden print:flex fixed bottom-2 left-[0.5in] right-[0.5in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]">
+        <div className="text-[9px] text-[#404040]">
+            {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
+        </div>
+        <div className="text-[9px] text-[#404040]">
+            Page <span className="page-number text-[9px]"></span>
+        </div>
+    </div>
+);
+
+const PrintValue = ({
+    value,
+    field,
+    isEditMode,
+    onChange
+}: {
+    value: any;
+    field?: any;
+    isEditMode: boolean;
+    onChange: (val: any) => void
+}) => {
+    const displayedValue = formatValueForPrint(value);
+    const isComplex = Array.isArray(value) && value.length > 0 && typeof value[0] === 'object';
+    const isArrayOfStrings = Array.isArray(value) && (value.length === 0 || typeof value[0] === 'string');
+    const isEditable = !isComplex && field?.path && field.path !== '__static';
+    const textContent = displayedValue || field?.defaultText;
+
+    if (isEditMode && isEditable) {
+        const inputClasses = "w-full text-[13px] px-2.5 py-1.5 border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-400 focus:border-slate-400 bg-white dark:bg-slate-900/50 font-normal leading-relaxed transition-all placeholder:text-slate-300 shadow-sm";
+
+        if (field?.type === 'date') {
+            return <input type="date" value={value || ''} onChange={(e) => onChange(e.target.value)} className={inputClasses} />;
+        }
+        if (field?.type === 'number') {
+            return <input type="number" value={value || ''} onChange={(e) => onChange(e.target.value)} className={inputClasses} />;
+        }
+        return (
+            <textarea
+                value={isArrayOfStrings ? (value as string[]).join('\n') : (displayedValue || field?.defaultText || '')}
+                onChange={(e) => {
+                    const val = e.target.value;
+                    if (isArrayOfStrings) {
+                        onChange(val.split('\n').filter((s: string) => s.trim() !== ''));
+                    } else {
+                        onChange(val);
+                    }
+                }}
+                className={`${inputClasses} min-h-[60px] resize-y`}
+                rows={isArrayOfStrings ? Math.max(3, (value as string[]).length) : (displayedValue && displayedValue.length > 60 ? 3 : 1)}
+            />
+        );
+    }
+
+    return (
+        <div className="relative group">
+            <div className={`value-text whitespace-pre-wrap max-w-[95ch] ${!textContent && 'italic text-slate-400'}`}>
+                {textContent || "—"}
+            </div>
+        </div>
+    );
+};
+
+interface TcmNoteShellProps {
+    note: ClioNote;
+    hideToolbar?: boolean;
+    isStandalone?: boolean;
+    onSaveComplete?: (saved: boolean) => void;
+}
+
+const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
+    note,
+    hideToolbar = false,
+    isStandalone = false,
+    onSaveComplete
+}) => {
+    const { user } = useAuth();
+    const [templates, setTemplates] = useState<Template[]>([]);
+    const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+    const [noteOverrides, setNoteOverrides] = useState<any>({});
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+
+    const [cmSignatureImg, setCmSignatureImg] = useState<string | null>(null);
+    const [supSignatureImg, setSupSignatureImg] = useState<string | null>(null);
+    const [activeSigType, setActiveSigType] = useState<'cm' | 'sup' | null>(null);
+
+    useEffect(() => {
+        const loadTemplates = async () => {
+            try {
+                const fetched = await storage.getTemplates();
+                setTemplates(fetched);
+            } catch (err) {
+                console.error("TcmNoteShell: Failed to load templates:", err);
+            } finally {
+                setIsLoadingTemplates(false);
+            }
+        };
+        loadTemplates();
+    }, []);
+
+    const mergedNote = useMemo(() => {
+        let result = { ...note };
+        Object.keys(noteOverrides).forEach(path => {
+            result = setValueByPath(result, path, noteOverrides[path]);
+        });
+        return result;
+    }, [note, noteOverrides]);
+
+    const { conflicts, confidence, isLoading: isConflictLoading } = useProviderTimeConflicts(mergedNote);
+
+    const handleUpdateField = (path: string, newValue: any) => {
+        setNoteOverrides((prev: any) => ({ ...prev, [path]: newValue }));
+        setIsSaved(false);
+        if (onSaveComplete) onSaveComplete(false);
+    };
+
+    const handleSaveToHistory = async () => {
+        if (!user) return;
+        setIsSaving(true);
+        try {
+            await storage.saveAnalyzedNote(mergedNote);
+            setIsSaved(true);
+            if (onSaveComplete) onSaveComplete(true);
+            toast.success("Saved to Clinical History");
+        } catch (err) {
+            toast.error("Failed to save note");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handlePrint = () => window.print();
+
+    // Calc helpers
+    const rawDuration = mergedNote.encounter?.duration_minutes;
+    const durationValue = rawDuration ? `${rawDuration} min` : "—";
+    const unitsValue = mergedNote.encounter?.units || (rawDuration ? Math.ceil(parseInt(String(rawDuration)) / 15).toString() : "—");
+
+    const posValue = (() => {
+        const code = (mergedNote.encounter?.pos || "").trim();
+        const label = ((mergedNote.encounter as any)?.service_location || "").trim();
+        if (code && label) return `${code} — ${label}`;
+        return code || label || "12 - Home";
+    })();
+
+    return (
+        <div className={`tcm-print-shell ${!isStandalone ? 'max-w-[1050px] mx-auto' : ''}`}>
+            <div className="no-print">
+                <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
+            </div>
+
+            {!hideToolbar && (
+                <div className="ecw-toolbar no-print flex items-center justify-end gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100 mb-6 mt-4">
+                    <button onClick={handleSaveToHistory} disabled={isSaving || isSaved || !user} className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider border ${isSaved ? "bg-slate-100 text-slate-400 border-slate-200" : "bg-teal-50 text-teal-600 border-teal-100 hover:bg-teal-600 hover:text-white"}`}>
+                        {isSaving ? "Saving..." : (isSaved ? "Saved" : "Save Note")}
+                    </button>
+                    <button onClick={() => setIsEditMode(!isEditMode)} className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider border ${isEditMode ? "bg-green-600 text-white border-green-700" : "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white"}`}>
+                        {isEditMode ? "Done" : "Edit Note"}
+                    </button>
+                    <button onClick={handlePrint} className="px-6 py-2.5 rounded-lg font-black text-[12px] uppercase tracking-widest bg-slate-900 text-white border-slate-900 hover:bg-slate-800">
+                        Print Document
+                    </button>
+                </div>
+            )}
+
+            <SignatureModal
+                isOpen={activeSigType !== null}
+                onClose={() => setActiveSigType(null)}
+                onSave={(data) => {
+                    if (activeSigType === 'cm') setCmSignatureImg(data);
+                    if (activeSigType === 'sup') setSupSignatureImg(data);
+                    setActiveSigType(null);
+                }}
+            />
+
+            <style>{`
+                .document-canvas-wrapper { background-color: #f8fafc; min-height: 100vh; padding: 3rem 1rem; display: flex; flex-direction: column; align-items: center; }
+                .document-page { 
+                    background-color: white; 
+                    width: 100%; 
+                    max-width: 8.5in; 
+                    min-height: 11in; 
+                    padding: 0.4in 0.5in; 
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+                    border: 1px solid #e2e8f0; 
+                    position: relative; 
+                    margin-bottom: 2rem; 
+                    /* TYPOGRAPHY SYSTEM */
+                    font-family: Arial, Helvetica, sans-serif !important;
+                    color: #1a1a1a;
+                }
+
+                /* PRINT UTILS */
+            .print-border-b { border-bottom: 0.5px solid #a3a3a3; }
+            .print-border-t { border-top: 0.5px solid #a3a3a3; }
+            .print-border { border: 0.5px solid #a3a3a3; }
+
+            /* TYPOGRAPHY ROLES */
+            .label-small {
+                font-size: 9px;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #404040;
+            }
+            .value-text {
+                font-size: 10.5px;
+                font-weight: 400;
+                color: #1a1a1a;
+                line-height: 1.2;
+            }
+
+            @media print {
+                /* FORCE GLOBAL VISIBILITY & RESET */
+                    html, body, #root, [class*="MainLayout"], .main-layout, main {
+                        display: block !important;
+                        visibility: visible !important;
+                        height: auto !important;
+                        min-height: 0 !important;
+                        overflow: visible !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        background: white !important;
+                        opacity: 1 !important;
+                        transform: none !important;
+                        position: static !important;
+                        font-family: Arial, Helvetica, sans-serif !important;
+                    }
+
+                    /* KILL ALL PADDINGS UP TO THE NOTE */
+                    div, section, main, article {
+                        margin-top: 0 !important;
+                        padding-top: 0 !important;
+                    }
+
+                    /* KILL ANIMATIONS */
+                    * {
+                        animation: none !important;
+                        transition: none !important;
+                        transition-duration: 0ms !important;
+                    }
+
+                    /* HIDE CLIO BRANDING & UI FURNITURE */
+                    aside, nav, header, footer, 
+                    .sidebar, .top-nav, .no-print,
+                    [class*="sidebar"], [class*="Sidebar"],
+                    [class*="Header"], [class*="navigation"],
+                    button, .btn, [role="button"],
+                    [class*="Avatar"], .avatar, img[src*="ui-avatars.com"],
+                    .clio-branding, .logo, [alt*="Clio"], .navbar-brand,
+                    .clio-notes-new > div:not(.flex-1),
+                    .clio-notes-new > div:first-child {
+                        display: none !important;
+                        visibility: hidden !important;
+                        height: 0 !important;
+                        width: 0 !important;
+                        overflow: hidden !important;
+                    }
+
+                    /* REVEAL CONTENT CORE */
+                    #review-workspace-root, .clio-notes-new, 
+                    #record-scroll-container, .clinical-viewer-root,
+                    .document-canvas-wrapper, #note-print-root {
+                        display: block !important;
+                        visibility: visible !important;
+                        position: static !important;
+                        width: 100% !important;
+                        height: auto !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                        opacity: 1 !important;
+                        background: white !important;
+                    }
+
+                    .document-page {
+                        display: block !important;
+                        width: 100% !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        background: white !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                    }
+
+                    .print-section { page-break-inside: avoid !important; display: block !important; }
+
+                    /* Color fidelity */
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                }
+            `}</style>
+
+            <div className="document-canvas-wrapper no-print-bg">
+                <div id="note-print-root" className="document-page">
+                    <CustomPrintHeader note={mergedNote} />
+
+                    <div className="space-y-6">
+                        {/* Patient & Facility Grid - TIGHTER & ALIGNED */}
+                        <div className="grid grid-cols-2 gap-x-8 mb-2 items-start">
+                            {/* Left: Patient Info */}
+                            <div className="space-y-[1px]">
+                                <div className="text-[14px] font-semibold text-[#1a1a1a] mb-1 leading-tight">
+                                    <PrintValue value={mergedNote.patient?.full_name} isEditMode={isEditMode} onChange={(val) => handleUpdateField('patient.full_name', val)} />
+                                </div>
+                                <div className="grid grid-cols-[60px_1fr] gap-x-2 items-baseline">
+                                    <span className="label-small">EMR:</span>
+                                    <span className="value-text">{mergedNote.patient?.account_number || "—"}</span>
+
+                                    <span className="label-small">Case No:</span>
+                                    <span className="value-text">{mergedNote.patient?.case_no || "—"}</span>
+
+                                    <span className="label-small">Sex:</span>
+                                    <span className="value-text">{mergedNote.patient?.sex_at_birth || "—"}</span>
+
+                                    <span className="label-small">Mobile:</span>
+                                    <span className="value-text">{mergedNote.patient?.phone || mergedNote.patient?.mobile || "—"}</span>
+
+                                    <span className="label-small">DOB:</span>
+                                    <span className="value-text">{mergedNote.patient?.dob || "—"} {(mergedNote.patient as any)?.age ? `(${(mergedNote.patient as any).age} years old)` : ""}</span>
+                                </div>
+                            </div>
+
+                            {/* Right: Facility Info - ALIGNED RIGHT */}
+                            <div className="flex flex-col items-end text-right space-y-[1px] mt-0.5">
+                                <div className="font-bold text-[#1a1a1a] text-[11px] uppercase tracking-wide mb-1">ARC MENTAL HEALTH</div>
+                                <div className="grid grid-cols-[1fr_auto] gap-x-2 items-baseline">
+                                    <span className="label-small">Fax:</span>
+                                    <span className="value-text">786-657-3092</span>
+
+                                    <span className="label-small">Phone:</span>
+                                    <span className="value-text">786-916-8073</span>
+
+                                    <span className="label-small">Email:</span>
+                                    <span className="value-text">contact@arcmentalhealth.com</span>
+                                </div>
+                                <div className="text-[10px] text-[#1a1a1a] text-right leading-tight max-w-[180px] mt-0.5">
+                                    14400 NW 77th Ct Ste 100 Miami Lakes, Florida, 33016
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Title Section (Assist to complete...) */}
+                        <div className="grid grid-cols-[1fr_180px] gap-8 items-start border-t-[0.5px] border-[#a3a3a3] pt-2 mb-0">
+                            <div className="space-y-1.5">
+                                <div className="text-[13px] font-semibold text-[#1a1a1a] leading-tight border-b-[0.5px] border-[#a3a3a3] pb-1 mb-1.5">
+                                    <PrintValue
+                                        value={(mergedNote as any).meta?.encounterReason || (mergedNote.encounter as any)?.title || "Routine Patient Encounter / Progress Evaluation"}
+                                        isEditMode={isEditMode}
+                                        onChange={(val) => handleUpdateField('meta.encounterReason', val)}
+                                    />
+                                </div>
+                                <div className="space-y-[1px]">
+                                    <div className="grid grid-cols-[60px_1fr] gap-x-1 items-baseline">
+                                        <span className="label-small">POS:</span>
+                                        <span className="value-text">{posValue}</span>
+                                    </div>
+                                    <div className="grid grid-cols-[60px_1fr] gap-x-1 items-baseline">
+                                        <span className="label-small">Time:</span>
+                                        <span className="value-text">{(mergedNote.encounter as any)?.start_time || "--:--"} — {(mergedNote.encounter as any)?.end_time || "--:--"}</span>
+                                    </div>
+                                    <div className="grid grid-cols-[60px_1fr] gap-x-1 items-baseline">
+                                        <span className="label-small">Duration:</span>
+                                        <span className="value-text">{durationValue}</span>
+                                    </div>
+                                    <div className="grid grid-cols-[60px_1fr] gap-x-1 items-baseline">
+                                        <span className="label-small">Units:</span>
+                                        <span className="value-text">{unitsValue}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-[11px] text-[#1a1a1a] text-right flex flex-col items-end gap-2.5">
+                                <div className="w-full">
+                                    <div className="text-[8px] font-medium text-[#404040] uppercase tracking-widest mb-0.5">Case Manager</div>
+                                    <div className="font-medium text-[11px] leading-tight text-right">{mergedNote.signatures?.cm_name || (user as any)?.full_name || "rey"}</div>
+                                </div>
+                                <div className="w-full">
+                                    <div className="text-[8px] font-medium text-[#404040] uppercase tracking-widest mb-0.5">Supervisor</div>
+                                    <div className="font-medium text-[11px] leading-tight print-border-b pb-0.5 text-right">Ileana Alvarez V.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <section className="print-section">
+                            <SectionHeader title="Information" />
+                            <div className="mt-1 px-0.5">
+                                <h3 className="label-small mb-1">Services (Domains):</h3>
+                                <div className="grid grid-cols-3 gap-x-6 gap-y-0.5 ml-0.5">
+                                    {TCM_DOMAINS.map((domain, idx) => (
+                                        <DomainItem key={idx} domain={domain} mergedNote={mergedNote} isEditMode={isEditMode} handleUpdateField={handleUpdateField} />
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="print-section">
+                            <SectionHeader title="Summary (Notes)" />
+                            <div className="mt-1 px-0.5 value-text">
+                                <PrintValue value={mergedNote.narrative?.summary_notes} isEditMode={isEditMode} onChange={(val) => handleUpdateField('narrative.summary_notes', val)} />
+                            </div>
+                        </section>
+
+                        <section className="print-section mb-0">
+                            <div className="grid grid-cols-2 gap-8 items-start">
+                                <div>
+                                    <SectionHeader title="Outcome of Service(s)" />
+                                    <div className="mt-1 px-0.5 value-text min-h-[40px]">
+                                        <PrintValue value={mergedNote.narrative?.outcome_of_services} isEditMode={isEditMode} onChange={(val) => handleUpdateField('narrative.outcome_of_services', val)} />
+                                    </div>
+                                    <div className="mt-2 border-b-[0.5px] border-[#a3a3a3] w-full"></div>
+                                </div>
+                                <div>
+                                    <SectionHeader title="Plan & Next Step(s)" />
+                                    <div className="mt-1 px-0.5 value-text min-h-[40px]">
+                                        <PrintValue value={mergedNote.narrative?.next_steps} isEditMode={isEditMode} onChange={(val) => handleUpdateField('narrative.next_steps', val)} />
+                                    </div>
+                                    <div className="mt-2 border-b-[0.5px] border-[#a3a3a3] w-full"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section className="print-section mt-4 mb-2">
+                            <SectionHeader title="Diagnoses" />
+                            {/* Empty state density match: uses min-h and flex to ensure visual weight matches populated state */}
+                            <div className={`mt-1 px-0.5 pb-1 border-b-[0.5px] border-transparent transition-all ${(!mergedNote.diagnoses?.length) ? 'min-h-[22px] flex items-center' : ''}`}>
+                                {Array.isArray(mergedNote.diagnoses) && mergedNote.diagnoses.length > 0 ? (
+                                    <div className="space-y-[1px] w-full">{mergedNote.diagnoses.map((diag: any, idx: number) => (
+                                        <div key={idx} className="flex items-baseline gap-4 pb-0.5 border-b-[0.5px] border-[#a3a3a3] border-dashed last:border-0 border-opacity-60">
+                                            <div className="label-small min-w-[60px] tracking-wider text-[#1a1a1a]">{diag.icd10 || 'DX'}</div>
+                                            <div className="value-text font-medium">{diag.name}</div>
+                                        </div>
+                                    ))}</div>
+                                ) : <p className="value-text italic text-[#333] ml-[4px] opacity-80 select-none">No diagnoses documented.</p>}
+                            </div>
+                        </section>
+
+                        {/* Signatures */}
+                        {/* Signatures */}
+                        <div className="mt-8">
+                            <div className="text-center px-12 mb-6">
+                                <p className="text-[9px] font-medium italic text-[#333] leading-normal font-sans">
+                                    By signing below, I certify that I provided the above services following all policies and procedures.
+                                </p>
+                            </div>
+
+                            {/* Signature Grid: 2 Rows x 3 Cols (Name | Signature | Date) */}
+                            {/* Row 1: Case Manager */}
+                            <div className="grid grid-cols-3 gap-x-8 items-end mb-8">
+                                {/* Col 1: Name */}
+                                <div className="text-center group">
+                                    <div className="value-text font-normal italic mb-0.5 min-h-[16px]">
+                                        {mergedNote.signatures?.cm_name || (user as any)?.full_name || "rey"}
+                                    </div>
+                                    <div className="border-t-[0.5px] border-[#a3a3a3] w-full"></div>
+                                    <div className="label-small mt-0.5 font-sans text-[#444]">CASE MANAGER</div>
+                                </div>
+
+                                {/* Col 2: Signature */}
+                                <div className="text-center group relative">
+                                    <div className="min-h-[16px] mb-0.5 flex items-end justify-center">
+                                        {/* Digital Signature Badge - Centered as the signature itself */}
+                                        <span className="text-[9px] font-medium italic text-[#005696]">DIGITALLY SIGNED</span>
+                                    </div>
+                                    <div className="border-t-[0.5px] border-[#a3a3a3] w-full"></div>
+                                    <div className="label-small mt-0.5 font-sans text-[#444]">SIGNATURE</div>
+                                </div>
+
+                                {/* Col 3: Date */}
+                                <div className="text-center group">
+                                    <div className="value-text font-normal mb-0.5 min-h-[16px]">
+                                        {new Date().toLocaleDateString('en-US')}
+                                    </div>
+                                    <div className="border-t-[0.5px] border-[#a3a3a3] w-full"></div>
+                                    <div className="label-small mt-0.5 font-sans text-[#444]">DATE</div>
+                                </div>
+                            </div>
+
+                            {/* Row 2: Supervisor */}
+                            <div className="grid grid-cols-3 gap-x-8 items-end">
+                                {/* Col 1: Name */}
+                                <div className="text-center group">
+                                    <div className="value-text font-normal italic mb-0.5 min-h-[16px]">
+                                        {"—"}
+                                    </div>
+                                    <div className="border-t-[0.5px] border-[#a3a3a3] w-full"></div>
+                                    <div className="label-small mt-0.5 font-sans text-[#444]">SUPERVISOR</div>
+                                </div>
+
+                                {/* Col 2: Signature */}
+                                <div className="text-center group">
+                                    <div className="min-h-[16px] mb-0.5"></div>
+                                    <div className="border-t-[0.5px] border-[#a3a3a3] w-full"></div>
+                                    <div className="label-small mt-0.5 font-sans text-[#444]">SIGNATURE</div>
+                                </div>
+
+                                {/* Col 3: Date */}
+                                <div className="text-center group">
+                                    <div className="min-h-[16px] mb-0.5"></div>
+                                    <div className="border-t-[0.5px] border-[#a3a3a3] w-full"></div>
+                                    <div className="label-small mt-0.5 font-sans text-[#444]">DATE</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <CustomPrintFooter note={mergedNote} />
+        </div>
+    );
+};
+
+export default TcmNoteShell;

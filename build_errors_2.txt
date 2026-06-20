@@ -1,0 +1,6 @@
+
+> clio-suite@0.0.0 build
+> tsc -b && vite build
+
+src/notes-module/components/FormControls.tsx(191,54): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'never'.
+src/notes-module/components/FormControls.tsx(195,17): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'never'.

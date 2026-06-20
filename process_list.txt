@@ -1,0 +1,6 @@
+
+CommandLine
+-----------
+"C:\Program Files\nodejs\\node.exe"  "C:\Program Files\nodejs\\node_modules\npm\bi…
+"node"   "C:\Users\REINIER\AppData\Local\npm-cache\_npx\53c4795544aaa350\node_modu…
+

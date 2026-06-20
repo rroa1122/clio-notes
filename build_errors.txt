@@ -1,0 +1,35 @@
+
+> clio-suite@0.0.0 build
+> tsc -b && vite build
+
+src/notes-module/components/ErrorBoundary.tsx(1,21): error TS1484: 'ErrorInfo' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/ErrorBoundary.tsx(1,32): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/FormControls.tsx(191,54): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'never'.
+src/notes-module/components/FormControls.tsx(195,17): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'never'.
+src/notes-module/components/TabAssessment.tsx(2,10): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabExam.tsx(2,10): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabHPI.tsx(2,10): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabMeds.tsx(2,10): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabOverview.tsx(2,10): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabPrintLayout.tsx(2,10): error TS1484: 'Note' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabPrintLayout.tsx(2,16): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabROS.tsx(2,10): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabScreenings.tsx(2,10): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/components/TabTranscript.tsx(2,10): error TS1484: 'Note' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/lib/mock-data.ts(1,15): error TS2305: Module '"../types"' has no exported member 'Clinic'.
+src/notes-module/lib/mock-data.ts(1,23): error TS2305: Module '"../types"' has no exported member 'User'.
+src/notes-module/lib/mock-data.ts(1,29): error TS2305: Module '"../types"' has no exported member 'Call'.
+src/notes-module/lib/mock-data.ts(1,35): error TS2305: Module '"../types"' has no exported member 'Appointment'.
+src/notes-module/lib/mock-data.ts(1,48): error TS2305: Module '"../types"' has no exported member 'AppointmentStatus'.
+src/notes-module/lib/mock-data.ts(1,67): error TS2305: Module '"../types"' has no exported member 'CallFlag'.
+src/notes-module/lib/parseClinicalNote.ts(1,10): error TS1484: 'StructuredNote' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/notes-module/lib/printUtils.ts(138,17): error TS2322: Type 'string' is not assignable to type 'null'.
+src/notes-module/pages/CallLogs.tsx(17,15): error TS2305: Module '"@/notes-module/types"' has no exported member 'CallFlag'.
+src/notes-module/pages/ResetPassword.tsx(2,26): error TS2307: Cannot find module '../../../lib/supabaseClient' or its corresponding type declarations.
+src/notes-module/scripts/capture_real_payload.ts(1,16): error TS2307: Cannot find module 'fs' or its corresponding type declarations.
+src/notes-module/scripts/capture_real_payload.ts(2,18): error TS2307: Cannot find module 'path' or its corresponding type declarations.
+src/notes-module/scripts/capture_real_payload.ts(16,24): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+src/notes-module/scripts/capture_real_payload.ts(31,22): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+src/notes-module/scripts/capture_real_payload.ts(32,27): error TS2591: Cannot find name 'Buffer'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+src/notes-module/scripts/test_parsing.ts(102,5): error TS2591: Cannot find name 'process'. Do you need to install type definitions for node? Try `npm i --save-dev @types/node` and then add 'node' to the types field in your tsconfig.
+src/pages/Overview.tsx(28,25): error TS2339: Property 'totalPatients' does not exist on type 'KPI'.

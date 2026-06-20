@@ -1,0 +1,403 @@
+
+> clio-suite@0.0.0 lint
+> eslint .
+
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\Badge.tsx
+  38:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\CallTimeline.tsx
+  51:54  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\Toast.tsx
+  38:80  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\calendar\AppointmentCard.tsx
+  59:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\calendar\CalendarView.tsx
+    2:50   error    'isValid' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+    8:40   error    'CalendarCheck' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+    8:58   error    'Activity' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+    8:68   error    'TrendingUp' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+    8:80   error    'AlertCircle' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+    9:10   error    'Button' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   51:8    warning  React Hook useEffect has a missing dependency: 'fetchEvents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  186:103  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\calendar\EventDetailsPanel.tsx
+   6:31  error  'Clock' is defined but never used         @typescript-eslint/no-unused-vars
+   6:44  error  'Phone' is defined but never used         @typescript-eslint/no-unused-vars
+   6:64  error  'FileText' is defined but never used      @typescript-eslint/no-unused-vars
+   6:74  error  'Info' is defined but never used          @typescript-eslint/no-unused-vars
+  19:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\ui\badge.tsx
+  45:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\ui\button.tsx
+  55:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\ui\input.tsx
+  4:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\ui\kpi-tile.tsx
+  59:37  error  'className' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\context\AuthContext.tsx
+  128:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\context\CallsContext.tsx
+    4:10  error  'CALLS' is defined but never used                                                                                               @typescript-eslint/no-unused-vars
+   60:20  error  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   60:47  error  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   65:31  error  Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  104:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\data.ts
+  78:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  88:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  96:8   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\hooks\useCallEvents.ts
+  11:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\layout\Sidebar.tsx
+   8:5   error  'Activity' is defined but never used     @typescript-eslint/no-unused-vars
+  13:5   error  'ShieldCheck' is defined but never used  @typescript-eslint/no-unused-vars
+  14:5   error  'CreditCard' is defined but never used   @typescript-eslint/no-unused-vars
+  17:10  error  'Button' is defined but never used       @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\lib\webhookUtils.ts
+    5:43   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:29   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   90:69   error  Unnecessary escape character: \/          no-useless-escape
+   90:119  error  Unnecessary escape character: \/          no-useless-escape
+  149:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\AuthModal.tsx
+   2:15  error  'AppSettings' is defined but never used   @typescript-eslint/no-unused-vars
+  37:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\DataTable.tsx
+  5:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\EcwPrintNote.tsx
+   11:30   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   16:37   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   66:30   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+   66:56   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  126:12   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  127:13   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  129:21   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  190:56   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  222:56   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  223:33   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  231:11   warning  The 'handleSaveToHistory' function makes the dependencies of useEffect Hook (at line 264) change on every render. To fix this, wrap the definition of 'handleSaveToHistory' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  240:44   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  240:101  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  240:140  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  240:175  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  240:208  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  243:33   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  243:59   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  244:28   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  251:23   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  262:20   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  263:35   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  540:124  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  540:157  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  544:154  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  544:184  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  548:137  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  553:126  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  563:78   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  563:129  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  563:162  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  563:191  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  563:218  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  570:109  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  570:150  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  578:131  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  584:59   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  591:78   error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  625:124  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  625:156  error    Unexpected any. Specify a different type                                                                                                                                                                   @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\KeyValueGrid.tsx
+   4:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:56  error  '_' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\Layout.tsx
+   42:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  205:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\Navbar.tsx
+  18:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\Navbar.tsx:18:5
+  16 |     // Sync with system or saved preference
+  17 |     const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+> 18 |     setIsDark(isDarkTheme);
+     |     ^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |   }, []);
+  20 |
+  21 |   const toggleTheme = () => {  react-hooks/set-state-in-effect
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\NotePrintPreview.tsx
+   10:11  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   12:33  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   38:32  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   72:76  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   84:51  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+   86:51  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  120:8   warning  React Hook useEffect has missing dependencies: 'noteObj.sections', 'patientObj.dob', 'patientObj.full_name', 'patientObj.name', 'patientObj.patientDob', 'patientObj.patientName', 'patientObj.patient_sex', 'patientObj.sex', 'response.flatSections', 'response.sectionsByTitle', and 'response.sections_by_title'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  133:18  error    'e' is defined but never used                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  174:18  error    'e' is defined but never used                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+  383:56  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  429:51  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\RecorderCard.tsx
+   58:13  error    Error: Cannot access variable before it is declared
+
+`cleanup` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\RecorderCard.tsx:58:13
+  56 |     useEffect(() => {
+  57 |         return () => {
+> 58 |             cleanup();
+     |             ^^^^^^^ `cleanup` accessed before it is declared
+  59 |         };
+  60 |     }, []);
+  61 |
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\RecorderCard.tsx:62:5
+  60 |     }, []);
+  61 |
+> 62 |     const cleanup = () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^
+> 63 |         if (timerIntervalRef.current) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 64 |             window.clearInterval(timerIntervalRef.current);
+     ÔÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 73 |         }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 74 |     };
+     | ^^^^^^^ `cleanup` is declared here
+  75 |
+  76 |     const startRecording = async () => {
+  77 |         setError(null);  react-hooks/immutability
+   60:8   warning  React Hook useEffect has a missing dependency: 'cleanup'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+  119:23  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+  277:30  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\SignaturePad.tsx
+  47:26  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\TabOverview.tsx
+  12:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\TabPrintLayout.tsx
+   14:65   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:90   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   33:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   33:67   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  309:110  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\TabScreenings.tsx
+  12:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\layout\Header.tsx
+  3:10  error  'Badge' is defined but never used             @typescript-eslint/no-unused-vars
+  6:19  error  'mockStatsClinic1' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\renderers\ClinicalRenderers.tsx
+   16:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   23:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   65:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  144:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  258:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  311:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  423:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  458:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\components\theme-provider.tsx
+  66:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\context\ThemeContext.tsx
+  45:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\lib\PDFService.ts
+   10:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   99:26  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  101:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\lib\clioUtils.ts
+   7:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  58:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\lib\parseClinicalNote.ts
+    9:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   11:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   34:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   58:26  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+   64:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   81:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  185:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  207:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  213:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  241:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  247:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  254:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\lib\printUtils.ts
+   27:9   error  'outputLines' is never reassigned. Use 'const' instead  prefer-const
+   99:35  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  129:9   error  'outputLines' is never reassigned. Use 'const' instead  prefer-const
+  165:28  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  171:27  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  180:23  error  '_' is defined but never used                           @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\lib\storage.ts
+   19:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   21:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  167:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  209:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\pages\Dashboard.tsx
+  27:28  error  'mockStatsClinic1' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\pages\Login.tsx
+  26:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\pages\NotesHistory.tsx
+   38:54   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   39:44   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   40:52   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:42   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:109  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\pages\PrintNote.tsx
+   2:15  error    'Note' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  69:65  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  69:95  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  70:35  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  71:53  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  83:8   warning  React Hook useEffect has a missing dependency: 'templates'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\pages\Record.tsx
+   18:29  error    'CardHeader' is defined but never used                                                                                                                                             @typescript-eslint/no-unused-vars
+   18:41  error    'CardTitle' is defined but never used                                                                                                                                              @typescript-eslint/no-unused-vars
+   18:52  error    'CardDescription' is defined but never used                                                                                                                                        @typescript-eslint/no-unused-vars
+   87:29  error    Unexpected any. Specify a different type                                                                                                                                           @typescript-eslint/no-explicit-any
+  102:8   warning  React Hook useEffect has missing dependencies: 'audioUrl', 'handleReset', 'isLoadingFromHistory', 'pdfResponse', and 'status'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  111:20  error    Unexpected any. Specify a different type                                                                                                                                           @typescript-eslint/no-explicit-any
+  112:35  error    Unexpected any. Specify a different type                                                                                                                                           @typescript-eslint/no-explicit-any
+  132:8   warning  React Hook useEffect has a missing dependency: 'handleReset'. Either include it or remove the dependency array                                                                     react-hooks/exhaustive-deps
+  146:26  error    Unexpected any. Specify a different type                                                                                                                                           @typescript-eslint/no-explicit-any
+  297:23  error    Unexpected any. Specify a different type                                                                                                                                           @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\pages\ResetPassword.tsx
+  56:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\pages\Templates.tsx
+    5:17  error  'FileText' is defined but never used           @typescript-eslint/no-unused-vars
+   16:9   error  'navigate' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   17:11  error  'user' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   30:16  error  'error' is defined but never used              @typescript-eslint/no-unused-vars
+   53:14  error  'error' is defined but never used              @typescript-eslint/no-unused-vars
+   79:14  error  'error' is defined but never used              @typescript-eslint/no-unused-vars
+  103:14  error  'error' is defined but never used              @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\scripts\capture_real_payload.ts
+  62:18  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  67:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\notes-module\types\index.ts
+   85:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  170:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  173:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  228:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  248:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\pages\Calls.tsx
+    6:5   error  'CheckCircle' is defined but never used   @typescript-eslint/no-unused-vars
+    7:5   error  'ArrowUpRight' is defined but never used  @typescript-eslint/no-unused-vars
+    8:5   error  'XCircle' is defined but never used       @typescript-eslint/no-unused-vars
+   11:5   error  'Sparkles' is defined but never used      @typescript-eslint/no-unused-vars
+   18:10  error  'Badge' is defined but never used         @typescript-eslint/no-unused-vars
+  142:58  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\pages\Login.tsx
+  17:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\pages\Login.tsx:17:13
+  15 |     useEffect(() => {
+  16 |         if (searchParams.get('activated')) {
+> 17 |             setStatusMessage("Account activated successfully! You can now sign in with your new password.");
+     |             ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  18 |         } else if (searchParams.get('reset')) {
+  19 |             setStatusMessage("Password updated successfully. Please sign in to verify your identity.");
+  20 |         }  react-hooks/set-state-in-effect
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\pages\Overview.tsx
+   1:10  error  'CalendarCheck' is defined but never used  @typescript-eslint/no-unused-vars
+   1:35  error  'TrendingUp' is defined but never used     @typescript-eslint/no-unused-vars
+   1:47  error  'AlertCircle' is defined but never used    @typescript-eslint/no-unused-vars
+   7:10  error  'PageHeader' is defined but never used     @typescript-eslint/no-unused-vars
+   8:10  error  'Button' is defined but never used         @typescript-eslint/no-unused-vars
+  10:10  error  'cn' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\pages\Patients.tsx
+  4:51  error  'User' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\pages\Settings.tsx
+  18:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  79:83  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  88:89  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\REINIER\.gemini\antigravity\scratch\clio-dashboard\src\services\calendarService.ts
+  37:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Ô£û 230 problems (223 errors, 7 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+

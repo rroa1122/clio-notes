@@ -1,0 +1,157 @@
+import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { KeyRound, Mail, ArrowRight, Loader2, Stethoscope, LogIn, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
+const Login = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const { login } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setIsSubmitting(true);
+
+        try {
+            const cleanEmail = email.trim();
+            await login(cleanEmail, password);
+            toast.success('Welcome back!');
+            navigate('/');
+        } catch (err: any) {
+            console.error('Auth Error:', err);
+
+            if (err.message?.toLowerCase().includes('invalid login credentials')) {
+                setError('Invalid email or password.');
+                toast.error('Login failed', { description: 'Please check your credentials.' });
+            } else if (err.message?.toLowerCase().includes('email not confirmed')) {
+                setError('Email not confirmed. Please check your inbox.');
+            } else {
+                setError(err.message || 'Authentication failed. Please try again.');
+                toast.error('Error', { description: err.message });
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen w-full flex items-center justify-center bg-background px-4 py-12 relative overflow-hidden animate-in fade-in duration-1000">
+            {/* Professional Background Accents */}
+            <div className="absolute top-[10%] left-[15%] w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full pointer-events-none z-0 animate-pulse" />
+            <div className="absolute bottom-[10%] right-[15%] w-[400px] h-[400px] bg-primary/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
+            <div className="w-full max-w-[460px] relative z-10">
+                {/* Unified Branding */}
+                <div className="flex flex-col items-center mb-12 text-center">
+                    <div className="size-20 rounded-[2rem] bg-primary flex items-center justify-center text-white mb-8 shadow-2xl shadow-teal-500/30 transition-transform hover:rotate-6 duration-500">
+                        <Stethoscope size={40} />
+                    </div>
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase font-display leading-none">
+                        Clio<span className="text-primary">Flow</span>
+                    </h1>
+                    <div className="flex items-center gap-3 mt-3">
+                        <span className="h-px w-4 bg-slate-200 dark:bg-slate-800"></span>
+                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500">Clinical Workspace 2.0</p>
+                        <span className="h-px w-4 bg-slate-200 dark:bg-slate-800"></span>
+                    </div>
+                </div>
+
+                {/* Glassmorphic Login Card */}
+                <div className="card glass-effect border-white/40 dark:border-white/5 !p-0 overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]">
+                    <div className="px-10 py-8 bg-white/40 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/5 flex items-center gap-5">
+                        <div className="size-11 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary shadow-inner">
+                            <LogIn size={22} />
+                        </div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                            Identity <span className="text-primary">Verification</span>
+                        </h3>
+                    </div>
+
+                    <div className="p-10">
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+
+                            {/* Email Input */}
+                            <div className="space-y-4">
+                                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/80 block ml-1">Professional Email</label>
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600 transition-colors group-focus-within:text-primary z-10">
+                                        <Mail size={18} />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full bg-slate-50/50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 py-5 pl-14 pr-6 rounded-2xl text-base font-bold dark:text-white outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700 shadow-sm"
+                                        placeholder="physician@clinicflow.dev"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Password Input */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between ml-1">
+                                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/80">Access Key</label>
+                                    <button type="button" className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">Forgot key?</button>
+                                </div>
+                                <div className="relative group">
+                                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600 transition-colors group-focus-within:text-primary z-10">
+                                        <KeyRound size={18} />
+                                    </div>
+                                    <input
+                                        type="password"
+                                        required
+                                        minLength={6}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full bg-slate-50/50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 py-5 pl-14 pr-6 rounded-2xl text-base font-bold dark:text-white outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700 shadow-sm"
+                                        placeholder="••••••••••••"
+                                    />
+                                </div>
+                            </div>
+
+                            {error && (
+                                <div className="p-5 rounded-2xl bg-red-500/5 dark:bg-red-500/10 text-red-500 border-2 border-red-500/10 text-[11px] font-black uppercase tracking-widest flex items-center gap-4 animate-in shake duration-500">
+                                    <AlertCircle size={20} className="shrink-0" />
+                                    <span>Authentication Error: {error}</span>
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full h-16 mt-4 rounded-[2rem] bg-primary text-white font-black text-sm uppercase tracking-[0.3em] shadow-2xl shadow-teal-500/30 hover:shadow-teal-500/50 hover:-translate-y-1 active:scale-[0.98] transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="animate-spin" size={22} />
+                                        <span>Syncing...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Initiate Portal</span>
+                                        <ArrowRight size={22} className="opacity-60" />
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div className="flex flex-col items-center mt-12 gap-1 text-[10px] uppercase font-black tracking-[0.3em] text-slate-400 opacity-40">
+                    <p>Secured by clinicflow enterprise</p>
+                    <p>High-Density Clinical Network</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Login;
+

@@ -1,0 +1,12 @@
+src/notes-module/lib/conflictUtils.test.ts(1,38): error TS2307: Cannot find module 'vitest' or its corresponding type declarations.
+src/notes-module/lib/conflictUtils.ts(86,21): error TS2339: Property 'provider' does not exist on type 'ClioNote'.
+src/notes-module/lib/conflictUtils.ts(86,59): error TS2339: Property 'provider' does not exist on type '{ template_id: string; template_version: string; confidence_overall: number; context: string; warnings: string[]; missing_fields: string[]; }'.
+src/notes-module/lib/conflictUtils.ts(87,20): error TS2339: Property 'appointment' does not exist on type 'ClioNote'.
+src/notes-module/lib/conflictUtils.ts(87,63): error TS2339: Property 'visitDate' does not exist on type '{ template_id: string; template_version: string; confidence_overall: number; context: string; warnings: string[]; missing_fields: string[]; }'.
+src/notes-module/lib/conflictUtils.ts(87,87): error TS2339: Property 'visit_date' does not exist on type '{ template_id: string; template_version: string; confidence_overall: number; context: string; warnings: string[]; missing_fields: string[]; }'.
+src/notes-module/lib/conflictUtils.ts(88,25): error TS2339: Property 'appointment' does not exist on type 'ClioNote'.
+src/notes-module/lib/conflictUtils.ts(89,23): error TS2339: Property 'appointment' does not exist on type 'ClioNote'.
+src/notes-module/lib/conflictUtils.ts(93,37): error TS2339: Property 'staff' does not exist on type 'ClioNote'.
+src/notes-module/lib/conflictUtils.ts(94,46): error TS2339: Property 'dos_date' does not exist on type '{ mode: string; }'.
+src/notes-module/lib/conflictUtils.ts(95,56): error TS2339: Property 'time_in' does not exist on type '{ mode: string; }'.
+src/notes-module/lib/conflictUtils.ts(96,52): error TS2339: Property 'time_out' does not exist on type '{ mode: string; }'.
