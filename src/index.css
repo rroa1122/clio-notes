@@ -96,6 +96,7 @@
 
   html,
   body {
+    font-size: 18px;
     text-rendering: auto;
     /* Eliminate sub-pixel scaling artifacts */
     transform: none !important;

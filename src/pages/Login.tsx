@@ -66,7 +66,7 @@ export const Login: React.FC = () => {
 
                 <div className="relative z-10">
                     <div className="flex flex-col items-center mb-10">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shadow-lg shadow-indigo-500/5 mb-4 group/logo cursor-pointer overflow-hidden ring-1 ring-indigo-500/15 ring-offset-[3px] ring-offset-[#0d101a] transition-all duration-300">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shadow-lg shadow-indigo-500/5 mb-4 group/logo cursor-pointer overflow-hidden transition-all duration-300">
                             <svg 
                                 viewBox="0 0 24 24" 
                                 className="size-10"
@@ -103,20 +103,14 @@ export const Login: React.FC = () => {
                                     <g transform="rotate(0 12 12)">
                                         <path className="login-fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
                                     </g>
-                                    <g transform="rotate(90 12 12)">
-                                        <path className="login-fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
-                                    </g>
                                     <g transform="rotate(180 12 12)">
-                                        <path className="login-fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
-                                    </g>
-                                    <g transform="rotate(270 12 12)">
                                         <path className="login-fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
                                     </g>
                                 </g>
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-black text-slate-800 tracking-tighter">
-                            {view === 'login' ? 'Welcome Back' : 'Identity Recovery'}
+                        <h1 className="text-3xl font-black tracking-[0.1em] bg-gradient-to-r from-[#2563eb] via-[#6366f1] to-[#8b5cf6] bg-clip-text text-transparent uppercase select-none">
+                            {view === 'login' ? 'Clio Notes' : 'Identity Recovery'}
                         </h1>
                         <p className="text-slate-400 text-sm mt-2 font-medium">
                             {view === 'login' ? 'Log in to your Clio account' : 'Security verification for password reset'}

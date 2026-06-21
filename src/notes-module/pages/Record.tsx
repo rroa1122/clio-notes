@@ -916,7 +916,7 @@ const Record: React.FC = () => {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <User size={14} className="text-slate-400" />
-                                        <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Client identity</Label>
+                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Client identity</Label>
                                         {selectedPatient && <Check size={12} className="text-emerald-400" />}
                                     </div>
                                     {selectedPatient ? (
@@ -950,7 +950,7 @@ const Record: React.FC = () => {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Calendar size={14} className="text-slate-400" />
-                                        <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Encounter Info</Label>
+                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Encounter Info</Label>
                                         {serviceDate && timeIn && <Check size={12} className="text-emerald-400" />}
                                     </div>
                                     <div className="flex bg-white border border-slate-200 rounded-full shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 overflow-hidden mt-1">
@@ -995,7 +995,7 @@ const Record: React.FC = () => {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <ClipboardList size={14} className="text-slate-400" />
-                                        <Label className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Service Provided</Label>
+                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Service Provided</Label>
                                         {selectedSubTemplate && <Check size={12} className="text-emerald-400" />}
                                     </div>
                                     <div className="relative mt-1">
@@ -1127,7 +1127,7 @@ const Record: React.FC = () => {
                                                         </span>
                                                         <div className="flex items-center gap-2 opacity-40">
                                                             <div className="size-1 rounded-full bg-rose-500 animate-pulse" />
-                                                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-600">
+                                                            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-600">
                                                                 Recording...
                                                             </p>
                                                         </div>
@@ -1135,14 +1135,14 @@ const Record: React.FC = () => {
                                                 ) : (
                                                     <div className="flex flex-col items-center gap-1 animate-in fade-in duration-700">
                                                         <p className={cn(
-                                                            "text-[10px] font-bold uppercase tracking-[0.4em] transition-all duration-700",
+                                                            "text-[11px] font-bold uppercase tracking-[0.4em] transition-all duration-700",
                                                             audioBlob ? "text-emerald-600" : "text-slate-400/60"
                                                         )}>
                                                             {audioBlob ? "Session Finalized" : "System Standby"}
                                                         </p>
                                                         {!audioBlob && (
                                                             <div className="h-4 flex items-center">
-                                                                <p className="text-[10px] font-semibold text-primary/50 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
+                                                                <p className="text-[11px] font-semibold text-primary/50 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
                                                                     Ready to record
                                                                 </p>
                                                             </div>
@@ -1164,7 +1164,7 @@ const Record: React.FC = () => {
                                                             setAudioUrl(null);
                                                             setTimer(0);
                                                         }}
-                                                        className="h-11 w-full rounded-full font-black text-[10px] uppercase tracking-[0.2em] text-rose-400 hover:bg-rose-50/30 transition-all"
+                                                        className="h-11 w-full rounded-full font-black text-[11px] uppercase tracking-[0.2em] text-rose-400 hover:bg-rose-50/30 transition-all"
                                                     >
                                                         Discard
                                                     </Button>
@@ -1268,7 +1268,7 @@ const Record: React.FC = () => {
                                                     "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 shadow-sm border",
                                                     canAdd 
                                                         ? "bg-white text-primary border-primary/20 hover:bg-primary/5 hover:border-primary/40 active:scale-[0.98]" 
-                                                        : "bg-slate-50/50 text-slate-300 border-slate-100 shadow-none cursor-not-allowed"
+                                                        : "bg-slate-50/50 text-slate-400 border-slate-100 shadow-none cursor-not-allowed"
                                                 )}
                                             >
                                                 <Plus size={14} strokeWidth={3} />
@@ -1284,7 +1284,7 @@ const Record: React.FC = () => {
                                             "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 active:scale-[0.98] shadow-md",
                                             recordedServices.length > 0
                                                 ? "bg-slate-800 text-white hover:bg-slate-900 shadow-slate-900/10"
-                                                : "bg-slate-50 text-slate-200 pointer-events-none border border-slate-100"
+                                                : "bg-slate-50 text-slate-400 pointer-events-none border border-slate-100"
                                         )}
                                     >
                                         {status === 'processing' || status === 'uploading' ? (
@@ -1302,7 +1302,7 @@ const Record: React.FC = () => {
                                 </div>
                                 
                                 {(!selectedPatient && !patientInfo.name.trim()) || !selectedSubTemplate ? (
-                                    <p className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] animate-pulse transition-opacity duration-1000">
+                                    <p className="text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] animate-pulse transition-opacity duration-1000">
                                         Fill patient & service fields to enable
                                     </p>
                                 ) : null}
@@ -1320,7 +1320,7 @@ const Record: React.FC = () => {
                                             variant="ghost" 
                                             size="sm" 
                                             onClick={handleReset}
-                                            className="h-7 text-[10px] font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg px-2.5"
+                                            className="h-7 text-[11px] font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg px-2.5"
                                         >
                                             Discard Session
                                         </Button>
@@ -1330,7 +1330,7 @@ const Record: React.FC = () => {
                                         {recordedServices.map((svc, i) => (
                                             <div key={svc.id} className="bg-slate-50/30 border border-slate-100 rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm hover:border-slate-200 transition-all duration-300 group overflow-hidden">
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="flex items-center justify-center size-5 rounded-full bg-white border border-slate-100 text-[9px] font-bold text-slate-400 shrink-0 shadow-sm">
+                                                    <div className="flex items-center justify-center size-5 rounded-full bg-white border border-slate-100 text-[11px] font-bold text-slate-400 shrink-0 shadow-sm">
                                                         {i + 1}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
@@ -1342,7 +1342,7 @@ const Record: React.FC = () => {
                                                             {svc.manualText && (
                                                                 <FileText size={9} className="text-slate-400" />
                                                             )}
-                                                            <span className="text-[9px] font-bold text-slate-400">
+                                                            <span className="text-[11px] font-bold text-slate-400">
                                                                 {svc.audioBlob && svc.manualText ? "Both" : (svc.audioBlob ? "Audio" : "Text")}
                                                             </span>
                                                         </div>

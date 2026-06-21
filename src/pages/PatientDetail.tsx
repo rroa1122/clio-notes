@@ -202,7 +202,7 @@ export function PatientDetail() {
                                 {isEditing ? (editData.full_name || patient.full_name) : patient.full_name}
                             </h1>
                             <div className={cn(
-                                "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-colors",
+                                "px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-widest border transition-colors",
                                 isEditing ? "bg-amber-50 text-amber-600 border-amber-200" : "bg-slate-100 text-slate-500 border-slate-200/50"
                             )}>
                                 {isEditing ? "Editing Mode" : "EMR Registry"}
@@ -233,14 +233,14 @@ export function PatientDetail() {
                                 className="h-11 px-6 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2.5 group"
                             >
                                 <Edit3 size={18} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                                <span className="text-[10px] uppercase tracking-[0.15em]">Edit Profile</span>
+                                <span className="text-[11px] uppercase tracking-[0.15em]">Edit Profile</span>
                             </Button>
                             <Button
                                 onClick={() => navigate(`/notes/new?patientId=${patient.id}`)}
                                 className="h-11 px-7 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2.5 transform active:scale-95 group"
                             >
                                 <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                                <span className="text-[10px] uppercase tracking-[0.15em]">New Encounter</span>
+                                <span className="text-[11px] uppercase tracking-[0.15em]">New Encounter</span>
                             </Button>
                         </>
                     ) : (
@@ -252,7 +252,7 @@ export function PatientDetail() {
                                 disabled={isSaving}
                             >
                                 <X size={18} />
-                                <span className="text-[10px] uppercase tracking-[0.15em]">Cancel</span>
+                                <span className="text-[11px] uppercase tracking-[0.15em]">Cancel</span>
                             </Button>
                             <Button
                                 onClick={handleSave}
@@ -264,7 +264,7 @@ export function PatientDetail() {
                                 ) : (
                                     <Save size={18} />
                                 )}
-                                <span className="text-[10px] uppercase tracking-[0.15em]">
+                                <span className="text-[11px] uppercase tracking-[0.15em]">
                                     {isSaving ? "Saving..." : "Save Changes"}
                                 </span>
                             </Button>
@@ -399,7 +399,7 @@ export function PatientDetail() {
                                     theme="indigo"
                                 />
                                 <div className="mt-4 pt-4 border-t border-slate-200/50">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Emergency Protocol</p>
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Emergency Protocol</p>
                                     <div className="space-y-4">
                                         <PremiumGlassField
                                             icon={User}
@@ -441,14 +441,14 @@ export function PatientDetail() {
                                 <div className="space-y-1.5 px-0.5">
                                     <div className="flex items-center gap-2">
                                         <Activity size={12} className="text-indigo-400" />
-                                        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Diagnostic Registry</p>
+                                        <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">Diagnostic Registry</p>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         {patient.diagnoses ? (
                                             patient.diagnoses.split('\n').filter(d => d.trim()).map((diag, i) => (
                                                 <div key={i} className="flex items-center gap-4 bg-white/40 backdrop-blur-sm border border-slate-200/50 h-[46px] px-4 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 hover:translate-x-1 group relative overflow-hidden">
                                                     <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/20 group-hover:bg-indigo-500 transition-colors" />
-                                                    <span className="text-[10px] font-black text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded-md border border-indigo-100/50 shadow-tiny shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 uppercase tracking-widest">
+                                                    <span className="text-[11px] font-black text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded-md border border-indigo-100/50 shadow-tiny shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 uppercase tracking-widest">
                                                         {diag.split(' - ')[0]}
                                                     </span>
                                                     <span className="text-[14px] font-bold text-slate-700 leading-snug truncate">{diag.split(' - ').slice(1).join(' ') || diag}</span>
@@ -465,7 +465,7 @@ export function PatientDetail() {
                                 <div className="space-y-1.5 px-0.5 relative">
                                     <div className="flex items-center gap-2">
                                         <Activity size={12} className="text-indigo-400" />
-                                        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">Registry Diagnoses (ICD-10 - Description, one per line)</p>
+                                        <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">Registry Diagnoses (ICD-10 - Description, one per line)</p>
                                     </div>
                                     <div className="relative">
                                         <textarea
@@ -488,7 +488,7 @@ export function PatientDetail() {
 
                                         {suggestions.length > 0 && (
                                             <div className="absolute z-50 bottom-full mb-2 left-0 w-full bg-white border border-slate-100 rounded-[16px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                <div className="p-2 border-b border-slate-50 bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest px-4">
+                                                <div className="p-2 border-b border-slate-50 bg-slate-50/50 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">
                                                     Clinical Suggestions
                                                 </div>
                                                 <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
@@ -505,7 +505,7 @@ export function PatientDetail() {
                                                             className="w-full text-left px-4 py-3 hover:bg-indigo-50/50 transition-colors border-b border-slate-50 last:border-0 group flex items-center justify-between gap-4"
                                                         >
                                                             <div className="flex items-center gap-3">
-                                                                <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded shadow-tiny shrink-0">{s.code}</span>
+                                                                <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded shadow-tiny shrink-0">{s.code}</span>
                                                                 <span className="text-[13px] font-bold text-slate-600 truncate group-hover:text-indigo-600 transition-colors">{s.description}</span>
                                                             </div>
                                                             <Plus size={14} className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -692,10 +692,10 @@ export function PatientDetail() {
                                     <div className="size-6 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100 shadow-tiny">
                                         <Clock size={14} />
                                     </div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] leading-none">Clinical Audit Trail</p>
+                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] leading-none">Clinical Audit Trail</p>
                                 </div>
                                 {timeline.length > 0 && !isEditing && (
-                                    <Button variant="ghost" className="text-indigo-600 font-black text-[10px] uppercase tracking-wider hover:bg-indigo-50/50 px-3 h-8 rounded-full" onClick={() => navigate(`/notes?patientId=${patient.id}`)}>
+                                    <Button variant="ghost" className="text-indigo-600 font-black text-[11px] uppercase tracking-wider hover:bg-indigo-50/50 px-3 h-8 rounded-full" onClick={() => navigate(`/notes?patientId=${patient.id}`)}>
                                         View Ledger &rarr;
                                     </Button>
                                 )}
@@ -752,7 +752,7 @@ function PremiumTrigger({ value, label, icon: Icon, theme }: { value: string, la
         <TabsTrigger
             value={value}
             className={cn(
-                "flex-1 rounded-full flex items-center justify-center gap-2 px-4 h-full text-[10px] font-bold uppercase tracking-[0.12em] transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg border border-transparent data-[state=active]:border-slate-100 group",
+                "flex-1 rounded-full flex items-center justify-center gap-2 px-4 h-full text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg border border-transparent data-[state=active]:border-slate-100 group",
                 themeShadows[theme]
             )}
         >
@@ -850,10 +850,10 @@ function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: 
             </div>
             <div className={cn("flex-1 pb-12 transition-transform duration-300", !disabled && "group-hover:translate-x-1")}>
                 <div className="flex items-center gap-4 mb-2.5">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] bg-slate-100/60 px-2.5 py-1 rounded-full border border-slate-200/30">
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] bg-slate-100/60 px-2.5 py-1 rounded-full border border-slate-200/30">
                         {format(new Date(item.timestamp), 'MMM d, yyyy • h:mm a')}
                     </span>
-                    {item.status && <Badge className="text-[9px] font-black bg-emerald-50 text-emerald-600 border-none px-2.5 h-4.5 rounded-full">{item.status}</Badge>}
+                    {item.status && <Badge className="text-[11px] font-black bg-emerald-50 text-emerald-600 border-none px-2.5 h-4.5 rounded-full">{item.status}</Badge>}
                 </div>
                 <div className="flex items-center justify-between">
                     <h4 className={cn(

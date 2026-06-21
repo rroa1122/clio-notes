@@ -97,14 +97,14 @@ export function Patients() {
                 <div className="flex flex-col gap-6 p-10 pb-8 bg-white shrink-0">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                         <div className="flex flex-col gap-1.5">
-                            <span className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] pl-1">Clinical Directory</span>
+                            <span className="text-[11px] font-bold text-primary/60 uppercase tracking-[0.2em] pl-1">Clinical Directory</span>
                             <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Clients</h1>
                             <div className="flex items-center gap-2.5 mt-1">
                                 <div className={cn(
                                     "size-2 rounded-full", 
                                     isLoading ? "bg-amber-400 animate-pulse" : "bg-emerald-500 animate-tactile-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"
                                 )} />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
                                     {isLoading ? "Syncing..." : `${patients.length} active records`}
                                 </span>
                             </div>
@@ -118,7 +118,7 @@ export function Patients() {
                                 <Input
                                     type="text"
                                     placeholder="Search directory..."
-                                    className="!pl-13 h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-[6px] focus:ring-primary/5 focus:border-primary/20 transition-all text-[15px] font-medium placeholder:text-slate-400 shadow-none"
+                                    className="!pl-12 h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-[6px] focus:ring-primary/5 focus:border-primary/20 transition-all text-[15px] font-medium placeholder:text-slate-400 shadow-none"
                                     value={searchTerm}
                                     onChange={handleSearch}
                                 />
@@ -135,11 +135,11 @@ export function Patients() {
 
                     {/* Table Headers (Simulated) */}
                     <div className="grid grid-cols-[2fr,1fr,1fr,1fr,auto] gap-4 px-4 py-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
-                        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Client Identity</span>
-                        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Date of Birth</span>
-                        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">EMR ID / MRN</span>
-                        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Registered</span>
-                        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest w-20 text-right">Actions</span>
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Client Identity</span>
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Date of Birth</span>
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">EMR ID / MRN</span>
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Registered</span>
+                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest w-20 text-right">Actions</span>
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
@@ -180,7 +180,7 @@ export function Patients() {
                                                     {patient.full_name}
                                                 </span>
                                                 {patient.phone && (
-                                                    <span className="text-[9px] text-slate-400 font-semibold tracking-widest uppercase">
+                                                    <span className="text-[11px] text-slate-400 font-semibold tracking-widest uppercase">
                                                         {patient.phone}
                                                     </span>
                                                 )}
@@ -197,7 +197,7 @@ export function Patients() {
                                         {/* ID */}
                                         <div>
                                             {patient.emr_id ? (
-                                                <Badge variant="secondary" className="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-400 border-none uppercase tracking-widest">
+                                                <Badge variant="secondary" className="px-2 py-0.5 text-[11px] font-bold rounded bg-slate-100 text-slate-400 border-none uppercase tracking-widest">
                                                     {patient.emr_id}
                                                 </Badge>
                                             ) : (

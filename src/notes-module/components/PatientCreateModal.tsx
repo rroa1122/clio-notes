@@ -165,9 +165,9 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-[1024px] p-0 overflow-hidden rounded-[2.5rem] border-slate-200/50 shadow-2xl bg-white/95 backdrop-blur-2xl">
-                <div className="flex flex-col h-[85vh] md:h-auto max-h-[90vh]">
+                <div className="flex flex-col h-[97vh] md:h-[1040px] max-h-[97vh]">
                     {/* Header */}
-                    <div className="px-8 pt-8 pb-6 border-b border-slate-100 relative overflow-hidden">
+                    <div className="px-8 pt-5 pb-4 border-b border-slate-100 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-3xl -mr-32 -mt-32 -z-10" />
 
                         <div className="flex items-center justify-between relative z-10">
@@ -195,7 +195,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                     <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
                         {/* Tabs Navigation */}
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
-                            <div className="px-8 bg-slate-50/30 border-b border-slate-100/50 py-3">
+                            <div className="px-8 bg-slate-50/30 border-b border-slate-100/50 py-2">
                                 <TabsList className="bg-slate-50/50 backdrop-blur-md p-1 h-12 rounded-full border border-slate-200/50 shadow-sm w-full flex items-stretch gap-1">
                                     <PremiumTrigger value="client" label="Client" icon={User} theme="indigo" />
                                     <PremiumTrigger value="pcp" label="Primary Care Physician" icon={DoctorIcon} theme="emerald" />
@@ -204,13 +204,13 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                 </TabsList>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto px-10 py-10 custom-scrollbar bg-slate-100/40">
+                            <div className="flex-1 overflow-y-auto px-10 py-6 custom-scrollbar bg-slate-100/40">
                                 {/* [CLIENT TAB] */}
                                 <TabsContent value="client" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                                     {/* AI Extraction Dropzone */}
                                     <div 
                                         className={cn(
-                                            "mb-10 relative rounded-[2rem] border border-dashed border-indigo-200 bg-indigo-50/20 overflow-hidden transition-all duration-500 group",
+                                            "mb-6 relative rounded-[2rem] border border-dashed border-indigo-200 bg-indigo-50/20 overflow-hidden transition-all duration-500 group",
                                             isExtracting ? "border-indigo-400 bg-indigo-50/40 shadow-inner" : "hover:border-indigo-300 hover:bg-white hover:shadow-[0_20px_50px_-20px_rgba(79,70,229,0.1)] focus-within:border-indigo-400 focus-within:bg-white"
                                         )}
                                         onDragOver={(e) => e.preventDefault()}
@@ -224,7 +224,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                             onChange={handleFileUpload}
                                             disabled={isExtracting}
                                         />
-                                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center relative z-0">
+                                        <div className="flex flex-col items-center justify-center py-6 px-6 text-center relative z-0">
                                             {isExtracting ? (
                                                 <div className="animate-in fade-in duration-500 flex flex-col items-center">
                                                     <div className="size-16 rounded-3xl bg-indigo-100/50 text-indigo-500 flex items-center justify-center mb-5 relative group-hover:scale-110 transition-transform">
@@ -250,8 +250,8 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     </div>
 
                                     <div className={cn("transition-all duration-700", isExtracting && "opacity-40 blur-[4px] pointer-events-none scale-[0.98]")}>
-                                        <div className="bg-white/70 border border-slate-200/50 rounded-[2rem] p-8 shadow-sm">
-                                            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                                        <div className="bg-white/70 border border-slate-200/50 rounded-[2rem] p-6 shadow-sm">
+                                            <div className="grid grid-cols-2 gap-x-6 gap-y-3.5">
                                                 <PremiumGlassField icon={User} label="Full Legal Name" name="full_name" value={formData.full_name} onChange={handleFieldChange} theme="indigo" placeholder="E.g. Alice Wonder" required />
                                                 <PremiumGlassField icon={Calendar} label="Date of Birth" name="dob" value={formData.dob} onChange={handleFieldChange} theme="indigo" type="date" />
                                                 <PremiumGlassField icon={BadgeCheck} label="Citizenship Status" name="citizenship" value={formData.citizenship} onChange={handleFieldChange} theme="indigo" />
@@ -262,7 +262,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                             </div>
                                         </div>
 
-                                        <div className="mt-8 bg-white/70 border border-slate-200/50 rounded-[2rem] p-8 shadow-sm">
+                                        <div className="mt-6 bg-white/70 border border-slate-200/50 rounded-[2rem] p-6 shadow-sm">
                                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                                                 <div className="col-span-2 mb-2">
                                                     <h4 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Coordination & Emergency</h4>
@@ -277,7 +277,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                             </div>
                                         </div>
 
-                                        <div className="mt-8 bg-white/70 border border-slate-200/50 rounded-[2rem] p-8 shadow-sm">
+                                        <div className="mt-6 bg-white/70 border border-slate-200/50 rounded-[2rem] p-6 shadow-sm">
                                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                                                 <div className="col-span-2 mb-2">
                                                     <h4 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Billing & Insurance</h4>
@@ -287,7 +287,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                             </div>
                                         </div>
 
-                                        <div className="mt-8 bg-white/70 border border-slate-200/50 rounded-[2rem] p-8 shadow-sm">
+                                        <div className="mt-6 bg-white/70 border border-slate-200/50 rounded-[2rem] p-6 shadow-sm">
                                             <div className="space-y-6">
                                                 <div className="mb-2">
                                                     <h4 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Clinical Overview</h4>
@@ -401,7 +401,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                         </Tabs>
 
                         {/* Footer Actions */}
-                        <div className="px-10 py-7 border-t border-slate-100/60 bg-white/50 backdrop-blur-md flex items-center justify-between gap-6">
+                        <div className="px-10 py-4 border-t border-slate-100/60 bg-white/50 backdrop-blur-md flex items-center justify-between gap-6">
                             <div className="hidden md:flex items-center gap-3 ml-2">
                                 <div className="size-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Ready for validation</span>

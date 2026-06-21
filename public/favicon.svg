@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
+  <defs>
+    <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+  </defs>
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes breathe {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1.5px); }
+    }
+    .grp {
+      transform-origin: 12px 12px;
+      animation: spin 40s linear infinite;
+    }
+    .fnl {
+      animation: breathe 3s ease-in-out infinite;
+      transform-origin: 12px 12px;
+      fill: url(#g4);
+    }
+  </style>
+  <g class="grp">
+    <g transform="rotate(0 12 12)">
+      <path class="fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
+    </g>
+    <g transform="rotate(180 12 12)">
+      <path class="fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
+    </g>
+  </g>
+</svg>

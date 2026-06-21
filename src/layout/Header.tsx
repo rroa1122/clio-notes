@@ -75,19 +75,13 @@ export function Header() {
                                 <g transform="rotate(0 12 12)">
                                     <path className="header-fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
                                 </g>
-                                <g transform="rotate(90 12 12)">
-                                    <path className="header-fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
-                                </g>
                                 <g transform="rotate(180 12 12)">
-                                    <path className="header-fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
-                                </g>
-                                <g transform="rotate(270 12 12)">
                                     <path className="header-fnl" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
                                 </g>
                             </g>
                         </svg>
                     </div>
-                    <span className="text-base font-bold tracking-tight text-white hidden sm:block">CLIO</span>
+                    <span className="text-base font-black tracking-[0.25em] bg-gradient-to-r from-white via-slate-300 to-sky-400 bg-clip-text text-transparent hidden sm:block transition-all duration-300 hover:tracking-[0.3em]">CLIO NOTES</span>
                 </div>
 
                 {/* 2. Desktop Navigation (Center) */}
