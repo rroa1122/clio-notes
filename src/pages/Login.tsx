@@ -26,15 +26,21 @@ export const Login: React.FC = () => {
         setError(null);
         setStatusMessage(null);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-        if (error) {
-            setError(error.message);
+            if (error) {
+                setError(error.message);
+            }
+        } catch (err: any) {
+            console.error("Login exception:", err);
+            setError(err.message || "An unexpected error occurred. Please try again.");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const handleForgotPassword = async (e: React.FormEvent) => {
@@ -172,12 +178,6 @@ export const Login: React.FC = () => {
                             >
                                 {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
                             </button>
-
-                            <div className="pt-2 text-center">
-                                <a href="/signup" className="text-[10px] font-black uppercase tracking-widest text-[#6366f1] hover:text-[#6366f1]/80 transition-colors">
-                                    New here? Create an account
-                                </a>
-                            </div>
                         </form>
                     ) : (
                         <form onSubmit={handleForgotPassword} className="space-y-6">

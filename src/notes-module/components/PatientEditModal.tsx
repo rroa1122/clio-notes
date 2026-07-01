@@ -168,8 +168,12 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-[700px] rounded-[32px] border-slate-200 bg-white shadow-full p-0 overflow-hidden">
-                <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[90vh]">
+            <DialogContent 
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+                className="sm:max-w-[700px] h-[90vh] max-h-[90vh] rounded-[32px] border-slate-200 bg-white shadow-full p-0 overflow-hidden translate-x-0 translate-y-0 inset-0 m-auto flex flex-col"
+            >
+                <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
                     <DialogHeader className="p-8 pb-4 border-b border-slate-100">
                         <div className="flex items-center gap-4 mb-2">
                             <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-sm border border-primary/5">

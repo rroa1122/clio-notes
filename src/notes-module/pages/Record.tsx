@@ -856,54 +856,30 @@ const Record: React.FC = () => {
     return (
         <div className="flex flex-col items-center w-full pt-6 lg:pt-8 px-4 pb-12 animate-in fade-in duration-500">
             {status === 'done' && pdfResponse ? (
-                <div id="review-workspace-root" className="clio-notes-new fixed inset-0 z-[100] flex flex-col bg-slate-900/40 p-4 md:p-8 animate-in fade-in duration-500 overflow-hidden print:bg-white print:p-0">
-                    {/* Decorative Background Layer */}
-                    <div className="absolute inset-0 -z-10 bg-white/95 no-print" />
-
-                    <div className="flex-1 flex flex-col max-w-[1600px] w-full mx-auto overflow-hidden">
-                        <div className="flex items-center justify-between mb-6 no-print">
-                            <Button
-                                variant="outline"
-                                onClick={() => handleReset()}
-                                className="rounded-xl font-bold tracking-tight gap-2 h-10 border-slate-200/60 bg-white shadow-sm hover:bg-slate-50"
-                            >
-                                <RefreshCw className="h-4 w-4 text-slate-500" />
-                                New Acquisition Session
-                            </Button>
-                            <div className="flex items-center gap-4">
-                                <Badge variant="outline" className="font-bold border-emerald-500/20 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full">
-                                    Validation Mode
-                                </Badge>
-                            </div>
+                <div id="review-workspace-root" className="clio-notes-new max-w-6xl w-full bg-white border border-slate-200/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] rounded-[2.5rem] p-6 md:p-10 relative">
+                    {isTemplatesLoading && (
+                        <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-[2.5rem]">
+                            <Loader2 className="animate-spin text-primary" size={32} />
                         </div>
-
-                        <div id="record-scroll-container" className="flex-1 overflow-y-auto rounded-2xl border border-slate-200/60 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.12)] p-2 custom-scrollbar relative">
-                            {isTemplatesLoading && (
-                                <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center">
-                                    <Loader2 className="animate-spin text-primary" size={32} />
-                                </div>
-                            )}
-                            {clioNote ? (
-                                <div className="py-4 px-2 md:px-0">
-                                    <ClioNoteViewer
-                                        note={clioNote}
-                                        onSaveComplete={(saved) => {
-                                            if (saved) {
-                                                toast.success("Saved successfully");
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            ) : (
-                                <NotePrintPreview
-                                    data={pdfResponse.data}
-                                    pdfUrl={pdfResponse.url}
-                                    onRegenerate={handleRegenerate}
-                                />
-                            )}
+                    )}
+                    {clioNote ? (
+                        <div className="py-4 px-2 md:px-0">
+                            <ClioNoteViewer
+                                note={clioNote}
+                                onSaveComplete={(saved) => {
+                                    if (saved) {
+                                        toast.success("Saved successfully");
+                                    }
+                                }}
+                            />
                         </div>
-                    </div>
-
+                    ) : (
+                        <NotePrintPreview
+                            data={pdfResponse.data}
+                            pdfUrl={pdfResponse.url}
+                            onRegenerate={handleRegenerate}
+                        />
+                    )}
                 </div>
             ) : (
                 <Card className="max-w-6xl w-full bg-surface border border-border/60 shadow-soft rounded-[2.5rem] overflow-hidden relative group">

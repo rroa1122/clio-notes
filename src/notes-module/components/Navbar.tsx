@@ -88,7 +88,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                   </button>
 
                   <button
-                    onClick={logout}
+                    onClick={() => logout()}
                     className="dropdown-item danger"
                   >
                     <LogOut size={18} />

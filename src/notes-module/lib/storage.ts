@@ -275,7 +275,7 @@ export const storage = {
                     const { auditService } = await import('../../services/auditService');
                     await auditService.logAction({
                         action: 'UPDATE',
-                        description: `Guardó/Modificó la nota clínica del paciente ${patientName}`,
+                        description: `Saved/Modified clinical note for patient ${patientName}`,
                         targetType: 'note',
                         targetId: note.id
                     });
@@ -333,7 +333,7 @@ export const storage = {
                 const { auditService } = await import('../../services/auditService');
                 await auditService.logAction({
                     action: 'CREATE',
-                    description: `Generó/Guardó nota clínica analizada para el paciente ${patientName}`,
+                    description: `Generated/Saved analyzed clinical note for patient ${patientName}`,
                     targetType: 'note',
                     targetId: noteId
                 });
@@ -398,7 +398,7 @@ export const storage = {
                     const { auditService } = await import('../../services/auditService');
                     await auditService.logAction({
                         action: 'DELETE',
-                        description: `Eliminó la nota clínica del paciente ${patientName}`,
+                        description: `Deleted clinical note for patient ${patientName}`,
                         targetType: 'note',
                         targetId: id
                     });
@@ -754,7 +754,7 @@ export const storage = {
                     const { auditService } = await import('../../services/auditService');
                     await auditService.logAction({
                         action: 'DELETE',
-                        description: `Eliminó el expediente del paciente ${patientName} (ID: ${patientId})`,
+                        description: `Deleted patient chart for ${patientName} (ID: ${patientId})`,
                         targetType: 'patient',
                         targetId: patientId
                     });
@@ -778,7 +778,7 @@ export const storage = {
                 const { auditService } = await import('../../services/auditService');
                 await auditService.logAction({
                     action: 'DELETE',
-                    description: `Eliminó el expediente del paciente ${patientName} (ID: ${patientId})`,
+                    description: `Deleted patient chart for ${patientName} (ID: ${patientId})`,
                     targetType: 'patient',
                     targetId: patientId
                 });
@@ -861,7 +861,7 @@ export const storage = {
                 const { auditService } = await import('../../services/auditService');
                 await auditService.logAction({
                     action: isUpdate ? 'UPDATE' : 'CREATE',
-                    description: `${isUpdate ? 'Modificó' : 'Creó'} el expediente del paciente ${data.full_name}`,
+                    description: `${isUpdate ? 'Modified' : 'Created'} patient chart for ${data.full_name}`,
                     targetType: 'patient',
                     targetId: data.id
                 });

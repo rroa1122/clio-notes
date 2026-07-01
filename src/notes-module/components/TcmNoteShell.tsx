@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { toast } from 'sonner';
 import { 
-    Save, CheckCircle2, CheckCircle, X, PenTool, Plus, Trash2, Copy, Check, AlertCircle, 
+    Save, CheckCircle2, CheckCircle, X, PenTool, Plus, Trash2, Copy, Check, AlertCircle, Lock,
     Calendar, Printer, Edit3, FileText, User, Activity, ClipboardList, MapPin, Clock, 
     Stethoscope, Briefcase, Info, ListTodo, History
 } from 'lucide-react';
@@ -42,6 +42,27 @@ const formatValueForPrint = (value: any): string | null => {
         }
     }
     return null;
+};
+
+const formatDosDate = (rawDate: string | null | undefined): string => {
+    if (!rawDate) return "N/A";
+    try {
+        let dateObj;
+        if (rawDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [y, m, d] = rawDate.split('-');
+            dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10), 12, 0, 0);
+        } else {
+            dateObj = new Date(rawDate);
+        }
+        if (isNaN(dateObj.getTime())) return rawDate;
+        return dateObj.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    } catch (e) {
+        return rawDate;
+    }
 };
 
 const isValidLayout = (layout: any): layout is any[] => {
@@ -544,12 +565,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             toast.success("Signature request sent successfully");
 
-            // Registrar log de auditoría
             try {
                 const { auditService } = await import('../../services/auditService');
                 await auditService.logAction({
                     action: 'UPDATE',
-                    description: `Solicitó firma digital a ${supervisorEmailInput} para la nota clínica del paciente ${mergedNote.patient?.full_name || 'Paciente'}`,
+                    description: `Requested digital signature from ${supervisorEmailInput} for clinical note of patient ${mergedNote.patient?.full_name || 'Patient'}`,
                     targetType: 'note',
                     targetId: targetId
                 });
@@ -633,6 +653,16 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         });
         return result;
     }, [note, noteOverrides]);
+
+    const isSigned = useMemo(() => {
+        return (mergedNote as any).signature_status === 'signed';
+    }, [mergedNote]);
+
+    useEffect(() => {
+        if (isSigned && isEditMode) {
+            setIsEditMode(false);
+        }
+    }, [isSigned, isEditMode]);
 
     const { conflicts, confidence, isLoading: isConflictLoading } = useProviderTimeConflicts(mergedNote);
 
@@ -861,28 +891,28 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
     return (
         <div className={`tcm-print-shell ${!isStandalone ? 'max-w-[1050px] mx-auto' : ''}`} style={{ minHeight: '100%' }}>
-            <div className="no-print">
-                <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
-            </div>
 
             {/* FLOATING TOOLBAR - PREMIUM STYLE */}
             {!hideToolbar && (
                 <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[60] no-print">
                     <div className="flex items-center gap-2 p-2 bg-white/80 backdrop-blur-2xl border border-white/50 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] ring-1 ring-slate-900/5">
                         <button
+                            disabled={isSigned}
                             onClick={() => setIsEditMode(!isEditMode)}
                             className={`flex items-center gap-2 px-6 py-3 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-300 ${
-                                isEditMode 
+                                isSigned
+                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                                : isEditMode 
                                 ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' 
                                 : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                             }`}
                         >
-                            {isEditMode ? <Check size={16} /> : <Edit3 size={16} />}
-                            {isEditMode ? 'Done' : 'Edit Note'}
+                            {isSigned ? <Lock size={16} /> : (isEditMode ? <Check size={16} /> : <Edit3 size={16} />)}
+                            {isSigned ? 'Locked (Signed)' : (isEditMode ? 'Done' : 'Edit Note')}
                         </button>
-
+ 
                         <div className="w-[1px] h-8 bg-slate-200/50 mx-1" />
-
+ 
                         <button
                             onClick={handlePrint}
                             className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 text-slate-600 hover:bg-indigo-600 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300 group"
@@ -890,35 +920,41 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             <Printer size={16} className="group-hover:scale-110 transition-transform" />
                             Print
                         </button>
+ 
+                        {!isSigned && (
+                            <>
+                                <div className="w-[1px] h-8 bg-slate-200/50 mx-1" />
 
-                        <button
-                            onClick={handleSaveNote}
-                            disabled={isSaving}
-                            className={`flex items-center gap-2 px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-300 ${
-                                isSaved 
-                                ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-100' 
-                                : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-100 hover:-translate-y-0.5'
-                            } disabled:opacity-50`}
-                        >
-                            {isSaving ? (
-                                <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : isSaved ? (
-                                <CheckCircle size={16} />
-                            ) : (
-                                <Save size={16} />
-                            )}
-                            {isSaving ? 'Saving...' : isSaved ? 'Saved' : 'Save Record'}
-                        </button>
-
-                        <div className="w-[1px] h-8 bg-slate-200/50 mx-1" />
-
-                        <button
-                            onClick={() => setIsRequestSignatureModalOpen(true)}
-                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-900 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300"
-                        >
-                            <PenTool size={16} />
-                            Sign
-                        </button>
+                                <button
+                                    onClick={handleSaveNote}
+                                    disabled={isSaving}
+                                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-300 ${
+                                        isSaved 
+                                        ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-100' 
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-100 hover:-translate-y-0.5'
+                                    } disabled:opacity-50`}
+                                >
+                                    {isSaving ? (
+                                        <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    ) : isSaved ? (
+                                        <CheckCircle size={16} />
+                                    ) : (
+                                        <Save size={16} />
+                                    )}
+                                    {isSaving ? 'Saving...' : isSaved ? 'Saved' : 'Save Record'}
+                                </button>
+ 
+                                <div className="w-[1px] h-8 bg-slate-200/50 mx-1" />
+ 
+                                <button
+                                    onClick={() => setIsRequestSignatureModalOpen(true)}
+                                    className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-900 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300"
+                                >
+                                    <PenTool size={16} />
+                                    Sign
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -927,7 +963,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                 .document-canvas-wrapper { 
                     background: #f8fafc;
-                    padding: 4rem 2rem; 
+                    padding: 1.5rem 2rem 2rem 2rem; 
                     display: flex; 
                     flex-direction: column; 
                     align-items: center; 
@@ -1015,13 +1051,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             <div className="document-canvas-wrapper no-print-bg">
                 <div id="note-print-root" className="document-page">
-                    <CustomPrintHeader 
-                        note={mergedNote} 
-                        clinicSettings={clinicSettings} 
-                        isEditMode={isEditMode}
-                        onUpdateField={handleUpdateField}
-                    />
-
+                    {/* Time Conflict Warning Banner inside the note card */}
+                    <div className="no-print w-full mb-6 shrink-0">
+                        <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
+                    </div>
                     <div className="space-y-6">
                         {/* Patient & Facility Grid - TIGHTER & ALIGNED */}
                         <div className="grid grid-cols-2 gap-x-8 mb-2 items-start">
@@ -1175,7 +1208,22 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                 <>
                                                     <section className="print-section">
                                                         <SectionHeader title="VISIT DETAILS" icon={Stethoscope} />
-                                                        <div className="grid grid-cols-4 gap-4">
+                                                        <div className="grid grid-cols-5 gap-4">
+                                                            <div className="flex flex-col gap-0.5 items-center text-center">
+                                                                <span className="label-small !mb-0 text-[9px]">Date</span>
+                                                                <div className="value-text text-[12px] flex items-center justify-center">
+                                                                    {isEditMode ? (
+                                                                        <input
+                                                                            type="date"
+                                                                            value={mergedNote.encounter?.dos_date || (mergedNote as any).meta?.visitDate || ''}
+                                                                            onChange={(e) => handleUpdateField('encounter.dos_date', e.target.value)}
+                                                                            className="bg-slate-50 border border-slate-100 px-2 py-0.5 text-[11px] font-bold text-indigo-900 rounded-lg hover:bg-white hover:border-indigo-200 transition-all outline-none w-[110px]"
+                                                                        />
+                                                                    ) : (
+                                                                        <span className="font-bold">{formatDosDate(mergedNote.encounter?.dos_date || (mergedNote as any).meta?.visitDate)}</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                             <div className="flex flex-col gap-0.5 items-center text-center">
                                                                 <span className="label-small !mb-0 text-[9px]">POS</span>
                                                                 <div className="value-text text-[12px]">
@@ -1274,7 +1322,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <div className="col-span-4 mt-3 pt-3 border-t border-slate-100/60">
+                                                            <div className="col-span-5 mt-3 pt-3 border-t border-slate-100/60">
                                                                 <div className="value-text !text-[16px] font-black text-indigo-950 tracking-tight leading-tight">
                                                                     <GhostInput
                                                                         value={svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "TCM Progress Note"}

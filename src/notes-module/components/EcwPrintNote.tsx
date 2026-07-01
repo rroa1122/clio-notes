@@ -4,7 +4,7 @@ import { storage } from '../lib/storage';
 import { DEFAULT_TEMPLATES } from '../lib/constants';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'sonner';
-import { Save, CheckCircle2, PenTool, Copy, Check, Calendar } from 'lucide-react';
+import { Save, CheckCircle2, PenTool, Copy, Check, Calendar, Lock } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import SignatureModal from './SignatureModal';
 import { useProviderTimeConflicts } from '../hooks/useProviderTimeConflicts';
@@ -390,6 +390,16 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
         return result;
     }, [note, noteOverrides]);
 
+    const isSigned = useMemo(() => {
+        return (mergedNote as any).signature_status === 'signed';
+    }, [mergedNote]);
+
+    useEffect(() => {
+        if (isSigned && isEditMode) {
+            setIsEditMode(false);
+        }
+    }, [isSigned, isEditMode]);
+
     // Conflict detection on the MERGED note for real-time validation
     const { conflicts, confidence, isLoading: isConflictLoading } = useProviderTimeConflicts(mergedNote);
 
@@ -544,37 +554,48 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                         </div>
                     )}
                     <div className="flex items-center justify-end gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100 dark:bg-white/5 dark:border-white/5">
-                        <button
-                            onClick={handleSaveToHistory}
-                            disabled={isSaving || isSaved || !user || (conflicts && conflicts.length > 0)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all shadow-sm border ${isSaved
-                                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-default"
-                                : (conflicts && conflicts.length > 0)
-                                ? "bg-red-50 text-red-400 border-red-100 cursor-not-allowed"
-                                : "bg-teal-50 text-teal-600 border-teal-100 hover:bg-teal-600 hover:text-white disabled:opacity-50"
-                                }`}
-                            title={(conflicts && conflicts.length > 0) ? "Please resolve time conflicts before saving" : ""}
-                        >
-                            {isSaving ? (
-                                <div className="size-3 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-                            ) : isSaved ? (
-                                <CheckCircle2 size={12} />
-                            ) : (
-                                <Save size={12} />
-                            )}
-                            {isSaved ? "Saved" : "Save Note"}
-                        </button>
+                        {!isSigned && (
+                            <button
+                                onClick={handleSaveToHistory}
+                                disabled={isSaving || isSaved || !user || (conflicts && conflicts.length > 0)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all shadow-sm border ${isSaved
+                                    ? "bg-slate-100 text-slate-400 border-slate-200 cursor-default"
+                                    : (conflicts && conflicts.length > 0)
+                                    ? "bg-red-50 text-red-400 border-red-100 cursor-not-allowed"
+                                    : "bg-teal-50 text-teal-600 border-teal-100 hover:bg-teal-600 hover:text-white disabled:opacity-50"
+                                    }`}
+                                title={(conflicts && conflicts.length > 0) ? "Please resolve time conflicts before saving" : ""}
+                            >
+                                {isSaving ? (
+                                    <div className="size-3 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+                                ) : isSaved ? (
+                                    <CheckCircle2 size={12} />
+                                ) : (
+                                    <Save size={12} />
+                                )}
+                                {isSaved ? "Saved" : "Save Note"}
+                            </button>
+                        )}
 
                         <div className="h-6 w-[1px] bg-slate-100 dark:bg-white/10 mx-1"></div>
 
                         <button
+                            disabled={isSigned}
                             onClick={() => setIsEditMode(!isEditMode)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all shadow-sm border ${isEditMode
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all shadow-sm border ${
+                                isSigned
+                                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                : isEditMode
                                 ? "bg-green-600 text-white border-green-700 hover:bg-green-700"
                                 : "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white"
                                 }`}
                         >
-                            {isEditMode ? (
+                            {isSigned ? (
+                                <>
+                                    <Lock size={12} />
+                                    Locked (Signed)
+                                </>
+                            ) : isEditMode ? (
                                 <>
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                         <polyline points="20 6 9 17 4 12" />
@@ -592,16 +613,20 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                             )}
                         </button>
 
-                        <button
-                            onClick={() => setSigModal({ open: true, type: 'cm' })}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all shadow-sm border ${signatureImg || mergedNote.signatures?.cm_signature_path
-                                ? "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-600 hover:text-white"
-                                : "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-600 hover:text-white"
-                                }`}
-                        >
-                            <PenTool size={12} />
-                            {signatureImg || mergedNote.signatures?.cm_signature_path ? "Change Signature" : "Sign Note"}
-                        </button>
+                        {!isSigned && (
+                            <>
+                                <button
+                                    onClick={() => setSigModal({ open: true, type: 'cm' })}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all shadow-sm border ${signatureImg || mergedNote.signatures?.cm_signature_path
+                                        ? "bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-600 hover:text-white"
+                                        : "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-600 hover:text-white"
+                                        }`}
+                                >
+                                    <PenTool size={12} />
+                                    {signatureImg || mergedNote.signatures?.cm_signature_path ? "Change Signature" : "Sign Note"}
+                                </button>
+                            </>
+                        )}
 
                         <button
                             onClick={handleCopyFullNote}

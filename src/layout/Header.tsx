@@ -1,16 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-    LayoutDashboard,
-    Phone,
     Users,
     LogOut,
     FileText,
     Mic,
     Settings,
     Menu,
-    X
+    X,
+    Shield
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -18,23 +17,35 @@ export function Header() {
     const { signOut, user } = useAuth();
     const { pathname } = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const fullName = (user?.first_name && user?.last_name)
         ? `${user.first_name} ${user.last_name}`
         : user?.name || 'User';
 
-    const isPrimaryAdmin = user?.email === 'reinier.roa2.0@gmail.com';
+    const isAuthorized = user?.role === 'admin' || user?.email === 'reinier.roa2.0@gmail.com';
 
-    // Combinar todos los enlaces en un solo menú principal
+    // Desktop center navigation items (Only Encounters, History, Clients)
     const navItems = [
         { icon: Mic, label: 'New encounter', path: '/notes/new' },
         { icon: FileText, label: 'Clinical history', path: '/notes/history' },
         { icon: Users, label: 'Clients', path: '/patients' },
-        { icon: Settings, label: 'Settings', path: '/settings' },
     ];
 
+    useEffect(() => {
+        if (!isDropdownOpen) return;
+        const handleOutsideClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('#user-dropdown-container')) {
+                setIsDropdownOpen(false);
+            }
+        };
+        window.addEventListener('click', handleOutsideClick);
+        return () => window.removeEventListener('click', handleOutsideClick);
+    }, [isDropdownOpen]);
+
     return (
-        <header className="sticky top-0 z-50 w-full bg-[#0a0c16] border-b border-white/10 text-white shadow-sm">
+        <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-200/80 text-slate-800 shadow-sm">
             <div className="h-16 flex items-center justify-between px-4 md:px-8 max-w-[1600px] mx-auto">
                 {/* 1. Logo Area */}
                 <div className="flex items-center gap-3 shrink-0">
@@ -81,7 +92,7 @@ export function Header() {
                             </g>
                         </svg>
                     </div>
-                    <span className="text-base font-black tracking-[0.25em] bg-gradient-to-r from-white via-slate-300 to-sky-400 bg-clip-text text-transparent hidden sm:block transition-all duration-300 hover:tracking-[0.3em]">CLIO NOTES</span>
+                    <span className="text-base font-black tracking-[0.25em] bg-gradient-to-r from-slate-900 via-indigo-950 to-[#6366f1] bg-clip-text text-transparent hidden sm:block transition-all duration-300 hover:tracking-[0.3em]">CLIO NOTES</span>
                 </div>
 
                 {/* 2. Desktop Navigation (Center) */}
@@ -93,48 +104,90 @@ export function Header() {
                                 key={item.path}
                                 to={item.path}
                                 className={cn(
-                                    "flex items-center gap-2 px-4 h-9 rounded-full text-sm font-semibold transition-all duration-200",
+                                    "flex items-center gap-2 px-4 h-9 rounded-full text-sm font-semibold transition-all duration-200 border border-transparent",
                                     isActive
-                                        ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
-                                        : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
+                                        ? "bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/20 shadow-sm"
+                                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
                                 )}
                             >
-                                <item.icon className={cn("size-4", isActive ? "opacity-100" : "opacity-70")} />
+                                <item.icon className={cn("size-4", isActive ? "opacity-100" : "opacity-75")} />
                                 <span>{item.label}</span>
                             </NavLink>
                         );
                     })}
                 </nav>
 
-                {/* 3. User Profile & Mobile Menu Toggle */}
+                {/* 3. User Profile Dropdown & Mobile Menu Toggle */}
                 <div className="flex items-center gap-4 shrink-0">
                     
-                    {/* User Avatar */}
-                    <div className="hidden sm:flex items-center gap-3">
-                        <span className="text-sm font-semibold text-slate-300 hidden lg:block">{fullName}</span>
-                        <div className="h-9 w-9 rounded-full overflow-hidden border border-white/20 bg-white/5 shadow-md ring-1 ring-white/10">
-                            <img
-                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=4f46e5&color=fff&bold=true`}
-                                alt="User"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
+                    {/* User Profile Dropdown (Desktop) */}
+                    <div className="hidden sm:block relative" id="user-dropdown-container">
+                        <button
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-slate-100 transition-all select-none border border-transparent hover:border-slate-200/50"
+                        >
+                            <span className="text-sm font-semibold text-slate-700 hidden lg:block">{fullName}</span>
+                            <div className="h-8 w-8 rounded-full overflow-hidden border border-slate-200 bg-slate-50 shadow-sm ring-1 ring-slate-100 shrink-0">
+                                <img
+                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=4f46e5&color=fff&bold=true`}
+                                    alt="User"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <svg className={cn("size-3.5 text-slate-400 transition-transform duration-200", isDropdownOpen && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {isDropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-52 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 origin-top-right">
+                                <div className="px-4 py-2 border-b border-slate-100">
+                                    <p className="text-xs font-bold text-slate-800 truncate">{fullName}</p>
+                                    <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+                                </div>
+                                <div className="p-1.5 space-y-0.5">
+                                    <NavLink
+                                        to="/settings"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all"
+                                    >
+                                        <Settings size={14} className="opacity-75" />
+                                        Settings
+                                    </NavLink>
+                                    
+                                    {isAuthorized && (
+                                        <NavLink
+                                            to="/audit-logs"
+                                            onClick={() => setIsDropdownOpen(false)}
+                                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all"
+                                        >
+                                            <Shield size={14} className="opacity-75" />
+                                            Audit logs
+                                        </NavLink>
+                                    )}
+
+                                    <div className="h-px bg-slate-100 my-1.5" />
+
+                                    <button
+                                        onClick={() => {
+                                            setIsDropdownOpen(false);
+                                            signOut();
+                                        }}
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 transition-all text-left"
+                                    >
+                                        <LogOut size={14} />
+                                        Log out
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
-
-                    <div className="w-px h-6 bg-white/10 hidden sm:block mx-1" />
-
-                    <button
-                        onClick={() => signOut()}
-                        className="hidden sm:flex items-center justify-center w-9 h-9 rounded-full hover:bg-red-500/10 text-white/40 hover:text-red-400 transition-all"
-                        title="Sign out"
-                    >
-                        <LogOut size={16} />
-                    </button>
 
                     {/* Mobile Hamburger */}
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="md:hidden p-2 -mr-2 text-white/70 hover:text-white transition-colors"
+                        className="md:hidden p-2 -mr-2 text-slate-600 hover:text-slate-900 transition-colors"
                         aria-label="Toggle Menu"
                     >
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -144,7 +197,7 @@ export function Header() {
 
             {/* Mobile Navigation Dropdown */}
             {isMobileMenuOpen && (
-                <div className="md:hidden border-t border-white/10 bg-[#0a0c16]/95 backdrop-blur-md absolute top-16 left-0 w-full shadow-2xl">
+                <div className="md:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-md absolute top-16 left-0 w-full shadow-2xl">
                     <nav className="flex flex-col p-4 gap-2">
                         {navItems.map((item) => {
                             const isActive = item.path === '/notes/new' ? pathname === '/notes/new' : pathname.startsWith(item.path);
@@ -154,21 +207,51 @@ export function Header() {
                                     to={item.path}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className={cn(
-                                        "flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold transition-all duration-200",
+                                        "flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold transition-all duration-200 border border-transparent",
                                         isActive
-                                            ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10"
-                                            : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
+                                            ? "bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/10 shadow-sm"
+                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                                     )}
                                 >
-                                    <item.icon className={cn("size-5", isActive ? "opacity-100" : "opacity-70")} />
+                                    <item.icon className={cn("size-5", isActive ? "opacity-100" : "opacity-75")} />
                                     <span>{item.label}</span>
                                 </NavLink>
                             );
                         })}
-                        <div className="h-px bg-white/10 my-2" />
+                        
+                        <div className="h-px bg-slate-200 my-1" />
+                        
+                        <NavLink
+                            to="/settings"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={cn(
+                                "flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold transition-all duration-200 border border-transparent",
+                                pathname.startsWith('/settings') ? "bg-[#6366f1]/10 text-[#6366f1]" : "text-slate-600 hover:bg-slate-50"
+                            )}
+                        >
+                            <Settings className="size-5" />
+                            <span>Settings</span>
+                        </NavLink>
+
+                        {isAuthorized && (
+                            <NavLink
+                                to="/audit-logs"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold transition-all duration-200 border border-transparent",
+                                    pathname.startsWith('/audit-logs') ? "bg-[#6366f1]/10 text-[#6366f1]" : "text-slate-600 hover:bg-slate-50"
+                                )}
+                            >
+                                <Shield className="size-5" />
+                                <span>Audit logs</span>
+                            </NavLink>
+                        )}
+
+                        <div className="h-px bg-slate-200 my-1" />
+
                         <button
                             onClick={() => { setIsMobileMenuOpen(false); signOut(); }}
-                            className="flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-all"
+                            className="flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
                         >
                             <LogOut className="size-5" />
                             <span>Sign out</span>

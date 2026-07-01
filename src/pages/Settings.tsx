@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Save, Building, PhoneCall, MapPin, Printer, User, CreditCard, Hash, Activity, UserCheck, ShieldCheck, PenTool, Eraser, Settings as SettingsIcon } from 'lucide-react';
+import { Save, Building, PhoneCall, MapPin, Printer, User, CreditCard, Hash, Activity, UserCheck, ShieldCheck, PenTool, Eraser, Lock, Settings as SettingsIcon } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 import { settingsService, type ClinicSettings, type UserProfile } from '../services/settingsService';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
@@ -13,6 +14,17 @@ export function Settings() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'profile' | 'clinic' | 'supervision' | 'signatures'>('profile');
     const [sigModal, setSigModal] = useState<{ open: boolean, type: 'user' | 'supervisor' }>({ open: false, type: 'user' });
+
+    // MFA States
+    const [mfaEnabled, setMfaEnabled] = useState(false);
+    const [mfaEnrolling, setMfaEnrolling] = useState(false);
+    const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+    const [mfaSecret, setMfaSecret] = useState<string | null>(null);
+    const [mfaQrCode, setMfaQrCode] = useState<string | null>(null);
+    const [mfaQrUri, setMfaQrUri] = useState<string | null>(null);
+    const [mfaCodeInput, setMfaCodeInput] = useState('');
+    const [mfaError, setMfaError] = useState<string | null>(null);
+    const [mfaSuccess, setMfaSuccess] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -54,6 +66,12 @@ export function Settings() {
                     },
                     integrations: { ems: false, email: true }
                 });
+
+                // Fetch MFA status
+                const { data: mfaData, error: mfaErr } = await supabase.auth.mfa.listFactors();
+                if (!mfaErr && mfaData) {
+                    setMfaEnabled(mfaData.all.some(factor => factor.status === 'verified'));
+                }
             } catch (err) {
                 console.error("Failed to load settings", err);
                 toast.error("Failed to load settings");
@@ -63,6 +81,89 @@ export function Settings() {
         };
         loadData();
     }, [user?.id, user?.clinic_id]);
+
+    const handleEnableMfa = async () => {
+        setMfaError(null);
+        setMfaSuccess(false);
+        try {
+            const { data, error } = await supabase.auth.mfa.enroll({
+                factorType: 'totp',
+                issuer: 'Clio Notes',
+                friendlyName: user?.email || 'Clio Notes User'
+            });
+            if (error) throw error;
+
+            setMfaFactorId(data.id);
+            setMfaSecret(data.totp.secret);
+            setMfaQrCode(data.totp.qr_code);
+            setMfaQrUri(data.totp.uri);
+            setMfaEnrolling(true);
+        } catch (err: any) {
+            console.error("MFA enroll error:", err);
+            setMfaError(err.message || "Failed to start 2FA enrollment");
+        }
+    };
+
+    const handleVerifyMfa = async () => {
+        if (!mfaCodeInput || mfaCodeInput.length !== 6) {
+            setMfaError("Please enter a valid 6-digit code");
+            return;
+        }
+        setMfaError(null);
+        try {
+            const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
+                factorId: mfaFactorId!
+            });
+            if (challengeError) throw challengeError;
+
+            const { error: verifyError } = await supabase.auth.mfa.verify({
+                factorId: mfaFactorId!,
+                challengeId: challengeData.id,
+                code: mfaCodeInput
+            });
+            if (verifyError) throw verifyError;
+
+            setMfaEnabled(true);
+            setMfaEnrolling(false);
+            setMfaCodeInput('');
+            setMfaSuccess(true);
+            toast.success("Multi-Factor Authentication enabled successfully!");
+        } catch (err: any) {
+            console.error("MFA verification error:", err);
+            setMfaError(err.message || "Failed to verify 2FA code. Please try again.");
+        }
+    };
+
+    const handleDisableMfa = async () => {
+        if (!window.confirm("Are you sure you want to disable Multi-Factor Authentication? This will make your account less secure under HIPAA guidelines.")) {
+            return;
+        }
+        setMfaError(null);
+        try {
+            const { data: mfaData, error: listError } = await supabase.auth.mfa.listFactors();
+            if (listError) throw listError;
+
+            const verifiedFactors = mfaData.all.filter(factor => factor.status === 'verified');
+            if (verifiedFactors.length === 0) {
+                setMfaEnabled(false);
+                return;
+            }
+
+            for (const factor of verifiedFactors) {
+                const { error: unenrollError } = await supabase.auth.mfa.unenroll({
+                    factorId: factor.id
+                });
+                if (unenrollError) throw unenrollError;
+            }
+
+            setMfaEnabled(false);
+            setMfaEnrolling(false);
+            toast.success("Multi-Factor Authentication disabled successfully.");
+        } catch (err: any) {
+            console.error("MFA unenroll error:", err);
+            setMfaError(err.message || "Failed to disable 2FA");
+        }
+    };
 
     const handleClinicChange = (field: string, value: any) => {
         if (!settings) return;
@@ -147,12 +248,12 @@ export function Settings() {
     ];
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* Sticky Header */}
-            <div className="sticky top-0 z-30 bg-background/95 border-b border-border/60 px-8 py-4 shadow-soft">
-                <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="bg-background">
+            <div className="max-w-6xl mx-auto px-8 py-10">
+                {/* Page Header (Non-sticky, clean, aligned) */}
+                <div className="flex items-center justify-between pb-6 border-b border-slate-200/60 mb-8">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-slate-950 rounded-xl shadow-sm">
+                        <div className="p-2.5 bg-gradient-to-tr from-indigo-500 to-indigo-600 rounded-xl shadow-md shadow-indigo-500/10">
                             <SettingsIcon size={20} className="text-white" />
                         </div>
                         <div>
@@ -166,36 +267,37 @@ export function Settings() {
                         disabled={saved}
                         className={`group flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 ${saved
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/10'
+                            : 'bg-[#6366f1] text-white hover:bg-[#6366f1]/90 hover:shadow-lg hover:shadow-indigo-500/15'
                             }`}
                     >
                         <Save size={16} className={saved ? 'animate-bounce' : 'group-hover:rotate-12 transition-transform'} />
                         {saved ? 'Changes Saved' : 'Save Changes'}
                     </button>
                 </div>
-            </div>
 
-            <div className="max-w-6xl mx-auto px-8 py-10">
                 <div className="grid grid-cols-12 gap-10">
                     {/* Sidebar Navigation */}
-                    <div className="col-span-12 lg:col-span-3 space-y-1">
-                        {tabs.map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all ${isActive
-                                        ? `${tab.bg} ${tab.color} shadow-sm border border-slate-200/50`
-                                        : 'text-slate-500 hover:bg-white hover:text-slate-700'
-                                        }`}
-                                >
-                                    <Icon size={18} />
-                                    {tab.label}
-                                </button>
-                            );
-                        })}
+                    <div className="col-span-12 lg:col-span-3">
+                        <div className="bg-white rounded-3xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-4 space-y-1.5">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 mb-3">Navigation</p>
+                            {tabs.map((tab) => {
+                                const Icon = tab.icon;
+                                const isActive = activeTab === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id as any)}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 ${isActive
+                                            ? `${tab.bg} ${tab.color} shadow-sm ring-1 ring-slate-100`
+                                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                                            }`}
+                                    >
+                                        <Icon size={18} />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     {/* Content Area */}
@@ -203,7 +305,7 @@ export function Settings() {
                         <div className="bg-white rounded-3xl border border-slate-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden transition-all duration-300">
                             {activeTab === 'profile' && profile && (
                                 <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                                    <div className="flex items-center gap-5 pb-6 border-b border-slate-50">
+                                    <div className="flex items-center gap-5 pb-6 border-b border-slate-100">
                                         <div className="size-14 rounded-2xl bg-indigo-50 flex items-center justify-center border border-indigo-100/50">
                                             <User size={28} className="text-indigo-600" />
                                         </div>
@@ -213,53 +315,74 @@ export function Settings() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <InputField
-                                            label="First Name"
-                                            value={profile.first_name}
-                                            onChange={(val) => handleProfileChange('first_name', val)}
-                                            placeholder="Jane"
-                                        />
-                                        <InputField
-                                            label="Last Name"
-                                            value={profile.last_name}
-                                            onChange={(val) => handleProfileChange('last_name', val)}
-                                            placeholder="Doe"
-                                        />
-                                        <InputField
-                                            label="Professional Title"
-                                            value={profile.professional_title}
-                                            onChange={(val) => handleProfileChange('professional_title', val)}
-                                            placeholder="MD, NP, LCSW..."
-                                            icon={Activity}
-                                        />
-                                        <InputField
-                                            label="NPI Number"
-                                            value={profile.npi}
-                                            onChange={(val) => handleProfileChange('npi', val)}
-                                            placeholder="10-digit NPI"
-                                            icon={Hash}
-                                        />
-                                        <InputField
-                                            label="License ID"
-                                            value={profile.license_id}
-                                            onChange={(val) => handleProfileChange('license_id', val)}
-                                            placeholder="State license number"
-                                        />
-                                        <InputField
-                                            label="Direct Work Phone"
-                                            value={profile.phone}
-                                            onChange={(val) => handleProfileChange('phone', val)}
-                                            placeholder="(555) 000-0000"
-                                            icon={PhoneCall}
-                                        />
+                                    <div className="space-y-8">
+                                        {/* Section 1: Personal Details */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
+                                                <User size={12} className="text-slate-400" /> Personal Details
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 p-6 rounded-2xl border border-slate-100">
+                                                <InputField
+                                                    label="First Name"
+                                                    value={profile.first_name}
+                                                    onChange={(val) => handleProfileChange('first_name', val)}
+                                                    placeholder="Jane"
+                                                />
+                                                <InputField
+                                                    label="Last Name"
+                                                    value={profile.last_name}
+                                                    onChange={(val) => handleProfileChange('last_name', val)}
+                                                    placeholder="Doe"
+                                                />
+                                                <div className="md:col-span-2">
+                                                    <InputField
+                                                        label="Direct Work Phone"
+                                                        value={profile.phone}
+                                                        onChange={(val) => handleProfileChange('phone', val)}
+                                                        placeholder="(555) 000-0000"
+                                                        icon={PhoneCall}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Section 2: Professional Credentials */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
+                                                <Activity size={12} className="text-slate-400" /> Professional Credentials
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 p-6 rounded-2xl border border-slate-100">
+                                                <InputField
+                                                    label="Professional Title"
+                                                    value={profile.professional_title}
+                                                    onChange={(val) => handleProfileChange('professional_title', val)}
+                                                    placeholder="MD, NP, LCSW..."
+                                                    icon={Activity}
+                                                />
+                                                <InputField
+                                                    label="NPI Number"
+                                                    value={profile.npi}
+                                                    onChange={(val) => handleProfileChange('npi', val)}
+                                                    placeholder="10-digit NPI"
+                                                    icon={Hash}
+                                                />
+                                                <div className="md:col-span-2">
+                                                    <InputField
+                                                        label="License ID"
+                                                        value={profile.license_id}
+                                                        onChange={(val) => handleProfileChange('license_id', val)}
+                                                        placeholder="State license number"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
                             {activeTab === 'supervision' && settings && (
                                 <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                                    <div className="flex items-center gap-5 pb-6 border-b border-slate-50">
+                                    <div className="flex items-center gap-5 pb-6 border-b border-slate-100">
                                         <div className="size-14 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100/50">
                                             <UserCheck size={28} className="text-emerald-600" />
                                         </div>
@@ -269,35 +392,43 @@ export function Settings() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="md:col-span-2">
-                                            <InputField
-                                                label="Supervisor Name"
-                                                value={settings.supervisorName || ''}
-                                                onChange={(val) => handleClinicChange('supervisorName', val)}
-                                                placeholder="Enter supervisor's full name"
-                                            />
+                                    <div className="space-y-8">
+                                        {/* Section 1: Supervisor Info */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
+                                                <UserCheck size={12} className="text-slate-400" /> Supervisor Profile
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 p-6 rounded-2xl border border-slate-100">
+                                                <div className="md:col-span-2">
+                                                    <InputField
+                                                        label="Supervisor Name"
+                                                        value={settings.supervisorName || ''}
+                                                        onChange={(val) => handleClinicChange('supervisorName', val)}
+                                                        placeholder="Enter supervisor's full name"
+                                                    />
+                                                </div>
+                                                <InputField
+                                                    label="Supervisor License"
+                                                    value={settings.supervisorLicense || ''}
+                                                    onChange={(val) => handleClinicChange('supervisorLicense', val)}
+                                                    placeholder="License number"
+                                                />
+                                                <InputField
+                                                    label="Supervisor NPI"
+                                                    value={settings.supervisorNpi || ''}
+                                                    onChange={(val) => handleClinicChange('supervisorNpi', val)}
+                                                    placeholder="10-digit NPI"
+                                                    icon={Hash}
+                                                />
+                                            </div>
                                         </div>
-                                        <InputField
-                                            label="Supervisor License"
-                                            value={settings.supervisorLicense || ''}
-                                            onChange={(val) => handleClinicChange('supervisorLicense', val)}
-                                            placeholder="License number"
-                                        />
-                                        <InputField
-                                            label="Supervisor NPI"
-                                            value={settings.supervisorNpi || ''}
-                                            onChange={(val) => handleClinicChange('supervisorNpi', val)}
-                                            placeholder="10-digit NPI"
-                                            icon={Hash}
-                                        />
                                     </div>
                                 </div>
                             )}
 
                             {activeTab === 'clinic' && settings && (
                                 <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                                    <div className="flex items-center gap-5 pb-6 border-b border-slate-50">
+                                    <div className="flex items-center gap-5 pb-6 border-b border-slate-100">
                                         <div className="size-14 rounded-2xl bg-blue-50 flex items-center justify-center border border-blue-100/50">
                                             <Building size={28} className="text-blue-600" />
                                         </div>
@@ -307,62 +438,80 @@ export function Settings() {
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="md:col-span-2">
-                                            <InputField
-                                                label="Clinic Name"
-                                                value={settings.clinicName}
-                                                onChange={(val) => handleClinicChange('clinicName', val)}
-                                                placeholder="Enter clinic name"
-                                            />
+                                    <div className="space-y-8">
+                                        {/* Section 1: Clinic Identity */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
+                                                <Building size={12} className="text-slate-400" /> Clinic Profile
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 p-6 rounded-2xl border border-slate-100">
+                                                <div className="md:col-span-2">
+                                                    <InputField
+                                                        label="Clinic Name"
+                                                        value={settings.clinicName}
+                                                        onChange={(val) => handleClinicChange('clinicName', val)}
+                                                        placeholder="Enter clinic name"
+                                                    />
+                                                </div>
+                                                <InputField
+                                                    label="Tax ID / EIN"
+                                                    value={settings.tax_id}
+                                                    onChange={(val) => handleClinicChange('tax_id', val)}
+                                                    placeholder="Professional tax identifier"
+                                                    icon={CreditCard}
+                                                />
+                                                <InputField
+                                                    label="Clinic NPI (Group)"
+                                                    value={settings.npi_group}
+                                                    onChange={(val) => handleClinicChange('npi_group', val)}
+                                                    placeholder="Group NPI number"
+                                                    icon={Hash}
+                                                />
+                                            </div>
                                         </div>
-                                        <InputField
-                                            label="Tax ID / EIN"
-                                            value={settings.tax_id}
-                                            onChange={(val) => handleClinicChange('tax_id', val)}
-                                            placeholder="Professional tax identifier"
-                                            icon={CreditCard}
-                                        />
-                                        <InputField
-                                            label="Clinic NPI (Group)"
-                                            value={settings.npi_group}
-                                            onChange={(val) => handleClinicChange('npi_group', val)}
-                                            placeholder="Group NPI number"
-                                            icon={Hash}
-                                        />
-                                        <InputField
-                                            label="Main Phone"
-                                            value={settings.phone}
-                                            onChange={(val) => handleClinicChange('phone', val)}
-                                            placeholder="(555) 000-0000"
-                                            icon={PhoneCall}
-                                        />
-                                        <InputField
-                                            label="Fax Number"
-                                            value={settings.fax}
-                                            onChange={(val) => handleClinicChange('fax', val)}
-                                            placeholder="(555) 000-0000"
-                                            icon={Printer}
-                                        />
-                                        <div className="md:col-span-2">
-                                            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2.5 flex items-center gap-2 px-1">
-                                                <MapPin size={12} className="text-slate-400" /> Physical Address
-                                            </label>
-                                            <textarea
-                                                value={settings.address}
-                                                onChange={(e) => handleClinicChange('address', e.target.value)}
-                                                className="w-full h-32 px-5 py-4 rounded-2xl border border-slate-200 bg-slate-50/20 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all placeholder:text-slate-300 resize-none shadow-inner"
-                                                placeholder="123 Medical Center Dr, Suite 100&#10;City, State, Zip"
-                                            />
+
+                                        {/* Section 2: Contact & Location */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
+                                                <MapPin size={12} className="text-slate-400" /> Contact & Location
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 p-6 rounded-2xl border border-slate-100">
+                                                <InputField
+                                                    label="Main Phone"
+                                                    value={settings.phone}
+                                                    onChange={(val) => handleClinicChange('phone', val)}
+                                                    placeholder="(555) 000-0000"
+                                                    icon={PhoneCall}
+                                                />
+                                                <InputField
+                                                    label="Fax Number"
+                                                    value={settings.fax}
+                                                    onChange={(val) => handleClinicChange('fax', val)}
+                                                    placeholder="(555) 000-0000"
+                                                    icon={Printer}
+                                                />
+                                                <div className="group md:col-span-2 space-y-2.5">
+                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 group-focus-within:text-[#6366f1] transition-colors">
+                                                        <span className="flex items-center gap-2">
+                                                            <MapPin size={12} className="text-slate-400 transition-colors group-focus-within:text-[#6366f1]" /> Physical Address
+                                                        </span>
+                                                    </label>
+                                                    <textarea
+                                                        value={settings.address}
+                                                        onChange={(e) => handleClinicChange('address', e.target.value)}
+                                                        className="w-full h-32 px-5 py-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-[#6366f1]/60 focus:bg-white transition-all placeholder:text-slate-300 resize-none shadow-sm"
+                                                        placeholder="123 Medical Center Dr, Suite 100&#10;City, State, Zip"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-
                             {activeTab === 'signatures' && (
                                 <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-400">
-                                    <div className="flex items-center gap-5 pb-6 border-b border-slate-50">
+                                    <div className="flex items-center gap-5 pb-6 border-b border-slate-100">
                                         <div className="size-14 rounded-2xl bg-amber-50 flex items-center justify-center border border-amber-100/50">
                                             <PenTool size={28} className="text-amber-600" />
                                         </div>
@@ -372,39 +521,49 @@ export function Settings() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-10">
-                                        {/* Case Manager Signature */}
-                                        <section className="space-y-4">
-                                            <div className="flex items-center justify-between px-1">
-                                                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">My Professional Signature</h3>
-                                                {profile?.signature_url && (
-                                                    <button
-                                                        onClick={() => clearSignature('user')}
-                                                        className="text-[10px] font-bold text-red-500 flex items-center gap-1.5 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-colors"
-                                                    >
-                                                        <Eraser size={12} /> Clear Current
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            <div
-                                                onClick={() => setSigModal({ open: true, type: 'user' })}
-                                                className="group relative cursor-pointer border-2 border-dashed border-slate-200 rounded-2xl h-40 bg-slate-50/30 flex items-center justify-center transition-all hover:border-amber-400/50 hover:bg-amber-50/30"
-                                            >
-                                                {profile?.signature_url ? (
-                                                    <img src={profile.signature_url} alt="My Signature" className="max-h-32 object-contain" />
-                                                ) : (
-                                                    <div className="text-center group-hover:scale-105 transition-transform">
-                                                        <div className="mx-auto size-12 rounded-xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
-                                                            <PenTool size={24} className="text-slate-400 group-hover:text-amber-600" />
-                                                        </div>
-                                                        <p className="text-xs font-bold text-slate-400 group-hover:text-slate-600">Click to record your signature</p>
+                                    <div className="space-y-8">
+                                        <div className="space-y-4">
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
+                                                <PenTool size={12} className="text-slate-400" /> Signature Registry
+                                            </h3>
+                                            <div className="bg-slate-50/30 p-6 rounded-2xl border border-slate-100 space-y-6">
+                                                {/* Case Manager Signature */}
+                                                <section className="space-y-4">
+                                                    <div className="flex items-center justify-between px-1">
+                                                        <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">My Professional Signature</h4>
+                                                        {profile?.signature_url && (
+                                                            <button
+                                                                onClick={() => clearSignature('user')}
+                                                                className="text-[10px] font-bold text-red-500 flex items-center gap-1.5 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-colors"
+                                                            >
+                                                                <Eraser size={12} /> Clear Current
+                                                            </button>
+                                                        )}
                                                     </div>
-                                                )}
+
+                                                    <div
+                                                         onClick={() => setSigModal({ open: true, type: 'user' })}
+                                                         className="group relative cursor-pointer border-2 border-dashed border-slate-200 rounded-2xl h-40 bg-white flex items-center justify-center transition-all hover:border-[#6366f1]/50 hover:bg-[#6366f1]/5 hover:shadow-sm"
+                                                     >
+                                                         {profile?.signature_url ? (
+                                                             <div className="relative w-full h-full flex items-center justify-center p-4">
+                                                                 <img src={profile.signature_url} alt="My Signature" className="max-h-32 object-contain filter drop-shadow-sm transition-transform group-hover:scale-105" />
+                                                                 <div className="absolute inset-0 bg-[#6366f1]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                                                                     <span className="bg-white/90 backdrop-blur-sm text-xs font-black text-[#6366f1] px-4 py-2 rounded-xl shadow-md border border-[#6366f1]/10">Click to edit signature</span>
+                                                                 </div>
+                                                             </div>
+                                                         ) : (
+                                                             <div className="text-center transition-all duration-300">
+                                                                 <div className="mx-auto size-12 rounded-xl bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-[#6366f1]/15 transition-colors">
+                                                                     <PenTool size={24} className="text-slate-400 group-hover:text-[#6366f1] transition-colors" />
+                                                                 </div>
+                                                                 <p className="text-xs font-bold text-slate-400 group-hover:text-slate-600 transition-colors">Click to record your signature</p>
+                                                             </div>
+                                                         )}
+                                                     </div>
+                                                </section>
                                             </div>
-                                        </section>
-
-
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -432,9 +591,9 @@ export function Settings() {
 function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text" }: any) {
     return (
         <div className="group space-y-2.5">
-            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 group-focus-within:text-slate-600 transition-colors">
+            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 group-focus-within:text-[#6366f1] transition-colors">
                 <span className="flex items-center gap-2">
-                    {Icon && <Icon size={12} className="text-slate-400 transition-colors group-focus-within:text-slate-500" />}
+                    {Icon && <Icon size={12} className="text-slate-400 transition-colors group-focus-within:text-[#6366f1]" />}
                     {label}
                 </span>
             </label>
@@ -442,7 +601,7 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                 type={type}
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full h-12 px-5 rounded-2xl border border-slate-200 bg-slate-50/20 text-sm font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-slate-400 transition-all placeholder:text-slate-300 shadow-sm"
+                className="w-full h-12 px-5 rounded-2xl border border-slate-200/80 bg-slate-50/50 text-sm font-semibold text-slate-800 placeholder:text-slate-300 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-[#6366f1]/60 transition-all shadow-sm"
                 placeholder={placeholder}
             />
         </div>

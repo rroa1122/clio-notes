@@ -21,7 +21,7 @@ export const TimeConflictBanner: React.FC<TimeConflictBannerProps> = ({
     // Use muted banner for low confidence cases as requested
     if (confidence === 'low') {
         return (
-            <div className="mx-auto w-full max-w-[850px] mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="mx-auto w-full max-w-none mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center gap-3">
                     <Info size={18} className="text-slate-400 shrink-0" />
                     <p className="text-[13px] font-medium text-slate-600">
@@ -35,7 +35,7 @@ export const TimeConflictBanner: React.FC<TimeConflictBannerProps> = ({
     if (conflicts.length === 0) return null;
 
     return (
-        <div className="mx-auto w-full max-w-[850px] mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
+        <div className="mx-auto w-full max-w-none mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-amber-200/30 transition-colors duration-500" />
 

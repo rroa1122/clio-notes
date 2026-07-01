@@ -47,37 +47,14 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
         <>
             {/* Backdrop */}
             <div
-                className={`fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-[110] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-[110] cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
                 onClick={onClose}
             />
 
             {/* Panel */}
             <div className={`fixed top-0 right-0 h-full w-full max-w-2xl bg-white shadow-2xl z-[120] transform transition-transform duration-500 ease-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                            <Stethoscope size={20} />
-                        </div>
-                        <div>
-                            <h3 className="text-base font-bold text-slate-900 tracking-tight">{templateName}</h3>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Review Mode • Validated Registry</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={onClose}
-                            className="h-9 w-9 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
-                        >
-                            <X size={20} />
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Sub-header / Meta */}
-                <div className="px-6 py-4 bg-white border-b border-slate-50 flex items-center gap-6 overflow-x-auto no-scrollbar">
+                {/* Sub-header / Meta (Now the top bar) */}
+                <div className="px-6 py-4 bg-white border-b border-slate-100 flex items-center gap-6 overflow-x-auto no-scrollbar shrink-0">
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">DOS / Timestamp</span>
                         <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
@@ -95,21 +72,23 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
                     </div>
                     <div className="ml-auto flex items-center gap-2">
                         <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handlePrint}
-                            className="rounded-lg font-bold gap-2 text-slate-600 h-9"
-                        >
-                            <Printer size={15} />
-                            Print
-                        </Button>
-                        <Button
                             size="sm"
                             onClick={() => onViewFull(note.id)}
-                            className="rounded-lg font-bold gap-2 h-9 px-4"
+                            className="rounded-lg font-bold gap-2 h-9 px-4 animate-in fade-in"
                         >
                             <Maximize2 size={15} />
                             Open Full
+                        </Button>
+                        
+                        <Separator orientation="vertical" className="h-6 mx-1" />
+                        
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onClose}
+                            className="h-9 w-9 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+                        >
+                            <X size={20} />
                         </Button>
                     </div>
                 </div>

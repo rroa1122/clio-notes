@@ -25,6 +25,9 @@ import Templates from './notes-module/pages/Templates';
 import PrintNote from './notes-module/pages/PrintNote';
 import SignNote from './notes-module/pages/SignNote';
 import ErrorBoundary from './components/ErrorBoundary';
+import { AuditLogs } from './pages/AuditLogs';
+import { MfaChallenge } from './pages/MfaChallenge';
+import { MfaEnrollment } from './pages/MfaEnrollment';
 
 const PrimaryAdminRoute = () => {
   const { user, loading } = useAuth();
@@ -49,14 +52,22 @@ const RoleProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
 };
 
 const Root = () => {
-  const { user, loading } = useAuth();
-
+  const { user, loading, mfaRequired, mfaEnrollmentRequired } = useAuth();
+ 
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (mfaRequired) {
+    return <MfaChallenge />;
+  }
+
+  if (mfaEnrollmentRequired) {
+    return <MfaEnrollment />;
   }
 
   const router = createBrowserRouter(
@@ -90,6 +101,7 @@ const Root = () => {
             <Route path="patients" element={<Patients />} />
             <Route path="patients/:id" element={<PatientDetail />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="audit-logs" element={<AuditLogs />} />
 
             {/* Clinical Module Routes */}
             <Route path="notes">

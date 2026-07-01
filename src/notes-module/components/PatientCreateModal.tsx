@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { storage, type Patient } from '../lib/storage';
 import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -44,6 +45,8 @@ interface PatientCreateModalProps {
 
 export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'encounter' }: PatientCreateModalProps) {
     const [formData, setFormData] = useState<Partial<Patient>>({
+        first_name: '',
+        last_name: '',
         full_name: '',
         dob: '',
         phone: '',
@@ -56,6 +59,10 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
         citizenship: '',
         case_manager: '',
         insurance_company: '',
+        insurance_id: '',
+        preferred_language: 'English',
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
         pcp_name: '',
         pcp_clinic_name: '',
         pcp_phone: '',
@@ -98,25 +105,78 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
         try {
             const extractedData = await extractPatientData(file);
             
-            const newPatientData = {
+            // Extract first and last name from full name if present
+            let extractedFirstName = '';
+            let extractedLastName = '';
+            if (extractedData.full_name) {
+                const parts = extractedData.full_name.trim().split(/\s+/);
+                if (parts.length > 1) {
+                    extractedFirstName = parts[0];
+                    extractedLastName = parts.slice(1).join(' ');
+                } else {
+                    extractedFirstName = parts[0];
+                    extractedLastName = '';
+                }
+            }
+
+            const updatedData = {
                 ...formData,
                 ...extractedData,
-            } as Patient;
+                first_name: extractedFirstName || extractedData.first_name || formData.first_name || '',
+                last_name: extractedLastName || extractedData.last_name || formData.last_name || '',
+                full_name: extractedData.full_name || `${extractedFirstName} ${extractedLastName}`.trim(),
+            };
 
-            setFormData(prev => ({ ...prev, ...extractedData }));
+            setFormData(updatedData);
 
-            if (!newPatientData.full_name) {
-                toast.warning("Datos extraídos, pero falta el nombre. Por favor completa el formulario.");
+            if (!updatedData.first_name || !updatedData.last_name) {
+                toast.warning("Datos extraídos, pero faltan el nombre o apellido. Por favor completa el formulario.");
                 return;
             }
 
-            const newPatient = await storage.upsertPatient(newPatientData);
+            const newPatient = await storage.upsertPatient(updatedData as Patient);
             
             if (newPatient) {
                 toast.success("Paciente creado automáticamente", { icon: "✨" });
                 onCreated(newPatient);
                 onClose();
-                setFormData({ full_name: '', dob: '', phone: '', email: '', emr_id: '', gender: '' });
+                // Reset form
+                setFormData({
+                    first_name: '',
+                    last_name: '',
+                    full_name: '',
+                    dob: '',
+                    phone: '',
+                    email: '',
+                    emr_id: '',
+                    gender: '',
+                    diagnoses: '',
+                    ssn: '',
+                    address: '',
+                    citizenship: '',
+                    case_manager: '',
+                    insurance_company: '',
+                    insurance_id: '',
+                    preferred_language: 'English',
+                    emergency_contact_name: '',
+                    emergency_contact_phone: '',
+                    pcp_name: '',
+                    pcp_clinic_name: '',
+                    pcp_phone: '',
+                    pcp_address: '',
+                    pcp_conditions: '',
+                    pcp_medications: '',
+                    psych_name: '',
+                    psych_phone: '',
+                    psych_address: '',
+                    psych_conditions: '',
+                    psych_medications: '',
+                    pharmacy_name: '',
+                    pharmacy_phone: '',
+                    pharmacy_fax: '',
+                    pharmacy_address: '',
+                    presenting_problems: ''
+                });
             } else {
                 toast.error("Error al guardar el paciente");
             }
@@ -134,8 +194,12 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.full_name) {
-            toast.error("Full name is required");
+        const firstName = formData.first_name?.trim() || '';
+        const lastName = formData.last_name?.trim() || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+
+        if (!firstName || !lastName) {
+            toast.error("First name and Last name are required");
             return;
         }
 
@@ -143,6 +207,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
         try {
             const newPatient = await storage.upsertPatient({
                 ...formData,
+                full_name: fullName
             } as Patient);
 
             if (newPatient) {
@@ -150,7 +215,42 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                 onCreated(newPatient);
                 onClose();
                 // Reset form
-                setFormData({ full_name: '', dob: '', phone: '', email: '', emr_id: '', gender: '' });
+                setFormData({
+                    first_name: '',
+                    last_name: '',
+                    full_name: '',
+                    dob: '',
+                    phone: '',
+                    email: '',
+                    emr_id: '',
+                    gender: '',
+                    diagnoses: '',
+                    ssn: '',
+                    address: '',
+                    citizenship: '',
+                    case_manager: '',
+                    insurance_company: '',
+                    insurance_id: '',
+                    preferred_language: 'English',
+                    emergency_contact_name: '',
+                    emergency_contact_phone: '',
+                    pcp_name: '',
+                    pcp_clinic_name: '',
+                    pcp_phone: '',
+                    pcp_address: '',
+                    pcp_conditions: '',
+                    pcp_medications: '',
+                    psych_name: '',
+                    psych_phone: '',
+                    psych_address: '',
+                    psych_conditions: '',
+                    psych_medications: '',
+                    pharmacy_name: '',
+                    pharmacy_phone: '',
+                    pharmacy_fax: '',
+                    pharmacy_address: '',
+                    presenting_problems: ''
+                });
             } else {
                 toast.error("Database returned no data - Possible permission issue");
             }
@@ -164,15 +264,19 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-[1024px] p-0 overflow-hidden rounded-[2.5rem] border-slate-200/50 shadow-2xl bg-white/95 backdrop-blur-2xl">
-                <div className="flex flex-col h-[97vh] md:h-[1040px] max-h-[97vh]">
+            <DialogContent 
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onInteractOutside={(e) => e.preventDefault()}
+                className="max-w-[1024px] h-[85vh] max-h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-slate-200/50 shadow-2xl bg-white translate-x-0 translate-y-0 inset-0 m-auto flex flex-col"
+            >
+                <div className="flex flex-col flex-1 overflow-hidden">
                     {/* Header */}
                     <div className="px-8 pt-5 pb-4 border-b border-slate-100 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-3xl -mr-32 -mt-32 -z-10" />
 
                         <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-6">
-                                <div className="size-14 rounded-[20px] bg-white text-indigo-600 flex items-center justify-center border border-indigo-50 shadow-sm">
+                                <div className="size-14 rounded-[20px] bg-indigo-50/75 text-indigo-600 flex items-center justify-center border border-indigo-100/20 shadow-sm relative group">
                                     <UserPlus size={28} />
                                 </div>
                                 <div>
@@ -195,18 +299,18 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                     <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
                         {/* Tabs Navigation */}
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
-                            <div className="px-8 bg-slate-50/30 border-b border-slate-100/50 py-2">
-                                <TabsList className="bg-slate-50/50 backdrop-blur-md p-1 h-12 rounded-full border border-slate-200/50 shadow-sm w-full flex items-stretch gap-1">
+                            <div className="px-8 py-3">
+                                <TabsList className="bg-slate-50 p-1 h-12 rounded-full border border-slate-200/50 shadow-sm w-full grid grid-cols-4 overflow-hidden gap-1">
                                     <PremiumTrigger value="client" label="Client" icon={User} theme="indigo" />
-                                    <PremiumTrigger value="pcp" label="Primary Care Physician" icon={DoctorIcon} theme="emerald" />
-                                    <PremiumTrigger value="psych" label="Psychiatric" icon={PsychIcon} theme="purple" />
+                                    <PremiumTrigger value="medical" label="Medical" icon={DoctorIcon} theme="emerald" />
+                                    <PremiumTrigger value="psychiatric" label="Psychiatric" icon={PsychIcon} theme="purple" />
                                     <PremiumTrigger value="pharmacy" label="Pharmacy" icon={Store} theme="amber" />
                                 </TabsList>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto px-10 py-6 custom-scrollbar bg-slate-100/40">
+                            <div className="flex-1 overflow-y-auto px-10 py-6 custom-scrollbar bg-slate-50/20">
                                 {/* [CLIENT TAB] */}
-                                <TabsContent value="client" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                <TabsContent value="client" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
                                     {/* AI Extraction Dropzone */}
                                     <div 
                                         className={cn(
@@ -241,7 +345,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                                     </div>
                                                     <h3 className="text-[15px] font-black text-slate-900 uppercase tracking-[0.25em] mb-3">Upload Clinical Intake</h3>
                                                     <p className="text-[11px] font-bold text-slate-400 max-w-sm mb-5 leading-relaxed tracking-wide opacity-80">Drag and drop forms to <span className="text-indigo-500 font-black">auto-fill</span> the profile using Health AI.</p>
-                                                    <Badge variant="outline" className="bg-white/80 backdrop-blur border-slate-200/50 text-slate-400 font-black px-4 py-1.5 text-[9px] uppercase tracking-widest rounded-full shadow-sm">
+                                                    <Badge variant="outline" className="bg-white border-slate-200/55 text-slate-400 font-black px-4 py-1.5 text-[9px] uppercase tracking-widest rounded-full shadow-sm">
                                                         PDF • JPG • PNG
                                                     </Badge>
                                                 </div>
@@ -249,45 +353,45 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                         </div>
                                     </div>
 
-                                    <div className={cn("transition-all duration-700", isExtracting && "opacity-40 blur-[4px] pointer-events-none scale-[0.98]")}>
-                                        <div className="bg-white/70 border border-slate-200/50 rounded-[2rem] p-6 shadow-sm">
-                                            <div className="grid grid-cols-2 gap-x-6 gap-y-3.5">
-                                                <PremiumGlassField icon={User} label="Full Legal Name" name="full_name" value={formData.full_name} onChange={handleFieldChange} theme="indigo" placeholder="E.g. Alice Wonder" required />
-                                                <PremiumGlassField icon={Calendar} label="Date of Birth" name="dob" value={formData.dob} onChange={handleFieldChange} theme="indigo" type="date" />
-                                                <PremiumGlassField icon={BadgeCheck} label="Citizenship Status" name="citizenship" value={formData.citizenship} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={Shield} label="SSN / National ID" name="ssn" value={formData.ssn} onChange={handleFieldChange} theme="indigo" />
+                                    <div className={cn("transition-all duration-700 space-y-6", isExtracting && "opacity-40 blur-[4px] pointer-events-none scale-[0.98]")}>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            {/* Left Column: Identity & Contact */}
+                                            <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
+                                                <div className="mb-2">
+                                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 uppercase">Identity & Contact</h4>
+                                                </div>
+                                                <PremiumGlassField icon={User} label="First Name" name="first_name" value={formData.first_name} onChange={handleFieldChange} theme="indigo" placeholder="E.g. Alice" required />
+                                                <PremiumGlassField icon={User} label="Last Name" name="last_name" value={formData.last_name} onChange={handleFieldChange} theme="indigo" placeholder="E.g. Wonder" required />
                                                 <PremiumGlassField icon={Phone} label="Primary Contact" name="phone" value={formData.phone} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={Mail} label="Email Address" name="email" value={formData.email} onChange={handleFieldChange} theme="indigo" type="email" />
-                                                <PremiumGlassField icon={MapPin} label="Residential Address" name="address" value={formData.address} onChange={handleFieldChange} theme="indigo" className="col-span-2" />
+                                                <PremiumGlassField icon={Calendar} label="Date of Birth" name="dob" value={formData.dob} onChange={handleFieldChange} theme="indigo" type="date" />
+                                                <PremiumGlassField icon={Shield} label="SSN / National ID" name="ssn" value={formData.ssn} onChange={handleFieldChange} theme="indigo" />
+                                                <PremiumGlassField icon={MapPin} label="Residential Address" name="address" value={formData.address} onChange={handleFieldChange} theme="indigo" />
                                             </div>
-                                        </div>
 
-                                        <div className="mt-6 bg-white/70 border border-slate-200/50 rounded-[2rem] p-6 shadow-sm">
-                                            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                                                <div className="col-span-2 mb-2">
-                                                    <h4 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Coordination & Emergency</h4>
+                                            {/* Right Column: Clinical Coordination */}
+                                            <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
+                                                <div className="mb-2">
+                                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 uppercase">Clinical Coordination</h4>
                                                 </div>
-                                                <PremiumGlassField icon={User} label="Race" name="race" value={formData.race} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={User} label="Ethnicity" name="ethnicity" value={formData.ethnicity} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={User} label="Preferred Language" name="preferred_language" value={formData.preferred_language} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={Briefcase} label="Case Manager" name="case_manager" value={formData.case_manager} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={Phone} label="Emergency Contact" name="emergency_contact_name" value={formData.emergency_contact_name} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={User} label="Relation" name="emergency_contact_relation" value={formData.emergency_contact_relation} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={Phone} label="Emergency Phone" name="emergency_contact_phone" value={formData.emergency_contact_phone} onChange={handleFieldChange} theme="indigo" className="col-span-2" />
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-6 bg-white/70 border border-slate-200/50 rounded-[2rem] p-6 shadow-sm">
-                                            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                                                <div className="col-span-2 mb-2">
-                                                    <h4 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Billing & Insurance</h4>
-                                                </div>
-                                                <PremiumGlassField icon={Shield} label="Insurance Carrier" name="insurance_company" value={formData.insurance_company} onChange={handleFieldChange} theme="indigo" />
+                                                <PremiumGlassField icon={Shield} label="Insurance Company" name="insurance_company" value={formData.insurance_company} onChange={handleFieldChange} theme="indigo" />
                                                 <PremiumGlassField icon={Shield} label="Member ID" name="insurance_id" value={formData.insurance_id} onChange={handleFieldChange} theme="indigo" />
+                                                <PremiumGlassField icon={Briefcase} label="Case Manager" name="case_manager" value={formData.case_manager} onChange={handleFieldChange} theme="indigo" />
+                                                <PremiumGlassField icon={BadgeCheck} label="Citizenship Status" name="citizenship" value={formData.citizenship} onChange={handleFieldChange} theme="indigo" />
+                                                <PremiumGlassField icon={User} label="Preferred Language" name="preferred_language" value={formData.preferred_language} onChange={handleFieldChange} theme="indigo" options={['English', 'Spanish']} />
+
+                                                {/* Emergency Protocol */}
+                                                <div className="mt-4 pt-4 border-t border-slate-200/50">
+                                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Emergency Protocol</p>
+                                                    <div className="space-y-4">
+                                                        <PremiumGlassField icon={User} label="Emergency Contact" name="emergency_contact_name" value={formData.emergency_contact_name} onChange={handleFieldChange} theme="amber" />
+                                                        <PremiumGlassField icon={Phone} label="Emergency Phone" name="emergency_contact_phone" value={formData.emergency_contact_phone} onChange={handleFieldChange} theme="amber" />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="mt-6 bg-white/70 border border-slate-200/50 rounded-[2rem] p-6 shadow-sm">
+                                        {/* Clinical Overview & ICD-10 */}
+                                        <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
                                             <div className="space-y-6">
                                                 <div className="mb-2">
                                                     <h4 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Clinical Overview</h4>
@@ -359,9 +463,9 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     </div>
                                 </TabsContent>
 
-                                {/* [PCP TAB] */}
-                                <TabsContent value="pcp" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                    <div className="bg-white/70 border border-slate-200/50 rounded-[2rem] p-8 shadow-sm">
+                                {/* [MEDICAL TAB] */}
+                                <TabsContent value="medical" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
+                                    <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-8 shadow-sm">
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                                             <PremiumGlassField icon={DoctorIcon} label="PCP Name" name="pcp_name" value={formData.pcp_name} onChange={handleFieldChange} theme="emerald" />
                                             <PremiumGlassField icon={Store} label="PCP Clinic Name" name="pcp_clinic_name" value={formData.pcp_clinic_name} onChange={handleFieldChange} theme="emerald" />
@@ -373,9 +477,9 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     </div>
                                 </TabsContent>
 
-                                {/* [PSYCH TAB] */}
-                                <TabsContent value="psych" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                    <div className="bg-white/70 border border-slate-200/50 rounded-[2rem] p-8 shadow-sm">
+                                {/* [PSYCHIATRIC TAB] */}
+                                <TabsContent value="psychiatric" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
+                                    <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-8 shadow-sm">
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                                             <PremiumGlassField icon={Brain} label="Psychiatrist Name" name="psych_name" value={formData.psych_name} onChange={handleFieldChange} theme="purple" />
                                             <PremiumGlassField icon={Phone} label="Psych Phone" name="psych_phone" value={formData.psych_phone} onChange={handleFieldChange} theme="purple" />
@@ -387,8 +491,8 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                 </TabsContent>
 
                                 {/* [PHARMACY TAB] */}
-                                <TabsContent value="pharmacy" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                    <div className="bg-white/70 border border-slate-200/50 rounded-[2rem] p-8 shadow-sm">
+                                <TabsContent value="pharmacy" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
+                                    <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-8 shadow-sm">
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                                             <PremiumGlassField icon={Store} label="Pharmacy Name" name="pharmacy_name" value={formData.pharmacy_name} onChange={handleFieldChange} theme="amber" />
                                             <PremiumGlassField icon={Phone} label="Pharmacy Phone" name="pharmacy_phone" value={formData.pharmacy_phone} onChange={handleFieldChange} theme="amber" />
@@ -401,7 +505,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                         </Tabs>
 
                         {/* Footer Actions */}
-                        <div className="px-10 py-4 border-t border-slate-100/60 bg-white/50 backdrop-blur-md flex items-center justify-between gap-6">
+                        <div className="px-10 py-4 border-t border-slate-100/60 bg-white flex items-center justify-between gap-6">
                             <div className="hidden md:flex items-center gap-3 ml-2">
                                 <div className="size-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Ready for validation</span>
@@ -418,7 +522,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                 </Button>
                                 <Button
                                     type="submit"
-                                    disabled={isSaving || !formData.full_name}
+                                    disabled={isSaving || !formData.first_name || !formData.last_name}
                                     className="flex-1 md:px-12 h-12 rounded-full font-black text-[10px] uppercase tracking-[0.15em] bg-indigo-950 hover:bg-indigo-900 text-white border border-indigo-800/20 shadow-xl shadow-indigo-200/50 gap-3 transition-all active:scale-[0.97] group/btn relative overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite] pointer-events-none" />
@@ -439,7 +543,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                     </form>
                 </div>
             </DialogContent>
-        </Dialog >
+        </Dialog>
     );
 }
 
@@ -481,9 +585,10 @@ interface ModalFieldProps {
     large?: boolean;
     required?: boolean;
     theme: 'indigo' | 'emerald' | 'purple' | 'blue' | 'amber';
+    options?: string[];
 }
 
-function PremiumGlassField({ icon: Icon, label, name, value, onChange, placeholder, type = 'text', className, isTextarea, large, required, theme }: ModalFieldProps) {
+function PremiumGlassField({ icon: Icon, label, name, value, onChange, placeholder, type = 'text', className, isTextarea, large, required, theme, options }: ModalFieldProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const iconBgThemes = {
         indigo: "bg-indigo-500/10 text-indigo-500 border-indigo-100/50",
@@ -497,7 +602,7 @@ function PremiumGlassField({ icon: Icon, label, name, value, onChange, placehold
         <div className={cn("space-y-1.5 group", className)}>
             <div className="flex items-center gap-3 ml-1.5 transition-transform duration-300 group-hover:translate-x-1">
                 <div className={cn("size-6 rounded-lg flex items-center justify-center relative", iconBgThemes[theme])}>
-                    <div className="absolute inset-0 blur-md opacity-0 group-hover:opacity-60 transition-opacity bg-current" />
+                    <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 transition-opacity rounded-lg" />
                     <Icon size={13} className="relative z-10" />
                 </div>
                 <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest leading-none opacity-90">
@@ -506,22 +611,40 @@ function PremiumGlassField({ icon: Icon, label, name, value, onChange, placehold
             </div>
 
             <div className={cn(
-                "rounded-[28px] border border-slate-200/70 bg-white transition-all duration-300 relative overflow-hidden",
+                "rounded-[28px] border border-slate-200/70 bg-white transition-[border-color,box-shadow,background-color] duration-200 relative overflow-hidden",
                 "shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]",
-                "hover:shadow-[0_12px_24px_-10px_rgba(var(--primary-rgb),0.2)] hover:-translate-y-[2px] hover:border-primary/30",
+                "hover:border-primary/35",
                 "focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-500/5",
                 isTextarea ? (large ? "min-h-[160px]" : "min-h-[110px]") : "h-11"
             )}>
 
                 {isTextarea ? (
                         <textarea
-                            className="absolute inset-0 w-full h-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none px-6 py-4 text-[14px] font-bold text-slate-900 placeholder:text-slate-300 resize-none leading-relaxed shadow-none hover:shadow-none"
+                            className="absolute inset-0 w-full h-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none px-6 py-4 text-[14px] font-bold text-slate-900 placeholder:text-slate-300 resize-none leading-relaxed shadow-none hover:shadow-none animate-none"
                             value={value || ''}
                             onChange={(e) => onChange(name, e.target.value)}
                             placeholder={placeholder || `Document ${label.toLowerCase()}...`}
                         />
+                ) : options ? (
+                    <div className="relative h-full flex items-center px-0 w-full">
+                        <Select 
+                            value={value || ''} 
+                            onValueChange={(val) => onChange(name, val)}
+                        >
+                            <SelectTrigger className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-6 text-[14px] font-bold text-slate-900 justify-between pr-4 hover:bg-transparent [&>svg]:opacity-50">
+                                <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}...`} />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-[1.5rem] border border-slate-100 shadow-2xl bg-white z-[250]">
+                                {options.map((opt) => (
+                                    <SelectItem key={opt} value={opt} className="rounded-xl font-bold text-[13px] text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:text-indigo-600 py-2.5">
+                                        {opt}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 ) : (
-                    <div className="relative h-full flex items-center px-0">
+                    <div className="relative h-full flex items-center px-0 w-full">
                         {type === 'date' ? (
                             <DatePicker 
                                 date={value || ''} 

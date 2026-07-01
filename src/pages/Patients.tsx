@@ -25,6 +25,15 @@ import { PatientCreateModal } from '../notes-module/components/PatientCreateModa
 import { TiltCard } from '../components/ui/tilt-card';
 import { cn } from '../lib/utils';
 
+const getInitialsTheme = (name: string) => {
+    const char = name ? name.charAt(0).toUpperCase() : '?';
+    if ('AEIOU'.includes(char)) return 'bg-indigo-50/70 text-indigo-600';
+    if ('BCDFG'.includes(char)) return 'bg-emerald-50/70 text-emerald-600';
+    if ('HJKLM'.includes(char)) return 'bg-purple-50/70 text-purple-600';
+    if ('NPQRS'.includes(char)) return 'bg-amber-50/70 text-amber-600';
+    return 'bg-blue-50/70 text-blue-600';
+};
+
 export function Patients() {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -90,60 +99,56 @@ export function Patients() {
     };
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-700 max-w-7xl mx-auto w-full px-6 pt-8 pb-12">
-            <div className="flex flex-col bg-white border border-slate-200/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] rounded-[2.5rem] overflow-hidden min-h-[80vh]">
-                
-                {/* Header Section - Premium Refinement */}
-                <div className="flex flex-col gap-6 p-10 pb-8 bg-white shrink-0">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-[11px] font-bold text-primary/60 uppercase tracking-[0.2em] pl-1">Clinical Directory</span>
-                            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Clients</h1>
-                            <div className="flex items-center gap-2.5 mt-1">
-                                <div className={cn(
-                                    "size-2 rounded-full", 
-                                    isLoading ? "bg-amber-400 animate-pulse" : "bg-emerald-500 animate-tactile-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                                )} />
-                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                                    {isLoading ? "Syncing..." : `${patients.length} active records`}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-[350px] group/search">
-                                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/search:text-primary transition-all duration-300 pointer-events-none">
-                                    <Search size={18} strokeWidth={2.5} />
-                                </div>
-                                <Input
-                                    type="text"
-                                    placeholder="Search directory..."
-                                    className="!pl-12 h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:ring-[6px] focus:ring-primary/5 focus:border-primary/20 transition-all text-[15px] font-medium placeholder:text-slate-400 shadow-none"
-                                    value={searchTerm}
-                                    onChange={handleSearch}
-                                />
-                            </div>
-                            <Button
-                                className="rounded-2xl font-bold gap-2.5 h-12 px-8 shadow-xl shadow-primary/10 hover:shadow-primary/20 hover:-translate-y-0.5 active:translate-y-0 transition-all text-[14px] bg-primary hover:bg-primary/90"
-                                onClick={() => setIsCreateModalOpen(true)}
-                            >
-                                <UserPlus className="h-5 w-5" strokeWidth={2.5} />
-                                <span>New Client</span>
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Table Headers (Simulated) */}
-                    <div className="grid grid-cols-[2fr,1fr,1fr,1fr,auto] gap-4 px-4 py-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
-                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Client Identity</span>
-                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Date of Birth</span>
-                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">EMR ID / MRN</span>
-                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Registered</span>
-                        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest w-20 text-right">Actions</span>
+        <div className="max-w-[1100px] mx-auto p-4 lg:p-8 space-y-8 animate-in fade-in duration-700">
+            {/* Header Section - Premium Refinement */}
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100/60 relative">
+                <div className="flex flex-col">
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900 leading-none">Clients</h1>
+                    <div className="flex items-center gap-2 mt-2">
+                        <div className={cn(
+                            "size-2 rounded-full", 
+                            isLoading ? "bg-amber-400 animate-pulse" : "bg-emerald-500 animate-tactile-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                        )} />
+                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                            {isLoading ? "Syncing..." : `${patients.length} active records`}
+                        </span>
                     </div>
                 </div>
-                <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
-                    <div className="flex flex-col gap-2.5">
+
+                <div className="flex items-center gap-4">
+                    <div className="relative flex-1 md:w-[320px] group/search">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/search:text-indigo-600 transition-colors pointer-events-none">
+                            <Search size={16} strokeWidth={2.5} />
+                        </div>
+                        <Input
+                            type="text"
+                            placeholder="Search directory..."
+                            className="!pl-11 h-11 rounded-full bg-slate-50 border border-slate-200/50 focus:bg-white focus:ring-[4px] focus:ring-indigo-600/5 focus:border-indigo-600/40 transition-all text-[13px] font-medium placeholder:text-slate-400 shadow-sm"
+                            value={searchTerm}
+                            onChange={handleSearch}
+                        />
+                    </div>
+                    <Button
+                        className="h-11 px-7 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 hover:shadow-indigo-200 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 transform active:scale-95 group"
+                        onClick={() => setIsCreateModalOpen(true)}
+                    >
+                        <UserPlus className="h-4.5 w-4.5 text-indigo-200 group-hover:text-white transition-colors" strokeWidth={2.5} />
+                        <span className="text-[11px] uppercase tracking-[0.15em]">New Client</span>
+                    </Button>
+                </div>
+            </header>
+
+            {/* Table Headers (Simulated) */}
+            <div className="grid grid-cols-[2.5fr,1.2fr,1.2fr,1.2fr,auto] gap-6 px-6 py-2 no-print mb-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Client Identity</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">EMR ID / MRN</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registered</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider w-20 text-right pr-2">Actions</span>
+            </div>
+
+            <div className="flex-1">
+                <div className="flex flex-col gap-3.5">
                         {isLoading && patients.length === 0 ? (
                             Array.from({ length: 8 }).map((_, i) => (
                                 <div key={i} className="h-16 bg-slate-50 rounded-xl animate-pulse w-full border border-slate-100" />
@@ -167,28 +172,35 @@ export function Patients() {
                             patients.map((patient) => (
                                 <TiltCard key={patient.id} intensity={3} scale={1.005}>
                                     <div 
-                                        className="grid grid-cols-[2fr,1fr,1fr,1fr,auto] gap-4 items-center px-4 h-16 bg-white border border-slate-100 rounded-xl hover:border-primary/20 hover:shadow-sm transition-all cursor-pointer group/row"
+                                        className="grid grid-cols-[2.5fr,1.2fr,1.2fr,1.2fr,auto] gap-6 items-center py-4 px-6 bg-white border border-slate-100 rounded-3xl hover:border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_-4px_rgba(0,0,0,0.04)] transition-all duration-300 cursor-pointer group/row"
                                         onClick={() => navigate(`/patients/${patient.id}`)}
                                     >
                                         {/* Identity */}
-                                        <div className="flex items-center gap-3.5 min-w-0">
-                                            <div className="size-9 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center font-semibold text-[12px] border border-slate-100 group-hover/row:bg-primary/10 group-hover/row:text-primary transition-all duration-300">
+                                        <div className="flex items-center gap-4 min-w-0">
+                                            <div className={cn(
+                                                "size-11 rounded-2xl flex items-center justify-center font-bold text-[14px] shrink-0 transition-transform duration-300 group-hover/row:scale-105",
+                                                getInitialsTheme(patient.full_name)
+                                            )}>
                                                 {patient.full_name?.charAt(0) || '?'}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="font-semibold text-slate-600 text-[14px] truncate group-hover/row:text-primary transition-colors tracking-tight">
+                                                <span className="font-semibold text-slate-900 text-[15px] truncate group-hover/row:text-primary transition-colors tracking-tight leading-snug">
                                                     {patient.full_name}
                                                 </span>
-                                                {patient.phone && (
-                                                    <span className="text-[11px] text-slate-400 font-semibold tracking-widest uppercase">
+                                                {patient.phone ? (
+                                                    <span className="text-[13px] text-slate-400 font-normal mt-0.5 leading-none">
                                                         {patient.phone}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[13px] text-slate-300 italic font-normal mt-0.5 leading-none">
+                                                        No contact phone
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
 
                                         {/* DOB */}
-                                        <span className="text-[11px] text-slate-500 font-medium font-mono">
+                                        <span className="text-[13px] text-slate-500 font-medium">
                                             {patient.dob && !isNaN(new Date(patient.dob).getTime())
                                                 ? format(new Date(patient.dob), 'MMM d, yyyy')
                                                 : <span className="text-slate-300 italic font-normal">—</span>}
@@ -197,16 +209,16 @@ export function Patients() {
                                         {/* ID */}
                                         <div>
                                             {patient.emr_id ? (
-                                                <Badge variant="secondary" className="px-2 py-0.5 text-[11px] font-bold rounded bg-slate-100 text-slate-400 border-none uppercase tracking-widest">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100/70 text-slate-600 border border-slate-200/20">
                                                     {patient.emr_id}
-                                                </Badge>
+                                                </span>
                                             ) : (
-                                                <span className="text-slate-300 italic font-normal text-[11px]">—</span>
+                                                <span className="text-slate-300 italic font-normal text-[13px]">—</span>
                                             )}
                                         </div>
 
                                         {/* Date */}
-                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-tight">
+                                        <span className="text-[13px] text-slate-400 font-medium">
                                             {patient.created_at ? format(new Date(patient.created_at), 'MMM d, yyyy') : '—'}
                                         </span>
 
@@ -215,22 +227,22 @@ export function Patients() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="size-8 rounded-lg text-slate-300 hover:text-primary hover:bg-primary/5 opacity-0 group-hover/row:opacity-100 transition-all"
+                                                className="size-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-all opacity-0 group-hover/row:opacity-100"
                                                 onClick={(e) => { e.stopPropagation(); navigate(`/patients/${patient.id}`); }}
                                             >
-                                                <ExternalLink size={14} />
+                                                <ExternalLink size={15} />
                                             </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className={cn(
-                                                    "size-8 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 opacity-0 group-hover/row:opacity-100 transition-all",
+                                                    "size-9 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all opacity-0 group-hover/row:opacity-100",
                                                     isDeleting === patient.id && "animate-pulse text-red-500 opacity-100"
                                                 )}
                                                 disabled={isDeleting === patient.id}
                                                 onClick={(e) => confirmDelete(e, patient.id, patient.full_name)}
                                             >
-                                                {isDeleting === patient.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                                                {isDeleting === patient.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={15} />}
                                             </Button>
                                         </div>
                                     </div>
@@ -239,7 +251,6 @@ export function Patients() {
                         )}
                     </div>
                 </div>
-            </div>
 
             <PatientCreateModal
                 isOpen={isCreateModalOpen}

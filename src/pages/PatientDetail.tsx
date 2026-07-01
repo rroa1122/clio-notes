@@ -26,14 +26,18 @@ import {
     Save,
     X,
     CheckCircle2,
-    Store
+    Store,
+    UploadCloud,
+    Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { toast } from 'sonner';
 import { storage, type Patient as StoragePatient } from '../notes-module/lib/storage';
 import { getCalls } from '../data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { PatientNotePreview } from '../components/PatientNotePreview';
 import { searchDiagnoses, type DiagnosisCode } from '../notes-module/lib/diagnosisCatalog';
 import { cn } from '@/lib/utils';
@@ -47,6 +51,30 @@ interface TimelineItem {
     status?: string;
     raw: any;
 }
+
+const getInitialsTheme = (name: string) => {
+    const char = name ? name.charAt(0).toUpperCase() : '?';
+    if ('AEIOU'.includes(char)) return {
+        bg: 'bg-indigo-50/70 text-indigo-600 border-indigo-100/20',
+        glow: 'from-indigo-500/20 to-indigo-300/10'
+    };
+    if ('BCDFG'.includes(char)) return {
+        bg: 'bg-emerald-50/70 text-emerald-600 border-emerald-100/20',
+        glow: 'from-emerald-500/20 to-emerald-300/10'
+    };
+    if ('HJKLM'.includes(char)) return {
+        bg: 'bg-purple-50/70 text-purple-600 border-purple-100/20',
+        glow: 'from-purple-500/20 to-purple-300/10'
+    };
+    if ('NPQRS'.includes(char)) return {
+        bg: 'bg-amber-50/70 text-amber-600 border-amber-100/20',
+        glow: 'from-amber-500/20 to-amber-300/10'
+    };
+    return {
+        bg: 'bg-blue-50/70 text-blue-600 border-blue-100/20',
+        glow: 'from-blue-500/20 to-blue-300/10'
+    };
+};
 
 export function PatientDetail() {
     const { id } = useParams<{ id: string }>();
@@ -62,6 +90,8 @@ export function PatientDetail() {
     const [editData, setEditData] = useState<Partial<StoragePatient>>({});
     const [isSaving, setIsSaving] = useState(false);
     const [suggestions, setSuggestions] = useState<DiagnosisCode[]>([]);
+    const [isExtracting, setIsExtracting] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const loadData = useCallback(async (isRetry = false) => {
         if (!id) return;
@@ -72,7 +102,11 @@ export function PatientDetail() {
 
             if (foundPatient) {
                 setPatient(foundPatient);
-                setEditData(foundPatient); // Initialize edit data
+                setEditData({
+                    ...foundPatient,
+                    first_name: foundPatient.first_name || foundPatient.full_name?.split(' ')[0] || '',
+                    last_name: foundPatient.last_name || foundPatient.full_name?.split(' ').slice(1).join(' ') || ''
+                }); // Initialize edit data
 
                 // Registrar log de auditoría una sola vez por paciente consultado
                 if (loggedRef.current !== id) {
@@ -80,7 +114,7 @@ export function PatientDetail() {
                     import('../services/auditService').then(({ auditService }) => {
                         auditService.logAction({
                             action: 'ACCESS',
-                            description: `Accedió al expediente del paciente ${foundPatient.full_name}`,
+                            description: `Accessed patient chart for ${foundPatient.full_name}`,
                             targetType: 'patient',
                             targetId: id
                         });
@@ -100,7 +134,7 @@ export function PatientDetail() {
                             (n as any).summary ||
                             (n.sections?.chiefComplaint) ||
                             (n.sections?.hpi) ||
-                            "Clinical encounter recorded.";
+                            "";
 
                         return {
                             id: n.id,
@@ -145,8 +179,12 @@ export function PatientDetail() {
         if (!patient || !id) return;
         setIsSaving(true);
         try {
-            await storage.upsertPatient({ ...editData, id });
-            setPatient({ ...patient, ...editData } as StoragePatient);
+            const finalData = {
+                ...editData,
+                full_name: `${editData.first_name || ''} ${editData.last_name || ''}`.trim() || patient.full_name
+            };
+            await storage.upsertPatient({ ...finalData, id });
+            setPatient({ ...patient, ...finalData } as StoragePatient);
             setIsEditing(false);
             // Re-load to ensure everything is fresh
             loadData(true);
@@ -158,8 +196,47 @@ export function PatientDetail() {
     };
 
     const handleCancel = () => {
-        setEditData(patient || {});
+        if (patient) {
+            setEditData({
+                ...patient,
+                first_name: patient.first_name || patient.full_name?.split(' ')[0] || '',
+                last_name: patient.last_name || patient.full_name?.split(' ').slice(1).join(' ') || ''
+            });
+        } else {
+            setEditData({});
+        }
         setIsEditing(false);
+    };
+
+    const handleAIAutofill = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsExtracting(true);
+        toast.info("Analyzing intake form with Health AI...", { icon: "✨" });
+
+        try {
+            const { extractPatientData } = await import('../lib/services/patientIntakeService');
+            const extractedData = await extractPatientData(file);
+
+            // Merge with current editData (or current patient if not editing yet)
+            setEditData(prev => ({
+                ...patient,
+                ...prev,
+                ...extractedData,
+                first_name: extractedData.first_name || extractedData.full_name?.split(' ')[0] || prev.first_name || patient?.first_name || '',
+                last_name: extractedData.last_name || extractedData.full_name?.split(' ').slice(1).join(' ') || prev.last_name || patient?.last_name || ''
+            }));
+
+            setIsEditing(true);
+            toast.success("Profile auto-filled successfully! Review and click Save.", { icon: "✨" });
+        } catch (error) {
+            console.error("AI extraction error:", error);
+            toast.error("Failed to extract data from document");
+        } finally {
+            setIsExtracting(false);
+            if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
+        }
     };
 
     if (loading) {
@@ -191,9 +268,15 @@ export function PatientDetail() {
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-10 py-6 mb-10 border-b border-slate-100/60 relative">
                 <div className="flex items-center gap-8">
                     <div className="relative group">
-                        <div className="absolute -inset-2 bg-gradient-to-tr from-indigo-500/20 to-indigo-300/10 rounded-[32px] blur-xl opacity-40 transform scale-90 group-hover:scale-110 transition-transform duration-700" />
-                        <div className="relative size-16 rounded-[24px] bg-white text-indigo-600 flex items-center justify-center border border-indigo-50 shadow-sm transition-transform duration-500 group-hover:rotate-3 group-hover:scale-105">
-                            <User size={32} />
+                        <div className={cn(
+                            "absolute -inset-2 bg-gradient-to-tr rounded-[32px] blur-xl opacity-40 transform scale-90 group-hover:scale-110 transition-transform duration-700",
+                            getInitialsTheme(patient.full_name).glow
+                        )} />
+                        <div className={cn(
+                            "relative size-16 rounded-[24px] flex items-center justify-center border shadow-sm transition-all duration-500 group-hover:rotate-3 group-hover:scale-105",
+                            getInitialsTheme(patient.full_name).bg
+                        )}>
+                            <User size={30} />
                         </div>
                     </div>
                     <div>
@@ -201,12 +284,11 @@ export function PatientDetail() {
                             <h1 className="text-4xl font-black tracking-tight text-slate-900 leading-none">
                                 {isEditing ? (editData.full_name || patient.full_name) : patient.full_name}
                             </h1>
-                            <div className={cn(
-                                "px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-widest border transition-colors",
-                                isEditing ? "bg-amber-50 text-amber-600 border-amber-200" : "bg-slate-100 text-slate-500 border-slate-200/50"
-                            )}>
-                                {isEditing ? "Editing Mode" : "EMR Registry"}
-                            </div>
+                            {isEditing && (
+                                <div className="px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-widest border bg-amber-50 text-amber-600 border-amber-200">
+                                    Editing Mode
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-center gap-6 mt-4">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 shadow-sm transition-all hover:bg-white hover:border-indigo-100 group/meta">
@@ -215,21 +297,52 @@ export function PatientDetail() {
                                     {patient.dob ? format(new Date(patient.dob), 'MMM dd, yyyy') : 'N/A'}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 shadow-sm transition-all hover:bg-white hover:border-indigo-100 group/meta">
-                                <Hash size={13} className="text-indigo-400 group-hover/meta:scale-110 transition-transform" />
-                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">
-                                    {patient.emr_id || patient.id.slice(0, 8)}
-                                </span>
-                            </div>
-                        </div>
+                            {patient.emr_id && (
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 shadow-sm transition-all hover:bg-white hover:border-indigo-100 group/meta">
+                                    <Hash size={13} className="text-indigo-400 group-hover/meta:scale-110 transition-transform" />
+                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                                        {patient.emr_id}
+                                    </span>
+                                </div>
+                            )}                        </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleAIAutofill}
+                        accept=".pdf,image/*"
+                        className="hidden"
+                    />
+                    <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isExtracting || isSaving}
+                        className="h-11 px-6 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2.5 group disabled:opacity-50"
+                    >
+                        {isExtracting ? (
+                            <Loader2 size={18} className="animate-spin text-indigo-500" />
+                        ) : (
+                            <UploadCloud size={18} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                        )}
+                        <span className="text-[11px] uppercase tracking-[0.15em]">
+                            {isExtracting ? "Analyzing..." : "AI Autofill"}
+                        </span>
+                    </Button>
                     {!isEditing ? (
                         <>
                             <Button
-                                onClick={() => setIsEditing(true)}
+                                onClick={() => {
+                                    if (patient) {
+                                        setEditData({
+                                            ...patient,
+                                            first_name: patient.first_name || patient.full_name?.split(' ')[0] || '',
+                                            last_name: patient.last_name || patient.full_name?.split(' ').slice(1).join(' ') || ''
+                                        });
+                                    }
+                                    setIsEditing(true);
+                                }}
                                 className="h-11 px-6 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2.5 group"
                             >
                                 <Edit3 size={18} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
@@ -276,11 +389,12 @@ export function PatientDetail() {
             <div className="bg-white rounded-[2.5rem] p-6 md:p-12 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-100 relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
             {/* Premium Unified Tabbed Interface */}
             <Tabs defaultValue="client" className="w-full">
-                <TabsList className="bg-slate-50/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 shadow-sm w-full grid grid-cols-2 md:grid-cols-4 h-12 overflow-hidden mb-10">
+                <TabsList className="bg-slate-50/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 shadow-sm w-full grid grid-cols-3 md:grid-cols-5 h-12 overflow-hidden mb-10">
                     <PremiumTrigger value="client" icon={User} label="Client" theme="indigo" />
                     <PremiumTrigger value="medical" icon={Stethoscope} label="Medical" theme="emerald" />
                     <PremiumTrigger value="psychiatric" icon={Brain} label="Psychiatric" theme="purple" />
                     <PremiumTrigger value="pharmacy" icon={Store} label="Pharmacy" theme="amber" />
+                    <PremiumTrigger value="history" icon={Clock} label="History" theme="slate" />
                 </TabsList>
 
                 <div className="animate-in slide-in-from-bottom-5 duration-700 ease-out">
@@ -327,6 +441,7 @@ export function PatientDetail() {
                                     isEditing={isEditing}
                                     onChange={handleFieldChange}
                                     theme="indigo"
+                                    type="date"
                                 />
                                 <PremiumGlassField
                                     icon={Shield}
@@ -397,6 +512,7 @@ export function PatientDetail() {
                                     isEditing={isEditing}
                                     onChange={handleFieldChange}
                                     theme="indigo"
+                                    options={['English', 'Spanish']}
                                 />
                                 <div className="mt-4 pt-4 border-t border-slate-200/50">
                                     <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Emergency Protocol</p>
@@ -730,7 +846,7 @@ export function PatientDetail() {
                 note={selectedNote}
                 isOpen={!!selectedNote}
                 onClose={() => setSelectedNote(null)}
-                onViewFull={(id) => navigate(`/notes/print/${id}`)}
+                onViewFull={(id) => navigate(`/notes/new?id=${id}`)}
             />
         </div>
     );
@@ -773,9 +889,11 @@ interface FieldProps {
     isEditing?: boolean;
     name?: string;
     onChange?: (name: string, value: string) => void;
+    type?: string;
+    options?: string[];
 }
 
-function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, large, theme, isEditing, name, onChange }: FieldProps) {
+function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, large, theme, isEditing, name, onChange, type, options }: FieldProps) {
     const iconBgThemes = {
         indigo: "bg-indigo-500/10 text-indigo-500 border-indigo-100/50",
         emerald: "bg-emerald-500/10 text-emerald-500 border-emerald-100/50",
@@ -788,18 +906,19 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
         <div className={cn("space-y-1.5 group", className)}>
             <div className="flex items-center gap-3 ml-1.5 transition-transform duration-300 group-hover:translate-x-1">
                 <div className={cn("size-6 rounded-lg flex items-center justify-center relative", iconBgThemes[theme])}>
-                    <div className="absolute inset-0 blur-md opacity-0 group-hover:opacity-60 transition-opacity bg-current" />
+                    <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 transition-opacity rounded-lg" />
                     <Icon size={13} className="relative z-10" />
                 </div>
                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider leading-none opacity-90">{label}</p>
             </div>
 
             <div className={cn(
-                "rounded-[28px] border border-slate-200/70 bg-white transition-all duration-300 relative overflow-hidden",
+                "rounded-[28px] border transition-all duration-300 relative overflow-hidden",
                 "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]",
-                isEditing ? "hover:shadow-[0_12px_24px_-10px_rgba(var(--primary-rgb),0.15)] hover:-translate-y-[2px] border-indigo-200 ring-2 ring-indigo-50" : "hover:border-primary/30",
-                isTextarea ? (large ? "min-h-[170px]" : "min-h-[120px]") : "h-11",
-                !value && !isEditing && "text-slate-300 italic font-medium"
+                isEditing 
+                    ? "hover:border-indigo-300 border-indigo-200 ring-2 ring-indigo-50/30 bg-white shadow-sm" 
+                    : (!value ? "border-dashed border-slate-200 bg-slate-50/30 text-slate-400 font-medium italic" : "border-slate-200/70 bg-white hover:border-indigo-100"),
+                isTextarea ? (large ? "min-h-[170px]" : "min-h-[120px]") : "h-11"
             )}>
 
                 {isEditing ? (
@@ -810,10 +929,26 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                             onChange={(e) => onChange?.(name!, e.target.value)}
                             placeholder={`Document ${label.toLowerCase()}...`}
                         />
+                    ) : options ? (
+                        <Select 
+                            value={value || ''} 
+                            onValueChange={(val) => onChange?.(name!, val)}
+                        >
+                            <SelectTrigger className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-5 text-[14px] font-bold text-slate-900 justify-between pr-4 hover:bg-transparent [&>svg]:opacity-50">
+                                <SelectValue placeholder="Select language..." />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-[1.5rem] border border-slate-100 shadow-2xl bg-white z-[250]">
+                                {options.map((opt) => (
+                                    <SelectItem key={opt} value={opt} className="rounded-xl font-bold text-[13px] text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:text-indigo-600 py-2.5">
+                                        {opt}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     ) : (
                         <input
-                            type="text"
-                            className="w-full h-full bg-transparent border-none outline-none px-5 text-[14px] font-bold text-slate-900 placeholder:text-slate-400 leading-none"
+                            type={type || "text"}
+                            className="w-full h-full bg-transparent border-none outline-none px-5 text-[14px] font-bold text-slate-900 placeholder:text-slate-400 leading-none pr-8"
                             value={value || ''}
                             onChange={(e) => onChange?.(name!, e.target.value)}
                             placeholder={`Enter ${label.toLowerCase()}...`}
@@ -821,7 +956,12 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                     )
                 ) : (
                     <div className="w-full h-full px-6 py-2 flex items-center">
-                        <span className="relative z-10 text-[14px] leading-relaxed">{value || `No documented ${label.toLowerCase()}`}</span>
+                        <span className={cn(
+                            "relative z-10 text-[14px] leading-relaxed",
+                            !value ? "text-slate-400/80" : "text-slate-700"
+                        )}>
+                            {value || `No documented ${label.toLowerCase()}`}
+                        </span>
                     </div>
                 )}
             </div>
@@ -834,42 +974,68 @@ function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: 
     return (
         <div
             className={cn(
-                "flex gap-8 group transition-opacity",
+                "group relative bg-white border border-slate-100 rounded-3xl p-5 md:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_-4px_rgba(0,0,0,0.04)] hover:border-slate-200/60 transition-all duration-300 flex gap-5 md:gap-6 items-center",
                 disabled ? "opacity-50 pointer-events-none" : "cursor-pointer"
             )}
             onClick={() => !disabled && (isNote ? onPreview(item.raw) : navigate(`/calls/${item.id}`))}
         >
-            <div className="flex flex-col items-center shrink-0 pt-1">
-                <div className={cn("size-12 rounded-[22px] flex items-center justify-center text-white shadow-lg transition-all duration-500",
-                    isNote ? 'bg-indigo-600 shadow-indigo-200' : 'bg-emerald-600 shadow-emerald-200',
-                    !disabled && "group-hover:scale-110 group-hover:rotate-6"
-                )}>
-                    {isNote ? <FileText size={20} /> : <Phone size={20} />}
-                </div>
-                {!isLast && <div className="w-1 flex-1 bg-gradient-to-b from-slate-100 via-slate-50 to-transparent my-3 rounded-full opacity-60" />}
+            {/* Left Icon: Apple-style soft pastel circles */}
+            <div className={cn(
+                "size-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105",
+                isNote ? 'bg-indigo-50/70 text-indigo-600' : 'bg-emerald-50/70 text-emerald-600'
+            )}>
+                {isNote ? <FileText size={20} /> : <Phone size={20} />}
             </div>
-            <div className={cn("flex-1 pb-12 transition-transform duration-300", !disabled && "group-hover:translate-x-1")}>
-                <div className="flex items-center gap-4 mb-2.5">
-                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] bg-slate-100/60 px-2.5 py-1 rounded-full border border-slate-200/30">
+
+            {/* Middle Content */}
+            <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-[11px] font-semibold text-slate-400 tracking-wider">
                         {format(new Date(item.timestamp), 'MMM d, yyyy • h:mm a')}
                     </span>
-                    {item.status && <Badge className="text-[11px] font-black bg-emerald-50 text-emerald-600 border-none px-2.5 h-4.5 rounded-full">{item.status}</Badge>}
+                    {isNote ? (
+                        <>
+                            {item.raw?.signature_status === 'signed' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-50/70 text-emerald-700 border border-emerald-100/20">
+                                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Signed
+                                </span>
+                            ) : item.raw?.signature_status === 'pending' ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-50/70 text-amber-700 border border-amber-100/20">
+                                    <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                    Pending Signature {item.raw?.supervisor_email ? `(${item.raw.supervisor_email})` : ''}
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-slate-50/70 text-slate-600 border border-slate-200/20">
+                                    <span className="size-1.5 rounded-full bg-slate-400" />
+                                    Draft
+                                </span>
+                            )}
+                        </>
+                    ) : (
+                        item.status && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100/30">
+                                {item.status}
+                            </span>
+                        )
+                    )}
                 </div>
-                <div className="flex items-center justify-between">
-                    <h4 className={cn(
-                        "text-[17px] font-black text-slate-900 transition-colors duration-300 flex items-center gap-2",
-                        !disabled && "group-hover:text-indigo-600"
-                    )}>
-                        {item.title}
-                    </h4>
-                    <div className={cn(
-                        "size-8 rounded-full flex items-center justify-center bg-slate-50 text-slate-300 transition-all duration-300",
-                        !disabled && "group-hover:bg-indigo-50 group-hover:text-indigo-500 group-hover:scale-110"
-                    )}>
-                        <ChevronRight size={18} />
-                    </div>
-                </div>
-                <p className="text-[14px] text-slate-500 font-medium mt-2 line-clamp-2 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity duration-300">{item.description}</p>
+                <h4 className="text-[16px] font-semibold text-slate-900 mt-1 leading-snug truncate group-hover:text-indigo-600 transition-colors">
+                    {item.title}
+                </h4>
+                {item.description && (
+                    <p className="text-[13px] text-slate-400 font-normal mt-1.5 line-clamp-2 leading-relaxed opacity-90">
+                        {item.description}
+                    </p>
+                )}
+            </div>
+
+            {/* Right Action: Clean chevron */}
+            <div className={cn(
+                "size-9 rounded-full flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-400 transition-all duration-300",
+                !disabled && "group-hover:bg-indigo-50 group-hover:border-indigo-100 group-hover:text-indigo-600 group-hover:translate-x-0.5"
+            )}>
+                <ChevronRight size={16} />
             </div>
         </div>
     );

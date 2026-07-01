@@ -45,6 +45,20 @@ const PrintNote: React.FC = () => {
                     const normalized = normalizeClioNote(rawData);
                     if (normalized) {
                         setNote(normalized);
+                        
+                        // Registrar log de auditoría para la exportación de información PHI (impresión)
+                        try {
+                            const patientName = normalized.patient?.full_name || (normalized as any).patient_name || (normalized as any).meta?.patientName || "Paciente";
+                            const { auditService } = await import('../../services/auditService');
+                            await auditService.logAction({
+                                action: 'EXPORT',
+                                description: `Printed/Exported to PDF clinical note for patient ${patientName} (Note ID: ${id})`,
+                                targetType: 'note',
+                                targetId: id
+                            });
+                        } catch (auditErr) {
+                            console.error('Error writing audit log for print action:', auditErr);
+                        }
                     } else {
                         setError("Failed to process note data");
                     }
