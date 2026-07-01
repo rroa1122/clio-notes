@@ -47,9 +47,9 @@ export function Header() {
                         >
                             <defs>
                                 <linearGradient id="header-g4" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#6366f1" />
-                                    <stop offset="50%" stopColor="#8b5cf6" />
-                                    <stop offset="100%" stopColor="#ec4899" />
+                                    <stop offset="0%" stopColor="#00f2fe" />
+                                    <stop offset="50%" stopColor="#3b82f6" />
+                                    <stop offset="100%" stopColor="#6366f1" />
                                 </linearGradient>
                             </defs>
                             <style>{`

@@ -14,6 +14,7 @@ import { Patients } from './pages/Patients';
 import { PatientDetail } from './pages/PatientDetail';
 import { Invite } from './pages/auth/Invite';
 import { ResetPassword } from './pages/auth/ResetPassword';
+import { Company } from './pages/Company';
 import { Setup } from './pages/Setup';
 import { SetupGuard } from './components/auth/SetupGuard';
 
@@ -66,6 +67,7 @@ const Root = () => {
         <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" replace />} />
         <Route path="/auth/invite" element={<Invite />} />
         <Route path="/auth/reset" element={<ResetPassword />} />
+        <Route path="/company" element={<Company />} />
 
         {/* Setup Mode - Strict Isolation (No Sidebar/Header) */}
         <Route element={<SetupLayout />}>
