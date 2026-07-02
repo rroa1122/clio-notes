@@ -1039,7 +1039,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     }
                     @page {
                         size: letter portrait;
-                        margin: 0.4in 0.4in 0.6in 0.4in !important;
+                        margin: 0.2in 0.4in 0.6in 0.4in !important;
                     }
                     .document-canvas-wrapper { 
                         padding: 0 !important; 
