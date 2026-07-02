@@ -881,57 +881,47 @@ export function PatientDetail() {
             </div>
 
             {showAutofillModeModal && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white border border-slate-100 rounded-[32px] p-8 max-w-md w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-300">
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[4px] animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-[0_24px_70px_-10px_rgba(0,0,0,0.15)] border border-slate-100/60 space-y-6 animate-in zoom-in-95 duration-200">
                         <div className="space-y-2 text-center">
-                            <div className="size-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
-                                <span className="text-xl">✨</span>
-                            </div>
-                            <h3 className="text-xl font-black text-slate-800 tracking-tight">Procesar Documento con IA</h3>
-                            <p className="text-slate-500 font-medium text-xs leading-relaxed">
-                                Selecciona cómo deseas aplicar la información extraída a la ficha actual del paciente.
+                            <h3 className="text-lg font-black text-slate-900 tracking-tight">AI Autofill Mode</h3>
+                            <p className="text-slate-400 font-medium text-[11px] leading-relaxed max-w-[280px] mx-auto">
+                                How should the extracted data be applied to this patient's chart?
                             </p>
                         </div>
                         
                         <div className="space-y-3">
                             <button
                                 onClick={() => executeAIAutofill('fill_blanks')}
-                                className="w-full text-left p-4 rounded-2xl border border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/10 transition-all flex items-start gap-3 group"
+                                className="w-full text-left p-5 rounded-2xl border border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/10 transition-all duration-200 group"
                             >
-                                <div className="mt-0.5 size-5 rounded-full border-2 border-indigo-500 flex items-center justify-center text-[10px] text-white bg-indigo-500 font-bold">1</div>
-                                <div>
-                                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">Completar datos faltantes</h4>
-                                    <p className="text-slate-400 text-[11px] font-medium mt-0.5 leading-relaxed">
-                                        Solo rellena los campos vacíos (ej. PCP o Psych). Respeta al 100% los datos existentes.
-                                    </p>
-                                </div>
+                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 group-hover:text-indigo-600 transition-colors">Fill missing info</h4>
+                                <p className="text-slate-400 text-[11px] font-medium mt-1 leading-normal">
+                                    Safely populate empty fields. Current data will not be overwritten.
+                                </p>
                             </button>
 
                             <button
                                 onClick={() => executeAIAutofill('overwrite_all')}
-                                className="w-full text-left p-4 rounded-2xl border border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/10 transition-all flex items-start gap-3 group"
+                                className="w-full text-left p-5 rounded-2xl border border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/10 transition-all duration-200 group"
                             >
-                                <div className="mt-0.5 size-5 rounded-full border-2 border-indigo-500 flex items-center justify-center text-[10px] text-white bg-indigo-500 font-bold">2</div>
-                                <div>
-                                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">Actualizar y sobrescribir todo</h4>
-                                    <p className="text-slate-400 text-[11px] font-medium mt-0.5 leading-relaxed">
-                                        Reemplaza la información actual con los nuevos datos del documento para una actualización completa.
-                                    </p>
-                                </div>
+                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 group-hover:text-indigo-600 transition-colors">Overwrite all</h4>
+                                <p className="text-slate-400 text-[11px] font-medium mt-1 leading-normal">
+                                    Replace all existing data with the newly extracted values.
+                                </p>
                             </button>
                         </div>
 
-                        <div className="flex gap-3 pt-2">
-                            <Button
-                                variant="outline"
+                        <div className="text-center pt-1">
+                            <button
                                 onClick={() => {
                                     setShowAutofillModeModal(false);
                                     setSelectedAutofillFile(null);
                                 }}
-                                className="flex-1 h-11 rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-50"
+                                className="text-slate-400 hover:text-slate-600 font-bold text-xs transition-colors"
                             >
-                                Cancelar
-                            </Button>
+                                Cancel
+                            </button>
                         </div>
                     </div>
                 </div>
