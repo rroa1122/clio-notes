@@ -821,7 +821,7 @@ export const storage = {
                     .from('patients')
                     .select('id')
                     .eq('full_name', patient.full_name)
-                    .eq('clinic_id', clinicId)
+                    .eq('user_id', user.id)
                     .is('deleted_at', null)
                     .maybeSingle();
                 
