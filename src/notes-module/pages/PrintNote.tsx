@@ -150,15 +150,14 @@ const PrintNote: React.FC = () => {
                         background: white !important;
                     }
 
-                    /* Specific ancestor reset to force zero margin-top and padding-top */
+                    /* Specific ancestor reset to force zero margin-top/bottom and padding-top/bottom */
                     html, body, #root,
-                    .min-h-screen,
-                    [class*="bg-slate-50"],
-                    [class*="max-w-"],
-                    .tcm-print-shell,
-                    .document-canvas-wrapper {
+                    #root div:has(#note-print-root),
+                    #root main:has(#note-print-root) {
                         margin-top: 0 !important;
                         padding-top: 0 !important;
+                        margin-bottom: 0 !important;
+                        padding-bottom: 0 !important;
                     }
 
                     .no-print { display: none !important; }
