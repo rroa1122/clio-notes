@@ -1049,12 +1049,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 }
             `}</style>
 
+            {/* Time Conflict Warning Banner outside the canvas, on the white background above the grey */}
+            <div className="no-print w-full px-8 py-3 bg-white border-b border-slate-100 flex items-center justify-center">
+                <div className="w-full max-w-[950px]">
+                    <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
+                </div>
+            </div>
+
             <div className="document-canvas-wrapper no-print-bg">
                 <div id="note-print-root" className="document-page">
-                    {/* Time Conflict Warning Banner inside the note card */}
-                    <div className="no-print w-full mb-6 shrink-0">
-                        <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
-                    </div>
                     <div className="space-y-6">
                         {/* Header with Title and Logo */}
                         <div className="flex justify-between items-end w-full border-b border-slate-100 pb-4 mb-2">
