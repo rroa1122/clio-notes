@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { calendarService } from '../services/calendarService';
@@ -45,6 +45,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
     const [mfaRequired, setMfaRequired] = useState(false);
     const [mfaEnrollmentRequired, setMfaEnrollmentRequired] = useState(false);
+
+    const userRef = useRef<User | null>(null);
+
+    useEffect(() => {
+        userRef.current = user;
+    }, [user]);
 
     const mapSupabaseUser = async (sbUser: SupabaseUser) => {
         try {
@@ -217,8 +223,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setSession(session);
                         checkMfaStatusSync(session.user, (isMfaActive) => {
                             if (!isMfaActive) {
-                                // Only show loading spinner on SIGNED_IN event, not on TOKEN_REFRESHED or USER_UPDATED
-                                const shouldShowSpinner = (event === 'SIGNED_IN');
+                                // Only show loading spinner if we don't have a user loaded yet
+                                const shouldShowSpinner = !userRef.current;
                                 if (mounted && shouldShowSpinner) setLoading(true);
                                 mapSupabaseUser(session.user).finally(() => {
                                     if (mounted && shouldShowSpinner) setLoading(false);
