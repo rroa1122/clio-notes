@@ -1035,20 +1035,31 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 @media print {
                     @page {
                         size: letter portrait;
-                        margin: 0.6in 0.5in 0.8in 0.5in !important;
+                        margin: 0 !important;
                     }
                     .document-canvas-wrapper { 
-                        padding: 0 !important; 
-                        background: white !important; 
+                        padding: 2.5rem 1.5rem !important; 
+                        background: #f8fafc !important; 
                         border-radius: 0 !important;
+                        min-height: 100vh !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                        align-items: center !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     .document-page {
-                        max-width: none !important;
-                        margin: 0 !important;
-                        padding: 0 !important; 
-                        box-shadow: none !important;
-                        border-radius: 0 !important;
-                        color: black !important;
+                        background-color: white !important; 
+                        width: 100% !important; 
+                        max-width: 900px !important; 
+                        padding: 0.4in 0.5in !important; 
+                        box-shadow: 0 40px 80px -15px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.08) !important;
+                        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+                        border-radius: 48px !important;
+                        margin: 0 auto !important;
+                        color: #1e293b !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     .print-avoid {
                         break-inside: avoid !important;
