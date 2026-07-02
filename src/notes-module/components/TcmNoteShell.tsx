@@ -1059,7 +1059,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         {/* Patient & Facility Grid - TIGHTER & ALIGNED */}
                         <div className="grid grid-cols-2 gap-x-8 mb-2 items-start">
                             {/* Left: Patient Info */}
-                            <div className="space-y-[1px] group/patient relative">
+                            <div className="flex flex-col items-start group/patient relative w-full">
                                 <div className="absolute -top-6 right-0 no-print opacity-0 group-hover/patient:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => handleCopy(`Patient: ${mergedNote.patient?.full_name}\nDOB: ${mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toLocaleDateString() : '—'}\nCase No: ${mergedNote.patient?.account_number || mergedNote.patient?.case_no || '—'}\nSex: ${mergedNote.patient?.sex_at_birth || '—'}`, "Patient Info", "patient")}
@@ -1069,11 +1069,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         {copyingSection === 'patient' ? 'Copied' : 'Copy Patient'}
                                     </button>
                                 </div>
-                                <div className="label-small text-slate-400 mb-1">
+                                <div className="label-small text-slate-400 mb-1 flex items-center h-4">
                                     <User size={11} className="text-indigo-400" />
                                     CLIENT IDENTITY
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 mb-1 leading-none uppercase tracking-tight flex items-center gap-2 h-6">
+                                <div className="text-[14px] font-black text-slate-900 mb-1 leading-none uppercase tracking-tight flex items-center gap-2 h-6 w-full">
                                     <GhostInput
                                         value={mergedNote.patient?.full_name}
                                         isEditMode={isEditMode}
@@ -1082,7 +1082,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         className="!px-0 !bg-transparent !border-0 !shadow-none !text-[14px] !font-black !text-slate-900 !uppercase !tracking-tight !h-auto !py-0"
                                     />
                                 </div>
-                                <div className="space-y-1 mt-2">
+                                <div className="space-y-1 mt-2 w-full">
                                     <div className="flex items-center gap-1.5 text-[11px] h-5">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Case No:</span>
                                         <div className="value-text flex items-center">
@@ -1157,15 +1157,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             </div>
  
                             {/* Right: Facility Info */}
-                            <div className="flex flex-col items-end text-right group/facility relative">
-                                <div className="label-small text-slate-400 mb-1 justify-end">
+                            <div className="flex flex-col items-end text-right group/facility relative w-full">
+                                <div className="label-small text-slate-400 mb-1 justify-end flex items-center h-4">
                                     FACILITY INFO
                                     <MapPin size={12} className="text-indigo-400" />
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 mb-1 leading-none uppercase tracking-tight flex items-center justify-end h-6">
+                                <div className="text-[14px] font-black text-slate-900 mb-1 leading-none uppercase tracking-tight flex items-center justify-end h-6 w-full">
                                     {clinicSettings?.clinicName || "Independent Practice"}
                                 </div>
-                                <div className="space-y-1 mt-2">
+                                <div className="space-y-1 mt-2 w-full">
                                     <div className="flex items-center justify-end gap-x-1.5 h-5 text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Fax:</span>
                                         <span className="font-semibold text-slate-800 leading-none">{clinicSettings?.fax || "—"}</span>
