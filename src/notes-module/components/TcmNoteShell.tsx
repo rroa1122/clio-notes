@@ -1082,64 +1082,56 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         className="!px-0 !bg-transparent !border-0 !shadow-none"
                                     />
                                 </div>
-                                <div className="space-y-0.5">
-                                    <div className="flex items-center gap-x-2">
-                                        <span className="label-small !mb-0 w-16 !text-slate-400/80 !text-[9px]">Case No:</span>
-                                        <div className="value-text flex-1">
-                                            <GhostInput
-                                                value={mergedNote.patient?.account_number || mergedNote.patient?.case_no}
-                                                isEditMode={isEditMode}
-                                                onChange={(val) => handleUpdateField('patient.account_number', val)}
-                                                placeholder="—"
-                                                className="!px-2 !py-0.5 !text-[12px] !h-6"
-                                            />
-                                        </div>
+                                <div className="grid grid-cols-[70px_1fr] gap-y-0.5 items-center mt-2.5">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Case No:</span>
+                                    <div className="value-text">
+                                        <GhostInput
+                                            value={mergedNote.patient?.account_number || mergedNote.patient?.case_no}
+                                            isEditMode={isEditMode}
+                                            onChange={(val) => handleUpdateField('patient.account_number', val)}
+                                            placeholder="—"
+                                            className="!px-2 !py-0.5 !text-[12px] !h-6"
+                                        />
                                     </div>
  
-                                    <div className="flex items-center gap-x-2">
-                                        <span className="label-small !mb-0 w-16 !text-slate-400/80 !text-[9px]">Sex:</span>
-                                        <div className="value-text flex-1">
-                                            <GhostInput
-                                                value={mergedNote.patient?.sex_at_birth}
-                                                isEditMode={isEditMode}
-                                                onChange={(val) => handleUpdateField('patient.sex_at_birth', val)}
-                                                placeholder="—"
-                                                className="!px-2 !py-0.5 !text-[12px] !h-6"
-                                            />
-                                        </div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sex:</span>
+                                    <div className="value-text">
+                                        <GhostInput
+                                            value={mergedNote.patient?.sex_at_birth}
+                                            isEditMode={isEditMode}
+                                            onChange={(val) => handleUpdateField('patient.sex_at_birth', val)}
+                                            placeholder="—"
+                                            className="!px-2 !py-0.5 !text-[12px] !h-6"
+                                        />
                                     </div>
  
-                                    <div className="flex items-center gap-x-2">
-                                        <span className="label-small !mb-0 w-16 !text-slate-400/80 !text-[9px]">Mobile:</span>
-                                        <div className="value-text flex-1">
-                                            <GhostInput
-                                                value={mergedNote.patient?.phone || mergedNote.patient?.mobile}
-                                                isEditMode={isEditMode}
-                                                onChange={(val) => handleUpdateField('patient.phone', val)}
-                                                placeholder="—"
-                                                className="!px-2 !py-0.5 !text-[12px] !h-6"
-                                            />
-                                        </div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile:</span>
+                                    <div className="value-text">
+                                        <GhostInput
+                                            value={mergedNote.patient?.phone || mergedNote.patient?.mobile}
+                                            isEditMode={isEditMode}
+                                            onChange={(val) => handleUpdateField('patient.phone', val)}
+                                            placeholder="—"
+                                            className="!px-2 !py-0.5 !text-[12px] !h-6"
+                                        />
                                     </div>
  
-                                    <div className="flex items-center gap-x-2">
-                                        <span className="label-small !mb-0 w-16 !text-slate-400/80 !text-[9px]">DOB:</span>
-                                        <div className="value-text flex-1 flex items-center gap-1">
-                                            {isEditMode ? (
-                                                <GhostInput
-                                                    type="date"
-                                                    value={mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toISOString().split('T')[0] : ''}
-                                                    onChange={(val) => handleUpdateField('patient.dob', val)}
-                                                    isEditMode={true}
-                                                    className="!px-2 !py-0.5 !text-[12px] !h-6"
-                                                />
-                                            ) : (
-                                                <>
-                                                    <span className="font-bold text-[12px]">{mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : "—"}</span>
-                                                    <span className="text-slate-400 font-black text-[9px] ml-1">({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"}Y)</span>
-                                                </>
-                                            )}
-                                        </div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">DOB:</span>
+                                    <div className="value-text flex items-center gap-1">
+                                        {isEditMode ? (
+                                            <GhostInput
+                                                type="date"
+                                                value={mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toISOString().split('T')[0] : ''}
+                                                onChange={(val) => handleUpdateField('patient.dob', val)}
+                                                isEditMode={true}
+                                                className="!px-2 !py-0.5 !text-[12px] !h-6"
+                                            />
+                                        ) : (
+                                            <>
+                                                <span className="font-bold text-[12px]">{mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : "—"}</span>
+                                                <span className="text-slate-400 font-black text-[9px] ml-1">({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"}Y)</span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
