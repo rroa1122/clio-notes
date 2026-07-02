@@ -220,13 +220,26 @@ export function PatientDetail() {
             const extractedData = await extractPatientData(file);
 
             // Merge with current editData (or current patient if not editing yet)
-            setEditData(prev => ({
-                ...patient,
-                ...prev,
-                ...extractedData,
-                first_name: extractedData.first_name || extractedData.full_name?.split(' ')[0] || prev.first_name || patient?.first_name || '',
-                last_name: extractedData.last_name || extractedData.full_name?.split(' ').slice(1).join(' ') || prev.last_name || patient?.last_name || ''
-            }));
+            setEditData(prev => {
+                const base = {
+                    ...patient,
+                    ...prev
+                };
+                const merged = { ...base };
+                
+                // Only overwrite/add keys from extractedData that are not null, undefined, or empty string
+                for (const [key, value] of Object.entries(extractedData)) {
+                    if (value !== undefined && value !== null && value !== '') {
+                        (merged as any)[key] = value;
+                    }
+                }
+                
+                return {
+                    ...merged,
+                    first_name: extractedData.first_name || extractedData.full_name?.split(' ')[0] || merged.first_name || '',
+                    last_name: extractedData.last_name || extractedData.full_name?.split(' ').slice(1).join(' ') || merged.last_name || ''
+                };
+            });
 
             setIsEditing(true);
             toast.success("Profile auto-filled successfully! Review and click Save.", { icon: "✨" });
