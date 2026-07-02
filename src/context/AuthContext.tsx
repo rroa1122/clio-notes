@@ -217,9 +217,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         setSession(session);
                         checkMfaStatusSync(session.user, (isMfaActive) => {
                             if (!isMfaActive) {
-                                if (mounted) setLoading(true);
+                                // Only show loading spinner on SIGNED_IN event, not on TOKEN_REFRESHED or USER_UPDATED
+                                const shouldShowSpinner = (event === 'SIGNED_IN');
+                                if (mounted && shouldShowSpinner) setLoading(true);
                                 mapSupabaseUser(session.user).finally(() => {
-                                    if (mounted) setLoading(false);
+                                    if (mounted && shouldShowSpinner) setLoading(false);
                                 });
                             } else {
                                 setUser({
