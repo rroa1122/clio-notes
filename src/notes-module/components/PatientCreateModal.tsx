@@ -109,21 +109,28 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
             let extractedFirstName = '';
             let extractedLastName = '';
             if (extractedData.full_name) {
-                const parts = extractedData.full_name.trim().split(/\s+/);
-                if (parts.length > 1) {
-                    extractedFirstName = parts[0];
-                    extractedLastName = parts.slice(1).join(' ');
+                const fullName = extractedData.full_name.trim();
+                if (fullName.includes(',')) {
+                    const commaParts = fullName.split(',');
+                    extractedLastName = commaParts[0].trim();
+                    extractedFirstName = commaParts.slice(1).join(',').trim();
                 } else {
-                    extractedFirstName = parts[0];
-                    extractedLastName = '';
+                    const parts = fullName.split(/\s+/);
+                    if (parts.length > 1) {
+                        extractedFirstName = parts[0];
+                        extractedLastName = parts.slice(1).join(' ');
+                    } else {
+                        extractedFirstName = parts[0];
+                        extractedLastName = '';
+                    }
                 }
             }
 
             const updatedData = {
                 ...formData,
                 ...extractedData,
-                first_name: extractedFirstName || extractedData.first_name || formData.first_name || '',
-                last_name: extractedLastName || extractedData.last_name || formData.last_name || '',
+                first_name: extractedData.first_name || extractedFirstName || formData.first_name || '',
+                last_name: extractedData.last_name || extractedLastName || formData.last_name || '',
                 full_name: extractedData.full_name || `${extractedFirstName} ${extractedLastName}`.trim(),
             };
 

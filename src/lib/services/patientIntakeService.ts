@@ -22,17 +22,26 @@ export async function extractPatientData(file: File): Promise<Partial<Patient>> 
     
     let content: any = rawData;
     
-    // Navigate down if it's the OpenAI array structure
-    if (Array.isArray(rawData) && rawData.length > 0 && rawData[0].message?.content) {
-        content = rawData[0].message.content;
-    } else if (rawData.message?.content) {
-        content = rawData.message.content;
+    // Si n8n devuelve un array con el item (comportamiento estándar de n8n webhooks)
+    if (Array.isArray(rawData) && rawData.length > 0) {
+        content = rawData[0];
+    }
+    
+    // Si viene envuelto en la clave 'json'
+    if (content && content.json) {
+        content = content.json;
+    }
+    
+    // Si viene envuelto en message.content (estructura heredada de OpenAI)
+    if (content && content.message?.content) {
+        content = content.message.content;
     }
 
     // Fallback si los datos ya venían planos
-    if (!content.patient && content.full_name) {
+    if (content && !content.patient && content.full_name) {
         return content as Partial<Patient>;
     }
+
 
     // Map 'content' to Partial<Patient>
     // Map 'content' to Partial<Patient>
@@ -40,6 +49,8 @@ export async function extractPatientData(file: File): Promise<Partial<Patient>> 
 
     if (content.patient) {
         patientData.full_name = content.patient.full_name || '';
+        patientData.first_name = content.patient.first_name || '';
+        patientData.last_name = content.patient.last_name || '';
         patientData.dob = content.patient.dob || '';
         patientData.ssn = content.patient.ssn || '';
         patientData.gender = content.patient.sex || '';
