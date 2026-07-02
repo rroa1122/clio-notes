@@ -453,6 +453,55 @@ export function Settings() {
                                                         placeholder="Enter clinic name"
                                                     />
                                                 </div>
+                                                <div className="md:col-span-2 flex flex-col gap-2">
+                                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1">
+                                                        Clinic Logo
+                                                    </label>
+                                                    <div className="flex items-center gap-5 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                                        {settings.logoUrl ? (
+                                                            <div className="relative size-16 rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center bg-slate-50">
+                                                                <img src={settings.logoUrl} alt="Clinic Logo" className="max-h-full max-w-full object-contain" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleClinicChange('logoUrl', '')}
+                                                                    className="absolute top-0.5 right-0.5 size-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md text-xs font-bold leading-none"
+                                                                    title="Remove Logo"
+                                                                >
+                                                                    &times;
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="size-16 rounded-xl border border-dashed border-slate-300 flex items-center justify-center bg-slate-50 text-slate-400">
+                                                                <Building size={20} />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        const reader = new FileReader();
+                                                                        reader.onloadend = () => {
+                                                                            handleClinicChange('logoUrl', reader.result as string);
+                                                                        };
+                                                                        reader.readAsDataURL(file);
+                                                                    }
+                                                                }}
+                                                                className="hidden"
+                                                                id="clinic-logo-upload"
+                                                            />
+                                                            <label
+                                                                htmlFor="clinic-logo-upload"
+                                                                className="px-4 py-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-600 text-xs font-black uppercase tracking-wider rounded-xl cursor-pointer transition-all shadow-sm flex items-center gap-1.5 w-fit"
+                                                            >
+                                                                Upload Image
+                                                            </label>
+                                                            <p className="text-[10px] text-slate-400 font-semibold">Supports PNG, JPG, or SVG. Max 500KB recommended.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                                 <InputField
                                                     label="Tax ID / EIN"
                                                     value={settings.tax_id}

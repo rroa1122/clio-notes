@@ -143,7 +143,7 @@ export const settingsService = {
                 email: clinic.email || '',
                 address: clinic.address || '',
                 website: clinic.website || '',
-                logoUrl: '', // Column logo_url does not exist in clinics table
+                logoUrl: clinic.settings?.logo_url || '', // Read from JSONB settings
                 timezone: clinic.settings?.timezone || 'UTC',
                 tax_id: clinic.tax_id || '',
                 npi_group: clinic.npi_group || '',
@@ -178,8 +178,8 @@ export const settingsService = {
             if (settings.tax_id !== undefined) dbUpdates.tax_id = settings.tax_id;
             if (settings.npi_group !== undefined) dbUpdates.npi_group = settings.npi_group;
 
-            // Handle supervisor fields in JSONB settings for now as per Setup.tsx logic
-            if (settings.supervisorName !== undefined || settings.supervisorLicense !== undefined || settings.supervisorNpi !== undefined || settings.supervisorSignatureUrl !== undefined || settings.timezone !== undefined) {
+            // Handle supervisor and logo fields in JSONB settings
+            if (settings.supervisorName !== undefined || settings.supervisorLicense !== undefined || settings.supervisorNpi !== undefined || settings.supervisorSignatureUrl !== undefined || settings.timezone !== undefined || settings.logoUrl !== undefined) {
                 // We need the current settings to merge
                 const { data: current } = await supabase.from('clinics').select('settings').eq('id', clinicId).single();
                 dbUpdates.settings = {
@@ -188,7 +188,8 @@ export const settingsService = {
                     ...(settings.supervisorLicense !== undefined && { supervisor_license: settings.supervisorLicense }),
                     ...(settings.supervisorNpi !== undefined && { supervisor_npi: settings.supervisorNpi }),
                     ...(settings.supervisorSignatureUrl !== undefined && { supervisor_signature_url: settings.supervisorSignatureUrl }),
-                    ...(settings.timezone !== undefined && { timezone: settings.timezone })
+                    ...(settings.timezone !== undefined && { timezone: settings.timezone }),
+                    ...(settings.logoUrl !== undefined && { logo_url: settings.logoUrl })
                 };
             }
 
@@ -223,7 +224,8 @@ export const settingsService = {
                     supervisor_name: settings.supervisorName || '',
                     supervisor_license: settings.supervisorLicense || '',
                     supervisor_npi: settings.supervisorNpi || '',
-                    supervisor_signature_url: settings.supervisorSignatureUrl || ''
+                    supervisor_signature_url: settings.supervisorSignatureUrl || '',
+                    logo_url: settings.logoUrl || ''
                 }
             };
 

@@ -1056,6 +1056,27 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
                     </div>
                     <div className="space-y-6">
+                        {/* Header with Title and Logo */}
+                        <div className="flex justify-between items-end w-full border-b border-slate-100 pb-4 mb-2">
+                            <div className="flex flex-col gap-1">
+                                <h1 className="text-[26px] font-black text-slate-900 tracking-tight leading-none uppercase font-sans">
+                                    Progress Note
+                                </h1>
+                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                    DOS: {formatDosDate(mergedNote.encounter?.dos_date || (mergedNote as any).meta?.dos_date || (mergedNote as any).meta?.visitDate)}
+                                </span>
+                            </div>
+                            {clinicSettings?.logoUrl && (
+                                <div className="h-12 flex items-center justify-end">
+                                    <img
+                                        src={clinicSettings.logoUrl}
+                                        alt="Clinic Logo"
+                                        className="max-h-full max-w-[180px] object-contain"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
                         {/* Patient & Facility Grid - TIGHTER & ALIGNED */}
                         <div className="grid grid-cols-2 gap-x-8 mb-2 items-start">
                             {/* Left: Patient Info */}
