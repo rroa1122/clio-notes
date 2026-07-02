@@ -3210,8 +3210,8 @@ textarea:focus {
    ========================================================================== */
 @media print {
   @page {
-    margin: 15mm;
     size: letter portrait;
+    margin: 0.2in 0.4in 0.6in 0.4in;
   }
 
   /* 1. HIDE UI ELEMENTS (Legacy list, closed properly) */
@@ -3229,9 +3229,8 @@ textarea:focus {
    ========================================================================== */
 @media print {
   @page {
-    margin: 5mm;
-    /* EXTREME MARGINS */
     size: letter portrait;
+    margin: 0.2in 0.4in 0.6in 0.4in;
   }
 
   /* 1. NUCLEAR HIDE OPTION (Hide App Shell) */
@@ -3765,7 +3764,8 @@ input.medical-input {
 
 @media print {
   @page {
-    margin: 2cm;
+    size: letter portrait;
+    margin: 0.2in 0.4in 0.6in 0.4in;
   }
 
   /* Target the main content container specifically */
