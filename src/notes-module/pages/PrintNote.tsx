@@ -150,6 +150,17 @@ const PrintNote: React.FC = () => {
                         background: white !important;
                     }
 
+                    /* Specific ancestor reset to force zero margin-top and padding-top */
+                    html, body, #root,
+                    .min-h-screen,
+                    [class*="bg-slate-50"],
+                    [class*="max-w-"],
+                    .tcm-print-shell,
+                    .document-canvas-wrapper {
+                        margin-top: 0 !important;
+                        padding-top: 0 !important;
+                    }
+
                     .no-print { display: none !important; }
                     
                     /* Force container sizing */
