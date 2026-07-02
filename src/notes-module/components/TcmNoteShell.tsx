@@ -1041,6 +1041,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     * {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
+                        transform: none !important;
+                        transition: none !important;
+                        animation: none !important;
                     }
                     /* Specific ancestor reset to force zero margin-top/bottom and padding-top/bottom */
                     html, body, #root,

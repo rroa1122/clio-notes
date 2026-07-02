@@ -130,6 +130,11 @@
 }
 
 @media print {
+  * {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
 
   /* Specific ancestor reset to force zero margin-top/bottom and padding-top/bottom */
   html,

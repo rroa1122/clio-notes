@@ -138,6 +138,11 @@ const PrintNote: React.FC = () => {
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @media print {
+                    * {
+                        transform: none !important;
+                        transition: none !important;
+                        animation: none !important;
+                    }
                     /* SUPER-NUCLEAR RESET: Force full page flow for standalone route */
                     html, body, #root, .min-h-screen, .layout, .layout-container, .main-content, .page-container {
                         height: auto !important;
