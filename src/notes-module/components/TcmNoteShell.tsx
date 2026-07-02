@@ -1113,7 +1113,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 <div className="space-y-[2px] mt-1 w-full">
                                     <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Case No:</span>
-                                        <div className="value-text flex items-center">
+                                        <div className="flex items-center">
                                             {isEditMode ? (
                                                 <GhostInput
                                                     value={mergedNote.patient?.account_number || mergedNote.patient?.case_no}
@@ -1130,7 +1130,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
  
                                     <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Sex:</span>
-                                        <div className="value-text flex items-center">
+                                        <div className="flex items-center">
                                             {isEditMode ? (
                                                 <GhostInput
                                                     value={mergedNote.patient?.sex_at_birth}
@@ -1147,7 +1147,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
  
                                     <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Mobile:</span>
-                                        <div className="value-text flex items-center">
+                                        <div className="flex items-center">
                                             {isEditMode ? (
                                                 <GhostInput
                                                     value={mergedNote.patient?.phone || mergedNote.patient?.mobile}
@@ -1164,7 +1164,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
  
                                     <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">DOB:</span>
-                                        <div className="value-text flex items-center gap-1">
+                                        <div className="flex items-center gap-1">
                                             {isEditMode ? (
                                                 <GhostInput
                                                     type="date"
