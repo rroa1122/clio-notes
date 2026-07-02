@@ -1053,7 +1053,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             {/* Time Conflict Warning Banner outside the canvas, on the white background above the grey */}
             {!isConflictLoading && (confidence === 'low' || conflicts.length > 0) && (
-                <div className="no-print w-full px-8 pt-0 pb-2.5 bg-white border-b border-slate-100 flex items-center justify-center -mt-4 md:-mt-8">
+                <div className="no-print w-full px-8 pt-0 pb-2.5 bg-white flex items-center justify-center -mt-4 md:-mt-8">
                     <div className="w-full max-w-[950px]">
                         <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
                     </div>
