@@ -92,6 +92,8 @@ export function PatientDetail() {
     const [suggestions, setSuggestions] = useState<DiagnosisCode[]>([]);
     const [isExtracting, setIsExtracting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [showAutofillModeModal, setShowAutofillModeModal] = useState(false);
+    const [selectedAutofillFile, setSelectedAutofillFile] = useState<File | null>(null);
 
     const loadData = useCallback(async (isRetry = false) => {
         if (!id) return;
@@ -208,9 +210,19 @@ export function PatientDetail() {
         setIsEditing(false);
     };
 
-    const handleAIAutofill = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAIAutofill = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        setSelectedAutofillFile(file);
+        setShowAutofillModeModal(true);
+        if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
+    };
+
+    const executeAIAutofill = async (mode: 'fill_blanks' | 'overwrite_all') => {
+        if (!selectedAutofillFile) return;
+        const file = selectedAutofillFile;
+        setSelectedAutofillFile(null);
+        setShowAutofillModeModal(false);
 
         setIsExtracting(true);
         toast.info("Analyzing intake form with Health AI...", { icon: "✨" });
@@ -219,7 +231,6 @@ export function PatientDetail() {
             const { extractPatientData } = await import('../lib/services/patientIntakeService');
             const extractedData = await extractPatientData(file);
 
-            // Merge with current editData (or current patient if not editing yet)
             setEditData(prev => {
                 const base = {
                     ...patient,
@@ -227,21 +238,33 @@ export function PatientDetail() {
                 };
                 const merged = { ...base };
                 
-                // Only fill in keys from extractedData if they are currently null, undefined, or empty in base
                 for (const [key, value] of Object.entries(extractedData)) {
                     if (value !== undefined && value !== null && value !== '') {
-                        const existingValue = (base as any)[key];
-                        if (existingValue === undefined || existingValue === null || existingValue === '') {
+                        if (mode === 'overwrite_all') {
                             (merged as any)[key] = value;
+                        } else {
+                            // fill_blanks mode: only set if currently empty in base
+                            const existingValue = (base as any)[key];
+                            if (existingValue === undefined || existingValue === null || existingValue === '') {
+                                (merged as any)[key] = value;
+                            }
                         }
                     }
                 }
                 
-                return {
-                    ...merged,
-                    first_name: merged.first_name || extractedData.first_name || extractedData.full_name?.split(' ')[0] || '',
-                    last_name: merged.last_name || extractedData.last_name || extractedData.full_name?.split(' ').slice(1).join(' ') || ''
-                };
+                if (mode === 'overwrite_all') {
+                    return {
+                        ...merged,
+                        first_name: extractedData.first_name || extractedData.full_name?.split(' ')[0] || '',
+                        last_name: extractedData.last_name || extractedData.full_name?.split(' ').slice(1).join(' ') || ''
+                    };
+                } else {
+                    return {
+                        ...merged,
+                        first_name: merged.first_name || extractedData.first_name || extractedData.full_name?.split(' ')[0] || '',
+                        last_name: merged.last_name || extractedData.last_name || extractedData.full_name?.split(' ').slice(1).join(' ') || ''
+                    };
+                }
             });
 
             setIsEditing(true);
@@ -251,7 +274,6 @@ export function PatientDetail() {
             toast.error("Failed to extract data from document");
         } finally {
             setIsExtracting(false);
-            if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
         }
     };
 
@@ -857,6 +879,63 @@ export function PatientDetail() {
                 </div>
             </Tabs>
             </div>
+
+            {showAutofillModeModal && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white border border-slate-100 rounded-[32px] p-8 max-w-md w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-300">
+                        <div className="space-y-2 text-center">
+                            <div className="size-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                                <span className="text-xl">✨</span>
+                            </div>
+                            <h3 className="text-xl font-black text-slate-800 tracking-tight">Procesar Documento con IA</h3>
+                            <p className="text-slate-500 font-medium text-xs leading-relaxed">
+                                Selecciona cómo deseas aplicar la información extraída a la ficha actual del paciente.
+                            </p>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => executeAIAutofill('fill_blanks')}
+                                className="w-full text-left p-4 rounded-2xl border border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/10 transition-all flex items-start gap-3 group"
+                            >
+                                <div className="mt-0.5 size-5 rounded-full border-2 border-indigo-500 flex items-center justify-center text-[10px] text-white bg-indigo-500 font-bold">1</div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">Completar datos faltantes</h4>
+                                    <p className="text-slate-400 text-[11px] font-medium mt-0.5 leading-relaxed">
+                                        Solo rellena los campos vacíos (ej. PCP o Psych). Respeta al 100% los datos existentes.
+                                    </p>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => executeAIAutofill('overwrite_all')}
+                                className="w-full text-left p-4 rounded-2xl border border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/10 transition-all flex items-start gap-3 group"
+                            >
+                                <div className="mt-0.5 size-5 rounded-full border-2 border-indigo-500 flex items-center justify-center text-[10px] text-white bg-indigo-500 font-bold">2</div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">Actualizar y sobrescribir todo</h4>
+                                    <p className="text-slate-400 text-[11px] font-medium mt-0.5 leading-relaxed">
+                                        Reemplaza la información actual con los nuevos datos del documento para una actualización completa.
+                                    </p>
+                                </div>
+                            </button>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setShowAutofillModeModal(false);
+                                    setSelectedAutofillFile(null);
+                                }}
+                                className="flex-1 h-11 rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-50"
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <PatientNotePreview
                 note={selectedNote}
