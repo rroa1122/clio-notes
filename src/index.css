@@ -168,13 +168,9 @@
   }
 
   #note-print-root.document-page {
-    background: white !important;
+    display: table !important;
     width: 100% !important;
     max-width: none !important;
-    padding-top: 0.25in !important;
-    padding-bottom: 0.7in !important;
-    padding-left: 0.3in !important;
-    padding-right: 0.3in !important;
     box-sizing: border-box !important;
     box-shadow: none !important;
     border: none !important;
@@ -183,6 +179,41 @@
     position: relative !important;
     color: #1e293b !important;
     min-height: 0 !important;
+    background: white !important;
+    padding: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+  }
+
+  .note-content-wrapper {
+    display: table-row-group !important;
+    width: 100% !important;
+  }
+
+  .note-content-wrapper > div {
+    padding-top: 0.25in !important;
+    padding-left: 0.3in !important;
+    padding-right: 0.3in !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-only-footer {
+    display: table-footer-group !important;
+    position: static !important;
+    width: 100% !important;
+  }
+
+  .print-only-footer-content {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 8px !important;
+    padding-bottom: 0.12in !important;
+    padding-left: 0.3in !important;
+    padding-right: 0.3in !important;
+    box-sizing: border-box !important;
+    border-top: 0.5px solid #a3a3a3 !important;
+    width: 100% !important;
   }
 
   .document-canvas-wrapper {

@@ -276,12 +276,14 @@ const CustomPrintHeader = ({ note, clinicSettings, isEditMode, onUpdateField }: 
 };
 
 const CustomPrintFooter = ({ note }: { note: ClioNote }) => (
-    <div className="print-only-footer hidden print:flex fixed left-[0.3in] right-[0.3in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]" style={{ bottom: '0.12in' }}>
-        <div className="text-[9px] text-[#404040]">
-            {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
-        </div>
-        <div className="text-[9px] text-[#404040]">
-            Page <span className="page-number text-[9px]"></span>
+    <div className="print-only-footer hidden print:table-footer-group w-full">
+        <div className="print-only-footer-content flex justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]">
+            <div className="text-[9px] text-[#404040]">
+                {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
+            </div>
+            <div className="text-[9px] text-[#404040]">
+                Page <span className="page-number text-[9px]"></span>
+            </div>
         </div>
     </div>
 );
@@ -1071,19 +1073,46 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         display: block !important;
                     }
                     .document-page {
-                        background-color: white !important; 
-                        width: 100% !important; 
-                        max-width: none !important; 
-                        padding-top: 0.25in !important;
-                        padding-bottom: 0.7in !important;
-                        padding-left: 0.3in !important;
-                        padding-right: 0.3in !important;
+                        display: table !important;
+                        width: 100% !important;
+                        max-width: none !important;
                         box-sizing: border-box !important;
                         box-shadow: none !important;
                         border: none !important;
                         border-radius: 0 !important;
                         margin: 0 !important;
                         color: #1e293b !important;
+                        background-color: white !important; 
+                        padding: 0 !important;
+                        table-layout: fixed !important;
+                        border-collapse: collapse !important;
+                    }
+                    .note-content-wrapper {
+                        display: table-row-group !important;
+                        width: 100% !important;
+                    }
+                    .note-content-wrapper > div {
+                        padding-top: 0.25in !important;
+                        padding-left: 0.3in !important;
+                        padding-right: 0.3in !important;
+                        box-sizing: border-box !important;
+                    }
+                    .print-only-footer {
+                        display: table-footer-group !important;
+                        position: static !important;
+                        width: 100% !important;
+                    }
+                    .print-only-footer-content {
+                        display: flex !important;
+                        justify-content: space-between !important;
+                        align-items: center !important;
+                        padding-top: 8px !important;
+                        padding-bottom: 0.12in !important;
+                        padding-left: 0.3in !important;
+                        padding-right: 0.3in !important;
+                        box-sizing: border-box !important;
+                        border-top: 0.5px solid #a3a3a3 !important;
+                        width: 100% !important;
                     }
                     .document-page .text-slate-400 {
                         color: #94a3b8 !important;
@@ -1128,7 +1157,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             <div className="document-canvas-wrapper no-print-bg">
                 <div id="note-print-root" className="document-page">
-                    <div className="space-y-6">
+                    <div className="note-content-wrapper space-y-6">
                         {/* Header with Title and Logo */}
                         <div className="flex justify-between items-end w-full border-b border-slate-100 pb-4 mb-2">
                             <div className="flex flex-col gap-1">
@@ -1691,9 +1720,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             </div>
                         </div>
                     </div>
+                    <CustomPrintFooter note={mergedNote} />
                 </div>
             </div>
-            <CustomPrintFooter note={mergedNote} />
             <SignatureModal
                 isOpen={activeSigType !== null}
                 onClose={() => setActiveSigType(null)}
