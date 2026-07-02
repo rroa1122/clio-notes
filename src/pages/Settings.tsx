@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Building, PhoneCall, MapPin, Printer, User, CreditCard, Hash, Activity, UserCheck, ShieldCheck, PenTool, Eraser, Lock, Settings as SettingsIcon } from 'lucide-react';
+import { Save, Building, PhoneCall, MapPin, Printer, User, CreditCard, Hash, Activity, UserCheck, ShieldCheck, PenTool, Eraser, Lock, Settings as SettingsIcon, Mail } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { settingsService, type ClinicSettings, type UserProfile } from '../services/settingsService';
 import { useAuth } from '../context/AuthContext';
@@ -490,6 +490,15 @@ export function Settings() {
                                                     placeholder="(555) 000-0000"
                                                     icon={Printer}
                                                 />
+                                                <div className="md:col-span-2">
+                                                    <InputField
+                                                        label="Clinic Email"
+                                                        value={settings.email || ''}
+                                                        onChange={(val) => handleClinicChange('email', val)}
+                                                        placeholder="clinic@example.com"
+                                                        icon={Mail}
+                                                    />
+                                                </div>
                                                 <div className="group md:col-span-2 space-y-2.5">
                                                     <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 group-focus-within:text-[#6366f1] transition-colors">
                                                         <span className="flex items-center gap-2">
