@@ -303,9 +303,9 @@ export function PatientDetail() {
     return (
         <div className="max-w-[1100px] mx-auto p-4 lg:p-8 space-y-12 animate-in fade-in duration-1000">
             {/* Sophisticated Context Header */}
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-10 py-6 mb-10 border-b border-slate-100/60 relative">
-                <div className="flex items-center gap-8">
-                    <div className="relative group">
+            <header className="bg-slate-50/50 border border-slate-100/70 rounded-[32px] p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative shadow-[0_2px_12px_rgba(0,0,0,0.01)] transition-all">
+                <div className="flex items-center gap-6 min-w-0">
+                    <div className="relative group shrink-0">
                         <div className={cn(
                             "absolute -inset-2 bg-gradient-to-tr rounded-[32px] blur-xl opacity-40 transform scale-90 group-hover:scale-110 transition-transform duration-700",
                             getInitialsTheme(patient.full_name).glow
@@ -317,36 +317,38 @@ export function PatientDetail() {
                             <User size={30} />
                         </div>
                     </div>
-                    <div>
-                        <div className="flex items-center gap-4">
-                            <h1 className="text-4xl font-black tracking-tight text-slate-900 leading-none">
-                                {isEditing ? (editData.full_name || patient.full_name) : patient.full_name}
+                    
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 leading-none truncate max-w-[200px] sm:max-w-[320px] md:max-w-[480px]">
+                                {isEditing ? (`${editData.first_name || ''} ${editData.last_name || ''}`.trim() || patient.full_name) : patient.full_name}
                             </h1>
                             {isEditing && (
-                                <div className="px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-widest border bg-amber-50 text-amber-600 border-amber-200">
-                                    Editing Mode
+                                <div className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-amber-50 text-amber-600 border-amber-200 shrink-0">
+                                    Editing
                                 </div>
                             )}
                         </div>
-                        <div className="flex items-center gap-6 mt-4">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 shadow-sm transition-all hover:bg-white hover:border-indigo-100 group/meta">
+                        <div className="flex flex-wrap items-center gap-4 mt-3.5">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200/60 shadow-sm transition-all hover:border-indigo-100 group/meta">
                                 <Calendar size={13} className="text-indigo-400 group-hover/meta:scale-110 transition-transform" />
-                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
                                     {patient.dob ? format(new Date(patient.dob), 'MMM dd, yyyy') : 'N/A'}
                                 </span>
                             </div>
                             {patient.emr_id && (
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 shadow-sm transition-all hover:bg-white hover:border-indigo-100 group/meta">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200/60 shadow-sm transition-all hover:border-indigo-100 group/meta">
                                     <Hash size={13} className="text-indigo-400 group-hover/meta:scale-110 transition-transform" />
-                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider font-mono">
                                         {patient.emr_id}
                                     </span>
                                 </div>
-                            )}                        </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -357,14 +359,14 @@ export function PatientDetail() {
                     <Button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isExtracting || isSaving}
-                        className="h-11 px-6 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2.5 group disabled:opacity-50"
+                        className="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2 group disabled:opacity-50"
                     >
                         {isExtracting ? (
-                            <Loader2 size={18} className="animate-spin text-indigo-500" />
+                            <Loader2 size={16} className="animate-spin text-indigo-500" />
                         ) : (
-                            <UploadCloud size={18} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                            <UploadCloud size={16} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
                         )}
-                        <span className="text-[11px] uppercase tracking-[0.15em]">
+                        <span className="text-[10px] uppercase tracking-[0.15em]">
                             {isExtracting ? "Analyzing..." : "AI Autofill"}
                         </span>
                     </Button>
@@ -381,17 +383,17 @@ export function PatientDetail() {
                                     }
                                     setIsEditing(true);
                                 }}
-                                className="h-11 px-6 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2.5 group"
+                                className="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2 group"
                             >
-                                <Edit3 size={18} className="text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                                <span className="text-[11px] uppercase tracking-[0.15em]">Edit Profile</span>
+                                <Edit3 size={16} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                                <span className="text-[10px] uppercase tracking-[0.15em]">Edit Profile</span>
                             </Button>
                             <Button
                                 onClick={() => navigate(`/notes/new?patientId=${patient.id}`)}
-                                className="h-11 px-7 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2.5 transform active:scale-95 group"
+                                className="h-11 px-6 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2 transform active:scale-95 group"
                             >
-                                <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                                <span className="text-[11px] uppercase tracking-[0.15em]">New Encounter</span>
+                                <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                                <span className="text-[10px] uppercase tracking-[0.15em]">New Encounter</span>
                             </Button>
                         </>
                     ) : (
@@ -399,23 +401,23 @@ export function PatientDetail() {
                             <Button
                                 onClick={handleCancel}
                                 variant="ghost"
-                                className="h-11 px-6 rounded-full text-slate-400 hover:text-slate-600 font-bold transition-all flex items-center gap-2.5"
+                                className="h-11 px-5 rounded-xl text-slate-400 hover:text-slate-600 font-bold transition-all flex items-center gap-2"
                                 disabled={isSaving}
                             >
-                                <X size={18} />
-                                <span className="text-[11px] uppercase tracking-[0.15em]">Cancel</span>
+                                <X size={16} />
+                                <span className="text-[10px] uppercase tracking-[0.15em]">Cancel</span>
                             </Button>
                             <Button
                                 onClick={handleSave}
-                                className="h-11 px-7 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2.5 transform active:scale-95 disabled:opacity-50"
+                                className="h-11 px-6 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2 transform active:scale-95 disabled:opacity-50"
                                 disabled={isSaving}
                             >
                                 {isSaving ? (
                                     <div className="size-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />
                                 ) : (
-                                    <Save size={18} />
+                                    <Save size={16} />
                                 )}
-                                <span className="text-[11px] uppercase tracking-[0.15em]">
+                                <span className="text-[10px] uppercase tracking-[0.15em]">
                                     {isSaving ? "Saving..." : "Save Changes"}
                                 </span>
                             </Button>
