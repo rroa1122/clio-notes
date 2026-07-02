@@ -276,7 +276,7 @@ const CustomPrintHeader = ({ note, clinicSettings, isEditMode, onUpdateField }: 
 };
 
 const CustomPrintFooter = ({ note }: { note: ClioNote }) => (
-    <div className="print-only-footer hidden print:flex fixed left-[0.2in] right-[0.2in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]" style={{ bottom: '0.25in' }}>
+    <div className="print-only-footer hidden print:flex fixed left-[0.3in] right-[0.3in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]" style={{ bottom: '0.12in' }}>
         <div className="text-[9px] text-[#404040]">
             {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
         </div>
@@ -1076,8 +1076,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         max-width: none !important; 
                         padding-top: 0.25in !important;
                         padding-bottom: 0.7in !important;
-                        padding-left: 0.2in !important;
-                        padding-right: 0.2in !important;
+                        padding-left: 0.3in !important;
+                        padding-right: 0.3in !important;
                         box-sizing: border-box !important;
                         box-shadow: none !important;
                         border: none !important;
