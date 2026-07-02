@@ -1236,12 +1236,12 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                     {isEditMode ? (
                                                                         <input
                                                                             type="date"
-                                                                            value={mergedNote.encounter?.dos_date || (mergedNote as any).meta?.visitDate || ''}
-                                                                            onChange={(e) => handleUpdateField('encounter.dos_date', e.target.value)}
+                                                                            value={svc.encounter?.dos_date || (svc as any).meta?.visitDate || ''}
+                                                                            onChange={(e) => handleUpdateField(`${pathPrefix}encounter.dos_date`, e.target.value)}
                                                                             className="bg-slate-50 border border-slate-100 px-2 py-0.5 text-[11px] font-bold text-indigo-900 rounded-lg hover:bg-white hover:border-indigo-200 transition-all outline-none w-[110px]"
                                                                         />
                                                                     ) : (
-                                                                        <span className="font-bold">{formatDosDate(mergedNote.encounter?.dos_date || (mergedNote as any).meta?.visitDate)}</span>
+                                                                        <span className="font-bold">{formatDosDate(svc.encounter?.dos_date || (svc as any).meta?.visitDate)}</span>
                                                                     )}
                                                                 </div>
                                                             </div>

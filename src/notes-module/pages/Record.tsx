@@ -104,7 +104,7 @@ const Record: React.FC = () => {
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [timer, setTimer] = useState(0);
-    const [recordedServices, setRecordedServices] = useState<Array<{ id: string, audioBlob: Blob | null, subTemplate: string, duration: number, manualText?: string, customTemplateText?: string }>>([]);
+    const [recordedServices, setRecordedServices] = useState<Array<{ id: string, audioBlob: Blob | null, subTemplate: string, duration: number, manualText?: string, customTemplateText?: string, serviceDate?: string, timeIn?: string, timeOut?: string }>>([]);
 
     // Process State
     const [status, setStatus] = useState<'idle' | 'recording' | 'uploading' | 'processing' | 'done'>('idle');
@@ -458,7 +458,10 @@ const Record: React.FC = () => {
             subTemplate: selectedSubTemplate,
             duration: timer,
             manualText: patientInfo.context,
-            customTemplateText: patientInfo.customTemplateText
+            customTemplateText: patientInfo.customTemplateText,
+            serviceDate: serviceDate,
+            timeIn: timeIn,
+            timeOut: timeOut
         }]);
 
         // Clean up pending states
@@ -516,7 +519,10 @@ const Record: React.FC = () => {
                 id: 'text-only',
                 audioBlob: new Blob([''], { type: 'audio/webm' }),
                 subTemplate: selectedSubTemplate,
-                duration: 0
+                duration: 0,
+                serviceDate: serviceDate,
+                timeIn: timeIn,
+                timeOut: timeOut
             });
         }
 
@@ -526,6 +532,9 @@ const Record: React.FC = () => {
         try {
             for (let i = 0; i < allServicesToProcess.length; i++) {
                 const svc = allServicesToProcess[i];
+                const svcDate = (svc as any).serviceDate || serviceDate;
+                const svcTimeIn = (svc as any).timeIn || timeIn;
+                const svcTimeOut = (svc as any).timeOut || timeOut;
                 
                 toast.loading(`Processing service ${i + 1} of ${allServicesToProcess.length}...`, { id: 'joint-progress' });
 
@@ -557,7 +566,7 @@ const Record: React.FC = () => {
                 }
 
                 // If it's a manual text service, use that as the primary context
-                const enrichedContext = `Encounter Context:\n${svc.manualText || patientInfo.context}\n\nDate: ${serviceDate}\nTime In: ${timeIn || 'Not specified'}\nTime Out: ${timeOut || 'Not specified'}`;
+                const enrichedContext = `Encounter Context:\n${svc.manualText || patientInfo.context}\n\nDate: ${svcDate}\nTime In: ${svcTimeIn || 'Not specified'}\nTime Out: ${svcTimeOut || 'Not specified'}`;
                 formData.append('patient_context', enrichedContext);
                 
                 // Add unique identifiers so n8n can process them completely separately
@@ -576,9 +585,9 @@ const Record: React.FC = () => {
 
                 if (isTcm) {
                     formData.append('template_id', 'tcm_progress_note');
-                    formData.append('service_date', serviceDate);
-                    formData.append('time_in', timeIn);
-                    formData.append('time_out', timeOut);
+                    formData.append('service_date', svcDate);
+                    formData.append('time_in', svcTimeIn);
+                    formData.append('time_out', svcTimeOut);
                     formData.append('primary_service_provided', uniqueServiceTitle);
                 } else {
                     const bodyData = {
@@ -591,7 +600,7 @@ const Record: React.FC = () => {
                         template_version: currentTemplate.version,
                         provider_name: user?.name,
                         patient_id: selectedPatient?.id,
-                        service_date: serviceDate,
+                        service_date: svcDate,
                         service_id: svc.id,
                         joint_note_index: i + 1,
                         joint_note_total: allServicesToProcess.length,
@@ -646,7 +655,7 @@ const Record: React.FC = () => {
                     
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations
                     if (!normalized.encounter) normalized.encounter = {} as any;
-                    normalized.encounter.dos_date = serviceDate;
+                    normalized.encounter.dos_date = svcDate;
                     
                     generatedNotes.push(normalized);
                 }
@@ -660,9 +669,10 @@ const Record: React.FC = () => {
                     let hasOverlap = false;
 
                     // 1. Ensure all generated notes have a valid dos_date before we extract ISO strings
-                    generatedNotes.forEach(note => {
+                    generatedNotes.forEach((note, idx) => {
                         if (note.encounter && (!note.encounter.dos_date || note.encounter.dos_date === '—')) {
-                            note.encounter.dos_date = serviceDate;
+                            const matchingSvc = allServicesToProcess[idx];
+                            note.encounter.dos_date = (matchingSvc as any).serviceDate || serviceDate;
                         }
                     });
 
