@@ -276,16 +276,20 @@ const CustomPrintHeader = ({ note, clinicSettings, isEditMode, onUpdateField }: 
 };
 
 const CustomPrintFooter = ({ note }: { note: ClioNote }) => (
-    <div className="print-only-footer hidden print:table-footer-group w-full">
-        <div className="print-only-footer-content flex justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]">
-            <div className="text-[9px] text-[#404040]">
-                {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
-            </div>
-            <div className="text-[9px] text-[#404040]">
-                Page <span className="page-number text-[9px]"></span>
-            </div>
-        </div>
-    </div>
+    <tfoot className="print-only-footer hidden print:table-footer-group w-full">
+        <tr>
+            <td className="px-[0.3in] pb-[0.12in]">
+                <div className="print-only-footer-content flex justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]">
+                    <div className="text-[9px] text-[#404040]">
+                        {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
+                    </div>
+                    <div className="text-[9px] text-[#404040]">
+                        Page <span className="page-number text-[9px]"></span>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </tfoot>
 );
 
 const GhostInput = ({
@@ -1073,46 +1077,19 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         display: block !important;
                     }
                     .document-page {
-                        display: table !important;
-                        width: 100% !important;
-                        max-width: none !important;
+                        background-color: white !important; 
+                        width: 100% !important; 
+                        max-width: none !important; 
+                        padding-top: 0.25in !important;
+                        padding-bottom: 0.7in !important;
+                        padding-left: 0.3in !important;
+                        padding-right: 0.3in !important;
                         box-sizing: border-box !important;
                         box-shadow: none !important;
                         border: none !important;
                         border-radius: 0 !important;
                         margin: 0 !important;
                         color: #1e293b !important;
-                        background-color: white !important; 
-                        padding: 0 !important;
-                        table-layout: fixed !important;
-                        border-collapse: collapse !important;
-                    }
-                    .note-content-wrapper {
-                        display: table-row-group !important;
-                        width: 100% !important;
-                    }
-                    .note-content-wrapper > div {
-                        padding-top: 0.25in !important;
-                        padding-left: 0.3in !important;
-                        padding-right: 0.3in !important;
-                        box-sizing: border-box !important;
-                    }
-                    .print-only-footer {
-                        display: table-footer-group !important;
-                        position: static !important;
-                        width: 100% !important;
-                    }
-                    .print-only-footer-content {
-                        display: flex !important;
-                        justify-content: space-between !important;
-                        align-items: center !important;
-                        padding-top: 8px !important;
-                        padding-bottom: 0.12in !important;
-                        padding-left: 0.3in !important;
-                        padding-right: 0.3in !important;
-                        box-sizing: border-box !important;
-                        border-top: 0.5px solid #a3a3a3 !important;
-                        width: 100% !important;
                     }
                     .document-page .text-slate-400 {
                         color: #94a3b8 !important;
@@ -1144,6 +1121,14 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     }
                     .no-print { display: none !important; }
                 }
+                @media screen {
+                    table#note-print-root,
+                    table#note-print-root > tbody,
+                    table#note-print-root > tbody > tr,
+                    table#note-print-root > tbody > tr > td {
+                        display: block !important;
+                    }
+                }
             `}</style>
 
             {/* Time Conflict Warning Banner outside the canvas, on the white background above the grey */}
@@ -1156,8 +1141,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
             )}
 
             <div className="document-canvas-wrapper no-print-bg">
-                <div id="note-print-root" className="document-page">
-                    <div className="note-content-wrapper space-y-6">
+                <table id="note-print-root" className="document-page border-collapse">
+                    <tbody className="note-content-wrapper">
+                        <tr>
+                            <td>
+                                <div className="space-y-6">
                         {/* Header with Title and Logo */}
                         <div className="flex justify-between items-end w-full border-b border-slate-100 pb-4 mb-2">
                             <div className="flex flex-col gap-1">
@@ -1720,8 +1708,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             </div>
                         </div>
                     </div>
-                    <CustomPrintFooter note={mergedNote} />
-                </div>
+                </td></tr></tbody>
+                <CustomPrintFooter note={mergedNote} />
+            </table>
             </div>
             <SignatureModal
                 isOpen={activeSigType !== null}

@@ -167,7 +167,8 @@
     print-color-adjust: exact !important;
   }
 
-  #note-print-root.document-page {
+  table#note-print-root.document-page,
+  .document-page {
     display: table !important;
     width: 100% !important;
     max-width: none !important;
@@ -185,13 +186,21 @@
     border-collapse: collapse !important;
   }
 
-  .note-content-wrapper {
+  table#note-print-root > tbody {
     display: table-row-group !important;
     width: 100% !important;
   }
 
-  .note-content-wrapper > div {
+  table#note-print-root > tbody > tr {
+    display: table-row !important;
+    width: 100% !important;
+  }
+
+  table#note-print-root > tbody > tr > td {
+    display: table-cell !important;
+    width: 100% !important;
     padding-top: 0.25in !important;
+    padding-bottom: 0.5in !important;
     padding-left: 0.3in !important;
     padding-right: 0.3in !important;
     box-sizing: border-box !important;
@@ -207,12 +216,6 @@
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding-top: 8px !important;
-    padding-bottom: 0.12in !important;
-    padding-left: 0.3in !important;
-    padding-right: 0.3in !important;
-    box-sizing: border-box !important;
-    border-top: 0.5px solid #a3a3a3 !important;
     width: 100% !important;
   }
 
@@ -278,5 +281,14 @@
   /* Force global visibility */
   * {
     overflow: visible !important;
+  }
+}
+
+@media screen {
+  table#note-print-root,
+  table#note-print-root > tbody,
+  table#note-print-root > tbody > tr,
+  table#note-print-root > tbody > tr > td {
+    display: block !important;
   }
 }
