@@ -1073,13 +1073,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     <User size={11} className="text-indigo-400" />
                                     CLIENT IDENTITY
                                 </div>
-                                <div className="text-[22px] font-black text-slate-900 mb-1.5 leading-tight flex items-center gap-2">
+                                <div className="text-[14px] font-black text-slate-900 mb-1 leading-none uppercase tracking-tight flex items-center gap-2">
                                     <GhostInput
                                         value={mergedNote.patient?.full_name}
                                         isEditMode={isEditMode}
                                         onChange={(val) => handleUpdateField('patient.full_name', val)}
                                         placeholder="Patient Name"
-                                        className="!px-0 !bg-transparent !border-0 !shadow-none"
+                                        className="!px-0 !bg-transparent !border-0 !shadow-none !text-[14px] !font-black !text-slate-900 !uppercase !tracking-tight !h-auto !py-0"
                                     />
                                 </div>
                                 <div className="space-y-0.5 mt-2.5">
