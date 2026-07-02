@@ -792,7 +792,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Agency / Facility</p>
                                                     <div className="text-xl font-black text-slate-950 leading-tight tracking-tight">
                                                         <PrintValue
-                                                            value={mergedNote.facility?.name || mergedNote.facility?.facility_name || ""}
+                                                            value={mergedNote.facility?.name || mergedNote.facility?.facility_name || clinicSettings?.clinicName || ""}
                                                             isEditMode={isEditMode}
                                                             onChange={(val) => handleUpdateField('facility.name', val)}
                                                             field={{ path: 'facility.name' }}
@@ -805,7 +805,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                                         <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.15em]">Physical Address</p>
                                                         <div className="text-[12px] font-black text-slate-800 leading-tight">
                                                             <PrintValue
-                                                                value={mergedNote.facility?.address || ""}
+                                                                value={mergedNote.facility?.address || clinicSettings?.address || ""}
                                                                 isEditMode={isEditMode}
                                                                 onChange={(val) => handleUpdateField('facility.address', val)}
                                                                 field={{ path: 'facility.address' }}
@@ -817,7 +817,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                                             <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.15em]">Phone</p>
                                                             <div className="text-[12px] font-black text-slate-800 leading-tight">
                                                                 <PrintValue
-                                                                    value={mergedNote.facility?.phone || ""}
+                                                                    value={mergedNote.facility?.phone || clinicSettings?.phone || ""}
                                                                     isEditMode={isEditMode}
                                                                     onChange={(val) => handleUpdateField('facility.phone', val)}
                                                                     field={{ path: 'facility.phone' }}
@@ -828,7 +828,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                                             <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.15em]">Fax</p>
                                                             <div className="text-[12px] font-black text-slate-800 leading-tight">
                                                                 <PrintValue
-                                                                    value={mergedNote.facility?.fax || ""}
+                                                                    value={mergedNote.facility?.fax || clinicSettings?.fax || ""}
                                                                     isEditMode={isEditMode}
                                                                     onChange={(val) => handleUpdateField('facility.fax', val)}
                                                                     field={{ path: 'facility.fax' }}
@@ -839,7 +839,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                                             <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.15em]">Email Contact</p>
                                                             <div className="text-[12px] font-black text-slate-800 leading-tight">
                                                                 <PrintValue
-                                                                    value={mergedNote.facility?.email || ""}
+                                                                    value={mergedNote.facility?.email || clinicSettings?.email || ""}
                                                                     isEditMode={isEditMode}
                                                                     onChange={(val) => handleUpdateField('facility.email', val)}
                                                                     field={{ path: 'facility.email' }}

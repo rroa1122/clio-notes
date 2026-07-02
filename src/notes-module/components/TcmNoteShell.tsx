@@ -1169,6 +1169,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                             {clinicSettings?.email || "—"}
                                         </div>
                                     </div>
+                                    <div className="flex items-center justify-end gap-x-1.5 mt-0.5">
+                                        <div className="value-text !text-[10px] !text-slate-400/80 font-semibold max-w-[200px] leading-tight text-right uppercase tracking-wide">
+                                            {clinicSettings?.address || "—"}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
