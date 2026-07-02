@@ -1082,7 +1082,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         className="!px-0 !bg-transparent !border-0 !shadow-none"
                                     />
                                 </div>
-                                <div className="grid grid-cols-[70px_1fr] gap-y-0.5 items-center mt-2.5">
+                                <div className="mt-2.5" style={{ display: 'grid', gridTemplateColumns: '70px 1fr', rowGap: '2px', alignItems: 'center' }}>
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Case No:</span>
                                     <div className="value-text">
                                         <GhostInput
