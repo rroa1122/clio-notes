@@ -1045,14 +1045,23 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         transition: none !important;
                         animation: none !important;
                     }
-                    /* Specific ancestor reset to force zero margin-top/bottom and padding-top/bottom */
-                    html, body, #root,
-                    #root div:has(#note-print-root),
-                    #root main:has(#note-print-root) {
-                        margin-top: 0 !important;
-                        padding-top: 0 !important;
-                        margin-bottom: 0 !important;
-                        padding-bottom: 0 !important;
+                    /* High-specificity ancestor reset to bypass Tailwind flexbox/padding overrides */
+                    html,
+                    body,
+                    html body #root,
+                    html body #root div:has(#note-print-root),
+                    html body #root main:has(#note-print-root) {
+                        display: block !important;
+                        position: static !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        height: auto !important;
+                        min-height: 0 !important;
+                        overflow: visible !important;
+                        background: white !important;
+                        box-shadow: none !important;
+                        border: none !important;
+                        border-radius: 0 !important;
                     }
                     .document-canvas-wrapper { 
                         padding: 0 !important; 
