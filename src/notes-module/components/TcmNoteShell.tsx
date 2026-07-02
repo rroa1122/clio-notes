@@ -1174,6 +1174,22 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                             {clinicSettings?.address || "—"}
                                         </div>
                                     </div>
+                                    <div className="flex flex-col items-end gap-y-0.5 mt-1 border-t border-slate-100 dark:border-slate-800/55 pt-1 w-full">
+                                        {clinicSettings?.npi_group && (
+                                            <div className="flex items-center justify-end gap-x-1.5">
+                                                <div className="value-text !text-[10px] !text-slate-500 font-bold uppercase tracking-wide">
+                                                    NPI Group: {clinicSettings.npi_group}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {clinicSettings?.tax_id && (
+                                            <div className="flex items-center justify-end gap-x-1.5">
+                                                <div className="value-text !text-[10px] !text-slate-500 font-bold uppercase tracking-wide">
+                                                    Tax ID: {clinicSettings.tax_id}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>

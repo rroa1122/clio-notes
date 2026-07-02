@@ -95,6 +95,8 @@ export interface StructuredNote {
         facility_address?: string;
         facility_phone?: string;
         facility_fax?: string;
+        npi_group?: string;
+        tax_id?: string;
     };
     provider: {
         provider_name: string;
@@ -319,6 +321,8 @@ export interface ClioNote {
         facility_fax?: string;
         email?: string;
         facility_email?: string;
+        npi_group?: string;
+        tax_id?: string;
     };
     meta: {
         template_id: string;

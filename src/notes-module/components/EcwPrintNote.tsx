@@ -835,6 +835,28 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                                                 />
                                                             </div>
                                                         </div>
+                                                        <div className="space-y-0.5">
+                                                            <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.15em]">NPI (Group)</p>
+                                                            <div className="text-[12px] font-black text-slate-800 leading-tight">
+                                                                <PrintValue
+                                                                    value={mergedNote.facility?.npi_group || clinicSettings?.npi_group || ""}
+                                                                    isEditMode={isEditMode}
+                                                                    onChange={(val) => handleUpdateField('facility.npi_group', val)}
+                                                                    field={{ path: 'facility.npi_group' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-0.5">
+                                                            <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.15em]">Tax ID (EIN)</p>
+                                                            <div className="text-[12px] font-black text-slate-800 leading-tight">
+                                                                <PrintValue
+                                                                    value={mergedNote.facility?.tax_id || clinicSettings?.tax_id || ""}
+                                                                    isEditMode={isEditMode}
+                                                                    onChange={(val) => handleUpdateField('facility.tax_id', val)}
+                                                                    field={{ path: 'facility.tax_id' }}
+                                                                />
+                                                            </div>
+                                                        </div>
                                                         <div className="col-span-2 space-y-0.5">
                                                             <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-[0.15em]">Email Contact</p>
                                                             <div className="text-[12px] font-black text-slate-800 leading-tight">
