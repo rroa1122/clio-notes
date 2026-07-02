@@ -227,17 +227,20 @@ export function PatientDetail() {
                 };
                 const merged = { ...base };
                 
-                // Only overwrite/add keys from extractedData that are not null, undefined, or empty string
+                // Only fill in keys from extractedData if they are currently null, undefined, or empty in base
                 for (const [key, value] of Object.entries(extractedData)) {
                     if (value !== undefined && value !== null && value !== '') {
-                        (merged as any)[key] = value;
+                        const existingValue = (base as any)[key];
+                        if (existingValue === undefined || existingValue === null || existingValue === '') {
+                            (merged as any)[key] = value;
+                        }
                     }
                 }
                 
                 return {
                     ...merged,
-                    first_name: extractedData.first_name || extractedData.full_name?.split(' ')[0] || merged.first_name || '',
-                    last_name: extractedData.last_name || extractedData.full_name?.split(' ').slice(1).join(' ') || merged.last_name || ''
+                    first_name: merged.first_name || extractedData.first_name || extractedData.full_name?.split(' ')[0] || '',
+                    last_name: merged.last_name || extractedData.last_name || extractedData.full_name?.split(' ').slice(1).join(' ') || ''
                 };
             });
 
