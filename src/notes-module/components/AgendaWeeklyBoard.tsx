@@ -223,7 +223,8 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                     const rawD = note.encounter?.duration_minutes || note.encounter?.duration;
                                     const timeStr = start ? (end ? `${start} - ${end}` : start) : (rawD ? `${rawD} mins` : 'Unscheduled');
                                     
-                                    const isSigned = note.signature || (note as any).sign_off?.status === 'signed';
+                                    const isSigned = note.signature || (note as any).sign_off?.status === 'signed' || note.signature_status === 'signed';
+                                    const isPending = (note as any).sign_off?.status === 'pending' || note.signature_status === 'pending';
 
                                     return (
                                         <TiltCard intensity={6} scale={1.01}>
@@ -234,7 +235,8 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                 "relative overflow-hidden rounded-2xl p-3 bg-white border border-slate-200/70 transition-all duration-300 cursor-pointer group/card",
                                                 "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]",
                                                 "hover:shadow-[0_12px_24px_-10px_rgba(var(--primary-rgb),0.15)] hover:-translate-y-[2px] hover:border-primary/30 hover:z-10",
-                                                !isSigned && "bg-gradient-to-br from-white to-amber-50/10"
+                                                isPending && "bg-gradient-to-br from-white to-amber-50/10",
+                                                !isSigned && !isPending && "bg-gradient-to-br from-white to-slate-50/30"
                                             )}
                                         >
                                             
@@ -253,10 +255,17 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                     </span>
                                                     <span 
                                                         className="relative flex h-2 w-2 shrink-0"
-                                                        title={isSigned ? "Signed" : "Draft"}
+                                                        title={isSigned ? "Signed" : isPending ? "Pending Signature" : "Draft"}
                                                     >
-                                                        {!isSigned && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>}
-                                                        <span className={cn("relative inline-flex rounded-full h-2 w-2", isSigned ? "bg-emerald-500" : "bg-amber-500")}></span>
+                                                        {isPending && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>}
+                                                        <span className={cn(
+                                                            "relative inline-flex rounded-full h-2 w-2", 
+                                                            isSigned 
+                                                                ? "bg-emerald-500" 
+                                                                : isPending 
+                                                                    ? "bg-amber-500" 
+                                                                    : "bg-slate-350 bg-slate-300"
+                                                        )}></span>
                                                     </span>
                                                 </div>
                                                 
