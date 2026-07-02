@@ -1073,7 +1073,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     <User size={11} className="text-indigo-400" />
                                     CLIENT IDENTITY
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 mb-1 leading-none uppercase tracking-tight flex items-center gap-2 h-6 w-full">
+                                <div className="text-[14px] font-black text-slate-900 mb-0.5 leading-none uppercase tracking-tight flex items-center gap-2 h-5 w-full">
                                     <GhostInput
                                         value={mergedNote.patient?.full_name}
                                         isEditMode={isEditMode}
@@ -1082,8 +1082,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         className="!px-0 !bg-transparent !border-0 !shadow-none !text-[14px] !font-black !text-slate-900 !uppercase !tracking-tight !h-auto !py-0"
                                     />
                                 </div>
-                                <div className="space-y-1 mt-2 w-full">
-                                    <div className="flex items-center gap-1.5 text-[11px] h-5">
+                                <div className="space-y-[2px] mt-1 w-full">
+                                    <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Case No:</span>
                                         <div className="value-text flex items-center">
                                             {isEditMode ? (
@@ -1100,7 +1100,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         </div>
                                     </div>
  
-                                    <div className="flex items-center gap-1.5 text-[11px] h-5">
+                                    <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Sex:</span>
                                         <div className="value-text flex items-center">
                                             {isEditMode ? (
@@ -1117,7 +1117,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         </div>
                                     </div>
  
-                                    <div className="flex items-center gap-1.5 text-[11px] h-5">
+                                    <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Mobile:</span>
                                         <div className="value-text flex items-center">
                                             {isEditMode ? (
@@ -1134,7 +1134,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         </div>
                                     </div>
  
-                                    <div className="flex items-center gap-1.5 text-[11px] h-5">
+                                    <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">DOB:</span>
                                         <div className="value-text flex items-center gap-1">
                                             {isEditMode ? (
@@ -1162,23 +1162,23 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     FACILITY INFO
                                     <MapPin size={12} className="text-indigo-400" />
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 mb-1 leading-none uppercase tracking-tight flex items-center justify-end h-6 w-full">
+                                <div className="text-[14px] font-black text-slate-900 mb-0.5 leading-none uppercase tracking-tight flex items-center justify-end h-5 w-full">
                                     {clinicSettings?.clinicName || "Independent Practice"}
                                 </div>
-                                <div className="space-y-1 mt-2 w-full">
-                                    <div className="flex items-center justify-end gap-x-1.5 h-5 text-[11px]">
+                                <div className="space-y-[2px] mt-1 w-full">
+                                    <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Fax:</span>
                                         <span className="font-semibold text-slate-800 leading-none">{clinicSettings?.fax || "—"}</span>
                                     </div>
-                                    <div className="flex items-center justify-end gap-x-1.5 h-5 text-[11px]">
+                                    <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Phone:</span>
                                         <span className="font-semibold text-slate-800 leading-none">{clinicSettings?.phone || "—"}</span>
                                     </div>
-                                    <div className="flex items-center justify-end gap-x-1.5 h-5 text-[11px]">
+                                    <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Email:</span>
                                         <span className="font-semibold text-slate-800 leading-none lowercase">{clinicSettings?.email || "—"}</span>
                                     </div>
-                                    <div className="flex items-center justify-end gap-x-1.5 h-5 text-[11px]">
+                                    <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Address:</span>
                                         <span className="font-semibold text-slate-800 leading-none max-w-[200px] truncate">{clinicSettings?.address || "—"}</span>
                                     </div>
