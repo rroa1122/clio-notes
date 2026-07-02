@@ -1033,6 +1033,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 }
 
                 @media print {
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
                     @page {
                         size: letter portrait;
                         margin: 0.6in 0.5in 0.8in 0.5in !important;
@@ -1043,8 +1047,6 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         border-radius: 0 !important;
                         min-height: 0 !important;
                         display: block !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
                     }
                     .document-page {
                         background-color: white !important; 
@@ -1056,8 +1058,26 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         border-radius: 0 !important;
                         margin: 0 !important;
                         color: #1e293b !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
+                    }
+                    .document-page .text-slate-400 {
+                        color: #94a3b8 !important;
+                    }
+                    .document-page .text-slate-500,
+                    .document-page .text-slate-600 {
+                        color: #64748b !important;
+                    }
+                    .document-page .text-indigo-400 {
+                        color: #818cf8 !important;
+                    }
+                    .document-page .label-small {
+                        color: #94a3b8 !important;
+                    }
+                    .gradient-divider { 
+                        background: transparent !important;
+                        background-image: none !important;
+                        border-bottom: 1.5px solid #cbd5e1 !important; 
+                        height: 1px !important;
+                        margin: 0.75rem 0 !important;
                     }
                     .print-avoid {
                         break-inside: avoid !important;
@@ -1068,7 +1088,6 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         page-break-after: avoid !important;
                     }
                     .no-print { display: none !important; }
-                    .gradient-divider { background: #e2e8f0 !important; }
                 }
             `}</style>
 
