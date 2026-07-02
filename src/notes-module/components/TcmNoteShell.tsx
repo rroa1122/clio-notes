@@ -276,7 +276,7 @@ const CustomPrintHeader = ({ note, clinicSettings, isEditMode, onUpdateField }: 
 };
 
 const CustomPrintFooter = ({ note }: { note: ClioNote }) => (
-    <div className="print-only-footer hidden print:flex fixed bottom-2 left-[0.5in] right-[0.5in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]">
+    <div className="print-only-footer hidden print:flex fixed left-[0.5in] right-[0.5in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]" style={{ bottom: '0.3in' }}>
         <div className="text-[9px] text-[#404040]">
             {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
         </div>
@@ -1033,6 +1033,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 }
 
                 @media print {
+                    @page {
+                        size: letter portrait;
+                        margin: 0.6in 0.5in 0.8in 0.5in !important;
+                    }
                     .document-canvas-wrapper { 
                         padding: 0 !important; 
                         background: white !important; 
@@ -1041,10 +1045,18 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     .document-page {
                         max-width: none !important;
                         margin: 0 !important;
-                        padding: 0.5in !important;
+                        padding: 0 !important; 
                         box-shadow: none !important;
                         border-radius: 0 !important;
                         color: black !important;
+                    }
+                    .print-avoid {
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                    }
+                    h1, h2, h3, h4, h5, h6, .label-small {
+                        break-after: avoid !important;
+                        page-break-after: avoid !important;
                     }
                     .no-print { display: none !important; }
                     .gradient-divider { background: #e2e8f0 !important; }
@@ -1247,7 +1259,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                                             return (
                                                 <>
-                                                    <section className="print-section">
+                                                    <section className="print-section print-avoid">
                                                         <SectionHeader title="VISIT DETAILS" icon={Stethoscope} />
                                                         <div className="grid grid-cols-5 gap-4">
                                                             <div className="flex flex-col gap-0.5 items-center text-center">
@@ -1377,7 +1389,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                         </div>
                                                     </section>
 
-                                                    <section className="print-section mt-4">
+                                                    <section className="print-section mt-4 print-avoid">
                                                         <SectionHeader title="INFORMATION & DOMAINS" icon={ListTodo} />
                                                         <div className="mt-0.5 px-0.5">
                                                             <div className="grid grid-cols-3 gap-x-2 gap-y-0.5">
@@ -1476,7 +1488,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             );
                         })()}
 
-                        <section className="print-section mt-2 mb-1 group/diagnoses relative">
+                        <section className="print-section mt-2 mb-1 group/diagnoses relative print-avoid">
                             <div className="flex justify-between items-center border-b border-slate-50 pb-0.5">
                                 <h2 className="text-[9px] font-black text-slate-900 tracking-[0.25em] uppercase leading-none">Diagnoses</h2>
                             </div>
