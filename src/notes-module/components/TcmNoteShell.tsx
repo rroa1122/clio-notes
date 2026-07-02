@@ -1035,7 +1035,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 @media print {
                     @page {
                         size: letter portrait;
-                        margin: 0.5in 0.4in 0.8in 0.4in !important;
+                        margin: 0.6in 0.5in 0.8in 0.5in !important;
                     }
                     .document-canvas-wrapper { 
                         padding: 0 !important; 
@@ -1050,10 +1050,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         background-color: white !important; 
                         width: 100% !important; 
                         max-width: none !important; 
-                        padding: 0.4in 0.5in !important; 
+                        padding: 0 !important; 
                         box-shadow: none !important;
-                        border: 1.5px solid #cbd5e1 !important;
-                        border-radius: 24px !important;
+                        border: none !important;
+                        border-radius: 0 !important;
                         margin: 0 !important;
                         color: #1e293b !important;
                         -webkit-print-color-adjust: exact !important;
