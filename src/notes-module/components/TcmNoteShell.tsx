@@ -1035,28 +1035,26 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 @media print {
                     @page {
                         size: letter portrait;
-                        margin: 0 !important;
+                        margin: 0.5in 0.4in 0.8in 0.4in !important;
                     }
                     .document-canvas-wrapper { 
-                        padding: 2.5rem 1.5rem !important; 
-                        background: #f8fafc !important; 
+                        padding: 0 !important; 
+                        background: white !important; 
                         border-radius: 0 !important;
-                        min-height: 100vh !important;
-                        display: flex !important;
-                        flex-direction: column !important;
-                        align-items: center !important;
+                        min-height: 0 !important;
+                        display: block !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
                     .document-page {
                         background-color: white !important; 
                         width: 100% !important; 
-                        max-width: 900px !important; 
+                        max-width: none !important; 
                         padding: 0.4in 0.5in !important; 
-                        box-shadow: 0 40px 80px -15px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.08) !important;
-                        border: 1px solid rgba(0, 0, 0, 0.04) !important;
-                        border-radius: 48px !important;
-                        margin: 0 auto !important;
+                        box-shadow: none !important;
+                        border: 1.5px solid #cbd5e1 !important;
+                        border-radius: 24px !important;
+                        margin: 0 !important;
                         color: #1e293b !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
