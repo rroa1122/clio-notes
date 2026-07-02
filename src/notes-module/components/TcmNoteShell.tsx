@@ -968,6 +968,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     flex-direction: column; 
                     align-items: center; 
                     min-height: 100vh;
+                    border-radius: 24px;
                 }
 
                 /* CUSTOM SCROLLBAR */
@@ -1035,6 +1036,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     .document-canvas-wrapper { 
                         padding: 0 !important; 
                         background: white !important; 
+                        border-radius: 0 !important;
                     }
                     .document-page {
                         max-width: none !important;
