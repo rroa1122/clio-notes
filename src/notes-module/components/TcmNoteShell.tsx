@@ -276,7 +276,7 @@ const CustomPrintHeader = ({ note, clinicSettings, isEditMode, onUpdateField }: 
 };
 
 const CustomPrintFooter = ({ note }: { note: ClioNote }) => (
-    <div className="print-only-footer hidden print:flex fixed left-[0.4in] right-[0.4in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]" style={{ bottom: '0.2in' }}>
+    <div className="print-only-footer hidden print:flex fixed left-[0.4in] right-[0.4in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]" style={{ bottom: '0.25in' }}>
         <div className="text-[9px] text-[#404040]">
             {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
         </div>
@@ -1032,14 +1032,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     margin: 0.75rem 0;
                 }
 
+                @page {
+                    size: letter portrait;
+                    margin: 0;
+                }
+
                 @media print {
                     * {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
-                    }
-                    @page {
-                        size: letter portrait;
-                        margin: 0.2in 0.4in 0.6in 0.4in !important;
                     }
                     .document-canvas-wrapper { 
                         padding: 0 !important; 
@@ -1052,7 +1053,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         background-color: white !important; 
                         width: 100% !important; 
                         max-width: none !important; 
-                        padding: 0 !important; 
+                        padding-top: 0.25in !important;
+                        padding-bottom: 0.7in !important;
+                        padding-left: 0.4in !important;
+                        padding-right: 0.4in !important;
+                        box-sizing: border-box !important;
                         box-shadow: none !important;
                         border: none !important;
                         border-radius: 0 !important;

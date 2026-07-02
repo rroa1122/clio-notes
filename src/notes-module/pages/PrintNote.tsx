@@ -160,11 +160,11 @@ const PrintNote: React.FC = () => {
                         box-shadow: none !important;
                         border: none !important;
                     }
+                }
 
-                    @page { 
-                        size: letter portrait; 
-                        margin: 0.2in 0.4in 0.6in 0.4in !important; 
-                    }
+                @page { 
+                    size: letter portrait; 
+                    margin: 0; 
                 }
             `}} />
 
