@@ -221,7 +221,7 @@
   .print-only-footer {
     display: flex !important;
     position: fixed !important;
-    bottom: 0.1in !important;
+    bottom: 0.04in !important;
     left: 0.3in !important;
     right: 0.3in !important;
     width: auto !important;
