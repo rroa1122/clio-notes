@@ -1040,7 +1040,37 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                 @page {
                     size: letter portrait;
-                    margin: 0;
+                    margin-top: 0.25in;
+                    margin-bottom: 0.6in;
+                    margin-left: 0.3in;
+                    margin-right: 0.3in;
+                    
+                    @bottom-left {
+                        content: "${mergedNote.patient?.full_name} (${(mergedNote as any).patient?.account_number || (mergedNote as any).patient?.emr || '—'})";
+                        font-family: sans-serif;
+                        font-size: 9px;
+                        color: #404040;
+                        border-top: 0.5px solid #a3a3a3;
+                        padding-top: 8px;
+                        vertical-align: top;
+                    }
+                    
+                    @bottom-center {
+                        content: "";
+                        border-top: 0.5px solid #a3a3a3;
+                        padding-top: 8px;
+                        vertical-align: top;
+                    }
+                    
+                    @bottom-right {
+                        content: "Page " counter(page);
+                        font-family: sans-serif;
+                        font-size: 9px;
+                        color: #404040;
+                        border-top: 0.5px solid #a3a3a3;
+                        padding-top: 8px;
+                        vertical-align: top;
+                    }
                 }
 
                 @media print {
@@ -1735,7 +1765,6 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         </div>
                     </div>
                 </td></tr></tbody>
-                <CustomPrintFooter note={mergedNote} />
             </table>
             </div>
             <SignatureModal
