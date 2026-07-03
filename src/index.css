@@ -206,17 +206,25 @@
     box-sizing: border-box !important;
   }
 
-  .print-only-footer {
+  .print-spacer-footer {
     display: table-footer-group !important;
-    position: static !important;
-    width: 100% !important;
+    height: 0.7in !important;
   }
 
-  .print-only-footer-content {
+  .print-spacer-footer td {
+    height: 0.7in !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  .print-only-footer {
     display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
+    position: fixed !important;
+    bottom: 0.1in !important;
+    left: 0.3in !important;
+    right: 0.3in !important;
+    width: auto !important;
   }
 
   .document-canvas-wrapper {

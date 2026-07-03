@@ -276,20 +276,14 @@ const CustomPrintHeader = ({ note, clinicSettings, isEditMode, onUpdateField }: 
 };
 
 const CustomPrintFooter = ({ note }: { note: ClioNote }) => (
-    <tfoot className="print-only-footer hidden print:table-footer-group w-full">
-        <tr>
-            <td className="px-[0.3in] pb-[0.12in]">
-                <div className="print-only-footer-content flex justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]">
-                    <div className="text-[9px] text-[#404040]">
-                        {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
-                    </div>
-                    <div className="text-[9px] text-[#404040]">
-                        Page <span className="page-number text-[9px]"></span>
-                    </div>
-                </div>
-            </td>
-        </tr>
-    </tfoot>
+    <div className="print-only-footer hidden print:flex fixed left-[0.3in] right-[0.3in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]" style={{ bottom: '0.1in' }}>
+        <div className="text-[9px] text-[#404040]">
+            {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
+        </div>
+        <div className="text-[9px] text-[#404040]">
+            Page <span className="page-number text-[9px]"></span>
+        </div>
+    </div>
 );
 
 const GhostInput = ({
@@ -1076,20 +1070,55 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         min-height: 0 !important;
                         display: block !important;
                     }
+                    table#note-print-root.document-page,
                     .document-page {
-                        background-color: white !important; 
-                        width: 100% !important; 
-                        max-width: none !important; 
-                        padding-top: 0.25in !important;
-                        padding-bottom: 0.7in !important;
-                        padding-left: 0.3in !important;
-                        padding-right: 0.3in !important;
+                        display: table !important;
+                        width: 100% !important;
+                        max-width: none !important;
                         box-sizing: border-box !important;
                         box-shadow: none !important;
                         border: none !important;
                         border-radius: 0 !important;
                         margin: 0 !important;
                         color: #1e293b !important;
+                        background-color: white !important; 
+                        padding: 0 !important;
+                        table-layout: fixed !important;
+                        border-collapse: collapse !important;
+                    }
+                    table#note-print-root > tbody {
+                        display: table-row-group !important;
+                        width: 100% !important;
+                    }
+                    table#note-print-root > tbody > tr {
+                        display: table-row !important;
+                        width: 100% !important;
+                    }
+                    table#note-print-root > tbody > tr > td {
+                        display: table-cell !important;
+                        width: 100% !important;
+                        padding-top: 0.25in !important;
+                        padding-bottom: 0.5in !important;
+                        padding-left: 0.3in !important;
+                        padding-right: 0.3in !important;
+                        box-sizing: border-box !important;
+                    }
+                    .print-spacer-footer {
+                        display: table-footer-group !important;
+                        height: 0.7in !important;
+                    }
+                    .print-spacer-footer td {
+                        height: 0.7in !important;
+                        padding: 0 !important;
+                        margin: 0 !important;
+                        border: none !important;
+                    }
+                    .print-only-footer {
+                        display: flex !important;
+                        position: fixed !important;
+                        bottom: 0.1in !important;
+                        left: 0.3in !important;
+                        right: 0.3in !important;
                     }
                     .document-page .text-slate-400 {
                         color: #94a3b8 !important;
@@ -1709,9 +1738,14 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         </div>
                     </div>
                 </td></tr></tbody>
-                <CustomPrintFooter note={mergedNote} />
+                <tfoot className="print-spacer-footer hidden print:table-footer-group">
+                    <tr>
+                        <td className="h-[0.7in]"></td>
+                    </tr>
+                </tfoot>
             </table>
             </div>
+            <CustomPrintFooter note={mergedNote} />
             <SignatureModal
                 isOpen={activeSigType !== null}
                 onClose={() => setActiveSigType(null)}
