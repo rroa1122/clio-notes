@@ -206,25 +206,14 @@
     box-sizing: border-box !important;
   }
 
-  .print-spacer-footer {
-    display: table-footer-group !important;
-    height: 0.7in !important;
-  }
-
-  .print-spacer-footer td {
-    height: 0.7in !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-  }
-
   .print-only-footer {
-    display: flex !important;
-    position: fixed !important;
-    bottom: 0.04in !important;
-    left: 0.3in !important;
-    right: 0.3in !important;
-    width: auto !important;
+    display: table-footer-group !important;
+    position: static !important;
+    width: 100% !important;
+  }
+
+  .page-number::after {
+    content: counter(page) !important;
   }
 
   .document-canvas-wrapper {

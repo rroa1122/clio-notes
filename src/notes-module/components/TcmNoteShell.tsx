@@ -276,14 +276,20 @@ const CustomPrintHeader = ({ note, clinicSettings, isEditMode, onUpdateField }: 
 };
 
 const CustomPrintFooter = ({ note }: { note: ClioNote }) => (
-    <div className="print-only-footer hidden print:flex fixed left-[0.3in] right-[0.3in] justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]" style={{ bottom: '0.04in' }}>
-        <div className="text-[9px] text-[#404040]">
-            {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
-        </div>
-        <div className="text-[9px] text-[#404040]">
-            Page <span className="page-number text-[9px]"></span>
-        </div>
-    </div>
+    <tfoot className="print-only-footer hidden print:table-footer-group w-full">
+        <tr>
+            <td className="px-[0.3in] pb-[0.04in] pt-4">
+                <div className="print-only-footer-content flex justify-between items-center py-2 border-t-[0.5px] border-[#a3a3a3]">
+                    <div className="text-[9px] text-[#404040]">
+                        {note.patient?.full_name} ({(note as any).patient?.account_number || (note as any).patient?.emr || "—"})
+                    </div>
+                    <div className="text-[9px] text-[#404040]">
+                        Page <span className="page-number text-[9px]"></span>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </tfoot>
 );
 
 const GhostInput = ({
@@ -1103,22 +1109,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         padding-right: 0.3in !important;
                         box-sizing: border-box !important;
                     }
-                    .print-spacer-footer {
-                        display: table-footer-group !important;
-                        height: 0.7in !important;
-                    }
-                    .print-spacer-footer td {
-                        height: 0.7in !important;
-                        padding: 0 !important;
-                        margin: 0 !important;
-                        border: none !important;
-                    }
                     .print-only-footer {
-                        display: flex !important;
-                        position: fixed !important;
-                        bottom: 0.04in !important;
-                        left: 0.3in !important;
-                        right: 0.3in !important;
+                        display: table-footer-group !important;
+                        position: static !important;
+                        width: 100% !important;
+                    }
+                    .page-number::after {
+                        content: counter(page) !important;
                     }
                     .document-page .text-slate-400 {
                         color: #94a3b8 !important;
@@ -1738,14 +1735,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         </div>
                     </div>
                 </td></tr></tbody>
-                <tfoot className="print-spacer-footer hidden print:table-footer-group">
-                    <tr>
-                        <td className="h-[0.7in]"></td>
-                    </tr>
-                </tfoot>
+                <CustomPrintFooter note={mergedNote} />
             </table>
             </div>
-            <CustomPrintFooter note={mergedNote} />
             <SignatureModal
                 isOpen={activeSigType !== null}
                 onClose={() => setActiveSigType(null)}
