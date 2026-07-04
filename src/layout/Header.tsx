@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../notes-module/context/ThemeContext';
 import {
     Users,
     LogOut,
@@ -9,12 +11,17 @@ import {
     Settings,
     Menu,
     X,
-    Shield
+    Shield,
+    Globe,
+    Sun,
+    Moon
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export function Header() {
     const { signOut, user } = useAuth();
+    const { language, setLanguage, t } = useLanguage();
+    const { theme, toggleTheme } = useTheme();
     const { pathname } = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -22,6 +29,11 @@ export function Header() {
     const fullName = (user?.first_name && user?.last_name)
         ? `${user.first_name} ${user.last_name}`
         : user?.name || 'User';
+
+    const firstLastName = user?.last_name ? user.last_name.trim().split(/\s+/)[0] : '';
+    const displayName = (user?.first_name && firstLastName)
+        ? `${user.first_name} ${firstLastName}`
+        : user?.name ? user.name.trim().split(/\s+/).slice(0, 2).join(' ') : 'User';
 
     const isAuthorized = user?.role === 'admin' || user?.email === 'reinier.roa2.0@gmail.com';
 
@@ -121,64 +133,105 @@ export function Header() {
                 {/* 3. User Profile Dropdown & Mobile Menu Toggle */}
                 <div className="flex items-center gap-4 shrink-0">
                     
+                    {/* Theme Toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        className="size-8 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 border border-slate-200/50 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+                        title={theme === 'dark' ? (language === 'es' ? "Modo claro" : "Light mode") : (language === 'es' ? "Modo oscuro" : "Dark mode")}
+                    >
+                        {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                    </button>
+
                     {/* User Profile Dropdown */}
                     <div className="relative" id="user-dropdown-container">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-slate-100 transition-all select-none border border-transparent hover:border-slate-200/50"
+                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all select-none border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50"
                         >
-                            <span className="text-sm font-semibold text-slate-700 hidden lg:block">{fullName}</span>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 hidden lg:block">{displayName}</span>
                             <div className="h-8 w-8 rounded-full overflow-hidden border border-slate-200 bg-slate-50 shadow-sm ring-1 ring-slate-100 shrink-0">
                                 <img
-                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=4f46e5&color=fff&bold=true`}
+                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=4f46e5&color=fff&bold=true`}
                                     alt="User"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <svg className={cn("size-3.5 text-slate-400 transition-transform duration-200 hidden sm:block", isDropdownOpen && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <svg className={cn("size-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 hidden sm:block", isDropdownOpen && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
 
                         {/* Dropdown Menu */}
                         {isDropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-52 bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 origin-top-right">
-                                <div className="px-4 py-2 border-b border-slate-100">
-                                    <p className="text-xs font-bold text-slate-800 truncate">{fullName}</p>
-                                    <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+                            <div className="absolute right-0 mt-2 w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 origin-top-right">
+                                <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+                                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{fullName}</p>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
                                 </div>
                                 <div className="p-1.5 space-y-0.5">
                                     <NavLink
                                         to="/settings"
                                         onClick={() => setIsDropdownOpen(false)}
-                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all"
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all"
                                     >
                                         <Settings size={14} className="opacity-75" />
-                                        Settings
+                                        {t('nav.settings', 'Settings')}
                                     </NavLink>
                                     
                                     {isAuthorized && (
                                         <NavLink
                                             to="/audit-logs"
                                             onClick={() => setIsDropdownOpen(false)}
-                                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 transition-all"
+                                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all"
                                         >
                                             <Shield size={14} className="opacity-75" />
-                                            Audit logs
+                                            {t('nav.audit_logs', 'Audit logs')}
                                         </NavLink>
                                     )}
 
-                                    <div className="h-px bg-slate-100 my-1.5" />
+                                    {/* Language Switcher */}
+                                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400">
+                                        <div className="flex items-center gap-2.5">
+                                            <Globe size={14} className="opacity-75" />
+                                            <span>{language === 'es' ? 'Idioma' : 'Language'}</span>
+                                        </div>
+                                        <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-0.5 rounded-full border border-slate-200/50 dark:border-slate-800/50">
+                                            <button
+                                                onClick={() => setLanguage('en')}
+                                                className={cn(
+                                                    "px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full transition-all duration-300",
+                                                    language === 'en'
+                                                        ? "bg-white dark:bg-slate-800 text-[#6366f1] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                                                        : "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                                                )}
+                                            >
+                                                EN
+                                            </button>
+                                            <button
+                                                onClick={() => setLanguage('es')}
+                                                className={cn(
+                                                    "px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full transition-all duration-300",
+                                                    language === 'es'
+                                                        ? "bg-white dark:bg-slate-800 text-[#6366f1] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                                                        : "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                                                )}
+                                            >
+                                                ES
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1.5" />
 
                                     <button
                                         onClick={() => {
                                             setIsDropdownOpen(false);
                                             signOut();
                                         }}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 transition-all text-left"
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all text-left"
                                     >
                                         <LogOut size={14} />
-                                        Log out
+                                        {t('nav.logout', 'Sign out')}
                                     </button>
                                 </div>
                             </div>

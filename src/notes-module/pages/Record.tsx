@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
@@ -107,6 +108,7 @@ const formatTimeInput = (val: string): string => {
 
 const Record: React.FC = () => {
     const { user } = useAuth();
+    const { language, t } = useLanguage();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     useTheme();
@@ -937,42 +939,56 @@ const Record: React.FC = () => {
                 <Card className="max-w-6xl w-full bg-surface border border-border/60 shadow-soft rounded-[2.5rem] overflow-hidden relative group">
                     <CardContent className="px-4 sm:px-6 md:px-10 pt-6 md:pt-8 pb-6 md:pb-10 space-y-6 md:space-y-8">
                         {showGuide && (
-                            <div className="bg-gradient-to-r from-indigo-50/60 via-violet-50/40 to-slate-50 border border-indigo-100 rounded-3xl p-6 relative animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm hidden md:flex flex-row items-center justify-between gap-6">
+                            <div className="bg-gradient-to-r from-indigo-50/60 via-violet-50/40 to-slate-50 dark:from-indigo-950/10 dark:via-violet-950/5 dark:to-slate-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl p-6 relative animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm hidden md:flex flex-row items-center justify-between gap-6">
                                 <button 
                                     onClick={() => {
                                         localStorage.setItem('clio_hide_guide', 'true');
                                         setShowGuide(false);
                                     }}
-                                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors text-lg font-bold leading-none p-1"
+                                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors text-lg font-bold leading-none p-1"
                                     title="Hide tutorial guide"
                                 >
                                     &times;
                                 </button>
                                 <div className="space-y-1">
-                                    <h4 className="text-[13px] font-black tracking-wider text-indigo-950 uppercase flex items-center gap-2">
-                                        ✨ Quick Start Guide
+                                    <h4 className="text-[13px] font-black tracking-wider text-indigo-950 dark:text-indigo-200 uppercase flex items-center gap-2">
+                                        {t('record.quick_start_guide', '✨ Quick Start Guide')}
                                     </h4>
-                                    <p className="text-xs text-slate-500 font-medium">Complete these simple steps to generate your medical note:</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+                                        {language === 'es' ? 'Completa estos sencillos pasos' : 'Complete these simple steps'}
+                                        <span className="text-[#6366f1] dark:text-indigo-400 font-semibold animate-pulse">
+                                            {language === 'es' ? ' (pasa el cursor para ver detalles)' : ' (hover steps for details)'}
+                                        </span>:
+                                    </p>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-1 md:max-w-3xl">
                                     {/* Step 1 */}
-                                    <div className={cn(
-                                        "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300",
-                                        selectedPatient 
-                                            ? "bg-emerald-50/40 border-emerald-100/80 text-emerald-700 font-semibold" 
-                                            : "bg-white border-slate-200/60 text-slate-500 font-medium"
-                                    )}>
+                                    <div className="relative group/tooltip">
                                         <div className={cn(
-                                            "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
-                                            selectedPatient ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                            "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300 cursor-help",
+                                            selectedPatient 
+                                                ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-100/80 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-semibold" 
+                                                : "bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-100 dark:hover:border-indigo-950"
                                         )}>
-                                            {selectedPatient ? "✓" : "1"}
+                                            <div className={cn(
+                                                "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                                                selectedPatient ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
+                                            )}>
+                                                {selectedPatient ? "✓" : "1"}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-[9px] font-black uppercase tracking-wider opacity-75">{t('record.step.client', 'Client')}</span>
+                                                <span className="text-[11px] leading-tight truncate">
+                                                    {selectedPatient ? selectedPatient.full_name : t('record.step.client_desc', 'Select client')}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[9px] font-black uppercase tracking-wider opacity-75">Client</span>
-                                            <span className="text-[11px] leading-tight truncate">
-                                                {selectedPatient ? selectedPatient.full_name : "Select client"}
-                                            </span>
+                                        {/* Tooltip Content */}
+                                        <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-2.5 w-60 p-3 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-sm text-white text-[11px] rounded-xl shadow-lg opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 -translate-y-1 transition-all duration-300 text-center font-medium leading-relaxed">
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900/95 dark:border-b-slate-950/95" />
+                                            {language === 'es' 
+                                                ? "Busca y selecciona un paciente del registro existente o crea uno nuevo haciendo clic en el botón con el signo \"+\"."
+                                                : "Search and select a patient from the existing registry or create a new one by clicking the \"+\" button."}
                                         </div>
                                     </div>
                                     
@@ -980,46 +996,64 @@ const Record: React.FC = () => {
                                     {(() => {
                                         const isStep2Done = Boolean(timeIn) && (Boolean(timeOut) || Boolean(units));
                                         return (
-                                            <div className={cn(
-                                                "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300",
-                                                isStep2Done 
-                                                    ? "bg-emerald-50/40 border-emerald-100/80 text-emerald-700 font-semibold" 
-                                                    : "bg-white border-slate-200/60 text-slate-500 font-medium"
-                                            )}>
+                                            <div className="relative group/tooltip">
                                                 <div className={cn(
-                                                    "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
-                                                    isStep2Done ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                                    "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300 cursor-help",
+                                                    isStep2Done 
+                                                        ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-100/80 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-semibold" 
+                                                        : "bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-100 dark:hover:border-indigo-950"
                                                 )}>
-                                                    {isStep2Done ? "✓" : "2"}
+                                                    <div className={cn(
+                                                        "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                                                        isStep2Done ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
+                                                    )}>
+                                                        {isStep2Done ? "✓" : "2"}
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-[9px] font-black uppercase tracking-wider opacity-75">{t('record.step.times', 'Times')}</span>
+                                                        <span className="text-[11px] leading-tight truncate">
+                                                            {isStep2Done ? `${timeIn} - ${timeOut || units + ' U'}` : t('record.step.times_desc', 'Set date & times')}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-[9px] font-black uppercase tracking-wider opacity-75">Times</span>
-                                                    <span className="text-[11px] leading-tight truncate">
-                                                        {isStep2Done ? `${timeIn} - ${timeOut || units + ' U'}` : "Set date & times"}
-                                                    </span>
+                                                {/* Tooltip Content */}
+                                                <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-2.5 w-60 p-3 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-sm text-white text-[11px] rounded-xl shadow-lg opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 -translate-y-1 transition-all duration-300 text-center font-medium leading-relaxed">
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900/95 dark:border-b-slate-950/95" />
+                                                    {language === 'es' 
+                                                        ? "Selecciona la fecha y las horas del encuentro. Puedes ingresar la hora de inicio y fin, o simplemente la hora de inicio y las unidades de tiempo; el sistema calculará la hora final automáticamente."
+                                                        : "Select the encounter date and times. You can input the start and end times, or simply the start time and time units; the system will automatically calculate the end time."}
                                                 </div>
                                             </div>
                                         );
                                     })()}
 
                                     {/* Step 3 */}
-                                    <div className={cn(
-                                        "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300",
-                                        selectedSubTemplate 
-                                            ? "bg-emerald-50/40 border-emerald-100/80 text-emerald-700 font-semibold" 
-                                            : "bg-white border-slate-200/60 text-slate-500 font-medium"
-                                    )}>
+                                    <div className="relative group/tooltip">
                                         <div className={cn(
-                                            "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
-                                            selectedSubTemplate ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                            "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300 cursor-help",
+                                            selectedSubTemplate 
+                                                ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-100/80 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-semibold" 
+                                                : "bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-100 dark:hover:border-indigo-950"
                                         )}>
-                                            {selectedSubTemplate ? "✓" : "3"}
+                                            <div className={cn(
+                                                "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                                                selectedSubTemplate ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
+                                            )}>
+                                                {selectedSubTemplate ? "✓" : "3"}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-[9px] font-black uppercase tracking-wider opacity-75">{t('record.step.service', 'Service')}</span>
+                                                <span className="text-[11px] leading-tight truncate">
+                                                    {selectedSubTemplate ? selectedSubTemplate : t('record.step.service_desc', 'Select service')}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[9px] font-black uppercase tracking-wider opacity-75">Service</span>
-                                            <span className="text-[11px] leading-tight truncate">
-                                                {selectedSubTemplate ? selectedSubTemplate : "Select service"}
-                                            </span>
+                                        {/* Tooltip Content */}
+                                        <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-2.5 w-60 p-3 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-sm text-white text-[11px] rounded-xl shadow-lg opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 -translate-y-1 transition-all duration-300 text-center font-medium leading-relaxed">
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900/95 dark:border-b-slate-950/95" />
+                                            {language === 'es' 
+                                                ? "Elige el servicio clínico brindado. Si seleccionas \"Custom Template\", se activará un panel para pegar tu plantilla de texto personalizada. \"Other\" sirve para cualquier otro servicio no listado."
+                                                : "Choose the clinical service provided. If you select \"Custom Template\", a panel will appear to paste your custom text template. \"Other\" is used for any other service not listed."}
                                         </div>
                                     </div>
 
@@ -1027,23 +1061,36 @@ const Record: React.FC = () => {
                                     {(() => {
                                         const hasInput = Boolean(audioBlob) || Boolean(patientInfo.customTemplateText?.trim());
                                         return (
-                                            <div className={cn(
-                                                "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300",
-                                                hasInput 
-                                                    ? "bg-emerald-50/40 border-emerald-100/80 text-emerald-700 font-semibold" 
-                                                    : "bg-white border-slate-200/60 text-slate-500 font-medium"
-                                            )}>
+                                            <div className="relative group/tooltip">
                                                 <div className={cn(
-                                                    "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
-                                                    hasInput ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                                    "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300 cursor-help",
+                                                    hasInput 
+                                                        ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-100/80 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-semibold" 
+                                                        : "bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-medium hover:border-indigo-100 dark:hover:border-indigo-950"
                                                 )}>
-                                                    {hasInput ? "✓" : "4"}
+                                                    <div className={cn(
+                                                        "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                                                        hasInput ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
+                                                    )}>
+                                                        {hasInput ? "✓" : "4"}
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-[9px] font-black uppercase tracking-wider opacity-75">{t('record.step.capture', 'Capture')}</span>
+                                                        <span className="text-[11px] leading-tight truncate">
+                                                            {audioBlob 
+                                                                ? (language === 'es' ? "Audio grabado" : "Audio Recorded") 
+                                                                : (patientInfo.customTemplateText?.trim() 
+                                                                    ? (language === 'es' ? "Objetivos escritos" : "Objectives written") 
+                                                                    : t('record.step.capture_desc', 'Record or write'))}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-[9px] font-black uppercase tracking-wider opacity-75">Capture</span>
-                                                    <span className="text-[11px] leading-tight truncate">
-                                                        {audioBlob ? "Audio Recorded" : (patientInfo.customTemplateText?.trim() ? "Objectives written" : "Record or write")}
-                                                    </span>
+                                                {/* Tooltip Content */}
+                                                <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-2.5 w-60 p-3 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-sm text-white text-[11px] rounded-xl shadow-lg opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 -translate-y-1 transition-all duration-300 text-center font-medium leading-relaxed">
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900/95 dark:border-b-slate-950/95" />
+                                                    {language === 'es' 
+                                                        ? "Presiona el icono de micrófono para grabar la sesión o describe de forma escrita los objetivos/detalles en el panel de texto."
+                                                        : "Press the microphone icon to record the session, or write the goals/details in the text panel."}
                                                 </div>
                                             </div>
                                         );
@@ -1051,8 +1098,6 @@ const Record: React.FC = () => {
                                 </div>
                             </div>
                         )}
-
-                        {/* Mobile view Tab navigation */}
                         <div className="flex md:hidden border-b border-border/40 pb-1 mb-4 gap-1">
                             <button 
                                 onClick={() => setActiveTab('info')}
