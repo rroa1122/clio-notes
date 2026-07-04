@@ -12,7 +12,7 @@ export function Company() {
         {/* Back Button */}
         <div className="flex items-center select-none shrink-0">
           <Link to="/login">
-            <button className="rounded-xl font-bold flex items-center gap-2.5 border border-white/[0.06] text-slate-350 bg-white/[0.02] hover:bg-white/[0.08] hover:text-white transition-all h-10 px-5 text-xs tracking-tight shadow-sm active:scale-[0.98] cursor-pointer">
+            <button className="rounded-xl font-bold flex items-center gap-2.5 border border-white/[0.06] text-slate-300 bg-white/[0.02] hover:bg-white/[0.08] hover:text-white transition-all h-10 px-5 text-xs tracking-tight shadow-sm active:scale-[0.98] cursor-pointer">
               {/* Arrow Left SVG */}
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -49,7 +49,7 @@ export function Company() {
               </svg>
               Corporate Relationship
             </h2>
-            <p className="text-sm leading-relaxed text-slate-350">
+            <p className="text-sm leading-relaxed text-slate-300">
               ClinicFlow / CLIO is operated by <strong className="text-white">Billinsights LLC</strong>.
             </p>
             <p className="text-sm leading-relaxed text-slate-400">
@@ -126,7 +126,7 @@ export function Company() {
               <p className="text-sm font-semibold text-white">
                 <a 
                   href="mailto:reinier@clinicflow.dev" 
-                  className="text-indigo-400 hover:text-indigo-350 hover:underline transition-colors"
+                  className="text-indigo-400 hover:text-indigo-300 hover:underline transition-colors"
                 >
                   reinier@clinicflow.dev
                 </a>
@@ -143,7 +143,7 @@ export function Company() {
               </svg>
               IMPORTANT NOTICE
             </h3>
-            <p className="text-xs leading-relaxed text-slate-350">
+            <p className="text-xs leading-relaxed text-slate-300">
               ClinicFlow / CLIO is a technology platform for healthcare administrative workflows. We are not a healthcare provider and we do not provide medical advice, diagnosis, treatment, or emergency services.
             </p>
           </div>

@@ -22,7 +22,8 @@ import {
     Save,
     Store,
     Plus,
-    UploadCloud
+    UploadCloud,
+    Hash
 } from 'lucide-react';
 import { extractPatientData } from '../../lib/services/patientIntakeService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -60,6 +61,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
         case_manager: '',
         insurance_company: '',
         insurance_id: '',
+        case_number: '',
         preferred_language: 'English',
         emergency_contact_name: '',
         emergency_contact_phone: '',
@@ -164,6 +166,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                     case_manager: '',
                     insurance_company: '',
                     insurance_id: '',
+                    case_number: '',
                     preferred_language: 'English',
                     emergency_contact_name: '',
                     emergency_contact_phone: '',
@@ -238,6 +241,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                     case_manager: '',
                     insurance_company: '',
                     insurance_id: '',
+                    case_number: '',
                     preferred_language: 'English',
                     emergency_contact_name: '',
                     emergency_contact_phone: '',
@@ -382,7 +386,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                                 </div>
                                                 <PremiumGlassField icon={Shield} label="Insurance Company" name="insurance_company" value={formData.insurance_company} onChange={handleFieldChange} theme="indigo" />
                                                 <PremiumGlassField icon={Shield} label="Member ID" name="insurance_id" value={formData.insurance_id} onChange={handleFieldChange} theme="indigo" />
-                                                <PremiumGlassField icon={Briefcase} label="Case Manager" name="case_manager" value={formData.case_manager} onChange={handleFieldChange} theme="indigo" />
+                                                <PremiumGlassField icon={Hash} label="Case Number" name="case_number" value={formData.case_number} onChange={handleFieldChange} theme="indigo" />
                                                 <PremiumGlassField icon={BadgeCheck} label="Citizenship Status" name="citizenship" value={formData.citizenship} onChange={handleFieldChange} theme="indigo" />
                                                 <PremiumGlassField icon={User} label="Preferred Language" name="preferred_language" value={formData.preferred_language} onChange={handleFieldChange} theme="indigo" options={['English', 'Spanish']} />
 

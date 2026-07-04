@@ -9,7 +9,7 @@ interface SignatureModalProps {
     title?: string;
 }
 
-const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose, onSave, title = "Physician Signature" }) => {
+const SignatureModal: React.FC<SignatureModalProps> = ({ isOpen, onClose, onSave, title = "Case Manager Signature" }) => {
     if (!isOpen) return null;
 
     return (

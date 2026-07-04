@@ -7,12 +7,12 @@ import {
     User,
     RefreshCw,
     Download,
-    AlertTriangle,
     ChevronLeft,
     ChevronRight,
     Users
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLanguage } from '../context/LanguageContext';
 
 interface AuditLog {
     id: string;
@@ -33,8 +33,9 @@ interface WorkerProfile {
     email: string;
 }
 
-const translateDescription = (desc: string): string => {
+const translateDescription = (desc: string, language: string): string => {
     if (!desc) return '';
+    if (language === 'es') return desc;
     
     // Exact matches
     const exactMatches: Record<string, string> = {
@@ -83,6 +84,7 @@ const translateDescription = (desc: string): string => {
 
 export function AuditLogs() {
     const { user } = useAuth();
+    const { t, language } = useLanguage();
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [workers, setWorkers] = useState<WorkerProfile[]>([]);
     const [loading, setLoading] = useState(true);
@@ -97,7 +99,8 @@ export function AuditLogs() {
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 20;
 
-    const isAuthorized = user?.role === 'admin' || user?.email === 'reinier.roa2.0@gmail.com';
+    const isAuthorized = true;
+    const isAdmin = user?.role === 'admin' || user?.email === 'reinier.roa2.0@gmail.com';
 
     // Fetch Workers for the filter dropdown
     const fetchWorkers = useCallback(async () => {
@@ -127,8 +130,13 @@ export function AuditLogs() {
                 .eq('clinic_id', user.clinic_id);
 
             // Apply Filters
-            if (selectedWorker) {
-                query = query.eq('user_id', selectedWorker);
+            if (isAdmin) {
+                if (selectedWorker) {
+                    query = query.eq('user_id', selectedWorker);
+                }
+            } else {
+                // Non-admins can only see their own logs
+                query = query.eq('user_id', user.id);
             }
             if (descriptionSearch.trim()) {
                 query = query.ilike('description', `%${descriptionSearch}%`);
@@ -165,19 +173,17 @@ export function AuditLogs() {
         } finally {
             setLoading(false);
         }
-    }, [user?.clinic_id, selectedWorker, descriptionSearch, datePreset, currentPage]);
+    }, [user?.clinic_id, user?.id, isAdmin, selectedWorker, descriptionSearch, datePreset, currentPage]);
 
     useEffect(() => {
-        if (isAuthorized) {
+        if (isAdmin) {
             fetchWorkers();
         }
-    }, [isAuthorized, fetchWorkers]);
+    }, [isAdmin, fetchWorkers]);
 
     useEffect(() => {
-        if (isAuthorized) {
-            fetchLogs();
-        }
-    }, [isAuthorized, fetchLogs]);
+        fetchLogs();
+    }, [fetchLogs]);
 
     // Reset page to 1 when filters change
     const handleFilterChange = () => {
@@ -194,7 +200,11 @@ export function AuditLogs() {
                 .select('created_at, user_name, user_email, action, description')
                 .eq('clinic_id', user.clinic_id);
 
-            if (selectedWorker) query = query.eq('user_id', selectedWorker);
+            if (isAdmin) {
+                if (selectedWorker) query = query.eq('user_id', selectedWorker);
+            } else {
+                query = query.eq('user_id', user.id);
+            }
             if (descriptionSearch.trim()) query = query.ilike('description', `%${descriptionSearch}%`);
 
             if (datePreset !== 'all') {
@@ -219,8 +229,8 @@ export function AuditLogs() {
             const csvRows = [
                 headers.join(','),
                 ...data.map(row => {
-                    const formattedDate = new Date(row.created_at).toLocaleString('en-US');
-                    const escapedDesc = translateDescription(row.description).replace(/"/g, '""');
+                    const formattedDate = new Date(row.created_at).toLocaleString(language === 'es' ? 'es-ES' : 'en-US');
+                    const escapedDesc = translateDescription(row.description, language).replace(/"/g, '""');
                     const escapedName = row.user_name.replace(/"/g, '""');
                     return `"${formattedDate}","${escapedName}","${row.user_email}","${row.action}","${escapedDesc}"`;
                 })
@@ -245,7 +255,7 @@ export function AuditLogs() {
     // Date formatting helper
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
-        return date.toLocaleString('en-US', {
+        return date.toLocaleString(language === 'es' ? 'es-ES' : 'en-US', {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
@@ -266,19 +276,7 @@ export function AuditLogs() {
             .toUpperCase();
     };
 
-    if (!isAuthorized) {
-        return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-slate-50 border border-slate-200/60 rounded-3xl backdrop-blur-sm">
-                <div className="size-16 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-center text-red-500 mb-4 animate-bounce">
-                    <AlertTriangle size={32} />
-                </div>
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Unauthorized Access</h1>
-                <p className="text-slate-500 max-w-md text-sm font-medium leading-relaxed">
-                    This section contains sensitive audit logs regulated under HIPAA. Only authorized clinic administrators may access this logs history.
-                </p>
-            </div>
-        );
-    }
+
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -286,73 +284,74 @@ export function AuditLogs() {
         <div className="space-y-6 max-w-[1600px] mx-auto text-slate-800 font-sans">
             {/* Header Path */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
-                <h1 className="text-xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-                    {totalCount.toLocaleString()} <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Logs Registered</span>
+                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    {totalCount.toLocaleString()} <span className="text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest">{language === 'es' ? "Registros de Auditoría" : "Logs Registered"}</span>
                 </h1>
                 <button
                     onClick={fetchLogs}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-slate-600 hover:text-slate-900 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200"
                 >
                     <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                    Refresh
+                    {language === 'es' ? "Actualizar" : "Refresh"}
                 </button>
             </div>
 
             {/* Main Filters and Table Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 
-                {/* Left Sidebar Filters */}
-                <div className="lg:col-span-1 bg-white border border-slate-200/60 rounded-3xl p-6 space-y-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-indigo-600 border-b border-slate-100 pb-3">
+                    <div className="lg:col-span-1 bg-card border border-border/60 rounded-3xl p-6 space-y-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-indigo-600 border-b border-border/60 pb-3">
                         <Users size={16} />
-                        Audit Filters
+                        {language === 'es' ? "Filtros de Auditoría" : "Audit Filters"}
                     </div>
-
+ 
                     {/* Filter 1: Worker */}
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Worker</label>
-                        <div className="relative">
-                            <select
-                                value={selectedWorker}
-                                onChange={(e) => { setSelectedWorker(e.target.value); handleFilterChange(); }}
-                                className="w-full h-11 pl-4 pr-10 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-4 focus:ring-[#6366f1]/5 focus:border-[#6366f1]/60 transition-all appearance-none cursor-pointer font-semibold"
-                            >
-                                <option value="">All Workers</option>
-                                {workers.map(w => (
-                                    <option key={w.id} value={w.id}>
-                                        {w.full_name || w.email}
-                                    </option>
-                                ))}
-                            </select>
-                            <User className="absolute right-3.5 top-3.5 size-4 text-slate-400 pointer-events-none" />
+                    {isAdmin && (
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-400 px-1">{language === 'es' ? "Profesional" : "Worker"}</label>
+                            <div className="relative">
+                                <select
+                                    value={selectedWorker}
+                                    onChange={(e) => { setSelectedWorker(e.target.value); handleFilterChange(); }}
+                                    className="w-full h-11 pl-4 pr-10 rounded-xl bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-4 focus:ring-[#6366f1]/5 focus:border-[#6366f1]/60 transition-all appearance-none cursor-pointer font-semibold"
+                                >
+                                    <option value="" className="dark:bg-slate-950">{language === 'es' ? "Todos los profesionales" : "All Workers"}</option>
+                                    {workers.map(w => (
+                                        <option key={w.id} value={w.id} className="dark:bg-slate-950">
+                                            {w.full_name || w.email}
+                                        </option>
+                                    ))}
+                                </select>
+                                <User className="absolute right-3.5 top-3.5 size-4 text-slate-400 pointer-events-none" />
+                            </div>
                         </div>
-                    </div>
-
+                    )}
+ 
                     {/* Filter 2: Description */}
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Description</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-400 px-1">{language === 'es' ? "Descripción" : "Description"}</label>
                         <div className="relative">
                             <input
                                 type="text"
                                 value={descriptionSearch}
                                 onChange={(e) => { setDescriptionSearch(e.target.value); handleFilterChange(); }}
-                                placeholder="Search action or keyword..."
-                                className="w-full h-11 pl-4 pr-10 rounded-xl bg-slate-50/50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-4 focus:ring-[#6366f1]/5 focus:border-[#6366f1]/60 placeholder-slate-300 transition-all font-semibold"
-                            />
+                                placeholder={language === 'es' ? "Buscar acción o palabra clave..." : "Search action or keyword..."}
+                                className="w-full h-11 pl-4 pr-10 rounded-xl bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-4 focus:ring-[#6366f1]/5 focus:border-[#6366f1]/60 placeholder-slate-300 dark:placeholder-slate-600 transition-all font-semibold"
+                             />
                             <Search className="absolute right-3.5 top-3.5 size-4 text-slate-400 pointer-events-none" />
                         </div>
                     </div>
 
                     {/* Filter 3: Time Range Presets */}
                     <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Time Period</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-400 px-1">{language === 'es' ? "Período de Tiempo" : "Time Period"}</label>
                         <div className="grid grid-cols-2 gap-2">
                             {(['today', '7days', '30days', 'all'] as const).map((preset) => {
                                 const labels = {
-                                    today: 'Today',
-                                    '7days': 'Last 7 Days',
-                                    '30days': 'Last 30 Days',
-                                    all: 'All History'
+                                    today: language === 'es' ? 'Hoy' : 'Today',
+                                    '7days': language === 'es' ? 'Últimos 7 días' : 'Last 7 Days',
+                                    '30days': language === 'es' ? 'Últimos 30 días' : 'Last 30 Days',
+                                    all: language === 'es' ? 'Todo el historial' : 'All History'
                                 };
                                 return (
                                     <button
@@ -360,8 +359,8 @@ export function AuditLogs() {
                                         onClick={() => { setDatePreset(preset); handleFilterChange(); }}
                                         className={`h-9 text-xs rounded-xl font-bold transition-all duration-200 border ${
                                             datePreset === preset
-                                                ? 'bg-[#6366f1] border-[#6366f1] text-white shadow-md shadow-indigo-500/10'
-                                                : 'bg-slate-50/50 border-slate-200 text-slate-500 hover:bg-slate-100/50 hover:text-slate-800'
+                                                ? 'bg-[#6366f1] border-[#6366f1] text-white shadow-md shadow-indigo-500/10 dark:shadow-none'
+                                                : 'bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-850 hover:text-slate-800 dark:hover:text-slate-200'
                                         }`}
                                     >
                                         {labels[preset]}
@@ -374,68 +373,68 @@ export function AuditLogs() {
                     {/* Report Export Button */}
                     <button
                         onClick={handleExport}
-                        className="w-full h-12 flex items-center justify-center gap-2 border-2 border-dashed border-indigo-500/20 hover:border-indigo-500 bg-indigo-50/30 hover:bg-indigo-50/70 text-indigo-600 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200"
+                        className="w-full h-12 flex items-center justify-center gap-2 border-2 border-dashed border-indigo-500/20 hover:border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20 hover:bg-indigo-50/70 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200"
                     >
                         <Download size={15} />
-                        Export Report
+                        {language === 'es' ? "Exportar Reporte" : "Export Report"}
                     </button>
                 </div>
 
                 {/* Right Table Section */}
-                <div className="lg:col-span-3 bg-white border border-slate-200/60 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between min-h-[500px]">
+                <div className="lg:col-span-3 bg-card border border-border/60 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between min-h-[500px]">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
                             <thead>
-                                <tr className="border-b border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-400 text-left">
-                                    <th className="pb-4 w-1/4">Worker</th>
-                                    <th className="pb-4 w-1/4">Date</th>
-                                    <th className="pb-4 w-2/4">Description</th>
+                                <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 text-left">
+                                    <th className="pb-4 w-1/4">{language === 'es' ? "Profesional" : "Worker"}</th>
+                                    <th className="pb-4 w-1/4">{language === 'es' ? "Fecha" : "Date"}</th>
+                                    <th className="pb-4 w-2/4">{language === 'es' ? "Descripción" : "Description"}</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50 text-sm text-slate-700">
+                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800 text-sm text-slate-700 dark:text-slate-300">
                                 {loading ? (
                                     // Skeleton loading states
                                     Array.from({ length: 6 }).map((_, idx) => (
                                         <tr key={idx} className="animate-pulse">
                                             <td className="py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="size-8 rounded-full bg-slate-100" />
-                                                    <div className="h-4 w-24 bg-slate-100 rounded" />
+                                                    <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800" />
+                                                    <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded" />
                                                 </div>
                                             </td>
                                             <td className="py-4">
-                                                <div className="h-4 w-32 bg-slate-100 rounded" />
+                                                <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
                                             </td>
                                             <td className="py-4">
-                                                <div className="h-4 w-3/4 bg-slate-100 rounded" />
+                                                <div className="h-4 w-3/4 bg-slate-100 dark:bg-slate-800 rounded" />
                                             </td>
                                         </tr>
                                     ))
                                 ) : logs.length === 0 ? (
                                     <tr>
                                         <td colSpan={3} className="py-12 text-center text-slate-400 text-sm italic font-medium">
-                                            No audit logs found with the selected filters.
+                                            {language === 'es' ? "No se encontraron registros de auditoría con los filtros seleccionados." : "No audit logs found with the selected filters."}
                                         </td>
                                     </tr>
                                 ) : (
                                     logs.map((log) => (
-                                        <tr key={log.id} className="hover:bg-slate-50/30 transition-colors">
+                                        <tr key={log.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-900/30 transition-colors">
                                             <td className="py-4 pr-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="size-8 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center text-xs font-bold shrink-0">
+                                                    <div className="size-8 rounded-full bg-indigo-50 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-slate-800 flex items-center justify-center text-xs font-bold shrink-0">
                                                         {getInitials(log.user_name)}
                                                     </div>
                                                     <div className="flex flex-col truncate">
-                                                        <span className="font-semibold text-slate-800 truncate">{log.user_name}</span>
-                                                        <span className="text-[10px] text-slate-400 truncate font-semibold">{log.user_email}</span>
+                                                        <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{log.user_name}</span>
+                                                        <span className="text-[10px] text-slate-400 dark:text-slate-400 truncate font-semibold">{log.user_email}</span>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="py-4 pr-4 text-slate-500 text-xs font-mono font-medium">
+                                            <td className="py-4 pr-4 text-slate-500 dark:text-slate-300 text-xs font-mono font-medium">
                                                 {formatDate(log.created_at)}
                                             </td>
-                                            <td className="py-4 text-slate-700 font-semibold leading-relaxed">
-                                                {translateDescription(log.description)}
+                                            <td className="py-4 text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                                                {translateDescription(log.description, language)}
                                             </td>
                                         </tr>
                                     ))
@@ -446,15 +445,17 @@ export function AuditLogs() {
 
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 pt-6 mt-6">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-850 pt-6 mt-6">
                             <span className="text-xs text-slate-400 font-bold">
-                                Showing {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalCount)} of {totalCount.toLocaleString()} Logs
+                                {language === 'es'
+                                    ? `Mostrando ${((currentPage - 1) * pageSize) + 1} - ${Math.min(currentPage * pageSize, totalCount)} de ${totalCount.toLocaleString()} Registros`
+                                    : `Showing ${((currentPage - 1) * pageSize) + 1} - ${Math.min(currentPage * pageSize, totalCount)} of ${totalCount.toLocaleString()} Logs`}
                             </span>
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
-                                    className="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:hover:border-slate-200 disabled:hover:bg-white transition-all cursor-pointer"
+                                    className="p-2 rounded-lg border border-border/80 bg-card text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 disabled:opacity-30 disabled:hover:border-border/80 disabled:hover:bg-card transition-all cursor-pointer"
                                 >
                                     <ChevronLeft size={16} />
                                 </button>
@@ -466,7 +467,7 @@ export function AuditLogs() {
                                         pageNum = currentPage - 3 + idx;
                                     }
                                     if (pageNum > totalPages) return null;
-
+ 
                                     return (
                                         <button
                                             key={pageNum}
@@ -474,30 +475,30 @@ export function AuditLogs() {
                                             className={`size-8 text-xs font-bold rounded-lg border transition-all ${
                                                 currentPage === pageNum
                                                     ? 'bg-indigo-600 border-indigo-600 text-white'
-                                                    : 'bg-white border-slate-200 text-slate-505 hover:text-slate-800 hover:border-slate-300'
+                                                    : 'bg-card border-border/80 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
                                             }`}
                                         >
                                             {pageNum}
                                         </button>
                                     );
                                 })}
-
+ 
                                 {totalPages > 5 && currentPage < totalPages - 2 && (
                                     <>
                                         <span className="text-slate-300 px-1 font-bold">...</span>
                                         <button
                                             onClick={() => setCurrentPage(totalPages)}
-                                            className="size-8 text-xs font-bold rounded-lg border bg-white border-slate-200 text-slate-500 hover:text-slate-800 hover:border-slate-300"
+                                            className="size-8 text-xs font-bold rounded-lg border bg-card border-border/80 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
                                         >
                                             {totalPages}
                                         </button>
                                     </>
                                 )}
-
+ 
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages}
-                                    className="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:hover:border-slate-200 disabled:hover:bg-white transition-all cursor-pointer"
+                                    className="p-2 rounded-lg border border-border/80 bg-card text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 disabled:opacity-30 disabled:hover:border-border/80 disabled:hover:bg-card transition-all cursor-pointer"
                                 >
                                     <ChevronRight size={16} />
                                 </button>

@@ -57,6 +57,11 @@ export async function extractPatientData(file: File): Promise<Partial<Patient>> 
         patientData.race = content.patient.race || '';
         patientData.ethnicity = content.patient.ethnicity || '';
         patientData.preferred_language = content.patient.preferred_language || '';
+        patientData.case_number = content.patient.case_number || content.patient.case_no || '';
+    }
+
+    if (!patientData.case_number) {
+        patientData.case_number = content.case_number || content.case_no || '';
     }
 
     if (content.contact_information) {

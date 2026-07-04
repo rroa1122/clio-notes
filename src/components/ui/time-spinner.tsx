@@ -63,8 +63,8 @@ function ScrollColumn({ items, value, onChange, isAmPm = false }: { items: strin
                                     : "font-medium text-slate-300 text-[12px] tracking-widest hover:text-slate-400 scale-90"
                             ) : (
                                 isActive 
-                                    ? "font-medium text-slate-900 text-[22px] tracking-tight" 
-                                    : "font-medium text-slate-300 text-[18px] tracking-tight hover:text-slate-400 scale-[0.85]"
+                                    ? "font-medium text-slate-900 dark:text-slate-100 text-[22px] tracking-tight" 
+                                    : "font-medium text-slate-300 dark:text-slate-600 text-[18px] tracking-tight hover:text-slate-400 scale-[0.85]"
                             )
                         )}
                     >
@@ -116,7 +116,7 @@ export function TimeSpinner({ onConfirm, initialTimeStr }: { onConfirm: (timeStr
                 }}
             >
                 {/* Thick elegant bezel capsule */}
-                <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[160px] h-[38px] bg-slate-400/5 rounded-[12px] shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border border-slate-200/50 pointer-events-none z-0" />
+                <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[160px] h-[38px] bg-slate-400/5 dark:bg-slate-800/10 rounded-[12px] shadow-[inset_0_2px_8px_rgba(0,0,0,0.03)] border border-slate-200/50 dark:border-slate-800 pointer-events-none z-0" />
                 
                 <div className="flex h-full z-10 gap-2">
                     <ScrollColumn items={hours} value={h} onChange={setH} />

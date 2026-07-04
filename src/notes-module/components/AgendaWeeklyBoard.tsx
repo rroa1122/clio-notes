@@ -9,6 +9,7 @@ import {
   eachDayOfInterval, 
   isToday,
 } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, Search, User, CalendarPlus } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -45,8 +46,10 @@ const parseTimeMins = (timeStr: string) => {
 };
 
 import { TimeSpinner } from '../../components/ui/time-spinner';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searchQuery = '', onSearchChange }: AgendaWeeklyBoardProps) {
+  const { t, language } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -103,25 +106,25 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
 
   return (
     <div className="flex flex-col overflow-hidden h-[100%] w-full">
-      <div className="flex flex-col flex-1 bg-white rounded-[2rem] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-200/60 overflow-hidden relative">
+      <div className="flex flex-col flex-1 bg-surface rounded-[2rem] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-border/60 overflow-hidden relative">
         
         {/* Top Bar Navigation */}
-        <div className="flex flex-none items-end justify-between gap-6 px-8 py-8 bg-white z-20 shrink-0">
+        <div className="flex flex-none items-end justify-between gap-6 px-8 py-8 bg-surface z-20 shrink-0">
             {/* Nav Left - Date Controls */}
-            <div className="flex flex-col gap-2">
-                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Agenda Timeline</span>
-                 <div className="flex items-center gap-4 border border-slate-200/80 rounded-[1.5rem] p-2 h-[60px] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                     <Button variant="outline" className="rounded-xl h-full px-5 font-bold bg-slate-50 border-0 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all" onClick={goToToday}>
-                         TODAY
+             <div className="flex flex-col gap-2">
+                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">{language === 'es' ? "Línea de Tiempo de Agenda" : "Agenda Timeline"}</span>
+                 <div className="flex items-center gap-4 border border-border/80 rounded-[1.5rem] p-2 h-[60px] bg-card shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+                     <Button variant="outline" className="rounded-xl h-full px-5 font-bold bg-slate-50 dark:bg-slate-900 border-0 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all" onClick={goToToday}>
+                         {language === 'es' ? "HOY" : "TODAY"}
                      </Button>
-                     <div className="text-[15px] font-medium tracking-tight text-slate-800 px-2 lg:px-4">
-                         {format(startDate, 'MMMM d')} - {format(endDate, 'MMMM d, yyyy')}
+                     <div className="text-[15px] font-medium tracking-tight text-slate-800 dark:text-slate-200 px-2 lg:px-4">
+                         {format(startDate, language === 'es' ? "d 'de' MMMM" : 'MMMM d', { locale: language === 'es' ? es : undefined })} - {format(endDate, language === 'es' ? "d 'de' MMMM, yyyy" : 'MMMM d, yyyy', { locale: language === 'es' ? es : undefined })}
                      </div>
-                     <div className="flex items-center gap-0.5 bg-slate-50/80 p-1 rounded-xl h-full">
-                         <Button variant="ghost" size="icon" onClick={previousWeek} className="h-full w-10 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white hover:shadow-sm transition-all bg-transparent">
+                     <div className="flex items-center gap-0.5 bg-slate-50/80 dark:bg-slate-900 p-1 rounded-xl h-full">
+                         <Button variant="ghost" size="icon" onClick={previousWeek} className="h-full w-10 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all bg-transparent">
                              <ChevronLeft className="w-4 h-4" />
                          </Button>
-                         <Button variant="ghost" size="icon" onClick={nextWeek} className="h-full w-10 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white hover:shadow-sm transition-all bg-transparent">
+                         <Button variant="ghost" size="icon" onClick={nextWeek} className="h-full w-10 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all bg-transparent">
                              <ChevronRight className="w-4 h-4" />
                          </Button>
                      </div>
@@ -131,54 +134,54 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
             {/* Nav Right - Search */}
              <div className="flex flex-col gap-2 flex-1 max-w-[500px]" ref={searchContainerRef}>
                  <div className="flex items-center justify-between px-1">
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Search className="w-3 h-3"/> Filter Patients</span>
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Search className="w-3 h-3"/> {language === 'es' ? "Filtrar Pacientes" : "Filter Patients"}</span>
                      <Link to="/notes/new" className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary/80 flex items-center gap-1 transition-colors">
                          <Plus className="w-3 h-3" />
-                         New Acquisition
+                         {language === 'es' ? "Nuevo Registro" : "New Acquisition"}
                      </Link>
                  </div>
-                 <div className="flex items-center border border-slate-200/80 rounded-2xl px-4 h-[52px] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative group focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
-                     <div className="text-slate-400 mr-3 pointer-events-none flex-shrink-0">
-                         <Search className="w-4 h-4" />
-                     </div>
-                     <Input 
-                        value={searchQuery}
-                        onChange={(e) => {
-                            onSearchChange?.(e.target.value);
-                            setIsSearchOpen(true);
-                        }}
-                        onFocus={() => setIsSearchOpen(true)}
-                        placeholder="Search patient registry..." 
-                        className="flex-1 h-full bg-transparent border-0 border-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent focus:border-transparent shadow-none text-[14px] font-medium text-slate-700 placeholder:text-slate-400"
-                     />
-                     
-                    {isSearchOpen && uniquePatients.length > 0 && searchQuery && (
-                        <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-[100] bg-white rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.12)] border border-slate-200/60 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                            <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-1">
-                                {uniquePatients.map((name, idx) => (
-                                    <button
-                                        key={idx}
-                                        className="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50 transition-colors rounded-xl group/btn"
-                                        onClick={() => {
-                                            onSearchChange?.(name);
-                                            setIsSearchOpen(false);
-                                        }}
-                                    >
-                                        <div className="size-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover/btn:bg-primary/10 group-hover/btn:text-primary transition-colors">
-                                            <User size={14} />
-                                        </div>
-                                        <span className="text-[13px] font-medium text-slate-700">{name}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                 <div className="flex items-center border border-border/80 rounded-2xl px-4 h-[52px] bg-card shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative group focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                      <div className="text-slate-400 mr-3 pointer-events-none flex-shrink-0">
+                          <Search className="w-4 h-4" />
+                      </div>
+                      <Input 
+                         value={searchQuery}
+                         onChange={(e) => {
+                             onSearchChange?.(e.target.value);
+                             setIsSearchOpen(true);
+                         }}
+                         onFocus={() => setIsSearchOpen(true)}
+                         placeholder={t('record.search_patient_placeholder', 'Search patient registry...')} 
+                         className="flex-1 h-full bg-transparent border-0 border-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent focus:border-transparent shadow-none text-[14px] font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                      />
+                      
+                     {isSearchOpen && uniquePatients.length > 0 && searchQuery && (
+                         <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-[100] bg-popover rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,0.12)] border border-border overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                             <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-1">
+                                 {uniquePatients.map((name, idx) => (
+                                     <button
+                                         key={idx}
+                                         className="w-full flex items-center gap-3 p-3 text-left hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors rounded-xl group/btn"
+                                         onClick={() => {
+                                             onSearchChange?.(name);
+                                             setIsSearchOpen(false);
+                                         }}
+                                     >
+                                         <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover/btn:bg-primary/10 group-hover/btn:text-primary transition-colors">
+                                             <User size={14} />
+                                         </div>
+                                         <span className="text-[13px] font-medium text-slate-700 dark:text-slate-300">{name}</span>
+                                     </button>
+                                 ))}
+                             </div>
+                         </div>
+                     )}
                  </div>
             </div>
         </div>
 
         {/* Agenda Grid Compact View */}
-        <div className="flex-1 overflow-x-auto custom-scrollbar relative px-6 pb-6 bg-white border-t border-slate-100/60">
+        <div className="flex-1 overflow-x-auto custom-scrollbar relative px-6 pb-6 bg-surface border-t border-border/60">
             <div className="min-w-[1100px] min-h-[500px] h-full flex gap-3 pt-6">
                 {days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
@@ -192,15 +195,14 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                         return parseTimeMins(tA) - parseTimeMins(tB);
                     });
 
-                    return (
-                        <div key={dateStr} className={cn("flex-1 flex flex-col min-h-full transition-colors relative group/col rounded-[1.5rem] border overflow-hidden", isTodayDate ? "bg-white border-primary/20 shadow-[0_4px_24px_-8px_rgba(var(--primary-rgb),0.15)] ring-1 ring-primary/10" : "bg-slate-50/80 border-slate-200/60 ")}>
+                    return (                        <div key={dateStr} className={cn("flex-1 flex flex-col min-h-full transition-colors relative group/col rounded-[1.5rem] border overflow-hidden", isTodayDate ? "bg-card border-primary/20 shadow-[0_4px_24px_-8px_rgba(var(--primary-rgb),0.15)] ring-1 ring-primary/10" : "bg-slate-50/80 dark:bg-slate-900/30 border-border/60 ")}>
                             {/* Day Header */}
-                            <div className={cn("py-4 px-4 text-center border-b flex flex-col items-center justify-center gap-1 transition-colors", isTodayDate ? "bg-primary/5 border-primary/10" : "bg-transparent border-slate-200/50")}>
+                            <div className={cn("py-4 px-4 text-center border-b flex flex-col items-center justify-center gap-1 transition-colors", isTodayDate ? "bg-primary/5 border-primary/10" : "bg-transparent border-border/50")}>
                                 <span className={cn("text-[10px] font-bold tracking-widest uppercase", isTodayDate ? "text-primary" : "text-slate-400")}>
-                                    {format(day, 'EEEE')}
+                                    {format(day, 'EEEE', { locale: language === 'es' ? es : undefined })}
                                 </span>
                                 <div className="flex items-center gap-1.5 flex-col mt-0.5">
-                                    <span className={cn("text-[28px] font-medium tracking-tight leading-none relative z-10", isTodayDate ? "text-primary" : "text-slate-700 font-normal")}>
+                                    <span className={cn("text-[28px] font-medium tracking-tight leading-none relative z-10", isTodayDate ? "text-primary" : "text-slate-700 dark:text-slate-300 font-normal")}>
                                         {format(day, 'd')}
                                     </span>
                                     {isTodayDate && <div className="w-1 h-1 bg-primary rounded-full mt-0.5 shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />}
@@ -221,22 +223,22 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                     const end = rawEnd ? formatTime(rawEnd) : '';
                                     
                                     const rawD = note.encounter?.duration_minutes || note.encounter?.duration;
-                                    const timeStr = start ? (end ? `${start} - ${end}` : start) : (rawD ? `${rawD} mins` : 'Unscheduled');
+                                    const timeStr = start ? (end ? `${start} - ${end}` : start) : (rawD ? `${rawD} mins` : (language === 'es' ? 'No programado' : 'Unscheduled'));
                                     
                                     const isSigned = note.signature || (note as any).sign_off?.status === 'signed' || note.signature_status === 'signed';
                                     const isPending = (note as any).sign_off?.status === 'pending' || note.signature_status === 'pending';
-
+ 
                                     return (
                                         <TiltCard intensity={6} scale={1.01}>
                                         <div 
                                             key={note.id || i}
                                             onClick={() => onSelectNote(note)}
                                             className={cn(
-                                                "relative overflow-hidden rounded-2xl p-3 bg-white border border-slate-200/70 transition-all duration-300 cursor-pointer group/card",
+                                                "relative overflow-hidden rounded-2xl p-3 bg-card border border-border/70 transition-all duration-300 cursor-pointer group/card",
                                                 "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]",
                                                 "hover:shadow-[0_12px_24px_-10px_rgba(var(--primary-rgb),0.15)] hover:-translate-y-[2px] hover:border-primary/30 hover:z-10",
-                                                isPending && "bg-gradient-to-br from-white to-amber-50/10",
-                                                !isSigned && !isPending && "bg-gradient-to-br from-white to-slate-50/30"
+                                                isPending && "bg-gradient-to-br from-card to-amber-500/5",
+                                                !isSigned && !isPending && "bg-gradient-to-br from-card to-slate-900/5"
                                             )}
                                         >
                                             
@@ -255,7 +257,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                     </span>
                                                     <span 
                                                         className="relative flex h-2 w-2 shrink-0"
-                                                        title={isSigned ? "Signed" : isPending ? "Pending Signature" : "Draft"}
+                                                        title={isSigned ? (language === 'es' ? "Firmado" : "Signed") : isPending ? (language === 'es' ? "Firma pendiente" : "Pending Signature") : (language === 'es' ? "Borrador" : "Draft")}
                                                     >
                                                         {isPending && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>}
                                                         <span className={cn(
@@ -264,7 +266,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                                 ? "bg-emerald-500" 
                                                                 : isPending 
                                                                     ? "bg-amber-500" 
-                                                                    : "bg-slate-350 bg-slate-300"
+                                                                    : "bg-slate-300 dark:bg-slate-700"
                                                         )}></span>
                                                     </span>
                                                 </div>
@@ -272,7 +274,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                 {/* Body: Patient Name */}
                                                 <div className="min-w-0">
                                                     <h3 
-                                                        className="font-medium text-slate-700 text-[12px] tracking-tight leading-tight group-hover/card:text-primary transition-colors truncate"
+                                                        className="font-medium text-slate-700 dark:text-slate-200 text-[12px] tracking-tight leading-tight group-hover/card:text-primary dark:group-hover/card:text-indigo-400 transition-colors truncate"
                                                         title={pName}
                                                     >
                                                         {pName}
@@ -293,17 +295,17 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                         <PopoverTrigger asChild>
                                             <Button 
                                                 variant="ghost" 
-                                                className="w-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 gap-1.5 h-8 px-4 shadow-none font-semibold text-[10px] uppercase tracking-widest rounded-xl transition-all"
+                                                className="w-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 gap-1.5 h-8 px-4 shadow-none font-semibold text-[10px] uppercase tracking-widest rounded-xl transition-all"
                                             >
                                                 <Plus className="w-3 h-3 stroke-[3]" />
-                                                New Session
+                                                {language === 'es' ? "Nueva Sesión" : "New Session"}
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[300px] p-0 rounded-[2rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 backdrop-blur-xl" side="top" align="center" sideOffset={12}>
+                                        <PopoverContent className="w-[300px] p-0 rounded-[2rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 dark:ring-white/5 bg-popover/70 backdrop-blur-xl" side="top" align="center" sideOffset={12}>
                                             <div className="flex flex-col items-center">
                                                 <div className="w-full pt-8 pb-4 text-center">
-                                                    <span className="font-medium tracking-tight text-slate-800 text-[18px]">Select Time</span>
-                                                    <div className="text-[11px] font-medium text-slate-400 uppercase tracking-widest mt-1 opacity-80">{format(day, 'MMMM d, yyyy')}</div>
+                                                    <span className="font-medium tracking-tight text-slate-800 dark:text-slate-100 text-[18px]">{language === 'es' ? "Seleccionar Hora" : "Select Time"}</span>
+                                                    <div className="text-[11px] font-medium text-slate-400 uppercase tracking-widest mt-1 opacity-80">{format(day, language === 'es' ? "d 'de' MMMM, yyyy" : 'MMMM d, yyyy', { locale: language === 'es' ? es : undefined })}</div>
                                                 </div>
                                                 
                                                 <div className="px-6 pb-6 w-full">
@@ -324,7 +326,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                             onNewNoteForDate(day);
                                                         }}
                                                     >
-                                                       Skip Time Selection
+                                                       {language === 'es' ? "Omitir selección de hora" : "Skip Time Selection"}
                                                     </Button>
                                                 </div>
                                             </div>

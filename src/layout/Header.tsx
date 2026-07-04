@@ -45,7 +45,8 @@ export function Header() {
     }, [isDropdownOpen]);
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-200/80 text-slate-800 shadow-sm">
+        <>
+            <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-100 shadow-sm">
             <div className="h-16 flex items-center justify-between px-4 md:px-8 max-w-[1600px] mx-auto">
                 {/* 1. Logo Area */}
                 <div className="flex items-center gap-3 shrink-0">
@@ -120,8 +121,8 @@ export function Header() {
                 {/* 3. User Profile Dropdown & Mobile Menu Toggle */}
                 <div className="flex items-center gap-4 shrink-0">
                     
-                    {/* User Profile Dropdown (Desktop) */}
-                    <div className="hidden sm:block relative" id="user-dropdown-container">
+                    {/* User Profile Dropdown */}
+                    <div className="relative" id="user-dropdown-container">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                             className="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-slate-100 transition-all select-none border border-transparent hover:border-slate-200/50"
@@ -134,7 +135,7 @@ export function Header() {
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <svg className={cn("size-3.5 text-slate-400 transition-transform duration-200", isDropdownOpen && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <svg className={cn("size-3.5 text-slate-400 transition-transform duration-200 hidden sm:block", isDropdownOpen && "rotate-180")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
@@ -183,82 +184,47 @@ export function Header() {
                             </div>
                         )}
                     </div>
-
-                    {/* Mobile Hamburger */}
-                    <button
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="md:hidden p-2 -mr-2 text-slate-600 hover:text-slate-900 transition-colors"
-                        aria-label="Toggle Menu"
-                    >
-                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
                 </div>
             </div>
-
-            {/* Mobile Navigation Dropdown */}
-            {isMobileMenuOpen && (
-                <div className="md:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-md absolute top-16 left-0 w-full shadow-2xl">
-                    <nav className="flex flex-col p-4 gap-2">
-                        {navItems.map((item) => {
-                            const isActive = item.path === '/notes/new' ? pathname === '/notes/new' : pathname.startsWith(item.path);
-                            return (
-                                <NavLink
-                                    key={item.path}
-                                    to={item.path}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className={cn(
-                                        "flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold transition-all duration-200 border border-transparent",
-                                        isActive
-                                            ? "bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/10 shadow-sm"
-                                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                                    )}
-                                >
-                                    <item.icon className={cn("size-5", isActive ? "opacity-100" : "opacity-75")} />
-                                    <span>{item.label}</span>
-                                </NavLink>
-                            );
-                        })}
-                        
-                        <div className="h-px bg-slate-200 my-1" />
-                        
-                        <NavLink
-                            to="/settings"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={cn(
-                                "flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold transition-all duration-200 border border-transparent",
-                                pathname.startsWith('/settings') ? "bg-[#6366f1]/10 text-[#6366f1]" : "text-slate-600 hover:bg-slate-50"
-                            )}
-                        >
-                            <Settings className="size-5" />
-                            <span>Settings</span>
-                        </NavLink>
-
-                        {isAuthorized && (
-                            <NavLink
-                                to="/audit-logs"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className={cn(
-                                    "flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold transition-all duration-200 border border-transparent",
-                                    pathname.startsWith('/audit-logs') ? "bg-[#6366f1]/10 text-[#6366f1]" : "text-slate-600 hover:bg-slate-50"
-                                )}
-                            >
-                                <Shield className="size-5" />
-                                <span>Audit logs</span>
-                            </NavLink>
-                        )}
-
-                        <div className="h-px bg-slate-200 my-1" />
-
-                        <button
-                            onClick={() => { setIsMobileMenuOpen(false); signOut(); }}
-                            className="flex items-center gap-3 px-4 h-12 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 transition-all"
-                        >
-                            <LogOut className="size-5" />
-                            <span>Sign out</span>
-                        </button>
-                    </nav>
-                </div>
-            )}
         </header>
+
+            {/* Mobile Bottom Navigation Bar */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/85 dark:bg-slate-950/85 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-around px-6 z-50 shadow-[0_-4px_25px_-6px_rgba(0,0,0,0.08)]">
+                {/* 1. History */}
+                <NavLink
+                    to="/notes/history"
+                    className={({ isActive }) => cn(
+                        "flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all",
+                        isActive && "text-[#6366f1] dark:text-[#6366f1] font-black"
+                    )}
+                >
+                    <FileText size={20} />
+                    <span className="text-[10px] font-black tracking-wide">History</span>
+                </NavLink>
+
+                {/* 2. Center FAB: New Encounter */}
+                <NavLink
+                    to="/notes/new"
+                    className={({ isActive }) => cn(
+                        "relative -top-4 flex items-center justify-center size-14 rounded-full bg-gradient-to-tr from-indigo-500 via-indigo-600 to-[#6366f1] text-white shadow-lg shadow-indigo-500/35 transition-all hover:scale-105 active:scale-95 z-50",
+                        isActive && "ring-4 ring-indigo-500/25"
+                    )}
+                >
+                    <Mic size={24} className="animate-pulse" />
+                </NavLink>
+
+                {/* 3. Clients */}
+                <NavLink
+                    to="/patients"
+                    className={({ isActive }) => cn(
+                        "flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all",
+                        isActive && "text-[#6366f1] dark:text-[#6366f1] font-black"
+                    )}
+                >
+                    <Users size={20} />
+                    <span className="text-[10px] font-black tracking-wide">Clients</span>
+                </NavLink>
+            </div>
+        </>
     );
 }

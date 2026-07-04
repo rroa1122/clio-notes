@@ -18,20 +18,20 @@ export function PatientSummaryCard({ patient, onReset }: PatientSummaryCardProps
                     <User size={18} />
                 </div>
                 <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-semibold text-slate-700 truncate tracking-tight">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate tracking-tight">
                         {patient.full_name}
                     </span>
                     <div className="flex flex-col gap-0.5 text-[10px] uppercase tracking-tight mt-0.5">
                         {patient.dob && (
                             <div className="flex items-center gap-1.5 font-semibold">
                                 <span className="text-slate-400 font-medium">DOB:</span>
-                                <span className="text-slate-500 tracking-tighter">{patient.dob}</span>
+                                <span className="text-slate-500 dark:text-slate-450 tracking-tighter">{patient.dob}</span>
                             </div>
                         )}
                         {patient.emr_id && (
                             <div className="flex items-center gap-1.5 font-semibold">
                                 <span className="text-slate-400 font-medium">ID:</span>
-                                <span className="text-slate-500 tracking-tighter">{patient.emr_id}</span>
+                                <span className="text-slate-500 dark:text-slate-450 tracking-tighter">{patient.emr_id}</span>
                             </div>
                         )}
                     </div>

@@ -81,8 +81,8 @@ export const Login: React.FC = () => {
                             >
                                 <defs>
                                     <linearGradient id="login-g4" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor="#00f2fe" />
-                                        <stop offset="50%" stopColor="#3b82f6" />
+                                        <stop offset="0%" stopColor="#3b82f6" />
+                                        <stop offset="50%" stopColor="#4f46e5" />
                                         <stop offset="100%" stopColor="#6366f1" />
                                     </linearGradient>
                                 </defs>
@@ -115,7 +115,7 @@ export const Login: React.FC = () => {
                                 </g>
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-black tracking-[0.1em] bg-gradient-to-r from-[#00f2fe] via-[#3b82f6] to-[#6366f1] bg-clip-text text-transparent uppercase select-none">
+                        <h1 className="text-3xl font-black tracking-[0.1em] bg-gradient-to-r from-[#3b82f6] via-[#4f46e5] to-[#6366f1] bg-clip-text text-transparent uppercase select-none">
                             {view === 'login' ? 'Clio Notes' : 'Identity Recovery'}
                         </h1>
                         <p className="text-slate-400 text-sm mt-2 font-medium">

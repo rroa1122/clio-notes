@@ -35,6 +35,9 @@ interface AuthContextType {
     signup: (email: string, password: string) => Promise<void>;
     refreshUser: () => Promise<void>;
     verifyMfaCode: (code: string, trustDevice?: boolean) => Promise<any>;
+    isImpersonating: boolean;
+    impersonateUser: (targetUserId: string) => Promise<void>;
+    stopImpersonating: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
     const [mfaRequired, setMfaRequired] = useState(false);
     const [mfaEnrollmentRequired, setMfaEnrollmentRequired] = useState(false);
+    const [isImpersonating, setIsImpersonating] = useState(false);
 
     const userRef = useRef<User | null>(null);
 
@@ -52,15 +56,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userRef.current = user;
     }, [user]);
 
+    useEffect(() => {
+        const impersonatedId = sessionStorage.getItem('clio_impersonating_user_id');
+        setIsImpersonating(!!impersonatedId);
+    }, []);
+
     const mapSupabaseUser = async (sbUser: SupabaseUser) => {
         try {
-            // Use the centralized bootstrap function to ensure data integrity
-            const { ensureUserBootstrap } = await import('../notes-module/lib/userBootstrap');
-            const { profile } = await ensureUserBootstrap(sbUser.id, sbUser.email || '');
+            const impersonatedId = sessionStorage.getItem('clio_impersonating_user_id');
+            const targetUserId = (impersonatedId && sbUser.email === 'reinier.roa2.0@gmail.com') 
+                ? impersonatedId 
+                : sbUser.id;
+
+            let profile;
+            if (targetUserId !== sbUser.id) {
+                // Fetch directly from profiles to avoid bootstrap side effects
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', targetUserId)
+                    .single();
+                if (error) throw error;
+                profile = data;
+            } else {
+                // Use the centralized bootstrap function to ensure data integrity
+                const { ensureUserBootstrap } = await import('../notes-module/lib/userBootstrap');
+                const res = await ensureUserBootstrap(sbUser.id, sbUser.email || '');
+                profile = res.profile;
+            }
 
             const newUser: User = {
-                id: sbUser.id,
-                email: sbUser.email || '',
+                id: targetUserId,
+                email: profile?.email || sbUser.email || '',
                 name: profile?.full_name || sbUser.email?.split('@')[0] || 'Doctor',
                 first_name: profile?.first_name,
                 last_name: profile?.last_name,
@@ -79,13 +106,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // but the Router will handle the redirect based on the DB field via a new hook/component.
         } catch (error) {
             console.error('Error bootstrapping user:', error);
+            const isSuperAdmin = sbUser.email === 'reinier.roa2.0@gmail.com';
             // Fallback for safety, though ideally we want to block or show error if bootstrap fails
             setUser({
                 id: sbUser.id,
                 email: sbUser.email || '',
                 name: sbUser.email?.split('@')[0] || 'Doctor',
-                role: 'doctor',
-                setup_complete: false, // Default to false on error to be safe
+                role: isSuperAdmin ? 'super_admin' : 'doctor',
+                setup_complete: isSuperAdmin ? true : false, // Default to true for super_admin to prevent setup loops
                 subscription_tier: 'free'
             });
         }
@@ -400,8 +428,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return verifyData;
     };
 
+    const impersonateUser = async (targetUserId: string) => {
+        try {
+            setLoading(true);
+            sessionStorage.setItem('clio_impersonating_user_id', targetUserId);
+            setIsImpersonating(true);
+            
+            // Reload user data
+            if (session?.user) {
+                await mapSupabaseUser(session.user);
+            }
+            const { toast } = await import('sonner');
+            toast.success("Impersonation active");
+        } catch (err) {
+            console.error("Failed to impersonate user:", err);
+            const { toast } = await import('sonner');
+            toast.error("Failed to impersonate user");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const stopImpersonating = async () => {
+        try {
+            setLoading(true);
+            sessionStorage.removeItem('clio_impersonating_user_id');
+            setIsImpersonating(false);
+            
+            // Reload user data
+            if (session?.user) {
+                await mapSupabaseUser(session.user);
+            }
+            const { toast } = await import('sonner');
+            toast.success("Impersonation stopped");
+        } catch (err) {
+            console.error("Failed to stop impersonation:", err);
+            const { toast } = await import('sonner');
+            toast.error("Failed to stop impersonation");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, session, loading, mfaRequired, mfaEnrollmentRequired, setMfaEnrollmentRequired, login, signOut, logout, signup, refreshUser, verifyMfaCode }}>
+        <AuthContext.Provider value={{ user, session, loading, mfaRequired, mfaEnrollmentRequired, setMfaEnrollmentRequired, login, signOut, logout, signup, refreshUser, verifyMfaCode, isImpersonating, impersonateUser, stopImpersonating }}>
             {children}
         </AuthContext.Provider>
     );

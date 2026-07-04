@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider, createRoutesFromElements, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './notes-module/context/ThemeContext';
 import { CallsProvider } from './context/CallsContext';
 import { ToastContainer } from './components/Toast';
@@ -28,11 +29,12 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { AuditLogs } from './pages/AuditLogs';
 import { MfaChallenge } from './pages/MfaChallenge';
 import { MfaEnrollment } from './pages/MfaEnrollment';
+import { PlatformAdmin } from './pages/PlatformAdmin';
 
 const PrimaryAdminRoute = () => {
-  const { user, loading } = useAuth();
+  const { session, loading } = useAuth();
   if (loading) return null;
-  if (!user || user.email !== 'reinier.roa2.0@gmail.com') {
+  if (!session || session.user?.email !== 'reinier.roa2.0@gmail.com') {
     return <Navigate to="/notes/new" replace />;
   }
   return <Outlet />;
@@ -103,6 +105,11 @@ const Root = () => {
             <Route path="settings" element={<Settings />} />
             <Route path="audit-logs" element={<AuditLogs />} />
 
+            {/* Platform Admin Route */}
+            <Route element={<PrimaryAdminRoute />}>
+              <Route path="platform-admin" element={<PlatformAdmin />} />
+            </Route>
+
             {/* Clinical Module Routes */}
             <Route path="notes">
               {/* Standard Clinical Access (All Auth Users) */}
@@ -137,17 +144,19 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <CallsProvider>
-          <ErrorBoundary>
-            <ToastContainer />
-            <Toaster richColors position="bottom-right" />
-            <Root />
-          </ErrorBoundary>
-        </CallsProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <CallsProvider>
+            <ErrorBoundary>
+              <ToastContainer />
+              <Toaster richColors position="bottom-right" />
+              <Root />
+            </ErrorBoundary>
+          </CallsProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

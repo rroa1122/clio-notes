@@ -39,6 +39,7 @@ export interface ClinicSettings {
     supervisorName?: string;
     supervisorLicense?: string;
     supervisorNpi?: string;
+    supervisorEmail?: string;
     supervisorSignatureUrl?: string;
     businessHours: Record<string, BusinessHours>;
     integrations: {
@@ -150,6 +151,7 @@ export const settingsService = {
                 supervisorName: clinic.settings?.supervisor_name || '',
                 supervisorLicense: clinic.settings?.supervisor_license || '',
                 supervisorNpi: clinic.settings?.supervisor_npi || '',
+                supervisorEmail: clinic.settings?.supervisor_email || '',
                 supervisorSignatureUrl: clinic.settings?.supervisor_signature_url || '',
                 // Hybrid: merge with mocks
                 businessHours: DEFAULT_BUSINESS_HOURS,
@@ -179,7 +181,7 @@ export const settingsService = {
             if (settings.npi_group !== undefined) dbUpdates.npi_group = settings.npi_group;
 
             // Handle supervisor and logo fields in JSONB settings
-            if (settings.supervisorName !== undefined || settings.supervisorLicense !== undefined || settings.supervisorNpi !== undefined || settings.supervisorSignatureUrl !== undefined || settings.timezone !== undefined || settings.logoUrl !== undefined) {
+            if (settings.supervisorName !== undefined || settings.supervisorLicense !== undefined || settings.supervisorNpi !== undefined || settings.supervisorEmail !== undefined || settings.supervisorSignatureUrl !== undefined || settings.timezone !== undefined || settings.logoUrl !== undefined) {
                 // We need the current settings to merge
                 const { data: current } = await supabase.from('clinics').select('settings').eq('id', clinicId).single();
                 dbUpdates.settings = {
@@ -187,6 +189,7 @@ export const settingsService = {
                     ...(settings.supervisorName !== undefined && { supervisor_name: settings.supervisorName }),
                     ...(settings.supervisorLicense !== undefined && { supervisor_license: settings.supervisorLicense }),
                     ...(settings.supervisorNpi !== undefined && { supervisor_npi: settings.supervisorNpi }),
+                    ...(settings.supervisorEmail !== undefined && { supervisor_email: settings.supervisorEmail }),
                     ...(settings.supervisorSignatureUrl !== undefined && { supervisor_signature_url: settings.supervisorSignatureUrl }),
                     ...(settings.timezone !== undefined && { timezone: settings.timezone }),
                     ...(settings.logoUrl !== undefined && { logo_url: settings.logoUrl })
@@ -224,6 +227,7 @@ export const settingsService = {
                     supervisor_name: settings.supervisorName || '',
                     supervisor_license: settings.supervisorLicense || '',
                     supervisor_npi: settings.supervisorNpi || '',
+                    supervisor_email: settings.supervisorEmail || '',
                     supervisor_signature_url: settings.supervisorSignatureUrl || '',
                     logo_url: settings.logoUrl || ''
                 }

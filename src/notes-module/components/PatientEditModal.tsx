@@ -46,6 +46,7 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
         case_manager: '',
         insurance_company: '',
         address: '',
+        case_number: '',
         // PCP
         pcp_name: '',
         pcp_clinic_name: '',
@@ -88,6 +89,7 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
                 case_manager: patient.case_manager || '',
                 insurance_company: patient.insurance_company || '',
                 address: patient.address || '',
+                case_number: (patient as any).case_number || '',
                 pcp_name: patient.pcp_name || '',
                 pcp_clinic_name: patient.pcp_clinic_name || '',
                 pcp_phone: patient.pcp_phone || '',
@@ -134,6 +136,7 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
                 case_manager: formData.case_manager || null,
                 insurance_company: formData.insurance_company || null,
                 address: formData.address || null,
+                case_number: formData.case_number || null,
                 pcp_name: formData.pcp_name || null,
                 pcp_clinic_name: formData.pcp_clinic_name || null,
                 pcp_phone: formData.pcp_phone || null,
@@ -242,8 +245,8 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
                                         <Input id="ssn" value={formData.ssn} onChange={(e) => setFormData(p => ({ ...p, ssn: e.target.value }))} placeholder="XXX-XX-XXXX" className="h-11 rounded-2xl bg-slate-50/50 border-slate-200" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="case_manager" className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Case Manager</Label>
-                                        <Input id="case_manager" value={formData.case_manager} onChange={(e) => setFormData(p => ({ ...p, case_manager: e.target.value }))} className="h-11 rounded-2xl bg-slate-50/50 border-slate-200" />
+                                        <Label htmlFor="case_number" className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Case Number</Label>
+                                        <Input id="case_number" value={formData.case_number} onChange={(e) => setFormData(p => ({ ...p, case_number: e.target.value }))} className="h-11 rounded-2xl bg-slate-50/50 border-slate-200" />
                                     </div>
                                     <div className="col-span-2 space-y-2">
                                         <Label htmlFor="address" className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Home Address</Label>

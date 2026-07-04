@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { storage } from '../lib/storage';
 import type { Note } from '../lib/storage';
 import { Loader2 } from 'lucide-react';
@@ -14,6 +15,7 @@ interface AgendaFilters {
 
 const NotesHistory = () => {
   const { user, loading: authLoading } = useAuth();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   
   const [notes, setNotes] = useState<Note[]>([]);
@@ -101,7 +103,7 @@ const NotesHistory = () => {
         <div className="flex items-center justify-center flex-1 h-full">
             <div className="flex flex-col items-center gap-4 opacity-50">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Loading Caseload...</span>
+                <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">{language === 'es' ? "Cargando Casos..." : "Loading Caseload..."}</span>
             </div>
         </div>
       ) : (

@@ -13,6 +13,11 @@ let cachedProfile: { full_name: string | null; clinic_id: string | null } | null
 export const auditService = {
     logAction: async ({ action, description, targetType, targetId }: AuditLogParams): Promise<void> => {
         try {
+            // Si está en modo de impersonación, no registrar logs de auditoría
+            if (typeof window !== 'undefined' && sessionStorage.getItem('clio_impersonating_user_id')) {
+                return;
+            }
+
             // 1. Obtener el usuario autenticado
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;

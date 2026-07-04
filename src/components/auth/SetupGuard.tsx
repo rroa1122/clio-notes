@@ -21,7 +21,11 @@ export const SetupGuard: React.FC = () => {
         return <Navigate to="/login" replace />;
     }
 
-    if (!user.setup_complete) {
+    const isSuperAdmin = user.role === 'super_admin' || user.email === 'reinier.roa2.0@gmail.com';
+    const impersonatingId = sessionStorage.getItem('clio_impersonating_user_id');
+    const isImpersonating = !!impersonatingId;
+
+    if (!user.setup_complete && !(isSuperAdmin && !isImpersonating)) {
         // Deterministic redirect to setup if not complete
         // This covers null, undefined, and false
         return <Navigate to="/setup" replace />;

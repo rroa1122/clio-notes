@@ -14,6 +14,8 @@ import {
   eachDayOfInterval,
   isToday
 } from "date-fns"
+import { es } from "date-fns/locale"
+import { useLanguage } from "../../context/LanguageContext"
 
 import { cn } from "../../lib/utils"
 import { TiltCard } from "./tilt-card"
@@ -25,6 +27,7 @@ export interface CalendarProps {
 }
 
 export function Calendar({ selected, onSelect, className }: CalendarProps) {
+  const { language } = useLanguage()
   const [currentMonth, setCurrentMonth] = React.useState(selected || new Date())
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
@@ -68,7 +71,7 @@ export function Calendar({ selected, onSelect, className }: CalendarProps) {
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i} value={i + 1}>
-                {format(new Date(2024, i, 1), "MMMM")}
+                {format(new Date(2024, i, 1), "MMMM", { locale: language === 'es' ? es : undefined })}
               </option>
             ))}
           </select>
@@ -111,7 +114,7 @@ export function Calendar({ selected, onSelect, className }: CalendarProps) {
       </div>
       
       <div className="grid grid-cols-7 mb-2">
-        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
+        {(language === 'es' ? ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"] : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]).map((day) => (
           <div key={day} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
             {day}
           </div>

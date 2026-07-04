@@ -38,6 +38,7 @@ export interface Patient {
     citizenship?: string | null;
     case_manager?: string | null;
     insurance_company?: string | null;
+    case_number?: string | null;
 
     // Contacto de Emergencia
     emergency_contact_name?: string | null;
@@ -96,6 +97,52 @@ async function computeFingerprint(data: any): Promise<string> {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+async function getCurrentUserId(): Promise<string> {
+    if (typeof window !== 'undefined') {
+        const impersonatedId = sessionStorage.getItem('clio_impersonating_user_id');
+        if (impersonatedId) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user?.email === 'reinier.roa2.0@gmail.com') {
+                return impersonatedId;
+            }
+        }
+    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("No authenticated user");
+    return user.id;
+}
+
+async function getCurrentClinicId(userId: string): Promise<string | null> {
+    if (typeof window !== 'undefined') {
+        const impersonatedId = sessionStorage.getItem('clio_impersonating_user_id');
+        if (impersonatedId && userId === impersonatedId) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('clinic_id')
+                .eq('id', impersonatedId)
+                .single();
+            return profile?.clinic_id || null;
+        }
+    }
+    
+    let clinicId = cachedClinicId;
+    if (!clinicId) {
+        const { data: cid } = await supabase.rpc('get_my_clinic_id');
+        if (cid) {
+            clinicId = cid;
+            cachedClinicId = clinicId;
+        } else {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('clinic_id')
+                .eq('id', userId)
+                .single();
+            clinicId = profile?.clinic_id || null;
+            if (clinicId) cachedClinicId = clinicId;
+        }
+    }
+    return clinicId;
+}
 
 export const storage = {
     getSettings: (): AppSettings => {
@@ -111,38 +158,15 @@ export const storage = {
 
     getNotes: async (): Promise<Note[]> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                console.warn('[Storage] getNotes called without authenticated user.');
-                return [];
-            }
-
-            // Fast path: use cached clinicId if available
-            let clinicId = cachedClinicId;
-            if (!clinicId) {
-                // Try RPC first (faster on server-side RLS context)
-                const { data: cid } = await supabase.rpc('get_my_clinic_id');
-                if (cid) {
-                    clinicId = cid;
-                    cachedClinicId = clinicId;
-                } else {
-                    // Fallback to profile
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('clinic_id')
-                        .eq('id', user.id)
-                        .single();
-                    clinicId = profile?.clinic_id || null;
-                    if (clinicId) cachedClinicId = clinicId;
-                }
-            }
+            const userId = await getCurrentUserId();
+            let clinicId = await getCurrentClinicId(userId);
 
             // Fetch only necessary columns or a slimmed down version if performance is an issue
             // For now, since we store everything in 'content', we fetch '*'
             let query = supabase.from('notes').select('*');
 
             // Option 1 Approach: Independent Case Manager sees ALL their notes regardless of clinic
-            query = query.eq('user_id', user.id);
+            query = query.eq('user_id', userId);
 
             const { data, error } = await query
                 .order('created_at', { ascending: false })
@@ -236,26 +260,16 @@ export const storage = {
 
     saveNote: async (note: Note) => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                console.error("Cannot save note: No user logged in.");
-                return;
-            }
-
-            // Get Clinic ID for Multi-Tenancy
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('clinic_id')
-                .eq('id', user.id)
-                .single();
+            const userId = await getCurrentUserId();
+            const clinicId = await getCurrentClinicId(userId);
 
             // Upsert into Supabase with clinic_id
             const { error } = await supabase
                 .from('notes')
                 .upsert({
                     id: note.id,
-                    user_id: user.id,
-                    clinic_id: profile?.clinic_id, // Link to clinic
+                    user_id: userId,
+                    clinic_id: clinicId, // Link to clinic
                     content: note, // Store the whole object as JSONB
                     patient_id: (note as any).patient_id,
                     updated_at: new Date().toISOString()
@@ -294,25 +308,18 @@ export const storage = {
 
     saveAnalyzedNote: async (noteData: any) => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("No authenticated user");
+            const userId = await getCurrentUserId();
+            const clinicId = await getCurrentClinicId(userId);
 
             const fingerprint = await computeFingerprint(noteData);
-
-            // Get Clinic ID
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('clinic_id')
-                .eq('id', user.id)
-                .single();
 
             const noteId = noteData.id || crypto.randomUUID();
             const { error } = await supabase
                 .from('notes')
                 .upsert({
                     id: noteId,
-                    user_id: user.id,
-                    clinic_id: profile?.clinic_id,
+                    user_id: userId,
+                    clinic_id: clinicId,
                     content: noteData,
                     patient_id: noteData.patient_id,
                     fingerprint: fingerprint,
@@ -349,21 +356,9 @@ export const storage = {
     },
 
     getClinicId: async (): Promise<string | null> => {
-        if (cachedClinicId) return cachedClinicId;
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return null;
-
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('clinic_id')
-                .eq('id', user.id)
-                .single();
-
-            if (profile?.clinic_id) {
-                cachedClinicId = profile.clinic_id;
-            }
-            return profile?.clinic_id || null;
+            const userId = await getCurrentUserId();
+            return await getCurrentClinicId(userId);
         } catch (e) {
             console.error('getClinicId error:', e);
             return null;
@@ -413,48 +408,18 @@ export const storage = {
 
     getTemplates: async (): Promise<Template[]> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return DEFAULT_TEMPLATES;
-
-            // Get Clinic ID for scoping
-            let clinicId = cachedClinicId;
-            if (!clinicId) {
-                const { data: cid } = await supabase.rpc('get_my_clinic_id');
-                clinicId = cid || null;
-                if (clinicId) cachedClinicId = clinicId;
-            }
-
-            if (!clinicId) {
-                // Fallback to profile check if RPC fails
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('clinic_id')
-                    .eq('id', user.id)
-                    .single();
-                clinicId = profile?.clinic_id || null;
-            }
+            const userId = await getCurrentUserId();
+            const clinicId = await getCurrentClinicId(userId);
 
             // Build inclusive query: Show if (clinic matches OR is public OR is user's own)
             let baseQuery = supabase.from('templates').select('*');
 
-            // --- IMPROVED RESILIENCE: Wait for clinicId if we know we are signed in ---
-            if (!clinicId) {
-                console.log('[Storage] clinicId missing, attempting resolution...');
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('clinic_id')
-                    .eq('id', user.id)
-                    .single();
-                clinicId = profile?.clinic_id || null;
-                if (clinicId) cachedClinicId = clinicId;
-            }
-
-            let filterString = `user_id.eq.${user.id},is_public.eq.true`;
+            let filterString = `user_id.eq.${userId},is_public.eq.true`;
             if (clinicId) {
                 filterString += `,clinic_id.eq.${clinicId}`;
             } else {
                 // If we STILL don't have it, we might be in a race.
-                // We'll proceed but this is why we get empty results有时.
+                // We'll proceed but this is why we get empty results sometimes.
                 filterString += `,clinic_id.is.null`;
                 console.warn('[Storage] Fetching templates without clinicId context');
             }
@@ -479,7 +444,7 @@ export const storage = {
                     const { data: profile } = await supabase
                         .from('profiles')
                         .select('role')
-                        .eq('id', user.id)
+                        .eq('id', userId)
                         .single();
 
                     if (profile?.role) {
@@ -530,27 +495,8 @@ export const storage = {
 
     saveTemplates: async (templates: Template[]) => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Get Clinic ID for Multi-Tenancy (Resilient fetch)
-            let clinicId = cachedClinicId;
-            if (!clinicId) {
-                const { data: cid } = await supabase.rpc('get_my_clinic_id');
-                if (cid) {
-                    clinicId = cid;
-                    cachedClinicId = clinicId;
-                } else {
-                    // Fallback to profile check if RPC fails or isn't created yet
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('clinic_id')
-                        .eq('id', user.id)
-                        .single();
-                    clinicId = profile?.clinic_id || null;
-                    if (clinicId) cachedClinicId = clinicId;
-                }
-            }
+            const userId = await getCurrentUserId();
+            const clinicId = await getCurrentClinicId(userId);
 
             const upsertData = templates.map(t => ({
                 id: t.id,
@@ -559,7 +505,7 @@ export const storage = {
                 category: t.category,
                 content: t.content,
                 definition: t.definition,
-                user_id: user.id,
+                user_id: userId,
                 clinic_id: clinicId, // Ensure clinic_id is always present
                 is_public: t.is_public ?? true,
                 updated_at: new Date().toISOString()
@@ -587,28 +533,8 @@ export const storage = {
 
     saveTemplate: async (template: Template) => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                throw new Error("No authenticated user");
-            }
-
-            // Get Clinic ID for Multi-Tenancy (Resilient fetch)
-            let clinicId = cachedClinicId;
-            if (!clinicId) {
-                const { data: cid } = await supabase.rpc('get_my_clinic_id');
-                if (cid) {
-                    clinicId = cid;
-                    cachedClinicId = clinicId;
-                } else {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('clinic_id')
-                        .eq('id', user.id)
-                        .single();
-                    clinicId = profile?.clinic_id || null;
-                    if (clinicId) cachedClinicId = clinicId;
-                }
-            }
+            const userId = await getCurrentUserId();
+            const clinicId = await getCurrentClinicId(userId);
 
             const upsertData = {
                 id: template.id,
@@ -617,7 +543,7 @@ export const storage = {
                 category: template.category,
                 content: template.content,
                 definition: template.definition,
-                user_id: user.id,
+                user_id: userId,
                 clinic_id: clinicId,
                 is_public: template.is_public ?? false,
                 updated_at: new Date().toISOString()
@@ -686,9 +612,11 @@ export const storage = {
 
     getPatients: async (options?: { limit?: number, offset?: number }): Promise<Patient[]> => {
         try {
+            const userId = await getCurrentUserId();
             let query = supabase
                 .from('patients')
                 .select('*')
+                .eq('user_id', userId)
                 .is('deleted_at', null)
                 .order('full_name', { ascending: true });
 
@@ -723,9 +651,11 @@ export const storage = {
 
     searchPatients: async (queryText: string): Promise<Patient[]> => {
         try {
+            const userId = await getCurrentUserId();
             const { data, error } = await supabase
                 .from('patients')
                 .select('*')
+                .eq('user_id', userId)
                 .is('deleted_at', null)
                 .or(`full_name.ilike.%${queryText}%,phone.ilike.%${queryText}%,emr_id.ilike.%${queryText}%`)
                 .order('full_name', { ascending: true })
@@ -793,26 +723,8 @@ export const storage = {
 
     upsertPatient: async (patient: Partial<Patient>): Promise<Patient | null> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("No authenticated user");
-
-            // Get Clinic ID for Multi-Tenancy (Resilient fetch)
-            let clinicId = cachedClinicId;
-            if (!clinicId) {
-                const { data: cid } = await supabase.rpc('get_my_clinic_id');
-                if (cid) {
-                    clinicId = cid;
-                    cachedClinicId = clinicId;
-                } else {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('clinic_id')
-                        .eq('id', user.id)
-                        .single();
-                    clinicId = profile?.clinic_id || null;
-                    if (clinicId) cachedClinicId = clinicId;
-                }
-            }
+            const userId = await getCurrentUserId();
+            const clinicId = await getCurrentClinicId(userId);
 
             // [LOGIC] Check if patient exists by name if no ID is provided to prevent duplicates
             let targetId = patient.id;
@@ -821,7 +733,7 @@ export const storage = {
                     .from('patients')
                     .select('id')
                     .eq('full_name', patient.full_name)
-                    .eq('user_id', user.id)
+                    .eq('user_id', userId)
                     .is('deleted_at', null)
                     .maybeSingle();
                 
@@ -844,7 +756,7 @@ export const storage = {
                 .upsert({
                     ...sanitizedPatient,
                     id: targetId, // Use existing ID if found, or undefined (DB will generate)
-                    user_id: user.id,
+                    user_id: userId,
                     clinic_id: clinicId,
                     updated_at: new Date().toISOString()
                 })

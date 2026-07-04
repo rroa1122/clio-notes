@@ -61,15 +61,15 @@
 
 .dark {
   /* DEEP CLINICAL NIGHT - PREMIUM OBSIDIAN AESTHETIC */
-  --background: 222 84% 2%;
-  /* Ultra Deep Obsidian */
+  --background: 222 47% 6%;
+  /* Midnight Slate */
   --foreground: 210 40% 98%;
 
-  --card: 222 47% 4%;
+  --card: 222 47% 11%;
   /* Midnight Slate */
   --card-foreground: 210 40% 98%;
 
-  --popover: 222 47% 4%;
+  --popover: 222 47% 11%;
   --popover-foreground: 210 40% 98%;
 
   /* LUMINOUS INDIGO - HIGH VISIBILITY DARK MODE */
@@ -77,10 +77,10 @@
   /* Vibrant Luminous Indigo */
   --primary-foreground: 222 84% 2%;
 
-  --secondary: 222 47% 10%;
+  --secondary: 222 47% 15%;
   --secondary-foreground: 210 40% 98%;
 
-  --muted: 222 47% 10%;
+  --muted: 222 47% 15%;
   --muted-foreground: 215 20% 65%;
 
   --accent: 226 100% 12%;
@@ -90,9 +90,9 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 222 47% 12%;
+  --border: 222 47% 18%;
   /* Subtle Edge Contrast */
-  --input: 222 47% 12%;
+  --input: 222 47% 18%;
   --ring: 226 100% 70%;
 
   /* M3 Token Mapping for Dark Mode - Luminous Evolution */
@@ -3209,10 +3209,6 @@ textarea:focus {
    PROFESSIONAL PRINT / PDF EXPORT STYLES
    ========================================================================== */
 @media print {
-  @page {
-    size: letter portrait;
-    margin: 0.2in 0.4in 0.6in 0.4in;
-  }
 
   /* 1. HIDE UI ELEMENTS (Legacy list, closed properly) */
   .no-print,
@@ -3228,10 +3224,6 @@ textarea:focus {
    FINALIZED ROBUST PRINT / PDF EXPORT STYLES
    ========================================================================== */
 @media print {
-  @page {
-    size: letter portrait;
-    margin: 0.2in 0.4in 0.6in 0.4in;
-  }
 
   /* 1. NUCLEAR HIDE OPTION (Hide App Shell) */
   /* Removed global visibility hide */
@@ -3763,10 +3755,6 @@ input.medical-input {
 }
 
 @media print {
-  @page {
-    size: letter portrait;
-    margin: 0.2in 0.4in 0.6in 0.4in;
-  }
 
   /* Target the main content container specifically */
   .layout-content-container,

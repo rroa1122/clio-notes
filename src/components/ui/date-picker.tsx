@@ -1,6 +1,8 @@
 import * as React from "react"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { format, parseISO, isValid, parse } from "date-fns"
+import { es } from "date-fns/locale"
+import { useLanguage } from "../../context/LanguageContext"
 
 import { cn } from "../../lib/utils"
 import { Calendar } from "./calendar"
@@ -17,6 +19,7 @@ export interface DatePickerProps {
   className?: string
   icon?: React.ReactNode
   mode?: "button" | "input"
+  dateFormat?: string
 }
 
 export function DatePicker({ 
@@ -25,8 +28,10 @@ export function DatePicker({
   placeholder = "MM/DD/YYYY", 
   className, 
   icon,
-  mode = "button"
+  mode = "button",
+  dateFormat
 }: DatePickerProps) {
+  const { language } = useLanguage();
   // Store the actual date object for the calendar
   const selectedDate = React.useMemo(() => {
     if (!date) return undefined
@@ -41,7 +46,7 @@ export function DatePicker({
   // Update input text when date prop changes (e.g. from calendar selection)
   React.useEffect(() => {
     if (selectedDate) {
-      setInputValue(format(selectedDate, "MM/dd/yyyy"))
+      setInputValue(format(selectedDate, "MM/dd/yyyy", { locale: language === 'es' ? es : undefined }))
     } else if (!date) {
       setInputValue("")
     }
@@ -85,7 +90,7 @@ export function DatePicker({
             )}
           >
             <span className={cn("truncate", !selectedDate && "opacity-60")}>
-              {selectedDate ? format(selectedDate, "PPP") : (placeholder === "MM/DD/YYYY" ? "Select date..." : placeholder)}
+              {selectedDate ? format(selectedDate, dateFormat || "PPP", { locale: language === 'es' ? es : undefined }) : (placeholder === "MM/DD/YYYY" ? (language === 'es' ? "Seleccionar fecha..." : "Select date...") : placeholder)}
             </span>
             {icon || <CalendarIcon className="h-4 w-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />}
           </button>

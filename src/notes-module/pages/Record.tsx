@@ -38,6 +38,18 @@ const getLocalDateString = () => {
     return `${year}-${month}-${day}`;
 };
 
+const parseTimeToMinutes = (timeStr: string): number | null => {
+    if (!timeStr) return null;
+    const match = timeStr.match(/(\d+):(\d+)\s*(am|pm)/i);
+    if (!match) return null;
+    let hours = parseInt(match[1]);
+    const minutes = parseInt(match[2]);
+    const period = match[3].toLowerCase();
+    if (period === 'pm' && hours < 12) hours += 12;
+    if (period === 'am' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+};
+
 const TCM_SUB_TEMPLATES = [
     'Monthly Home Visit (MHV)',
     'Update Information in the Community',
@@ -104,7 +116,7 @@ const Record: React.FC = () => {
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [timer, setTimer] = useState(0);
-    const [recordedServices, setRecordedServices] = useState<Array<{ id: string, audioBlob: Blob | null, subTemplate: string, duration: number, manualText?: string, customTemplateText?: string, serviceDate?: string, timeIn?: string, timeOut?: string }>>([]);
+    const [recordedServices, setRecordedServices] = useState<Array<{ id: string, audioBlob: Blob | null, subTemplate: string, duration: number, manualText?: string, customTemplateText?: string, serviceDate?: string, timeIn?: string, timeOut?: string, units?: string }>>([]);
 
     // Process State
     const [status, setStatus] = useState<'idle' | 'recording' | 'uploading' | 'processing' | 'done'>('idle');
@@ -129,9 +141,13 @@ const Record: React.FC = () => {
     const [serviceDate, setServiceDate] = useState(getLocalDateString());
     const [timeIn, setTimeIn] = useState('');
     const [timeOut, setTimeOut] = useState('');
+    const [units, setUnits] = useState('');
+    const [activeTab, setActiveTab] = useState<'info' | 'capture' | 'services'>('info');
+    const [showGuide, setShowGuide] = useState(() => localStorage.getItem('clio_hide_guide') !== 'true');
     const [isTemplatesLoading, setIsTemplatesLoading] = useState(true);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
+    const [isTimeOutPopoverOpen, setIsTimeOutPopoverOpen] = useState(false);
 
     // Bootstrap Data State
     const [userProfile, setUserProfile] = useState<any>(null);
@@ -461,7 +477,8 @@ const Record: React.FC = () => {
             customTemplateText: patientInfo.customTemplateText,
             serviceDate: serviceDate,
             timeIn: timeIn,
-            timeOut: timeOut
+            timeOut: timeOut,
+            units: units
         }]);
 
         // Clean up pending states
@@ -470,10 +487,11 @@ const Record: React.FC = () => {
         setAudioUrl(null);
         setTimer(0);
         setPatientInfo(prev => ({ ...prev, context: '', customTemplateText: '' }));
-        // We keep selectedSubTemplate for convenience or reset it? 
-        // User said: "y que se agreguen todos los campos... se habilita el boton de add note"
-        // Let's reset the sub-template to force the user to pick again for the next service if it's a joint note.
         setSelectedSubTemplate('');
+        setTimeIn('');
+        setTimeOut('');
+        setUnits('');
+        setActiveTab('services');
         
         toast.success('Service added to joint note');
     };
@@ -535,6 +553,7 @@ const Record: React.FC = () => {
                 const svcDate = (svc as any).serviceDate || serviceDate;
                 const svcTimeIn = (svc as any).timeIn || timeIn;
                 const svcTimeOut = (svc as any).timeOut || timeOut;
+                const svcUnits = (svc as any).units || units;
                 
                 toast.loading(`Processing service ${i + 1} of ${allServicesToProcess.length}...`, { id: 'joint-progress' });
 
@@ -588,6 +607,7 @@ const Record: React.FC = () => {
                     formData.append('service_date', svcDate);
                     formData.append('time_in', svcTimeIn);
                     formData.append('time_out', svcTimeOut);
+                    formData.append('units', svcUnits);
                     formData.append('primary_service_provided', uniqueServiceTitle);
                 } else {
                     const bodyData = {
@@ -656,6 +676,26 @@ const Record: React.FC = () => {
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations
                     if (!normalized.encounter) normalized.encounter = {} as any;
                     normalized.encounter.dos_date = svcDate;
+                    normalized.encounter.time_in = svcTimeIn;
+                    normalized.encounter.time_out = svcTimeOut;
+                    normalized.encounter.units = svcUnits;
+                    
+                    // Calculate duration in minutes
+                    const startMins = parseTimeToMinutes(svcTimeIn);
+                    const endMins = parseTimeToMinutes(svcTimeOut);
+                    let calcDuration = 0;
+                    if (startMins !== null && endMins !== null) {
+                        let diff = endMins - startMins;
+                        if (diff < 0) diff += 1440;
+                        calcDuration = diff;
+                    } else if (svcUnits) {
+                        calcDuration = parseInt(svcUnits) * 15;
+                    }
+                    if (calcDuration === 0) {
+                        calcDuration = Math.round(svc.duration / 60) || 15;
+                    }
+                    normalized.encounter.duration = calcDuration.toString();
+                    normalized.encounter.duration_minutes = calcDuration.toString();
                     
                     generatedNotes.push(normalized);
                 }
@@ -806,6 +846,8 @@ const Record: React.FC = () => {
         navigate('/notes/new', { replace: true });
         setTimeIn('');
         setTimeOut('');
+        setUnits('');
+        setActiveTab('info');
     };
 
 
@@ -893,9 +935,161 @@ const Record: React.FC = () => {
                 </div>
             ) : (
                 <Card className="max-w-6xl w-full bg-surface border border-border/60 shadow-soft rounded-[2.5rem] overflow-hidden relative group">
-                    <CardContent className="px-6 md:px-10 pt-8 pb-10 space-y-8">
-                        {/* Unified Action Center (Phase 1: Metadata & Phase 2: Capture) */}
-                        <div className="space-y-6">
+                    <CardContent className="px-4 sm:px-6 md:px-10 pt-6 md:pt-8 pb-6 md:pb-10 space-y-6 md:space-y-8">
+                        {showGuide && (
+                            <div className="bg-gradient-to-r from-indigo-50/60 via-violet-50/40 to-slate-50 border border-indigo-100 rounded-3xl p-6 relative animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm hidden md:flex flex-row items-center justify-between gap-6">
+                                <button 
+                                    onClick={() => {
+                                        localStorage.setItem('clio_hide_guide', 'true');
+                                        setShowGuide(false);
+                                    }}
+                                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors text-lg font-bold leading-none p-1"
+                                    title="Hide tutorial guide"
+                                >
+                                    &times;
+                                </button>
+                                <div className="space-y-1">
+                                    <h4 className="text-[13px] font-black tracking-wider text-indigo-950 uppercase flex items-center gap-2">
+                                        ✨ Quick Start Guide
+                                    </h4>
+                                    <p className="text-xs text-slate-500 font-medium">Complete these simple steps to generate your medical note:</p>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 flex-1 md:max-w-3xl">
+                                    {/* Step 1 */}
+                                    <div className={cn(
+                                        "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300",
+                                        selectedPatient 
+                                            ? "bg-emerald-50/40 border-emerald-100/80 text-emerald-700 font-semibold" 
+                                            : "bg-white border-slate-200/60 text-slate-500 font-medium"
+                                    )}>
+                                        <div className={cn(
+                                            "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                                            selectedPatient ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                        )}>
+                                            {selectedPatient ? "✓" : "1"}
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-[9px] font-black uppercase tracking-wider opacity-75">Client</span>
+                                            <span className="text-[11px] leading-tight truncate">
+                                                {selectedPatient ? selectedPatient.full_name : "Select client"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Step 2 */}
+                                    {(() => {
+                                        const isStep2Done = Boolean(timeIn) && (Boolean(timeOut) || Boolean(units));
+                                        return (
+                                            <div className={cn(
+                                                "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300",
+                                                isStep2Done 
+                                                    ? "bg-emerald-50/40 border-emerald-100/80 text-emerald-700 font-semibold" 
+                                                    : "bg-white border-slate-200/60 text-slate-500 font-medium"
+                                            )}>
+                                                <div className={cn(
+                                                    "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                                                    isStep2Done ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                                )}>
+                                                    {isStep2Done ? "✓" : "2"}
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[9px] font-black uppercase tracking-wider opacity-75">Times</span>
+                                                    <span className="text-[11px] leading-tight truncate">
+                                                        {isStep2Done ? `${timeIn} - ${timeOut || units + ' U'}` : "Set date & times"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Step 3 */}
+                                    <div className={cn(
+                                        "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300",
+                                        selectedSubTemplate 
+                                            ? "bg-emerald-50/40 border-emerald-100/80 text-emerald-700 font-semibold" 
+                                            : "bg-white border-slate-200/60 text-slate-500 font-medium"
+                                    )}>
+                                        <div className={cn(
+                                            "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                                            selectedSubTemplate ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                        )}>
+                                            {selectedSubTemplate ? "✓" : "3"}
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-[9px] font-black uppercase tracking-wider opacity-75">Service</span>
+                                            <span className="text-[11px] leading-tight truncate">
+                                                {selectedSubTemplate ? selectedSubTemplate : "Select service"}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 4 */}
+                                    {(() => {
+                                        const hasInput = Boolean(audioBlob) || Boolean(patientInfo.customTemplateText?.trim());
+                                        return (
+                                            <div className={cn(
+                                                "flex items-center gap-3 p-3 rounded-2xl border transition-all duration-300",
+                                                hasInput 
+                                                    ? "bg-emerald-50/40 border-emerald-100/80 text-emerald-700 font-semibold" 
+                                                    : "bg-white border-slate-200/60 text-slate-500 font-medium"
+                                            )}>
+                                                <div className={cn(
+                                                    "size-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0",
+                                                    hasInput ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                                                )}>
+                                                    {hasInput ? "✓" : "4"}
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[9px] font-black uppercase tracking-wider opacity-75">Capture</span>
+                                                    <span className="text-[11px] leading-tight truncate">
+                                                        {audioBlob ? "Audio Recorded" : (patientInfo.customTemplateText?.trim() ? "Objectives written" : "Record or write")}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Mobile view Tab navigation */}
+                        <div className="flex md:hidden border-b border-border/40 pb-1 mb-4 gap-1">
+                            <button 
+                                onClick={() => setActiveTab('info')}
+                                className={cn(
+                                    "flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 text-center transition-all",
+                                    activeTab === 'info' ? "border-primary text-primary" : "border-transparent text-slate-400"
+                                )}
+                            >
+                                1. Info
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('capture')}
+                                className={cn(
+                                    "flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 text-center transition-all",
+                                    activeTab === 'capture' ? "border-primary text-primary" : "border-transparent text-slate-400"
+                                )}
+                            >
+                                2. Capture
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('services')}
+                                className={cn(
+                                    "flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 text-center transition-all relative",
+                                    activeTab === 'services' ? "border-primary text-primary" : "border-transparent text-slate-400"
+                                )}
+                            >
+                                3. Services
+                                {recordedServices.length > 0 && (
+                                    <Badge className="absolute -top-1 right-2 bg-primary text-primary-foreground size-5 p-0 flex items-center justify-center rounded-full text-[9px] font-black border border-background">
+                                        {recordedServices.length}
+                                    </Badge>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* 1. Desktop Layout (hidden md:block) */}
+                        <div className="hidden md:block space-y-8">
                             {/* Top Tier: Mandatory Clinical Metadata */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 pb-8 border-b border-slate-100">
                                 {/* Patient Selection */}
@@ -939,20 +1133,22 @@ const Record: React.FC = () => {
                                         <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Encounter Info</Label>
                                         {serviceDate && timeIn && <Check size={12} className="text-emerald-400" />}
                                     </div>
-                                    <div className="flex bg-white border border-slate-200 rounded-full shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 overflow-hidden mt-1">
-                                        <div className="flex-1 min-w-[200px] border-r border-slate-100">
+                                    <div className="flex bg-white border border-slate-200 rounded-full shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 overflow-hidden mt-1 h-11 items-center">
+                                        {/* Date */}
+                                        <div className="flex-1 min-w-[140px] border-r border-slate-100">
                                             <DatePicker 
                                                 date={serviceDate} 
                                                 setDate={setServiceDate} 
-                                                className="h-11 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 px-5 font-medium text-slate-600 tracking-tight"
+                                                className="h-11 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 px-4 font-medium text-slate-600 tracking-tight"
                                             />
                                         </div>
-                                        <div className="relative shrink-0 flex items-center bg-slate-50/30 pr-1">
+                                        {/* Time In */}
+                                        <div className="border-r border-slate-100 h-full flex items-center bg-slate-50/20 pr-1">
                                             <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-5 font-medium text-slate-500 min-w-[110px] w-auto flex items-center gap-2 justify-center transition-colors tracking-tight">
-                                                        <Clock size={16} className="text-slate-300" />
-                                                        {timeIn ? timeIn : "--:-- AM"}
+                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-3 font-medium text-slate-500 min-w-[95px] w-auto flex items-center gap-2 justify-center transition-colors tracking-tight">
+                                                        <Clock size={16} className="text-slate-300 shrink-0" />
+                                                        <span className="text-[11px] whitespace-nowrap">{timeIn ? `In: ${timeIn}` : "Start"}</span>
                                                     </Button>
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 backdrop-blur-xl" side="bottom" align="end" sideOffset={12}>
@@ -973,6 +1169,45 @@ const Record: React.FC = () => {
                                                     </div>
                                                 </PopoverContent>
                                             </Popover>
+                                        </div>
+                                        {/* Time Out */}
+                                        <div className="border-r border-slate-100 h-full flex items-center bg-slate-50/20 pr-1">
+                                            <Popover open={isTimeOutPopoverOpen} onOpenChange={setIsTimeOutPopoverOpen}>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-3 font-medium text-slate-500 min-w-[95px] w-auto flex items-center gap-2 justify-center transition-colors tracking-tight">
+                                                        <Clock size={16} className="text-slate-300 shrink-0" />
+                                                        <span className="text-[11px] whitespace-nowrap">{timeOut ? `Out: ${timeOut}` : "End"}</span>
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 backdrop-blur-xl" side="bottom" align="end" sideOffset={12}>
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="w-full pt-8 pb-4 text-center">
+                                                            <span className="font-medium tracking-tight text-slate-800 text-[18px]">Select Time</span>
+                                                            <div className="text-[11px] font-medium text-slate-400 uppercase tracking-widest mt-1 opacity-80">Encounter End</div>
+                                                        </div>
+                                                        <div className="px-6 pb-6 w-full">
+                                                            <TimeSpinner 
+                                                                initialTimeStr={timeOut}
+                                                                onConfirm={(timeStr) => {
+                                                                    setTimeOut(timeStr);
+                                                                    setIsTimeOutPopoverOpen(false);
+                                                                }} 
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+                                        {/* Units */}
+                                        <div className="w-[75px] h-full flex items-center bg-slate-50/10 px-2 shrink-0">
+                                            <Input 
+                                                type="number"
+                                                min="0"
+                                                placeholder="Units"
+                                                value={units}
+                                                onChange={(e) => setUnits(e.target.value)}
+                                                className="h-full border-0 bg-transparent text-slate-600 font-semibold focus-visible:ring-0 text-center text-xs w-full px-1"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -1020,8 +1255,8 @@ const Record: React.FC = () => {
                                                                     isActive ? 'bg-primary/5 text-primary hover:bg-primary/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
                                                                 )}
                                                             >
-                                                                <span className="tracking-tight">{t}</span>
-                                                                {isActive && <Check size={14} strokeWidth={3} className="animate-in zoom-in" />}
+                                                                 <span className="tracking-tight">{t}</span>
+                                                                 {isActive && <Check size={14} strokeWidth={3} className="animate-in zoom-in" />}
                                                             </button>
                                                         );
                                                     })}
@@ -1045,162 +1280,152 @@ const Record: React.FC = () => {
                                                 </Badge>
                                             </div>
                                         </div>
-                                    <div className="flex flex-col items-center justify-center flex-1 gap-6 w-full py-2">
-                                        <div className="flex flex-col items-center gap-5 relative">
-                                            {/* The Permanent Microphone - Precision Clinical Instrument Aesthetic */}
-                                            <div className="relative group w-fit flex items-center justify-center">
-                                                {/* Ambient Aura for Idle State - Soft, breathing background glow */}
-                                                {status === 'idle' && !audioBlob && (
-                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-36 bg-primary/[0.04] rounded-full blur-3xl animate-[pulse_8s_ease-in-out_infinite] pointer-events-none" />
-                                                )}
-
-                                                <button
-                                                    onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
-                                                    disabled={!!audioBlob}
-                                                    className={cn(
-                                                        "relative size-28 rounded-[2.8rem] flex items-center justify-center transition-all duration-700 z-10 overflow-hidden group/mic-btn",
-                                                        audioBlob 
-                                                            ? "bg-emerald-50/40 border-2 border-emerald-200 text-emerald-600 shadow-[0_4px_20px_rgba(16,185,129,0.1)] cursor-default" 
-                                                            : status === 'recording'
-                                                                ? "animate-recording-pulse backdrop-blur-md border-2 border-rose-500/20 text-rose-500 cursor-pointer hover:scale-[0.98]"
-                                                                : "glass-tactile border-2 border-white/80 text-slate-400 animate-tactile-pulse hover:text-primary hover:border-primary/30 hover:scale-105 cursor-pointer active:scale-95 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]"
-                                                    )}
-                                                >
-                                                    {/* Premium Shimmer Sweep (Idle only) */}
+                                        <div className="flex flex-col items-center justify-center flex-1 gap-6 w-full py-2">
+                                            <div className="flex flex-col items-center gap-5 relative">
+                                                <div className="relative group w-fit flex items-center justify-center">
                                                     {status === 'idle' && !audioBlob && (
-                                                        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent animate-shimmer-sweep pointer-events-none w-[200%]" />
+                                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-36 bg-primary/[0.04] rounded-full blur-3xl animate-[pulse_8s_ease-in-out_infinite] pointer-events-none" />
                                                     )}
 
-                                                    {/* Warm Breathing Pulse (Recording only) */}
-                                                    {status === 'recording' && (
-                                                        <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
-                                                    )}
+                                                    <button
+                                                        onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
+                                                        disabled={!!audioBlob}
+                                                        className={cn(
+                                                            "relative size-28 rounded-[2.8rem] flex items-center justify-center transition-all duration-700 z-10 overflow-hidden group/mic-btn",
+                                                            audioBlob 
+                                                                ? "bg-emerald-50/40 border-2 border-emerald-200 text-emerald-600 shadow-[0_4px_20px_rgba(16,185,129,0.1)] cursor-default" 
+                                                                : status === 'recording'
+                                                                    ? "animate-recording-pulse backdrop-blur-md border-2 border-rose-500/20 text-rose-500 cursor-pointer hover:scale-[0.98]"
+                                                                    : "glass-tactile border-2 border-white/80 text-slate-400 animate-tactile-pulse hover:text-primary hover:border-primary/30 hover:scale-105 cursor-pointer active:scale-95 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]"
+                                                        )}
+                                                    >
+                                                        {status === 'idle' && !audioBlob && (
+                                                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent animate-shimmer-sweep pointer-events-none w-[200%]" />
+                                                        )}
 
-                                                    {status === 'recording' ? (
-                                                        <div className="size-10 rounded-2xl bg-rose-500 animate-in zoom-in-50 duration-500 shadow-[0_8px_20px_rgba(244,63,94,0.4)] relative z-10 flex items-center justify-center">
-                                                            <div className="size-4 bg-white/20 rounded-sm animate-pulse" />
-                                                        </div>
-                                                    ) : (
-                                                        <div className={cn(
-                                                            "relative z-10 transition-all duration-700",
-                                                            status === 'idle' && !audioBlob ? "group-hover/mic-btn:scale-110" : ""
-                                                        )}>
-                                                            <Mic size={42} strokeWidth={1} className={cn(
-                                                                "transition-all duration-700",
-                                                                status === 'idle' && !audioBlob ? "text-primary/40 drop-shadow-[0_4px_8px_rgba(79,70,229,0.08)] group-hover/mic-btn:text-primary group-hover/mic-btn:drop-shadow-[0_8px_16px_rgba(79,70,229,0.2)]" : "text-emerald-500"
-                                                            )} />
-                                                        </div>
-                                                    )}
+                                                        {status === 'recording' && (
+                                                            <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
+                                                        )}
 
-                                                    {/* Glossy Overlay */}
-                                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none opacity-50" />
-                                                </button>
-
-                                                {audioBlob && (
-                                                    <div className="absolute -top-2 -right-2 size-10 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white shadow-xl animate-in zoom-in-50 duration-500 z-20">
-                                                        <Check size={20} strokeWidth={3} />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            
-                                            {/* Status Texts & Small Timer - Luxury Precision Labeling */}
-                                            <div className="flex flex-col items-center gap-2 min-h-[44px] justify-start mt-1">
-                                                {status === 'recording' ? (
-                                                    <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-700">
-                                                        <span className="text-2xl font-bold tabular-nums tracking-tighter text-rose-500 drop-shadow-sm">
-                                                            {formatTime(timer)}
-                                                        </span>
-                                                        <div className="flex items-center gap-2 opacity-40">
-                                                            <div className="size-1 rounded-full bg-rose-500 animate-pulse" />
-                                                            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-600">
-                                                                Recording...
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex flex-col items-center gap-1 animate-in fade-in duration-700">
-                                                        <p className={cn(
-                                                            "text-[11px] font-bold uppercase tracking-[0.4em] transition-all duration-700",
-                                                            audioBlob ? "text-emerald-600" : "text-slate-400/60"
-                                                        )}>
-                                                            {audioBlob ? "Session Finalized" : "System Standby"}
-                                                        </p>
-                                                        {!audioBlob && (
-                                                            <div className="h-4 flex items-center">
-                                                                <p className="text-[11px] font-semibold text-primary/50 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
-                                                                    Ready to record
-                                                                </p>
+                                                        {status === 'recording' ? (
+                                                            <div className="size-10 rounded-2xl bg-rose-500 animate-in zoom-in-50 duration-500 shadow-[0_8px_20px_rgba(244,63,94,0.4)] relative z-10 flex items-center justify-center">
+                                                                <div className="size-4 bg-white/20 rounded-sm animate-pulse" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className={cn(
+                                                                "relative z-10 transition-all duration-700",
+                                                                status === 'idle' && !audioBlob ? "group-hover/mic-btn:scale-110" : ""
+                                                            )}>
+                                                                <Mic size={42} strokeWidth={1} className={cn(
+                                                                    "transition-all duration-700",
+                                                                    status === 'idle' && !audioBlob ? "text-primary/40 drop-shadow-[0_4px_8px_rgba(79,70,229,0.08)] group-hover/mic-btn:text-primary group-hover/mic-btn:drop-shadow-[0_8px_16px_rgba(79,70,229,0.2)]" : "text-emerald-500"
+                                                                )} />
                                                             </div>
                                                         )}
+                                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none opacity-50" />
+                                                    </button>
+
+                                                    {audioBlob && (
+                                                        <div className="absolute -top-2 -right-2 size-10 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white shadow-xl animate-in zoom-in-50 duration-500 z-20">
+                                                            <Check size={20} strokeWidth={3} />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex flex-col items-center gap-2 min-h-[44px] justify-start mt-1">
+                                                    {status === 'recording' ? (
+                                                        <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-700">
+                                                            <span className="text-2xl font-bold tabular-nums tracking-tighter text-rose-500 drop-shadow-sm">
+                                                                {formatTime(timer)}
+                                                            </span>
+                                                            <div className="flex items-center gap-2 opacity-40">
+                                                                <div className="size-1 rounded-full bg-rose-500 animate-pulse" />
+                                                                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-600">
+                                                                    Recording...
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center gap-1 animate-in fade-in duration-700">
+                                                            <p className={cn(
+                                                                "text-[11px] font-bold uppercase tracking-[0.4em] transition-all duration-700",
+                                                                audioBlob ? "text-emerald-600" : "text-slate-400/60"
+                                                            )}>
+                                                                {audioBlob ? "Session Finalized" : "System Standby"}
+                                                            </p>
+                                                            {!audioBlob && (
+                                                                <div className="h-4 flex items-center">
+                                                                    <p className="text-[11px] font-semibold text-primary/50 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
+                                                                        Ready to record
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col gap-3 w-full max-w-[240px] mt-2">
+                                                {audioBlob && status !== 'recording' && (
+                                                    <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                        <Button
+                                                            variant="ghost"
+                                                            onClick={() => {
+                                                                if (audioUrl) URL.revokeObjectURL(audioUrl);
+                                                                setAudioBlob(null);
+                                                                setAudioUrl(null);
+                                                                setTimer(0);
+                                                            }}
+                                                            className="h-11 w-full rounded-full font-black text-[11px] uppercase tracking-[0.2em] text-rose-400 hover:bg-rose-50/30 transition-all"
+                                                        >
+                                                            Discard
+                                                        </Button>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
-
-                                        <div className="flex flex-col gap-3 w-full max-w-[240px] mt-2">
-                                            
-                                            {audioBlob && status !== 'recording' && (
-                                                <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                    <Button
-                                                        variant="ghost"
-                                                        onClick={() => {
-                                                            if (audioUrl) URL.revokeObjectURL(audioUrl);
-                                                            setAudioBlob(null);
-                                                            setAudioUrl(null);
-                                                            setTimer(0);
-                                                        }}
-                                                        className="h-11 w-full rounded-full font-black text-[11px] uppercase tracking-[0.2em] text-rose-400 hover:bg-rose-50/30 transition-all"
-                                                    >
-                                                        Discard
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
                                     </div>
-
-                                </div>
                                 </TiltCard>
 
                                 {/* Text Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
                                     <div className="bg-slate-50/50 border border-slate-200/80 rounded-[2rem] p-6 flex flex-col gap-4 shadow-sm transition-all hover:bg-white hover:shadow-md h-full min-h-[260px]">
-                                    {selectedSubTemplate === 'Custom Template' ? (
-                                        <div className="flex flex-col gap-6 h-full">
-                                            <div className="flex-1 flex flex-col gap-3 relative">
-                                                <div className="flex items-center justify-between w-full px-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Target size={14} className="text-slate-400" />
-                                                        <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
-                                                            Goals
-                                                        </Badge>
+                                        {selectedSubTemplate === 'Custom Template' ? (
+                                            <div className="flex flex-col gap-6 h-full">
+                                                <div className="flex-1 flex flex-col gap-3 relative">
+                                                    <div className="flex items-center justify-between w-full px-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Target size={14} className="text-slate-400" />
+                                                            <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                                Goals
+                                                            </Badge>
+                                                        </div>
                                                     </div>
+                                                    <Textarea
+                                                        value={patientInfo.context}
+                                                        onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
+                                                        placeholder="Symptoms or session objectives..."
+                                                        className="w-full flex-1 min-h-[60px] bg-white border border-slate-100 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 shadow-sm focus-visible:ring-primary/20 placeholder:text-slate-300"
+                                                    />
                                                 </div>
-                                                <Textarea
-                                                    value={patientInfo.context}
-                                                    onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
-                                                    placeholder="Symptoms or session objectives..."
-                                                    className="w-full flex-1 min-h-[60px] bg-white border border-slate-100 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 shadow-sm focus-visible:ring-primary/20 placeholder:text-slate-300"
-                                                />
-                                            </div>
-                                            <div className="flex-1 flex flex-col gap-3 relative">
-                                                <div className="flex items-center justify-between w-full px-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Sparkles size={14} className="text-emerald-400" />
-                                                        <Badge variant="outline" className="bg-emerald-50/50 text-emerald-600 border-emerald-100/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
-                                                            Template
-                                                        </Badge>
+                                                <div className="flex-1 flex flex-col gap-3 relative">
+                                                    <div className="flex items-center justify-between w-full px-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <Sparkles size={14} className="text-emerald-400" />
+                                                            <Badge variant="outline" className="bg-emerald-50/50 text-emerald-600 border-emerald-100/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                                Template
+                                                            </Badge>
+                                                        </div>
                                                     </div>
+                                                    <Textarea
+                                                        value={patientInfo.customTemplateText}
+                                                        onChange={(e) => setPatientInfo(prev => ({ ...prev, customTemplateText: e.target.value }))}
+                                                        placeholder="Paste your custom template here..."
+                                                        className="w-full flex-1 min-h-[60px] bg-white border border-emerald-100 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 shadow-sm focus-visible:ring-emerald-500/20 placeholder:text-emerald-300/60"
+                                                    />
                                                 </div>
-                                                <Textarea
-                                                    value={patientInfo.customTemplateText}
-                                                    onChange={(e) => setPatientInfo(prev => ({ ...prev, customTemplateText: e.target.value }))}
-                                                    placeholder="Paste your custom template here..."
-                                                    className="w-full flex-1 min-h-[60px] bg-white border border-emerald-100 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 shadow-sm focus-visible:ring-emerald-500/20 placeholder:text-emerald-300/60"
-                                                />
                                             </div>
-                                        </div>
-                                    ) : (
+                                        ) : (
                                             <div className="flex flex-col gap-4 h-full relative group/text flex-1">
                                                 <div className="flex items-center justify-between w-full px-2">
                                                     <div className="flex items-center gap-2">
@@ -1215,13 +1440,12 @@ const Record: React.FC = () => {
                                                         </Badge>
                                                     )}
                                                 </div>
-                                                
                                                 <div className="flex-1 flex flex-col relative justify-start pt-2">
                                                     {!patientInfo.context.trim() && (
                                                         <div className="absolute inset-x-0 top-2 pointer-events-none px-2 flex group-focus-within/text:opacity-0 transition-opacity duration-300">
                                                             <div className="flex items-start gap-1">
                                                                 <div className="w-[2.5px] h-5 bg-primary/40 animate-cursor-blink rounded-full mt-0.5" />
-                                                                <span className="text-[15px] font-medium text-slate-400/60 animate-text-breathing tracking-tight leading-relaxed">
+                                                                <span className="text-[15px] font-medium text-slate-400/60 animate-text-breathing tracking-tight leading-relaxed animate-in fade-in">
                                                                     Specify symptoms, history focus, or session objectives (optional)...
                                                                 </span>
                                                             </div>
@@ -1235,8 +1459,8 @@ const Record: React.FC = () => {
                                                     />
                                                 </div>
                                             </div>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
                                 </TiltCard>
                             </div>
 
@@ -1286,7 +1510,6 @@ const Record: React.FC = () => {
                                         )}
                                     </Button>
                                 </div>
-                                
                                 {(!selectedPatient && !patientInfo.name.trim()) || !selectedSubTemplate ? (
                                     <p className="text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] animate-pulse transition-opacity duration-1000">
                                         Fill patient & service fields to enable
@@ -1311,7 +1534,6 @@ const Record: React.FC = () => {
                                             Discard Session
                                         </Button>
                                     </div>
-
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                         {recordedServices.map((svc, i) => (
                                             <div key={svc.id} className="bg-slate-50/30 border border-slate-100 rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm hover:border-slate-200 transition-all duration-300 group overflow-hidden">
@@ -1322,12 +1544,8 @@ const Record: React.FC = () => {
                                                     <div className="flex flex-col min-w-0">
                                                         <h5 className="text-[11px] font-semibold text-slate-500 truncate leading-tight tracking-tight">{svc.subTemplate}</h5>
                                                         <div className="flex items-center gap-1.5 mt-0.5 opacity-60">
-                                                            {svc.audioBlob && (
-                                                                <Mic size={9} className="text-slate-400" />
-                                                            )}
-                                                            {svc.manualText && (
-                                                                <FileText size={9} className="text-slate-400" />
-                                                            )}
+                                                            {svc.audioBlob && <Mic size={9} className="text-slate-400" />}
+                                                            {svc.manualText && <FileText size={9} className="text-slate-400" />}
                                                             <span className="text-[11px] font-bold text-slate-400">
                                                                 {svc.audioBlob && svc.manualText ? "Both" : (svc.audioBlob ? "Audio" : "Text")}
                                                             </span>
@@ -1347,16 +1565,412 @@ const Record: React.FC = () => {
                             )}
                         </div>
 
-                    </CardContent>
 
-                    {error && (
-                        <div className="absolute -bottom-20 left-0 right-0 animate-in slide-in-from-top-4 duration-300">
-                            <Badge variant="destructive" className="w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold shadow-xl shadow-red-100/50 border-red-200/50">
-                                <AlertCircle size={18} />
-                                {error}
-                            </Badge>
+                        {/* 2. Mobile Layout (block md:hidden) */}
+                        <div className="block md:hidden space-y-6">
+                            {/* Tab 1: Info */}
+                            {activeTab === 'info' && (
+                                <div className="space-y-5 animate-in fade-in duration-300">
+                                    {/* Patient Selection */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <User size={13} className="text-slate-400" />
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Client identity</Label>
+                                            {selectedPatient && <Check size={12} className="text-emerald-400" />}
+                                        </div>
+                                        {selectedPatient ? (
+                                            <PatientSummaryCard
+                                                patient={selectedPatient}
+                                                onReset={() => {
+                                                    setSelectedPatient(null);
+                                                    setPatientInfo({ name: '', dob: '', context: '', customTemplateText: '' });
+                                                    setClioNote(null);
+                                                }}
+                                            />
+                                        ) : (
+                                            <PatientSelector
+                                                onSelect={(p) => {
+                                                    setSelectedPatient(p);
+                                                    setPatientInfo(prev => ({
+                                                        ...prev,
+                                                        name: p.full_name,
+                                                        dob: p.dob || ''
+                                                    }));
+                                                }}
+                                                onInputChange={(val) => {
+                                                    setPatientInfo(prev => ({ ...prev, name: val }));
+                                                }}
+                                                onCreateNew={() => setIsCreateModalOpen(true)}
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* Encounter Info */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <Calendar size={13} className="text-slate-400" />
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Encounter Info</Label>
+                                            {serviceDate && timeIn && <Check size={12} className="text-emerald-400" />}
+                                        </div>
+                                        
+                                        <div className="flex flex-col gap-3 bg-transparent">
+                                            {/* Date Picker */}
+                                            <div className="bg-card border border-border/60 rounded-2xl shadow-sm px-1 py-1.5 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                                                <DatePicker 
+                                                    date={serviceDate} 
+                                                    setDate={setServiceDate} 
+                                                    className="h-11 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 px-4 font-semibold text-slate-600 tracking-tight text-sm"
+                                                />
+                                            </div>
+                                            
+                                            {/* Start & End Time side-by-side */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {/* Time In */}
+                                                <div className="bg-card border border-border/60 rounded-2xl shadow-sm flex items-center justify-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                                                    <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
+                                                        <PopoverTrigger asChild>
+                                                            <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-3 font-semibold text-slate-500 w-full flex items-center gap-2 justify-center transition-colors tracking-tight">
+                                                                <Clock size={16} className="text-slate-300 shrink-0" />
+                                                                <span className="text-[11px] truncate">{timeIn ? `In: ${timeIn}` : "Start Time"}</span>
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-[280px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-2xl bg-white" side="bottom" align="center" sideOffset={12}>
+                                                            <div className="flex flex-col items-center">
+                                                                <div className="w-full pt-8 pb-4 text-center">
+                                                                    <span className="font-semibold tracking-tight text-slate-800 text-base">Start Time</span>
+                                                                </div>
+                                                                <div className="px-6 pb-6 w-full">
+                                                                    <TimeSpinner 
+                                                                        initialTimeStr={timeIn}
+                                                                        onConfirm={(timeStr) => {
+                                                                            setTimeIn(timeStr);
+                                                                            setIsTimePopoverOpen(false);
+                                                                        }} 
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+
+                                                {/* Time Out */}
+                                                <div className="bg-card border border-border/60 rounded-2xl shadow-sm flex items-center justify-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                                                    <Popover open={isTimeOutPopoverOpen} onOpenChange={setIsTimeOutPopoverOpen}>
+                                                        <PopoverTrigger asChild>
+                                                            <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-3 font-semibold text-slate-500 w-full flex items-center gap-2 justify-center transition-colors tracking-tight">
+                                                                <Clock size={16} className="text-slate-300 shrink-0" />
+                                                                <span className="text-[11px] truncate">{timeOut ? `Out: ${timeOut}` : "End Time"}</span>
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-[280px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-2xl bg-white" side="bottom" align="center" sideOffset={12}>
+                                                            <div className="flex flex-col items-center">
+                                                                <div className="w-full pt-8 pb-4 text-center">
+                                                                    <span className="font-semibold tracking-tight text-slate-800 text-base">End Time</span>
+                                                                </div>
+                                                                <div className="px-6 pb-6 w-full">
+                                                                    <TimeSpinner 
+                                                                        initialTimeStr={timeOut}
+                                                                        onConfirm={(timeStr) => {
+                                                                            setTimeOut(timeStr);
+                                                                            setIsTimeOutPopoverOpen(false);
+                                                                        }} 
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Units */}
+                                            <div className="bg-card border border-border/60 rounded-2xl shadow-sm flex items-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 pl-4 pr-1 select-none">Units:</span>
+                                                <Input 
+                                                    type="number"
+                                                    min="0"
+                                                    placeholder="e.g. 1, 2, 4..."
+                                                    value={units}
+                                                    onChange={(e) => setUnits(e.target.value)}
+                                                    className="h-11 border-0 bg-transparent focus-visible:ring-0 font-semibold text-slate-600 w-full px-2 text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Service Provided */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <ClipboardList size={13} className="text-slate-400" />
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Service Provided</Label>
+                                            {selectedSubTemplate && <Check size={12} className="text-emerald-400" />}
+                                        </div>
+                                        <div className="relative mt-1">
+                                            <div 
+                                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                className={cn(
+                                                    "w-full h-11 flex items-center justify-between px-5 bg-card border border-border/60 rounded-2xl shadow-sm cursor-pointer transition-all hover:bg-slate-50",
+                                                    isDropdownOpen ? "border-primary/40 ring-4 ring-primary/10" : ""
+                                                )}
+                                            >
+                                                <span className={cn(
+                                                    "text-sm font-semibold tracking-tight truncate",
+                                                    selectedSubTemplate ? "text-slate-700" : "text-slate-400"
+                                                )}>
+                                                    {selectedSubTemplate || "Select encounter type..."}
+                                                </span>
+                                                <ChevronDown className={cn("size-4 text-slate-400 transition-transform duration-300 shrink-0", isDropdownOpen && "rotate-180")} />
+                                            </div>
+
+                                            {isDropdownOpen && (
+                                                <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-[2rem] shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                    <div className="flex flex-col gap-1 max-h-[220px] overflow-y-auto">
+                                                        {TCM_SUB_TEMPLATES.map((t) => {
+                                                            const isActive = selectedSubTemplate === t;
+                                                            return (
+                                                                <button
+                                                                    key={t}
+                                                                    onClick={() => {
+                                                                        setSelectedSubTemplate(t);
+                                                                        setIsDropdownOpen(false);
+                                                                    }}
+                                                                    className={cn(
+                                                                        "w-full justify-between items-center h-10 px-4 text-xs font-semibold rounded-xl transition-colors flex text-left",
+                                                                        isActive ? 'bg-primary/5 text-primary' : 'text-slate-500 hover:bg-slate-50'
+                                                                    )}
+                                                                >
+                                                                    <span className="truncate pr-2">{t}</span>
+                                                                    {isActive && <Check size={13} strokeWidth={3} className="shrink-0" />}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="pt-4">
+                                        <Button
+                                            onClick={() => setActiveTab('capture')}
+                                            disabled={!selectedPatient && !patientInfo.name.trim() || !selectedSubTemplate}
+                                            className="w-full h-11 rounded-full bg-slate-800 text-white font-bold text-xs uppercase tracking-wider gap-2 shadow-sm transition-all active:scale-95"
+                                        >
+                                            Next: Capture
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Tab 2: Capture */}
+                            {activeTab === 'capture' && (
+                                <div className="space-y-6 animate-in fade-in duration-300">
+                                    {/* Voice Capture */}
+                                    <div className="bg-slate-50/50 border border-slate-200/80 rounded-3xl p-5 flex flex-col gap-4 shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <Mic size={13} className="text-slate-400" />
+                                            <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px]">
+                                                Voice Capture
+                                            </Badge>
+                                        </div>
+                                        <div className="flex flex-col items-center justify-center py-2 w-full">
+                                            <div className="relative group w-fit flex items-center justify-center">
+                                                {status === 'idle' && !audioBlob && (
+                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 bg-primary/[0.04] rounded-full blur-2xl animate-[pulse_8s_ease-in-out_infinite]" />
+                                                )}
+                                                <button
+                                                    onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
+                                                    disabled={!!audioBlob}
+                                                    className={cn(
+                                                        "relative size-24 rounded-full flex items-center justify-center transition-all duration-500 z-10",
+                                                        audioBlob 
+                                                            ? "bg-emerald-50/40 border-2 border-emerald-200 text-emerald-600 shadow-[0_4px_15px_rgba(16,185,129,0.1)]" 
+                                                            : status === 'recording'
+                                                                ? "animate-recording-pulse border-2 border-rose-500/20 text-rose-500 hover:scale-[0.98]"
+                                                                : "bg-white border-2 border-slate-150 text-slate-400 active:scale-95 shadow-md"
+                                                    )}
+                                                >
+                                                    {status === 'recording' ? (
+                                                        <div className="size-8 rounded-xl bg-rose-500 shadow-md flex items-center justify-center animate-pulse">
+                                                            <div className="size-3 bg-white rounded-sm" />
+                                                        </div>
+                                                    ) : (
+                                                        <Mic size={36} strokeWidth={1} className={audioBlob ? "text-emerald-500" : "text-slate-400"} />
+                                                    )}
+                                                </button>
+                                                {audioBlob && (
+                                                    <div className="absolute -top-1 -right-1 size-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white shadow-md z-20">
+                                                        <Check size={14} strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-col items-center gap-1 mt-3 text-center">
+                                                {status === 'recording' ? (
+                                                    <>
+                                                        <span className="text-xl font-bold tabular-nums text-rose-500">{formatTime(timer)}</span>
+                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Recording...</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                                            {audioBlob ? "Recording Saved" : "Tap Mic to Start"}
+                                                        </p>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            {audioBlob && status !== 'recording' && (
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        if (audioUrl) URL.revokeObjectURL(audioUrl);
+                                                        setAudioBlob(null);
+                                                        setAudioUrl(null);
+                                                        setTimer(0);
+                                                    }}
+                                                    className="h-9 rounded-full font-bold text-[10px] uppercase tracking-wider text-rose-500 hover:bg-rose-50 mt-2 px-4"
+                                                >
+                                                    Discard Audio
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Text Capture */}
+                                    <div className="bg-slate-50/50 border border-slate-200/80 rounded-3xl p-5 flex flex-col gap-4 shadow-sm min-h-[160px]">
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-2">
+                                                <Target size={13} className="text-slate-400" />
+                                                <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px]">
+                                                    Objectives
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                        <Textarea
+                                            value={patientInfo.context}
+                                            onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
+                                            placeholder="Specify symptoms, history focus, or session objectives (optional)..."
+                                            className="w-full flex-1 bg-white border border-slate-100 px-4 py-3 text-sm font-semibold rounded-2xl text-slate-700 shadow-inner focus-visible:ring-primary/20 placeholder:text-slate-300 min-h-[100px]"
+                                        />
+                                    </div>
+
+                                    {/* Action button inside capture tab */}
+                                    <div className="pt-2">
+                                        {(() => {
+                                            const hasIdentity = selectedPatient || patientInfo.name.trim().length > 0;
+                                            const canAdd = hasIdentity && serviceDate && selectedSubTemplate && (audioBlob || patientInfo.context.trim().length > 0 || (selectedSubTemplate === 'Custom Template' && patientInfo.customTemplateText?.trim().length > 0));
+                                            return (
+                                                <Button
+                                                    onClick={handleAddService}
+                                                    disabled={!canAdd}
+                                                    className={cn(
+                                                        "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 shadow-sm transition-all duration-300 active:scale-95",
+                                                        canAdd 
+                                                            ? "bg-slate-800 text-white hover:bg-slate-900" 
+                                                            : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-150 shadow-none"
+                                                    )}
+                                                >
+                                                    <Plus size={14} strokeWidth={3} />
+                                                    <span>Add Service to Note</span>
+                                                </Button>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Tab 3: Services (Joint note stack) */}
+                            {activeTab === 'services' && (
+                                <div className="space-y-6 animate-in fade-in duration-300">
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="flex items-center gap-2">
+                                            <Layers className="text-primary/40" size={15} />
+                                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Services Stack ({recordedServices.length})</h4>
+                                        </div>
+                                        {recordedServices.length > 0 && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                onClick={handleReset}
+                                                className="h-6 text-[10px] font-bold text-rose-500 hover:bg-rose-50 rounded-lg px-2"
+                                            >
+                                                Clear All
+                                            </Button>
+                                        )}
+                                    </div>
+
+                                    {recordedServices.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-150 rounded-3xl p-6 bg-slate-50/20">
+                                            <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                                                <Layers size={20} />
+                                            </div>
+                                            <h5 className="text-sm font-semibold text-slate-600 mb-1">No services added yet</h5>
+                                            <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">Fill out the Info and Capture tabs, then click "Add Service" to stack them here.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {/* Stack List */}
+                                            <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
+                                                {recordedServices.map((svc, i) => (
+                                                    <div key={svc.id} className="bg-slate-50/50 border border-slate-150/70 rounded-2xl py-2 px-3.5 flex items-center justify-between shadow-sm">
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <div className="flex items-center justify-center size-5 rounded-full bg-white border border-slate-100 text-[10px] font-black text-slate-400 shrink-0">
+                                                                {i + 1}
+                                                            </div>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <h5 className="text-[11px] font-bold text-slate-500 truncate">{svc.subTemplate}</h5>
+                                                                <div className="flex items-center gap-1.5 mt-0.5 opacity-60">
+                                                                    {svc.audioBlob && <Mic size={9} className="text-slate-400" />}
+                                                                    {svc.manualText && <FileText size={9} className="text-slate-400" />}
+                                                                    <span className="text-[9px] font-black text-slate-400">
+                                                                        {svc.audioBlob && svc.manualText ? "Both" : (svc.audioBlob ? "Audio" : "Text")}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => handleRemoveService(svc.id)} 
+                                                            className="size-7 flex items-center justify-center rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
+                                                        >
+                                                            <Trash2 size={13} strokeWidth={1.5} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Finalize Button */}
+                                            <div className="pt-2">
+                                                <Button
+                                                    onClick={sendToGenerate}
+                                                    disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
+                                                    className={cn(
+                                                        "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 transition-all duration-300 active:scale-95 shadow-md",
+                                                        recordedServices.length > 0
+                                                            ? "bg-slate-800 text-white hover:bg-slate-900"
+                                                            : "bg-slate-100 text-slate-400 pointer-events-none border border-slate-150 shadow-none"
+                                                    )}
+                                                >
+                                                    {status === 'processing' || status === 'uploading' ? (
+                                                        <>
+                                                            <Loader2 className="animate-spin" size={14} />
+                                                            <span>Processing...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <FileCheck size={14} />
+                                                            <span>Finalize Note ({recordedServices.length})</span>
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                    )}
+
+
+                    </CardContent>
                 </Card>
             )}
 

@@ -31,6 +31,8 @@ import {
     Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useLanguage } from '../context/LanguageContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
@@ -77,6 +79,7 @@ const getInitialsTheme = (name: string) => {
 };
 
 export function PatientDetail() {
+    const { t, language } = useLanguage();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [patient, setPatient] = useState<StoragePatient | null>(null);
@@ -367,7 +370,7 @@ export function PatientDetail() {
                             <UploadCloud size={16} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
                         )}
                         <span className="text-[10px] uppercase tracking-[0.15em]">
-                            {isExtracting ? "Analyzing..." : "AI Autofill"}
+                            {isExtracting ? (language === 'es' ? "Analizando..." : "Analyzing...") : (language === 'es' ? "Autocompletar IA" : "AI Autofill")}
                         </span>
                     </Button>
                     {!isEditing ? (
@@ -386,14 +389,14 @@ export function PatientDetail() {
                                 className="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2 group"
                             >
                                 <Edit3 size={16} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
-                                <span className="text-[10px] uppercase tracking-[0.15em]">Edit Profile</span>
+                                <span className="text-[10px] uppercase tracking-[0.15em]">{t('patient.edit_profile', 'Edit Profile')}</span>
                             </Button>
                             <Button
                                 onClick={() => navigate(`/notes/new?patientId=${patient.id}`)}
                                 className="h-11 px-6 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2 transform active:scale-95 group"
                             >
                                 <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-                                <span className="text-[10px] uppercase tracking-[0.15em]">New Encounter</span>
+                                <span className="text-[10px] uppercase tracking-[0.15em]">{t('nav.new_encounter', 'New Encounter')}</span>
                             </Button>
                         </>
                     ) : (
@@ -405,7 +408,7 @@ export function PatientDetail() {
                                 disabled={isSaving}
                             >
                                 <X size={16} />
-                                <span className="text-[10px] uppercase tracking-[0.15em]">Cancel</span>
+                                <span className="text-[10px] uppercase tracking-[0.15em]">{t('patient.cancel', 'Cancel')}</span>
                             </Button>
                             <Button
                                 onClick={handleSave}
@@ -418,7 +421,7 @@ export function PatientDetail() {
                                     <Save size={16} />
                                 )}
                                 <span className="text-[10px] uppercase tracking-[0.15em]">
-                                    {isSaving ? "Saving..." : "Save Changes"}
+                                    {isSaving ? (language === 'es' ? "Guardando..." : "Saving...") : t('patient.save_changes', 'Save Changes')}
                                 </span>
                             </Button>
                         </>
@@ -430,11 +433,11 @@ export function PatientDetail() {
             {/* Premium Unified Tabbed Interface */}
             <Tabs defaultValue="client" className="w-full">
                 <TabsList className="bg-slate-50/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 shadow-sm w-full grid grid-cols-3 md:grid-cols-5 h-12 overflow-hidden mb-10">
-                    <PremiumTrigger value="client" icon={User} label="Client" theme="indigo" />
-                    <PremiumTrigger value="medical" icon={Stethoscope} label="Medical" theme="emerald" />
-                    <PremiumTrigger value="psychiatric" icon={Brain} label="Psychiatric" theme="purple" />
-                    <PremiumTrigger value="pharmacy" icon={Store} label="Pharmacy" theme="amber" />
-                    <PremiumTrigger value="history" icon={Clock} label="History" theme="slate" />
+                    <PremiumTrigger value="client" icon={User} label={language === 'es' ? "Cliente" : "Client"} theme="indigo" />
+                    <PremiumTrigger value="medical" icon={Stethoscope} label={language === 'es' ? "Médico" : "Medical"} theme="emerald" />
+                    <PremiumTrigger value="psychiatric" icon={Brain} label={language === 'es' ? "Psiquiátrico" : "Psychiatric"} theme="purple" />
+                    <PremiumTrigger value="pharmacy" icon={Store} label={language === 'es' ? "Farmacia" : "Pharmacy"} theme="amber" />
+                    <PremiumTrigger value="history" icon={Clock} label={language === 'es' ? "Historial" : "History"} theme="slate" />
                 </TabsList>
 
                 <div className="animate-in slide-in-from-bottom-5 duration-700 ease-out">
@@ -477,7 +480,7 @@ export function PatientDetail() {
                                     icon={Calendar}
                                     label="Date of Birth"
                                     name="dob"
-                                    value={isEditing ? editData.dob : (patient.dob ? format(new Date(patient.dob), 'MMM dd, yyyy') : 'N/A')}
+                                    value={isEditing ? editData.dob : (patient.dob ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM dd, yyyy', { locale: language === 'es' ? es : undefined }) : 'N/A')}
                                     isEditing={isEditing}
                                     onChange={handleFieldChange}
                                     theme="indigo"
@@ -527,10 +530,10 @@ export function PatientDetail() {
                                     theme="indigo"
                                 />
                                 <PremiumGlassField
-                                    icon={Briefcase}
-                                    label="Case Manager"
-                                    name="case_manager"
-                                    value={isEditing ? editData.case_manager : patient.case_manager}
+                                    icon={Hash}
+                                    label="Case Number"
+                                    name="case_number"
+                                    value={isEditing ? editData.case_number : (patient as any).case_number}
                                     isEditing={isEditing}
                                     onChange={handleFieldChange}
                                     theme="indigo"
@@ -981,6 +984,7 @@ interface FieldProps {
 }
 
 function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, large, theme, isEditing, name, onChange, type, options }: FieldProps) {
+    const { language } = useLanguage();
     const iconBgThemes = {
         indigo: "bg-indigo-500/10 text-indigo-500 border-indigo-100/50",
         emerald: "bg-emerald-500/10 text-emerald-500 border-emerald-100/50",
@@ -989,6 +993,37 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
         amber: "bg-amber-500/10 text-amber-500 border-amber-100/50"
     };
 
+    const labelTranslations: Record<string, string> = {
+        "First Name": "Primer Nombre",
+        "Last Name": "Apellidos",
+        "Primary Contact": "Contacto Principal",
+        "Date of Birth": "Fecha de Nacimiento",
+        "SSN / National ID": "SSN / ID Nacional",
+        "Residential Address": "Dirección Residencial",
+        "Insurance Company": "Compañía de Seguros",
+        "Member ID": "ID de Miembro",
+        "Case Number": "Número de Caso",
+        "Citizenship Status": "Estado de Ciudadanía",
+        "Language Preference": "Idioma de Preferencia",
+        "Preferred Pharmacy": "Farmacia Preferida",
+        "PCP Clinic Name": "Clínica PCP",
+        "PCP Doctor Name": "Médico PCP",
+        "Clinic Phone": "Teléfono de Clínica",
+        "Clinic Fax": "Fax de Clínica",
+        "Clinic Address": "Dirección de Clínica",
+        "Medical Notes": "Notas Médicas",
+        "Psychiatric Notes": "Notas Psiquiátricas",
+        "Primary Pharmacy": "Farmacia Principal",
+        "Pharmacy Phone": "Teléfono de Farmacia",
+        "Pharmacy Fax": "Fax de Farmacia",
+        "Pharmacy Address": "Dirección de Farmacia",
+        "Pharmacy Notes": "Notas de Farmacia",
+        "Diagnoses": "Diagnósticos",
+        "Allergies": "Alergias"
+    };
+
+    const translatedLabel = language === 'es' ? (labelTranslations[label] || label) : label;
+
     return (
         <div className={cn("space-y-1.5 group", className)}>
             <div className="flex items-center gap-3 ml-1.5 transition-transform duration-300 group-hover:translate-x-1">
@@ -996,7 +1031,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                     <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 transition-opacity rounded-lg" />
                     <Icon size={13} className="relative z-10" />
                 </div>
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider leading-none opacity-90">{label}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider leading-none opacity-90">{translatedLabel}</p>
             </div>
 
             <div className={cn(
@@ -1014,7 +1049,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                             className="w-full h-full bg-transparent border-none outline-none p-4 text-[14px] font-bold text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
                             value={value || ''}
                             onChange={(e) => onChange?.(name!, e.target.value)}
-                            placeholder={`Document ${label.toLowerCase()}...`}
+                            placeholder={language === 'es' ? `Documentar ${translatedLabel.toLowerCase()}...` : `Document ${label.toLowerCase()}...`}
                         />
                     ) : options ? (
                         <Select 
@@ -1022,12 +1057,12 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                             onValueChange={(val) => onChange?.(name!, val)}
                         >
                             <SelectTrigger className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-5 text-[14px] font-bold text-slate-900 justify-between pr-4 hover:bg-transparent [&>svg]:opacity-50">
-                                <SelectValue placeholder="Select language..." />
+                                <SelectValue placeholder={language === 'es' ? "Seleccionar idioma..." : "Select language..."} />
                             </SelectTrigger>
                             <SelectContent className="rounded-[1.5rem] border border-slate-100 shadow-2xl bg-white z-[250]">
                                 {options.map((opt) => (
                                     <SelectItem key={opt} value={opt} className="rounded-xl font-bold text-[13px] text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:text-indigo-600 py-2.5">
-                                        {opt}
+                                        {language === 'es' ? (opt === 'English' ? 'Inglés' : opt === 'Spanish' ? 'Español' : opt) : opt}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -1038,7 +1073,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                             className="w-full h-full bg-transparent border-none outline-none px-5 text-[14px] font-bold text-slate-900 placeholder:text-slate-400 leading-none pr-8"
                             value={value || ''}
                             onChange={(e) => onChange?.(name!, e.target.value)}
-                            placeholder={`Enter ${label.toLowerCase()}...`}
+                            placeholder={language === 'es' ? `Ingresar ${translatedLabel.toLowerCase()}...` : `Enter ${label.toLowerCase()}...`}
                         />
                     )
                 ) : (
@@ -1047,7 +1082,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                             "relative z-10 text-[14px] leading-relaxed",
                             !value ? "text-slate-400/80" : "text-slate-700"
                         )}>
-                            {value || `No documented ${label.toLowerCase()}`}
+                            {value || (language === 'es' ? `Sin ${translatedLabel.toLowerCase()} registrado` : `No documented ${label.toLowerCase()}`)}
                         </span>
                     </div>
                 )}
@@ -1057,6 +1092,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
 }
 
 function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: TimelineItem, isLast: boolean, navigate: any, onPreview: (note: any) => void, disabled?: boolean }) {
+    const { language } = useLanguage();
     const isNote = item.type === 'note';
     return (
         <div
@@ -1078,24 +1114,24 @@ function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: 
             <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
                     <span className="text-[11px] font-semibold text-slate-400 tracking-wider">
-                        {format(new Date(item.timestamp), 'MMM d, yyyy • h:mm a')}
+                        {format(new Date(item.timestamp), language === 'es' ? "d 'de' MMM, yyyy • h:mm a" : 'MMM d, yyyy • h:mm a', { locale: language === 'es' ? es : undefined })}
                     </span>
                     {isNote ? (
                         <>
                             {item.raw?.signature_status === 'signed' ? (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-50/70 text-emerald-700 border border-emerald-100/20">
                                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    Signed
+                                    {language === 'es' ? "Firmado" : "Signed"}
                                 </span>
                             ) : item.raw?.signature_status === 'pending' ? (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-50/70 text-amber-700 border border-amber-100/20">
                                     <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                    Pending Signature {item.raw?.supervisor_email ? `(${item.raw.supervisor_email})` : ''}
+                                    {language === 'es' ? "Firma pendiente" : "Pending Signature"} {item.raw?.supervisor_email ? `(${item.raw.supervisor_email})` : ''}
                                 </span>
                             ) : (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-slate-50/70 text-slate-600 border border-slate-200/20">
                                     <span className="size-1.5 rounded-full bg-slate-400" />
-                                    Draft
+                                    {language === 'es' ? "Borrador" : "Draft"}
                                 </span>
                             )}
                         </>

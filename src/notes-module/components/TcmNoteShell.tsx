@@ -771,6 +771,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     
                     next[`${prefix}encounter.duration`] = duration.toString();
                     next[`${prefix}encounter.billing_units`] = units.toString();
+                    next[`${prefix}encounter.units`] = units.toString();
                 }
             }
             
@@ -1703,7 +1704,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                     {(user as any).npi}
                                                 </span>
                                             )}
-                                            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest mt-1">Physician Signature</span>
+                                            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest mt-1">Case Manager Signature</span>
                                         </div>
                                         <div className="flex flex-col items-end">
                                             <span className="text-[11px] font-bold text-slate-900 leading-none mb-1">
@@ -1771,7 +1772,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 isOpen={activeSigType !== null}
                 onClose={() => setActiveSigType(null)}
                 onSave={handleSaveSignature}
-                title={activeSigType === 'cm' ? "Physician Signature" : "Supervisor Signature"}
+                title={activeSigType === 'cm' ? "Case Manager Signature" : "Supervisor Signature"}
             />
             {isRequestSignatureModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print">
