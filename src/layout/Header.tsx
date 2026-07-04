@@ -14,7 +14,8 @@ import {
     Shield,
     Globe,
     Sun,
-    Moon
+    Moon,
+    Terminal
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -165,14 +166,25 @@ export function Header() {
                         {isDropdownOpen && (
                             <div className="absolute right-0 mt-2 w-52 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150 origin-top-right">
                                 <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
-                                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{fullName}</p>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
+                                    <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{fullName}</p>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-300 truncate">{user?.email}</p>
                                 </div>
                                 <div className="p-1.5 space-y-0.5">
+                                    {user?.email === 'reinier.roa2.0@gmail.com' && (
+                                        <NavLink
+                                            to="/platform-admin"
+                                            onClick={() => setIsDropdownOpen(false)}
+                                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all"
+                                        >
+                                            <Terminal size={14} className="opacity-75" />
+                                            {t('nav.platform_admin', 'Platform Admin')}
+                                        </NavLink>
+                                    )}
+
                                     <NavLink
                                         to="/settings"
                                         onClick={() => setIsDropdownOpen(false)}
-                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all"
+                                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all"
                                     >
                                         <Settings size={14} className="opacity-75" />
                                         {t('nav.settings', 'Settings')}
@@ -182,7 +194,7 @@ export function Header() {
                                         <NavLink
                                             to="/audit-logs"
                                             onClick={() => setIsDropdownOpen(false)}
-                                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all"
+                                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all"
                                         >
                                             <Shield size={14} className="opacity-75" />
                                             {t('nav.audit_logs', 'Audit logs')}
@@ -190,7 +202,7 @@ export function Header() {
                                     )}
 
                                     {/* Language Switcher */}
-                                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400">
+                                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300">
                                         <div className="flex items-center gap-2.5">
                                             <Globe size={14} className="opacity-75" />
                                             <span>{language === 'es' ? 'Idioma' : 'Language'}</span>
@@ -202,7 +214,7 @@ export function Header() {
                                                     "px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full transition-all duration-300",
                                                     language === 'en'
                                                         ? "bg-white dark:bg-slate-800 text-[#6366f1] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
-                                                        : "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                                                        : "text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
                                                 )}
                                             >
                                                 EN
@@ -213,7 +225,7 @@ export function Header() {
                                                     "px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-full transition-all duration-300",
                                                     language === 'es'
                                                         ? "bg-white dark:bg-slate-800 text-[#6366f1] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
-                                                        : "text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                                                        : "text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
                                                 )}
                                             >
                                                 ES
@@ -228,7 +240,7 @@ export function Header() {
                                             setIsDropdownOpen(false);
                                             signOut();
                                         }}
-                                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all text-left"
+                                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all text-left"
                                     >
                                         <LogOut size={14} />
                                         {t('nav.logout', 'Sign out')}

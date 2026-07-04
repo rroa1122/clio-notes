@@ -198,7 +198,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                     return (                        <div key={dateStr} className={cn("flex-1 flex flex-col min-h-full transition-colors relative group/col rounded-[1.5rem] border overflow-hidden", isTodayDate ? "bg-card border-primary/20 shadow-[0_4px_24px_-8px_rgba(var(--primary-rgb),0.15)] ring-1 ring-primary/10" : "bg-slate-50/80 dark:bg-slate-900/30 border-border/60 ")}>
                             {/* Day Header */}
                             <div className={cn("py-4 px-4 text-center border-b flex flex-col items-center justify-center gap-1 transition-colors", isTodayDate ? "bg-primary/5 border-primary/10" : "bg-transparent border-border/50")}>
-                                <span className={cn("text-[10px] font-bold tracking-widest uppercase", isTodayDate ? "text-primary" : "text-slate-400")}>
+                                <span className={cn("text-[10px] font-bold tracking-widest uppercase", isTodayDate ? "text-primary" : "text-slate-400 dark:text-slate-350")}>
                                     {format(day, 'EEEE', { locale: language === 'es' ? es : undefined })}
                                 </span>
                                 <div className="flex items-center gap-1.5 flex-col mt-0.5">

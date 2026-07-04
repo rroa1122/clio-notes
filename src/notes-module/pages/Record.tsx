@@ -1141,7 +1141,7 @@ const Record: React.FC = () => {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <User size={14} className="text-slate-400" />
-                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Client identity</Label>
+                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.client_identity', 'Client identity')}</Label>
                                         {selectedPatient && <Check size={12} className="text-emerald-400" />}
                                     </div>
                                     {selectedPatient ? (
@@ -1175,32 +1175,32 @@ const Record: React.FC = () => {
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Calendar size={14} className="text-slate-400" />
-                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Encounter Info</Label>
+                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.encounter_info', 'Encounter Info')}</Label>
                                         {serviceDate && timeIn && <Check size={12} className="text-emerald-400" />}
                                     </div>
-                                    <div className="flex bg-white border border-slate-200 rounded-full shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 overflow-hidden mt-1 h-11 items-center">
+                                    <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 overflow-hidden mt-1 h-11 items-center">
                                         {/* Date */}
-                                        <div className="flex-1 min-w-[140px] border-r border-slate-100">
+                                        <div className="flex-1 min-w-[140px] border-r border-slate-100 dark:border-slate-800">
                                             <DatePicker 
                                                 date={serviceDate} 
                                                 setDate={setServiceDate} 
-                                                className="h-11 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 px-4 font-medium text-slate-600 tracking-tight"
+                                                className="h-11 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 px-4 font-medium text-slate-600 dark:text-slate-300 tracking-tight"
                                             />
                                         </div>
                                         {/* Time In */}
-                                        <div className="border-r border-slate-100 h-full flex items-center bg-slate-50/20 pr-1">
+                                        <div className="border-r border-slate-100 dark:border-slate-800 h-full flex items-center bg-slate-50/20 pr-1">
                                             <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-3 font-medium text-slate-500 min-w-[95px] w-auto flex items-center gap-2 justify-center transition-colors tracking-tight">
-                                                        <Clock size={16} className="text-slate-300 shrink-0" />
-                                                        <span className="text-[11px] whitespace-nowrap">{timeIn ? `In: ${timeIn}` : "Start"}</span>
+                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 dark:hover:bg-slate-800 px-3 font-medium text-slate-500 dark:text-slate-300 min-w-[95px] w-auto flex items-center gap-2 justify-center transition-colors tracking-tight">
+                                                        <Clock size={16} className="text-slate-300 dark:text-slate-600 shrink-0" />
+                                                        <span className="text-[11px] whitespace-nowrap">{timeIn ? `In: ${timeIn}` : (language === 'es' ? 'Inicio' : 'Start')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 backdrop-blur-xl" side="bottom" align="end" sideOffset={12}>
+                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl" side="bottom" align="end" sideOffset={12}>
                                                     <div className="flex flex-col items-center">
                                                         <div className="w-full pt-8 pb-4 text-center">
-                                                            <span className="font-medium tracking-tight text-slate-800 text-[18px]">Select Time</span>
-                                                            <div className="text-[11px] font-medium text-slate-400 uppercase tracking-widest mt-1 opacity-80">Encounter Start</div>
+                                                            <span className="font-medium tracking-tight text-slate-800 dark:text-slate-100 text-[18px]">{language === 'es' ? 'Seleccionar hora' : 'Select Time'}</span>
+                                                            <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 opacity-80">{language === 'es' ? 'Inicio del encuentro' : 'Encounter Start'}</div>
                                                         </div>
                                                         <div className="px-6 pb-6 w-full">
                                                             <TimeSpinner 
@@ -1216,19 +1216,19 @@ const Record: React.FC = () => {
                                             </Popover>
                                         </div>
                                         {/* Time Out */}
-                                        <div className="border-r border-slate-100 h-full flex items-center bg-slate-50/20 pr-1">
+                                        <div className="border-r border-slate-100 dark:border-slate-800 h-full flex items-center bg-slate-50/20 pr-1">
                                             <Popover open={isTimeOutPopoverOpen} onOpenChange={setIsTimeOutPopoverOpen}>
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-3 font-medium text-slate-500 min-w-[95px] w-auto flex items-center gap-2 justify-center transition-colors tracking-tight">
-                                                        <Clock size={16} className="text-slate-300 shrink-0" />
-                                                        <span className="text-[11px] whitespace-nowrap">{timeOut ? `Out: ${timeOut}` : "End"}</span>
+                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 dark:hover:bg-slate-800 px-3 font-medium text-slate-500 dark:text-slate-300 min-w-[95px] w-auto flex items-center gap-2 justify-center transition-colors tracking-tight">
+                                                        <Clock size={16} className="text-slate-300 dark:text-slate-600 shrink-0" />
+                                                        <span className="text-[11px] whitespace-nowrap">{timeOut ? `Out: ${timeOut}` : (language === 'es' ? 'Fin' : 'End')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 backdrop-blur-xl" side="bottom" align="end" sideOffset={12}>
+                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl" side="bottom" align="end" sideOffset={12}>
                                                     <div className="flex flex-col items-center">
                                                         <div className="w-full pt-8 pb-4 text-center">
-                                                            <span className="font-medium tracking-tight text-slate-800 text-[18px]">Select Time</span>
-                                                            <div className="text-[11px] font-medium text-slate-400 uppercase tracking-widest mt-1 opacity-80">Encounter End</div>
+                                                            <span className="font-medium tracking-tight text-slate-800 dark:text-slate-100 text-[18px]">{language === 'es' ? 'Seleccionar hora' : 'Select Time'}</span>
+                                                            <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 opacity-80">{language === 'es' ? 'Fin del encuentro' : 'Encounter End'}</div>
                                                         </div>
                                                         <div className="px-6 pb-6 w-full">
                                                             <TimeSpinner 
@@ -1248,43 +1248,45 @@ const Record: React.FC = () => {
                                             <Input 
                                                 type="number"
                                                 min="0"
-                                                placeholder="Units"
+                                                placeholder={language === 'es' ? "Unid." : "Units"}
                                                 value={units}
                                                 onChange={(e) => setUnits(e.target.value)}
-                                                className="h-full border-0 bg-transparent text-slate-600 font-semibold focus-visible:ring-0 text-center text-xs w-full px-1"
+                                                className="h-full border-0 bg-transparent text-slate-600 dark:text-slate-300 font-semibold focus-visible:ring-0 text-center text-xs w-full px-1"
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Service Provided */}
+                                navigate; // reference to keep imports valid
+                                return (
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <ClipboardList size={14} className="text-slate-400" />
-                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Service Provided</Label>
+                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.service_provided', 'Service Provided')}</Label>
                                         {selectedSubTemplate && <Check size={12} className="text-emerald-400" />}
                                     </div>
                                     <div className="relative mt-1">
                                         <div 
                                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                             className={cn(
-                                                "w-full h-11 flex items-center justify-between px-6 bg-white border border-slate-200 rounded-full shadow-sm cursor-pointer transition-all hover:bg-slate-50",
+                                                "w-full h-11 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800",
                                                 isDropdownOpen ? "border-primary/40 ring-4 ring-primary/10" : ""
                                             )}
                                         >
                                             <div className="flex items-center gap-3">
                                                 <span className={cn(
                                                     "text-[14px] font-medium tracking-tight",
-                                                    selectedSubTemplate ? "text-slate-700" : "text-slate-400"
+                                                    selectedSubTemplate ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"
                                                 )}>
-                                                    {selectedSubTemplate || "Select encounter type..."}
+                                                    {selectedSubTemplate || t('record.select_encounter_type', 'Select encounter type...')}
                                                 </span>
                                             </div>
                                             <ChevronDown className={cn("size-4 text-slate-400 transition-transform duration-300", isDropdownOpen && "rotate-180")} />
                                         </div>
 
                                         {isDropdownOpen && (
-                                            <div className="absolute top-full left-0 right-0 mt-3 bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-[2.5rem] shadow-[0_15px_40px_-10px_rgba(0,0,0,0.08)] p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-500 ease-out">
+                                            <div className="absolute top-full left-0 right-0 mt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800 rounded-[2.5rem] shadow-[0_15px_40px_-10px_rgba(0,0,0,0.08)] p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-500 ease-out">
                                                 <div className="flex flex-col gap-1">
                                                     {TCM_SUB_TEMPLATES.map((t) => {
                                                         const isActive = selectedSubTemplate === t;
@@ -1297,7 +1299,7 @@ const Record: React.FC = () => {
                                                                 }}
                                                                 className={cn(
                                                                     "w-full justify-between items-center h-10 px-5 text-xs font-medium rounded-full transition-colors flex group/item",
-                                                                    isActive ? 'bg-primary/5 text-primary hover:bg-primary/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                                                                    isActive ? 'bg-primary/5 text-primary hover:bg-primary/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
                                                                 )}
                                                             >
                                                                  <span className="tracking-tight">{t}</span>
@@ -1316,12 +1318,12 @@ const Record: React.FC = () => {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Voice Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
-                                    <div className="bg-slate-50/50 border border-slate-200/80 rounded-[2rem] p-6 flex flex-col gap-4 shadow-sm transition-all hover:bg-white hover:shadow-md h-full min-h-[260px]">
+                                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-[2rem] p-6 flex flex-col gap-4 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900 hover:shadow-md h-full min-h-[260px]">
                                         <div className="flex items-center justify-between w-full px-2">
                                             <div className="flex items-center gap-2">
                                                 <Mic size={14} className="text-slate-400" />
-                                                <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
-                                                    Voice Capture
+                                                <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-850 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                    {t('record.voice_capture', 'Voice Capture')}
                                                 </Badge>
                                             </div>
                                         </div>
@@ -1341,7 +1343,7 @@ const Record: React.FC = () => {
                                                                 ? "bg-emerald-50/40 border-2 border-emerald-200 text-emerald-600 shadow-[0_4px_20px_rgba(16,185,129,0.1)] cursor-default" 
                                                                 : status === 'recording'
                                                                     ? "animate-recording-pulse backdrop-blur-md border-2 border-rose-500/20 text-rose-500 cursor-pointer hover:scale-[0.98]"
-                                                                    : "glass-tactile border-2 border-white/80 text-slate-400 animate-tactile-pulse hover:text-primary hover:border-primary/30 hover:scale-105 cursor-pointer active:scale-95 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]"
+                                                                    : "glass-tactile dark:bg-slate-900 border-2 border-white/80 dark:border-slate-800 text-slate-400 dark:text-slate-500 animate-tactile-pulse hover:text-primary dark:hover:text-indigo-400 hover:border-primary/30 dark:hover:border-indigo-500/30 hover:scale-105 cursor-pointer active:scale-95 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]"
                                                         )}
                                                     >
                                                         {status === 'idle' && !audioBlob && (
@@ -1385,8 +1387,8 @@ const Record: React.FC = () => {
                                                             </span>
                                                             <div className="flex items-center gap-2 opacity-40">
                                                                 <div className="size-1 rounded-full bg-rose-500 animate-pulse" />
-                                                                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-600">
-                                                                    Recording...
+                                                                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400">
+                                                                    {t('record.recording', 'Recording...')}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -1394,14 +1396,14 @@ const Record: React.FC = () => {
                                                         <div className="flex flex-col items-center gap-1 animate-in fade-in duration-700">
                                                             <p className={cn(
                                                                 "text-[11px] font-bold uppercase tracking-[0.4em] transition-all duration-700",
-                                                                audioBlob ? "text-emerald-600" : "text-slate-400/60"
+                                                                audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400/60 dark:text-slate-550"
                                                             )}>
-                                                                {audioBlob ? "Session Finalized" : "System Standby"}
+                                                                {audioBlob ? t('record.session_finalized', 'Session Finalized') : t('record.system_standby', 'System Standby')}
                                                             </p>
                                                             {!audioBlob && (
                                                                 <div className="h-4 flex items-center">
-                                                                    <p className="text-[11px] font-semibold text-primary/50 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
-                                                                        Ready to record
+                                                                    <p className="text-[11px] font-semibold text-primary/50 dark:text-indigo-400/50 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
+                                                                        {t('record.ready_to_record', 'Ready to record')}
                                                                     </p>
                                                                 </div>
                                                             )}
@@ -1421,9 +1423,9 @@ const Record: React.FC = () => {
                                                                 setAudioUrl(null);
                                                                 setTimer(0);
                                                             }}
-                                                            className="h-11 w-full rounded-full font-black text-[11px] uppercase tracking-[0.2em] text-rose-400 hover:bg-rose-50/30 transition-all"
+                                                            className="h-11 w-full rounded-full font-black text-[11px] uppercase tracking-[0.2em] text-rose-400 hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-all"
                                                         >
-                                                            Discard
+                                                            {t('record.discard', 'Discard')}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -1434,39 +1436,39 @@ const Record: React.FC = () => {
 
                                 {/* Text Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
-                                    <div className="bg-slate-50/50 border border-slate-200/80 rounded-[2rem] p-6 flex flex-col gap-4 shadow-sm transition-all hover:bg-white hover:shadow-md h-full min-h-[260px]">
+                                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-[2rem] p-6 flex flex-col gap-4 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900 hover:shadow-md h-full min-h-[260px]">
                                         {selectedSubTemplate === 'Custom Template' ? (
                                             <div className="flex flex-col gap-6 h-full">
                                                 <div className="flex-1 flex flex-col gap-3 relative">
                                                     <div className="flex items-center justify-between w-full px-2">
                                                         <div className="flex items-center gap-2">
                                                             <Target size={14} className="text-slate-400" />
-                                                            <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
-                                                                Goals
+                                                            <Badge variant="outline" className="bg-white dark:bg-slate-850 text-slate-400 dark:text-slate-350 border-slate-100 dark:border-slate-800 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                                {t('record.encounter_goals', 'Goals')}
                                                             </Badge>
                                                         </div>
                                                     </div>
                                                     <Textarea
                                                         value={patientInfo.context}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
-                                                        placeholder="Symptoms or session objectives..."
-                                                        className="w-full flex-1 min-h-[60px] bg-white border border-slate-100 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 shadow-sm focus-visible:ring-primary/20 placeholder:text-slate-300"
+                                                        placeholder={t('record.goals_placeholder', 'Symptoms or session objectives...')}
+                                                        className="w-full flex-1 min-h-[60px] bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-primary/20 placeholder:text-slate-300 dark:placeholder:text-slate-600"
                                                     />
                                                 </div>
                                                 <div className="flex-1 flex flex-col gap-3 relative">
                                                     <div className="flex items-center justify-between w-full px-2">
                                                         <div className="flex items-center gap-2">
                                                             <Sparkles size={14} className="text-emerald-400" />
-                                                            <Badge variant="outline" className="bg-emerald-50/50 text-emerald-600 border-emerald-100/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
-                                                                Template
+                                                            <Badge variant="outline" className="bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-100/50 dark:border-emerald-900/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                                {language === 'es' ? 'Plantilla' : 'Template'}
                                                             </Badge>
                                                         </div>
                                                     </div>
                                                     <Textarea
                                                         value={patientInfo.customTemplateText}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, customTemplateText: e.target.value }))}
-                                                        placeholder="Paste your custom template here..."
-                                                        className="w-full flex-1 min-h-[60px] bg-white border border-emerald-100 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 shadow-sm focus-visible:ring-emerald-500/20 placeholder:text-emerald-300/60"
+                                                        placeholder={language === 'es' ? 'Pega tu plantilla personalizada aquí...' : 'Paste your custom template here...'}
+                                                        className="w-full flex-1 min-h-[60px] bg-white dark:bg-slate-950 border border-emerald-100 dark:border-emerald-900 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-emerald-500/20 placeholder:text-emerald-300/60 dark:placeholder:text-emerald-700/40"
                                                     />
                                                 </div>
                                             </div>
@@ -1475,13 +1477,13 @@ const Record: React.FC = () => {
                                                 <div className="flex items-center justify-between w-full px-2">
                                                     <div className="flex items-center gap-2">
                                                         <Target size={14} className="text-slate-400" />
-                                                        <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
-                                                            Encounter Goals
+                                                        <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-850 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                            {t('record.encounter_goals', 'Encounter Goals')}
                                                         </Badge>
                                                     </div>
                                                     {patientInfo.context.trim().length > 0 && (
-                                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-500 border-emerald-100 flex items-center gap-1.5 font-bold animate-in zoom-in px-2.5 py-0.5 rounded-full scale-90">
-                                                            <Check size={12} strokeWidth={3} /> Added
+                                                        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950 text-emerald-500 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900 flex items-center gap-1.5 font-bold animate-in zoom-in px-2.5 py-0.5 rounded-full scale-90">
+                                                            <Check size={12} strokeWidth={3} /> {language === 'es' ? "Añadido" : "Added"}
                                                         </Badge>
                                                     )}
                                                 </div>
@@ -1490,8 +1492,8 @@ const Record: React.FC = () => {
                                                         <div className="absolute inset-x-0 top-2 pointer-events-none px-2 flex group-focus-within/text:opacity-0 transition-opacity duration-300">
                                                             <div className="flex items-start gap-1">
                                                                 <div className="w-[2.5px] h-5 bg-primary/40 animate-cursor-blink rounded-full mt-0.5" />
-                                                                <span className="text-[15px] font-medium text-slate-400/60 animate-text-breathing tracking-tight leading-relaxed animate-in fade-in">
-                                                                    Specify symptoms, history focus, or session objectives (optional)...
+                                                                <span className="text-[15px] font-medium text-slate-400/60 dark:text-slate-500/60 tracking-tight leading-relaxed animate-in fade-in">
+                                                                    {t('record.goals_placeholder', 'Specify symptoms, history focus, or session objectives (optional)...')}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -1500,7 +1502,7 @@ const Record: React.FC = () => {
                                                         value={patientInfo.context}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
                                                         placeholder=""
-                                                        className="w-full flex-1 bg-transparent border-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0 text-[15px] font-medium text-slate-600 placeholder:text-transparent resize-none leading-relaxed transition-all shadow-none tracking-tight z-10 min-h-[160px]"
+                                                        className="w-full flex-1 bg-transparent border-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0 text-[15px] font-medium text-slate-600 dark:text-slate-200 placeholder:text-transparent resize-none leading-relaxed transition-all shadow-none tracking-tight z-10 min-h-[160px]"
                                                     />
                                                 </div>
                                             </div>
@@ -1522,12 +1524,12 @@ const Record: React.FC = () => {
                                                 className={cn(
                                                     "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 shadow-sm border",
                                                     canAdd 
-                                                        ? "bg-white text-primary border-primary/20 hover:bg-primary/5 hover:border-primary/40 active:scale-[0.98]" 
-                                                        : "bg-slate-50/50 text-slate-400 border-slate-100 shadow-none cursor-not-allowed"
+                                                        ? "bg-white dark:bg-slate-900 text-primary border-primary/20 dark:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/40 active:scale-[0.98]" 
+                                                        : "bg-slate-50/50 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 border-slate-100 dark:border-slate-900 shadow-none cursor-not-allowed"
                                                 )}
                                             >
                                                 <Plus size={14} strokeWidth={3} />
-                                                <span>{audioBlob && (patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) ? "Add Combined" : (audioBlob ? "Add Audio" : ((patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) ? "Add Text" : "Add Service"))}</span>
+                                                <span>{audioBlob && (patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) ? (language === 'es' ? "Añadir Combinado" : "Add Combined") : (audioBlob ? (language === 'es' ? "Añadir Audio" : "Add Audio") : ((patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) ? (language === 'es' ? "Añadir Texto" : "Add Text") : (language === 'es' ? "Añadir Servicio" : "Add Service")))}</span>
                                             </Button>
                                         );
                                     })()}
@@ -1538,26 +1540,26 @@ const Record: React.FC = () => {
                                         className={cn(
                                             "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 active:scale-[0.98] shadow-md",
                                             recordedServices.length > 0
-                                                ? "bg-slate-800 text-white hover:bg-slate-900 shadow-slate-900/10"
-                                                : "bg-slate-50 text-slate-400 pointer-events-none border border-slate-100"
+                                                ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600 shadow-slate-900/10"
+                                                : "bg-slate-50 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 pointer-events-none border border-slate-100 dark:border-slate-900"
                                         )}
                                     >
                                         {status === 'processing' || status === 'uploading' ? (
                                             <>
                                                 <Loader2 className="animate-spin" size={14} />
-                                                <span>Processing...</span>
+                                                <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <FileCheck size={14} />
-                                                <span>Finalize ({recordedServices.length})</span>
+                                                <span>{language === 'es' ? "Finalizar" : "Finalize"} ({recordedServices.length})</span>
                                             </>
                                         )}
                                     </Button>
                                 </div>
                                 {(!selectedPatient && !patientInfo.name.trim()) || !selectedSubTemplate ? (
-                                    <p className="text-center text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] animate-pulse transition-opacity duration-1000">
-                                        Fill patient & service fields to enable
+                                    <p className="text-center text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] animate-pulse transition-opacity duration-1000">
+                                        {t('record.fill_fields_to_enable', 'Fill patient & service fields to enable')}
                                     </p>
                                 ) : null}
                             </div>
@@ -1568,31 +1570,31 @@ const Record: React.FC = () => {
                                     <div className="flex items-center justify-between mb-4 px-1">
                                         <div className="flex items-center gap-2">
                                             <Layers className="text-primary/40" size={16} />
-                                            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">Joint Note Stack ({recordedServices.length})</h3>
+                                            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">{t('record.joint_note_stack', 'Joint Note Stack')} ({recordedServices.length})</h3>
                                         </div>
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
                                             onClick={handleReset}
-                                            className="h-7 text-[11px] font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg px-2.5"
+                                            className="h-7 text-[11px] font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg px-2.5"
                                         >
-                                            Discard Session
+                                            {t('record.discard_session', 'Discard Session')}
                                         </Button>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                         {recordedServices.map((svc, i) => (
-                                            <div key={svc.id} className="bg-slate-50/30 border border-slate-100 rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm hover:border-slate-200 transition-all duration-300 group overflow-hidden">
+                                            <div key={svc.id} className="bg-slate-50/30 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-300 group overflow-hidden">
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="flex items-center justify-center size-5 rounded-full bg-white border border-slate-100 text-[11px] font-bold text-slate-400 shrink-0 shadow-sm">
+                                                    <div className="flex items-center justify-center size-5 rounded-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 dark:text-slate-550 shrink-0 shadow-sm">
                                                         {i + 1}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
-                                                        <h5 className="text-[11px] font-semibold text-slate-500 truncate leading-tight tracking-tight">{svc.subTemplate}</h5>
+                                                        <h5 className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 truncate leading-tight tracking-tight">{svc.subTemplate}</h5>
                                                         <div className="flex items-center gap-1.5 mt-0.5 opacity-60">
-                                                            {svc.audioBlob && <Mic size={9} className="text-slate-400" />}
-                                                            {svc.manualText && <FileText size={9} className="text-slate-400" />}
-                                                            <span className="text-[11px] font-bold text-slate-400">
-                                                                {svc.audioBlob && svc.manualText ? "Both" : (svc.audioBlob ? "Audio" : "Text")}
+                                                            {svc.audioBlob && <Mic size={9} className="text-slate-400 dark:text-slate-500" />}
+                                                            {svc.manualText && <FileText size={9} className="text-slate-400 dark:text-slate-500" />}
+                                                            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                                                                {svc.audioBlob && svc.manualText ? (language === 'es' ? "Ambos" : "Both") : (svc.audioBlob ? "Audio" : (language === 'es' ? "Texto" : "Text"))}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1620,7 +1622,7 @@ const Record: React.FC = () => {
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2 px-1">
                                             <User size={13} className="text-slate-400" />
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Client identity</Label>
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('record.client_identity', 'Client identity')}</Label>
                                             {selectedPatient && <Check size={12} className="text-emerald-400" />}
                                         </div>
                                         {selectedPatient ? (
@@ -1654,35 +1656,35 @@ const Record: React.FC = () => {
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2 px-1">
                                             <Calendar size={13} className="text-slate-400" />
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Encounter Info</Label>
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('record.encounter_info', 'Encounter Info')}</Label>
                                             {serviceDate && timeIn && <Check size={12} className="text-emerald-400" />}
                                         </div>
                                         
                                         <div className="flex flex-col gap-3 bg-transparent">
                                             {/* Date Picker */}
-                                            <div className="bg-card border border-border/60 rounded-2xl shadow-sm px-1 py-1.5 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                                            <div className="bg-card border border-border/60 dark:border-slate-800 rounded-2xl shadow-sm px-1 py-1.5 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
                                                 <DatePicker 
                                                     date={serviceDate} 
                                                     setDate={setServiceDate} 
-                                                    className="h-11 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 px-4 font-semibold text-slate-600 tracking-tight text-sm"
+                                                    className="h-11 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 px-4 font-semibold text-slate-600 dark:text-slate-350 tracking-tight text-sm"
                                                 />
                                             </div>
                                             
                                             {/* Start & End Time side-by-side */}
                                             <div className="grid grid-cols-2 gap-3">
                                                 {/* Time In */}
-                                                <div className="bg-card border border-border/60 rounded-2xl shadow-sm flex items-center justify-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                                                <div className="bg-card border border-border/60 dark:border-slate-800 rounded-2xl shadow-sm flex items-center justify-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
                                                     <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
                                                         <PopoverTrigger asChild>
-                                                            <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-3 font-semibold text-slate-500 w-full flex items-center gap-2 justify-center transition-colors tracking-tight">
-                                                                <Clock size={16} className="text-slate-300 shrink-0" />
-                                                                <span className="text-[11px] truncate">{timeIn ? `In: ${timeIn}` : "Start Time"}</span>
+                                                            <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 dark:hover:bg-slate-800 px-3 font-semibold text-slate-500 dark:text-slate-300 w-full flex items-center gap-2 justify-center transition-colors tracking-tight">
+                                                                <Clock size={16} className="text-slate-300 dark:text-slate-600 shrink-0" />
+                                                                <span className="text-[11px] truncate">{timeIn ? `In: ${timeIn}` : (language === 'es' ? 'Hora de inicio' : 'Start Time')}</span>
                                                             </Button>
                                                         </PopoverTrigger>
-                                                        <PopoverContent className="w-[280px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-2xl bg-white" side="bottom" align="center" sideOffset={12}>
+                                                        <PopoverContent className="w-[280px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-2xl bg-white dark:bg-slate-900" side="bottom" align="center" sideOffset={12}>
                                                             <div className="flex flex-col items-center">
                                                                 <div className="w-full pt-8 pb-4 text-center">
-                                                                    <span className="font-semibold tracking-tight text-slate-800 text-base">Start Time</span>
+                                                                    <span className="font-semibold tracking-tight text-slate-800 dark:text-slate-100 text-base">{language === 'es' ? 'Hora de inicio' : 'Start Time'}</span>
                                                                 </div>
                                                                 <div className="px-6 pb-6 w-full">
                                                                     <TimeSpinner 
@@ -1697,20 +1699,20 @@ const Record: React.FC = () => {
                                                         </PopoverContent>
                                                     </Popover>
                                                 </div>
-
+ 
                                                 {/* Time Out */}
-                                                <div className="bg-card border border-border/60 rounded-2xl shadow-sm flex items-center justify-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                                                <div className="bg-card border border-border/60 dark:border-slate-800 rounded-2xl shadow-sm flex items-center justify-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
                                                     <Popover open={isTimeOutPopoverOpen} onOpenChange={setIsTimeOutPopoverOpen}>
                                                         <PopoverTrigger asChild>
-                                                            <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 px-3 font-semibold text-slate-500 w-full flex items-center gap-2 justify-center transition-colors tracking-tight">
-                                                                <Clock size={16} className="text-slate-300 shrink-0" />
-                                                                <span className="text-[11px] truncate">{timeOut ? `Out: ${timeOut}` : "End Time"}</span>
+                                                            <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 dark:hover:bg-slate-800 px-3 font-semibold text-slate-500 dark:text-slate-300 w-full flex items-center gap-2 justify-center transition-colors tracking-tight">
+                                                                <Clock size={16} className="text-slate-300 dark:text-slate-600 shrink-0" />
+                                                                <span className="text-[11px] truncate">{timeOut ? `Out: ${timeOut}` : (language === 'es' ? 'Hora de fin' : 'End Time')}</span>
                                                             </Button>
                                                         </PopoverTrigger>
-                                                        <PopoverContent className="w-[280px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-2xl bg-white" side="bottom" align="center" sideOffset={12}>
+                                                        <PopoverContent className="w-[280px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-2xl bg-white dark:bg-slate-900" side="bottom" align="center" sideOffset={12}>
                                                             <div className="flex flex-col items-center">
                                                                 <div className="w-full pt-8 pb-4 text-center">
-                                                                    <span className="font-semibold tracking-tight text-slate-800 text-base">End Time</span>
+                                                                    <span className="font-semibold tracking-tight text-slate-800 dark:text-slate-100 text-base">{language === 'es' ? 'Hora de fin' : 'End Time'}</span>
                                                                 </div>
                                                                 <div className="px-6 pb-6 w-full">
                                                                     <TimeSpinner 
@@ -1728,15 +1730,15 @@ const Record: React.FC = () => {
                                             </div>
                                             
                                             {/* Units */}
-                                            <div className="bg-card border border-border/60 rounded-2xl shadow-sm flex items-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 pl-4 pr-1 select-none">Units:</span>
+                                            <div className="bg-card border border-border/60 dark:border-slate-800 rounded-2xl shadow-sm flex items-center p-1 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 pl-4 pr-1 select-none">{language === 'es' ? 'Unidades:' : 'Units:'}</span>
                                                 <Input 
                                                     type="number"
                                                     min="0"
                                                     placeholder="e.g. 1, 2, 4..."
                                                     value={units}
                                                     onChange={(e) => setUnits(e.target.value)}
-                                                    className="h-11 border-0 bg-transparent focus-visible:ring-0 font-semibold text-slate-600 w-full px-2 text-sm"
+                                                    className="h-11 border-0 bg-transparent focus-visible:ring-0 font-semibold text-slate-600 dark:text-slate-350 w-full px-2 text-sm"
                                                 />
                                             </div>
                                         </div>
@@ -1746,28 +1748,28 @@ const Record: React.FC = () => {
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2 px-1">
                                             <ClipboardList size={13} className="text-slate-400" />
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Service Provided</Label>
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('record.service_provided', 'Service Provided')}</Label>
                                             {selectedSubTemplate && <Check size={12} className="text-emerald-400" />}
                                         </div>
                                         <div className="relative mt-1">
                                             <div 
                                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                                 className={cn(
-                                                    "w-full h-11 flex items-center justify-between px-5 bg-card border border-border/60 rounded-2xl shadow-sm cursor-pointer transition-all hover:bg-slate-50",
+                                                    "w-full h-11 flex items-center justify-between px-5 bg-card border border-border/60 dark:border-slate-800 rounded-2xl shadow-sm cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800",
                                                     isDropdownOpen ? "border-primary/40 ring-4 ring-primary/10" : ""
                                                 )}
                                             >
                                                 <span className={cn(
                                                     "text-sm font-semibold tracking-tight truncate",
-                                                    selectedSubTemplate ? "text-slate-700" : "text-slate-400"
+                                                    selectedSubTemplate ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"
                                                 )}>
-                                                    {selectedSubTemplate || "Select encounter type..."}
+                                                    {selectedSubTemplate || t('record.select_encounter_type', 'Select encounter type...')}
                                                 </span>
                                                 <ChevronDown className={cn("size-4 text-slate-400 transition-transform duration-300 shrink-0", isDropdownOpen && "rotate-180")} />
                                             </div>
-
+ 
                                             {isDropdownOpen && (
-                                                <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-[2rem] shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-[2rem] shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-1 duration-300">
                                                     <div className="flex flex-col gap-1 max-h-[220px] overflow-y-auto">
                                                         {TCM_SUB_TEMPLATES.map((t) => {
                                                             const isActive = selectedSubTemplate === t;
@@ -1780,7 +1782,7 @@ const Record: React.FC = () => {
                                                                     }}
                                                                     className={cn(
                                                                         "w-full justify-between items-center h-10 px-4 text-xs font-semibold rounded-xl transition-colors flex text-left",
-                                                                        isActive ? 'bg-primary/5 text-primary' : 'text-slate-500 hover:bg-slate-50'
+                                                                        isActive ? 'bg-primary/5 text-primary dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-750 dark:hover:text-slate-200'
                                                                     )}
                                                                 >
                                                                     <span className="truncate pr-2">{t}</span>
@@ -1798,9 +1800,9 @@ const Record: React.FC = () => {
                                         <Button
                                             onClick={() => setActiveTab('capture')}
                                             disabled={!selectedPatient && !patientInfo.name.trim() || !selectedSubTemplate}
-                                            className="w-full h-11 rounded-full bg-slate-800 text-white font-bold text-xs uppercase tracking-wider gap-2 shadow-sm transition-all active:scale-95"
+                                            className="w-full h-11 rounded-full bg-slate-800 dark:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider gap-2 shadow-sm transition-all active:scale-95"
                                         >
-                                            Next: Capture
+                                            {language === 'es' ? 'Siguiente: Capturar' : 'Next: Capture'}
                                         </Button>
                                     </div>
                                 </div>
@@ -1810,11 +1812,11 @@ const Record: React.FC = () => {
                             {activeTab === 'capture' && (
                                 <div className="space-y-6 animate-in fade-in duration-300">
                                     {/* Voice Capture */}
-                                    <div className="bg-slate-50/50 border border-slate-200/80 rounded-3xl p-5 flex flex-col gap-4 shadow-sm">
+                                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 flex flex-col gap-4 shadow-sm">
                                         <div className="flex items-center gap-2">
                                             <Mic size={13} className="text-slate-400" />
-                                            <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px]">
-                                                Voice Capture
+                                            <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-850 font-bold px-2 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px]">
+                                                {t('record.voice_capture', 'Voice Capture')}
                                             </Badge>
                                         </div>
                                         <div className="flex flex-col items-center justify-center py-2 w-full">
@@ -1831,7 +1833,7 @@ const Record: React.FC = () => {
                                                             ? "bg-emerald-50/40 border-2 border-emerald-200 text-emerald-600 shadow-[0_4px_15px_rgba(16,185,129,0.1)]" 
                                                             : status === 'recording'
                                                                 ? "animate-recording-pulse border-2 border-rose-500/20 text-rose-500 hover:scale-[0.98]"
-                                                                : "bg-white border-2 border-slate-150 text-slate-400 active:scale-95 shadow-md"
+                                                                : "bg-white dark:bg-slate-950 border-2 border-slate-150 dark:border-slate-800 text-slate-400 dark:text-slate-500 active:scale-95 shadow-md"
                                                     )}
                                                 >
                                                     {status === 'recording' ? (
@@ -1839,11 +1841,11 @@ const Record: React.FC = () => {
                                                             <div className="size-3 bg-white rounded-sm" />
                                                         </div>
                                                     ) : (
-                                                        <Mic size={36} strokeWidth={1} className={audioBlob ? "text-emerald-500" : "text-slate-400"} />
+                                                        <Mic size={36} strokeWidth={1} className={audioBlob ? "text-emerald-500" : "text-slate-400 dark:text-slate-500"} />
                                                     )}
                                                 </button>
                                                 {audioBlob && (
-                                                    <div className="absolute -top-1 -right-1 size-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white shadow-md z-20">
+                                                    <div className="absolute -top-1 -right-1 size-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-md z-20">
                                                         <Check size={14} strokeWidth={3} />
                                                     </div>
                                                 )}
@@ -1853,12 +1855,12 @@ const Record: React.FC = () => {
                                                 {status === 'recording' ? (
                                                     <>
                                                         <span className="text-xl font-bold tabular-nums text-rose-500">{formatTime(timer)}</span>
-                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Recording...</p>
+                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{t('record.recording', 'Recording...')}</p>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                                            {audioBlob ? "Recording Saved" : "Tap Mic to Start"}
+                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-550">
+                                                            {audioBlob ? (language === 'es' ? "Grabación Guardada" : "Recording Saved") : (language === 'es' ? "Toca el Micrófono para Iniciar" : "Tap Mic to Start")}
                                                         </p>
                                                     </>
                                                 )}
@@ -1873,29 +1875,29 @@ const Record: React.FC = () => {
                                                         setAudioUrl(null);
                                                         setTimer(0);
                                                     }}
-                                                    className="h-9 rounded-full font-bold text-[10px] uppercase tracking-wider text-rose-500 hover:bg-rose-50 mt-2 px-4"
+                                                    className="h-9 rounded-full font-bold text-[10px] uppercase tracking-wider text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 mt-2 px-4"
                                                 >
-                                                    Discard Audio
+                                                    {language === 'es' ? "Descartar Audio" : "Discard Audio"}
                                                 </Button>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Text Capture */}
-                                    <div className="bg-slate-50/50 border border-slate-200/80 rounded-3xl p-5 flex flex-col gap-4 shadow-sm min-h-[160px]">
+                                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 flex flex-col gap-4 shadow-sm min-h-[160px]">
                                         <div className="flex items-center justify-between w-full">
                                             <div className="flex items-center gap-2">
                                                 <Target size={13} className="text-slate-400" />
-                                                <Badge variant="outline" className="bg-white text-slate-400 border-slate-100 font-bold px-2 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px]">
-                                                    Objectives
+                                                <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-350 border-slate-100 dark:border-slate-850 font-bold px-2 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px]">
+                                                    {t('record.encounter_goals', 'Objectives')}
                                                 </Badge>
                                             </div>
                                         </div>
                                         <Textarea
                                             value={patientInfo.context}
                                             onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
-                                            placeholder="Specify symptoms, history focus, or session objectives (optional)..."
-                                            className="w-full flex-1 bg-white border border-slate-100 px-4 py-3 text-sm font-semibold rounded-2xl text-slate-700 shadow-inner focus-visible:ring-primary/20 placeholder:text-slate-300 min-h-[100px]"
+                                            placeholder={t('record.goals_placeholder', 'Specify symptoms, history focus, or session objectives (optional)...')}
+                                            className="w-full flex-1 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 px-4 py-3 text-sm font-semibold rounded-2xl text-slate-700 dark:text-slate-200 shadow-inner focus-visible:ring-primary/20 placeholder:text-slate-300 dark:placeholder:text-slate-650 min-h-[100px]"
                                         />
                                     </div>
 
@@ -1911,12 +1913,12 @@ const Record: React.FC = () => {
                                                     className={cn(
                                                         "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 shadow-sm transition-all duration-300 active:scale-95",
                                                         canAdd 
-                                                            ? "bg-slate-800 text-white hover:bg-slate-900" 
-                                                            : "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-150 shadow-none"
+                                                            ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600" 
+                                                            : "bg-slate-100 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-150 dark:border-slate-850 shadow-none"
                                                     )}
                                                 >
                                                     <Plus size={14} strokeWidth={3} />
-                                                    <span>Add Service to Note</span>
+                                                    <span>{language === 'es' ? 'Añadir Servicio a la Nota' : 'Add Service to Note'}</span>
                                                 </Button>
                                             );
                                         })()}
@@ -1930,52 +1932,52 @@ const Record: React.FC = () => {
                                     <div className="flex items-center justify-between px-1">
                                         <div className="flex items-center gap-2">
                                             <Layers className="text-primary/40" size={15} />
-                                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Services Stack ({recordedServices.length})</h4>
+                                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('record.joint_note_stack', 'Services Stack')} ({recordedServices.length})</h4>
                                         </div>
                                         {recordedServices.length > 0 && (
                                             <Button 
                                                 variant="ghost" 
                                                 size="sm" 
                                                 onClick={handleReset}
-                                                className="h-6 text-[10px] font-bold text-rose-500 hover:bg-rose-50 rounded-lg px-2"
+                                                className="h-6 text-[10px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg px-2"
                                             >
-                                                Clear All
+                                                {language === 'es' ? 'Limpiar Todo' : 'Clear All'}
                                             </Button>
                                         )}
                                     </div>
 
                                     {recordedServices.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-150 rounded-3xl p-6 bg-slate-50/20">
-                                            <div className="size-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                                        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-150 dark:border-slate-800 rounded-3xl p-6 bg-slate-50/20">
+                                            <div className="size-12 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3">
                                                 <Layers size={20} />
                                             </div>
-                                            <h5 className="text-sm font-semibold text-slate-600 mb-1">No services added yet</h5>
-                                            <p className="text-xs text-slate-400 max-w-[200px] leading-relaxed">Fill out the Info and Capture tabs, then click "Add Service" to stack them here.</p>
+                                            <h5 className="text-sm font-semibold text-slate-600 dark:text-slate-350 mb-1">{language === 'es' ? 'No se han agregado servicios aún' : 'No services added yet'}</h5>
+                                            <p className="text-xs text-slate-400 dark:text-slate-550 max-w-[200px] leading-relaxed">{language === 'es' ? 'Completa la información y captura, luego presiona "Añadir Servicio" para acumularlos aquí.' : 'Fill out the Info and Capture tabs, then click "Add Service" to stack them here.'}</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
                                             {/* Stack List */}
                                             <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
                                                 {recordedServices.map((svc, i) => (
-                                                    <div key={svc.id} className="bg-slate-50/50 border border-slate-150/70 rounded-2xl py-2 px-3.5 flex items-center justify-between shadow-sm">
+                                                    <div key={svc.id} className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-150/70 dark:border-slate-800 rounded-2xl py-2 px-3.5 flex items-center justify-between shadow-sm">
                                                         <div className="flex items-center gap-3 min-w-0">
-                                                            <div className="flex items-center justify-center size-5 rounded-full bg-white border border-slate-100 text-[10px] font-black text-slate-400 shrink-0">
+                                                            <div className="flex items-center justify-center size-5 rounded-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-850 text-[10px] font-black text-slate-400 dark:text-slate-550 shrink-0">
                                                                 {i + 1}
                                                             </div>
                                                             <div className="flex flex-col min-w-0">
-                                                                <h5 className="text-[11px] font-bold text-slate-500 truncate">{svc.subTemplate}</h5>
+                                                                <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-300 truncate">{svc.subTemplate}</h5>
                                                                 <div className="flex items-center gap-1.5 mt-0.5 opacity-60">
-                                                                    {svc.audioBlob && <Mic size={9} className="text-slate-400" />}
-                                                                    {svc.manualText && <FileText size={9} className="text-slate-400" />}
-                                                                    <span className="text-[9px] font-black text-slate-400">
-                                                                        {svc.audioBlob && svc.manualText ? "Both" : (svc.audioBlob ? "Audio" : "Text")}
+                                                                    {svc.audioBlob && <Mic size={9} className="text-slate-400 dark:text-slate-500" />}
+                                                                    {svc.manualText && <FileText size={9} className="text-slate-400 dark:text-slate-500" />}
+                                                                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-550">
+                                                                        {svc.audioBlob && svc.manualText ? (language === 'es' ? "Ambos" : "Both") : (svc.audioBlob ? "Audio" : (language === 'es' ? "Texto" : "Text"))}
                                                                     </span>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <button 
                                                             onClick={() => handleRemoveService(svc.id)} 
-                                                            className="size-7 flex items-center justify-center rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all shrink-0"
+                                                            className="size-7 flex items-center justify-center rounded-full text-slate-300 dark:text-slate-650 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all shrink-0"
                                                         >
                                                             <Trash2 size={13} strokeWidth={1.5} />
                                                         </button>
@@ -1991,19 +1993,19 @@ const Record: React.FC = () => {
                                                     className={cn(
                                                         "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 transition-all duration-300 active:scale-95 shadow-md",
                                                         recordedServices.length > 0
-                                                            ? "bg-slate-800 text-white hover:bg-slate-900"
-                                                            : "bg-slate-100 text-slate-400 pointer-events-none border border-slate-150 shadow-none"
+                                                            ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600"
+                                                            : "bg-slate-100 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 pointer-events-none border border-slate-150 dark:border-slate-850 shadow-none"
                                                     )}
                                                 >
                                                     {status === 'processing' || status === 'uploading' ? (
                                                         <>
                                                             <Loader2 className="animate-spin" size={14} />
-                                                            <span>Processing...</span>
+                                                            <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <FileCheck size={14} />
-                                                            <span>Finalize Note ({recordedServices.length})</span>
+                                                            <span>{language === 'es' ? "Finalizar Nota" : "Finalize Note"} ({recordedServices.length})</span>
                                                         </>
                                                     )}
                                                 </Button>
