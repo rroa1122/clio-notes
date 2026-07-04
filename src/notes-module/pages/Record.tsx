@@ -1258,8 +1258,6 @@ const Record: React.FC = () => {
                                 </div>
 
                                 {/* Service Provided */}
-                                navigate; // reference to keep imports valid
-                                return (
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <ClipboardList size={14} className="text-slate-400" />
