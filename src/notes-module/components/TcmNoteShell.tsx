@@ -1050,14 +1050,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 .dark .document-page .border-slate-200 {
                     border-color: #334155 !important;
                 }
-                .dark .document-page .bg-slate-50 {
-                    background-color: rgba(2, 6, 23, 0.5) !important;
-                }
-                .dark .document-page .bg-slate-50\/30 {
-                    background-color: rgba(2, 6, 23, 0.4) !important;
-                }
-                .dark .document-page .bg-slate-50\/50 {
-                    background-color: rgba(2, 6, 23, 0.6) !important;
+                .dark .document-page div[class*="bg-slate-50"] {
+                    background-color: rgba(2, 6, 23, 0.55) !important;
                 }
                 .dark .document-page .bg-white {
                     background-color: #0f172a !important;
@@ -1695,7 +1689,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                             onCopy={() => handleCopy(svcSummary || "", "Summary", `summary_${svcIndex}`)}
                                                             isCopied={copyingSection === `summary_${svcIndex}`}
                                                         />
-                                                        <div className="mt-1 bg-slate-50/50 border border-slate-200/80 rounded-2xl p-3 relative group/narrative">
+                                                        <div className="mt-1 bg-slate-50/50 dark:!bg-slate-950/40 border border-slate-200/80 dark:!border-slate-800/80 rounded-2xl p-3 relative group/narrative">
                                                             <GhostTextarea
                                                                 value={svcSummary}
                                                                 isEditMode={isEditMode}
@@ -1735,7 +1729,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                     onCopy={() => handleCopy(mergedNote.narrative?.outcome_of_services || "", "Outcome", "outcome")}
                                                     isCopied={copyingSection === 'outcome'}
                                                 />
-                                                <div className="mt-1 p-3 bg-slate-50/30 rounded-xl border border-slate-100/50">
+                                                <div className="mt-1 p-3 bg-slate-50/30 dark:!bg-slate-950/40 rounded-xl border border-slate-100/50 dark:!border-slate-800/80">
                                                     <GhostTextarea
                                                         value={mergedNote.narrative?.outcome_of_services}
                                                         isEditMode={isEditMode}
@@ -1754,7 +1748,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                     onCopy={() => handleCopy(mergedNote.narrative?.next_steps || "", "Plan", "plan")}
                                                     isCopied={copyingSection === 'plan'}
                                                 />
-                                                <div className="mt-1 p-3 bg-slate-50/30 rounded-xl border border-slate-100/50">
+                                                <div className="mt-1 p-3 bg-slate-50/30 dark:!bg-slate-950/40 rounded-xl border border-slate-100/50 dark:!border-slate-800/80">
                                                     <GhostTextarea
                                                         value={mergedNote.narrative?.next_steps}
                                                         isEditMode={isEditMode}
@@ -1774,7 +1768,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             <div className="flex justify-between items-center border-b border-slate-50 pb-0.5">
                                 <h2 className="text-[9px] font-black text-slate-900 tracking-[0.25em] uppercase leading-none">Diagnoses</h2>
                             </div>
-                            <div className="mt-1 p-2 bg-slate-50/30 rounded-xl border border-slate-100/50">
+                            <div className="mt-1 p-2 bg-slate-50/30 dark:!bg-slate-950/40 rounded-xl border border-slate-100/50 dark:!border-slate-800/80">
                                 {Array.isArray(mergedNote.diagnoses) && mergedNote.diagnoses.length > 0 ? (
                                     <div className="space-y-1 w-full">
                                         {(mergedNote.diagnoses as any[]).map((diag: any, idx: number) => (
