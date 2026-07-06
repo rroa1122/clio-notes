@@ -59,7 +59,7 @@ export function Header() {
 
     return (
         <>
-            <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-100 shadow-sm">
+            <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-100 shadow-sm print:hidden">
             <div className="h-16 flex items-center justify-between px-4 md:px-8 max-w-[1600px] mx-auto">
                 {/* 1. Logo Area */}
                 <div className="flex items-center gap-3 shrink-0">
@@ -254,7 +254,7 @@ export function Header() {
         </header>
 
             {/* Mobile Bottom Navigation Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/85 dark:bg-slate-950/85 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-around px-6 z-50 shadow-[0_-4px_25px_-6px_rgba(0,0,0,0.08)]">
+            <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/85 dark:bg-slate-950/85 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-around px-6 z-50 shadow-[0_-4px_25px_-6px_rgba(0,0,0,0.08)]">
                 {/* 1. History */}
                 <NavLink
                     to="/notes/history"
