@@ -24,6 +24,11 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                // If the user is currently focusing the input, do not close the dropdown
+                const inputEl = containerRef.current.querySelector('input');
+                if (document.activeElement === inputEl) {
+                    return;
+                }
                 setIsOpen(false);
             }
         };
@@ -60,7 +65,7 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
                 <Input
                     type="text"
                     placeholder={t('record.search_patient_placeholder', 'Search patient registry...')}
-                    className="!pl-12 !pr-10 h-12 rounded-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 focus-visible:ring-offset-0 text-sm font-medium text-slate-900 dark:text-slate-100 transition-all duration-200"
+                    className="!pl-12 !pr-10 h-11 rounded-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 focus-visible:ring-offset-0 text-[13px] font-medium text-slate-900 dark:text-slate-100 transition-all duration-200"
                     value={query}
                     onChange={(e) => {
                         const val = e.target.value;
@@ -73,7 +78,7 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
                     size="icon"
                     variant="ghost"
                     onClick={onCreateNew}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full text-slate-400 hover:text-primary hover:bg-primary/5 transition-all"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full text-slate-400 hover:text-primary hover:bg-primary/5 transition-all"
                     title={language === 'es' ? "Añadir nuevo paciente" : "Add New Patient"}
                 >
                     <UserPlus size={16} />
@@ -92,7 +97,9 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
                             results.map((patient) => (
                                 <button
                                     key={patient.id}
-                                    onClick={() => {
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         onSelect(patient);
                                         setIsOpen(false);
                                         setQuery('');

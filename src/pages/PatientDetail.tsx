@@ -57,24 +57,24 @@ interface TimelineItem {
 const getInitialsTheme = (name: string) => {
     const char = name ? name.charAt(0).toUpperCase() : '?';
     if ('AEIOU'.includes(char)) return {
-        bg: 'bg-indigo-50/70 text-indigo-600 border-indigo-100/20',
-        glow: 'from-indigo-500/20 to-indigo-300/10'
+        bg: 'bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 border-indigo-100/20 dark:border-indigo-900/10',
+        glow: 'from-indigo-500/20 to-indigo-300/10 dark:from-indigo-500/10 dark:to-indigo-500/5'
     };
     if ('BCDFG'.includes(char)) return {
-        bg: 'bg-emerald-50/70 text-emerald-600 border-emerald-100/20',
-        glow: 'from-emerald-500/20 to-emerald-300/10'
+        bg: 'bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border-emerald-100/20 dark:border-emerald-900/10',
+        glow: 'from-emerald-500/20 to-emerald-300/10 dark:from-emerald-500/10 dark:to-emerald-500/5'
     };
     if ('HJKLM'.includes(char)) return {
-        bg: 'bg-purple-50/70 text-purple-600 border-purple-100/20',
-        glow: 'from-purple-500/20 to-purple-300/10'
+        bg: 'bg-purple-50/70 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border-purple-100/20 dark:border-purple-900/10',
+        glow: 'from-purple-500/20 to-purple-300/10 dark:from-purple-500/10 dark:to-purple-500/5'
     };
     if ('NPQRS'.includes(char)) return {
-        bg: 'bg-amber-50/70 text-amber-600 border-amber-100/20',
-        glow: 'from-amber-500/20 to-amber-300/10'
+        bg: 'bg-amber-50/70 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300 border-amber-100/20 dark:border-amber-900/10',
+        glow: 'from-amber-500/20 to-amber-300/10 dark:from-amber-500/10 dark:to-amber-500/5'
     };
     return {
-        bg: 'bg-blue-50/70 text-blue-600 border-blue-100/20',
-        glow: 'from-blue-500/20 to-blue-300/10'
+        bg: 'bg-blue-50/70 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border-blue-100/20 dark:border-blue-900/10',
+        glow: 'from-blue-500/20 to-blue-300/10 dark:from-blue-500/10 dark:to-blue-500/5'
     };
 };
 
@@ -306,7 +306,7 @@ export function PatientDetail() {
     return (
         <div className="max-w-[1100px] mx-auto p-4 lg:p-8 space-y-12 animate-in fade-in duration-1000">
             {/* Sophisticated Context Header */}
-            <header className="bg-slate-50/50 border border-slate-100/70 rounded-[32px] p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative shadow-[0_2px_12px_rgba(0,0,0,0.01)] transition-all">
+            <header className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100/70 dark:border-slate-800 rounded-[32px] p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative shadow-[0_2px_12px_rgba(0,0,0,0.01)] transition-all">
                 <div className="flex items-center gap-6 min-w-0">
                     <div className="relative group shrink-0">
                         <div className={cn(
@@ -323,26 +323,26 @@ export function PatientDetail() {
                     
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-3">
-                            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 leading-none truncate max-w-[200px] sm:max-w-[320px] md:max-w-[480px]">
+                            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100 leading-none truncate max-w-[200px] sm:max-w-[320px] md:max-w-[480px]">
                                 {isEditing ? (`${editData.first_name || ''} ${editData.last_name || ''}`.trim() || patient.full_name) : patient.full_name}
                             </h1>
                             {isEditing && (
-                                <div className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-amber-50 text-amber-600 border-amber-200 shrink-0">
-                                    Editing
+                                <div className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 shrink-0">
+                                    {language === 'es' ? 'Editando' : 'Editing'}
                                 </div>
                             )}
                         </div>
                         <div className="flex flex-wrap items-center gap-4 mt-3.5">
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200/60 shadow-sm transition-all hover:border-indigo-100 group/meta">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 shadow-sm transition-all hover:border-indigo-100 dark:hover:border-indigo-900 group/meta">
                                 <Calendar size={13} className="text-indigo-400 group-hover/meta:scale-110 transition-transform" />
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                                    {patient.dob ? format(new Date(patient.dob), 'MMM dd, yyyy') : 'N/A'}
+                                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                    {patient.dob ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM dd, yyyy', { locale: language === 'es' ? es : undefined }) : 'N/A'}
                                 </span>
                             </div>
                             {patient.emr_id && (
-                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200/60 shadow-sm transition-all hover:border-indigo-100 group/meta">
+                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 shadow-sm transition-all hover:border-indigo-100 dark:hover:border-indigo-900 group/meta">
                                     <Hash size={13} className="text-indigo-400 group-hover/meta:scale-110 transition-transform" />
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider font-mono">
+                                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
                                         {patient.emr_id}
                                     </span>
                                 </div>
@@ -362,12 +362,12 @@ export function PatientDetail() {
                     <Button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isExtracting || isSaving}
-                        className="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2 group disabled:opacity-50"
+                        className="h-11 px-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-indigo-200 dark:hover:border-indigo-900 hover:text-indigo-600 dark:hover:text-indigo-450 font-bold shadow-sm transition-all flex items-center gap-2 group disabled:opacity-50"
                     >
                         {isExtracting ? (
                             <Loader2 size={16} className="animate-spin text-indigo-500" />
                         ) : (
-                            <UploadCloud size={16} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                            <UploadCloud size={16} className="text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 transition-colors" />
                         )}
                         <span className="text-[10px] uppercase tracking-[0.15em]">
                             {isExtracting ? (language === 'es' ? "Analizando..." : "Analyzing...") : (language === 'es' ? "Autocompletar IA" : "AI Autofill")}
@@ -386,14 +386,14 @@ export function PatientDetail() {
                                     }
                                     setIsEditing(true);
                                 }}
-                                className="h-11 px-5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-indigo-200 hover:text-indigo-600 font-bold shadow-sm transition-all flex items-center gap-2 group"
+                                className="h-11 px-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-indigo-200 dark:hover:border-indigo-900 hover:text-indigo-600 dark:hover:text-indigo-450 font-bold shadow-sm transition-all flex items-center gap-2 group"
                             >
-                                <Edit3 size={16} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                                <Edit3 size={16} className="text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 transition-colors" />
                                 <span className="text-[10px] uppercase tracking-[0.15em]">{t('patient.edit_profile', 'Edit Profile')}</span>
                             </Button>
                             <Button
                                 onClick={() => navigate(`/notes/new?patientId=${patient.id}`)}
-                                className="h-11 px-6 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2 transform active:scale-95 group"
+                                className="h-11 px-6 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 dark:shadow-none transition-all flex items-center gap-2 transform active:scale-95 group"
                             >
                                 <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
                                 <span className="text-[10px] uppercase tracking-[0.15em]">{t('nav.new_encounter', 'New Encounter')}</span>
@@ -404,7 +404,7 @@ export function PatientDetail() {
                             <Button
                                 onClick={handleCancel}
                                 variant="ghost"
-                                className="h-11 px-5 rounded-xl text-slate-400 hover:text-slate-600 font-bold transition-all flex items-center gap-2"
+                                className="h-11 px-5 rounded-xl text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 font-bold transition-all flex items-center gap-2"
                                 disabled={isSaving}
                             >
                                 <X size={16} />
@@ -412,7 +412,7 @@ export function PatientDetail() {
                             </Button>
                             <Button
                                 onClick={handleSave}
-                                className="h-11 px-6 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2 transform active:scale-95 disabled:opacity-50"
+                                className="h-11 px-6 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-100 dark:shadow-none transition-all flex items-center gap-2 transform active:scale-95 disabled:opacity-50"
                                 disabled={isSaving}
                             >
                                 {isSaving ? (
@@ -429,10 +429,10 @@ export function PatientDetail() {
                 </div>
             </header>
 
-            <div className="bg-white rounded-[2.5rem] p-6 md:p-12 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-100 relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-12 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-slate-800 relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
             {/* Premium Unified Tabbed Interface */}
             <Tabs defaultValue="client" className="w-full">
-                <TabsList className="bg-slate-50/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 shadow-sm w-full grid grid-cols-3 md:grid-cols-5 h-12 overflow-hidden mb-10">
+                <TabsList className="bg-slate-50/50 dark:bg-slate-850/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 dark:border-slate-700 shadow-sm w-full flex overflow-x-auto whitespace-nowrap h-12 mb-10 scrollbar-none justify-start lg:justify-around">
                     <PremiumTrigger value="client" icon={User} label={language === 'es' ? "Cliente" : "Client"} theme="indigo" />
                     <PremiumTrigger value="medical" icon={Stethoscope} label={language === 'es' ? "Médico" : "Medical"} theme="emerald" />
                     <PremiumTrigger value="psychiatric" icon={Brain} label={language === 'es' ? "Psiquiátrico" : "Psychiatric"} theme="purple" />
@@ -445,9 +445,11 @@ export function PatientDetail() {
                     <TabsContent value="client" className="m-0 focus-visible:outline-none">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Left Column: Identity & Contact */}
-                            <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                            <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
                                 <div className="mb-2">
-                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 uppercase">Identity & Contact</h4>
+                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+                                        {language === 'es' ? 'Identidad y Contacto' : 'Identity & Contact'}
+                                    </h4>
                                 </div>
                                 <PremiumGlassField
                                     icon={User}
@@ -507,9 +509,11 @@ export function PatientDetail() {
                             </div>
 
                             {/* Right Column: Coordination & Insurance */}
-                            <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                            <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
                                 <div className="mb-2">
-                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 uppercase">Clinical Coordination</h4>
+                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+                                        {language === 'es' ? 'Coordinación Clínica' : 'Clinical Coordination'}
+                                    </h4>
                                 </div>
                                 <PremiumGlassField
                                     icon={CreditCard}
@@ -557,8 +561,10 @@ export function PatientDetail() {
                                     theme="indigo"
                                     options={['English', 'Spanish']}
                                 />
-                                <div className="mt-4 pt-4 border-t border-slate-200/50">
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Emergency Protocol</p>
+                                <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-850">
+                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
+                                        {language === 'es' ? 'Protocolo de Emergencia' : 'Emergency Protocol'}
+                                    </p>
                                     <div className="space-y-4">
                                         <PremiumGlassField
                                             icon={User}
@@ -583,7 +589,7 @@ export function PatientDetail() {
                             </div>
                         </div>
 
-                        <div className="mt-8 bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8">
+                        <div className="mt-8 bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8">
                             <PremiumGlassField
                                 icon={ClipboardList}
                                 label="Primary Case Narrative / Presenting Problem"
@@ -958,7 +964,7 @@ function PremiumTrigger({ value, label, icon: Icon, theme }: { value: string, la
         <TabsTrigger
             value={value}
             className={cn(
-                "flex-1 rounded-full flex items-center justify-center gap-2 px-4 h-full text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg border border-transparent data-[state=active]:border-slate-100 group",
+                "flex-1 lg:flex-none shrink-0 rounded-full flex items-center justify-center gap-2 px-5 h-full text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg border border-transparent data-[state=active]:border-slate-100 group",
                 themeShadows[theme]
             )}
         >

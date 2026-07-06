@@ -16,6 +16,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Header & Sidebar
     "nav.new_encounter": "New encounter",
     "nav.clinical_history": "Clinical history",
+    "nav.history": "History",
     "nav.clients": "Clients",
     "nav.audit_logs": "Audit logs",
     "nav.platform_admin": "Platform Admin",
@@ -113,6 +114,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Header & Sidebar
     "nav.new_encounter": "Nuevo encuentro",
     "nav.clinical_history": "Historial clínico",
+    "nav.history": "Historial",
     "nav.clients": "Clientes",
     "nav.audit_logs": "Registros de auditoría",
     "nav.platform_admin": "Admin de Plataforma",

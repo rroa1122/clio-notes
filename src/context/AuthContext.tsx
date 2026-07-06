@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         calendarService.clearCache();
     };
 
-    const INITIAL_CHECK_TIMEOUT = 3000; // 3 seconds fail-safe
+    const INITIAL_CHECK_TIMEOUT = 10000; // 10 seconds fail-safe for slower mobile networks
 
     useEffect(() => {
         let mounted = true;

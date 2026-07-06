@@ -264,7 +264,7 @@ export function Header() {
                     )}
                 >
                     <FileText size={20} />
-                    <span className="text-[10px] font-black tracking-wide">History</span>
+                    <span className="text-[10px] font-black tracking-wide">{t('nav.history', 'History')}</span>
                 </NavLink>
 
                 {/* 2. Center FAB: New Encounter */}
@@ -287,7 +287,7 @@ export function Header() {
                     )}
                 >
                     <Users size={20} />
-                    <span className="text-[10px] font-black tracking-wide">Clients</span>
+                    <span className="text-[10px] font-black tracking-wide">{t('nav.clients', 'Clients')}</span>
                 </NavLink>
             </div>
         </>

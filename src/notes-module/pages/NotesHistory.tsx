@@ -98,7 +98,7 @@ const NotesHistory = () => {
   };
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)]">
+    <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)]">
       {isLoading ? (
         <div className="flex items-center justify-center flex-1 h-full">
             <div className="flex flex-col items-center gap-4 opacity-50">

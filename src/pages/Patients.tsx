@@ -102,8 +102,8 @@ export function Patients() {
     };
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)] mb-4">
-            <div className="flex flex-col flex-1 bg-surface dark:bg-slate-900 rounded-[2rem] shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-border/60 overflow-hidden relative h-full">
+        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-auto lg:h-[calc(100vh-10rem)] mb-2">
+            <div className="flex flex-col lg:flex-1 bg-transparent md:bg-surface dark:md:bg-slate-900 rounded-[2rem] shadow-none md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 md:border border-border/60 overflow-visible lg:overflow-hidden relative h-auto lg:h-full">
                 {/* Card Header area matching the history timeline filters */}
                 <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-6 px-8 py-8 bg-surface border-b border-border/60 z-20 shrink-0">
                     <div className="flex flex-col gap-1">
@@ -151,139 +151,222 @@ export function Patients() {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto">
-                    <Table>
-                        <TableHeader className="sticky top-0 bg-surface dark:bg-slate-900 z-10 shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
-                            <TableRow className="hover:bg-transparent border-b border-border/60">
-                                <TableHead className="px-8 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider pl-8">
-                                    {t('record.client_identity', 'Client Identity')}
-                                </TableHead>
-                                <TableHead className="py-4 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
-                                    {t('patient.label.dob', 'Date of Birth')}
-                                </TableHead>
-                                <TableHead className="py-4 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
-                                    {t('patient.label.case_number', 'EMR ID / MRN')}
-                                </TableHead>
-                                <TableHead className="py-4 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
-                                    {t('patients.table.created', 'Registered')}
-                                </TableHead>
-                                <TableHead className="px-8 py-4 text-right text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider pr-8">
-                                    {t('patients.table.actions', 'Actions')}
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading && patients.length === 0 ? (
-                                Array.from({ length: 5 }).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell colSpan={5} className="px-8 py-4 pl-8">
-                                            <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse w-full opacity-50" />
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            ) : patients.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="px-8 py-16 text-center">
-                                        <EmptyState
-                                            icon={searchTerm ? Search : Users2}
-                                            title={searchTerm ? (language === 'es' ? "No se encontraron resultados" : "No results found") : (language === 'es' ? "Directorio Vacío" : "Directory Empty")}
-                                            description={searchTerm ? (language === 'es' ? `No pudimos encontrar ningún registro que coincida con "${searchTerm}".` : `We couldn't find any record matching "${searchTerm}".`) : (language === 'es' ? "Tu directorio clínico está vacío." : "Your clinical directory is empty.")}
-                                            action={searchTerm ? {
-                                                label: language === 'es' ? "Limpiar Búsqueda" : "Clear Search",
-                                                onClick: () => {
-                                                    setSearchTerm('');
-                                                    loadPatients();
-                                                }
-                                            } : undefined}
-                                        />
-                                    </TableCell>
+                <div className="overflow-visible lg:flex-1 lg:overflow-y-auto">
+                                        {/* Desktop View */}
+                    <div className="hidden lg:block">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-surface dark:bg-slate-900 z-10 shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+                                <TableRow className="hover:bg-transparent border-b border-border/60">
+                                    <TableHead className="px-8 py-4 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider pl-8">
+                                        {t('record.client_identity', 'Client Identity')}
+                                    </TableHead>
+                                    <TableHead className="py-4 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                        {t('patient.label.dob', 'Date of Birth')}
+                                    </TableHead>
+                                    <TableHead className="py-4 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                        {t('patient.label.case_number', 'EMR ID / MRN')}
+                                    </TableHead>
+                                    <TableHead className="py-4 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                        {t('patients.table.created', 'Registered')}
+                                    </TableHead>
+                                    <TableHead className="px-8 py-4 text-right text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider pr-8">
+                                        {t('patients.table.actions', 'Actions')}
+                                    </TableHead>
                                 </TableRow>
-                            ) : (
-                                patients.map((patient) => (
-                                    <TableRow
-                                        key={patient.id}
-                                        onClick={() => navigate(`/patients/${patient.id}`)}
-                                        className="cursor-pointer group h-16 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors border-b border-slate-100/60 dark:border-slate-800/80 last:border-b-0"
-                                    >
-                                        {/* Identity */}
-                                        <TableCell className="px-8 py-3 pl-8">
-                                            <div className="flex items-center gap-4">
-                                                <div className={cn(
-                                                    "size-10 rounded-2xl flex items-center justify-center font-bold text-[14px] shrink-0 transition-transform duration-300 group-hover:scale-105",
-                                                    getInitialsTheme(patient.full_name)
-                                                )}>
-                                                    {patient.full_name?.charAt(0) || '?'}
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors tracking-tight leading-snug">
-                                                        {patient.full_name}
-                                                    </span>
-                                                    {patient.phone ? (
-                                                        <span className="text-[12px] text-slate-400 dark:text-slate-400 font-normal mt-0.5 leading-none">
-                                                            {patient.phone}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-[12px] text-slate-300 dark:text-slate-500 italic font-normal mt-0.5 leading-none">
-                                                            {language === 'es' ? 'Sin teléfono de contacto' : 'No contact phone'}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-
-                                        {/* DOB */}
-                                        <TableCell className="py-3 text-[13px] text-slate-500 dark:text-slate-300 font-medium">
-                                            {patient.dob && !isNaN(new Date(patient.dob).getTime())
-                                                ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM d, yyyy', { locale: language === 'es' ? es : undefined })
-                                                : <span className="text-slate-300 dark:text-slate-600 italic font-normal">—</span>}
-                                        </TableCell>
-
-                                        {/* ID */}
-                                        <TableCell className="py-3">
-                                            {patient.emr_id ? (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/20 dark:border-slate-800">
-                                                    {patient.emr_id}
-                                                </span>
-                                            ) : (
-                                                <span className="text-slate-300 dark:text-slate-700 italic font-normal text-[13px]">—</span>
-                                            )}
-                                        </TableCell>
-
-                                        {/* Date */}
-                                        <TableCell className="py-3 text-[13px] text-slate-400 dark:text-slate-300 font-medium">
-                                            {patient.created_at ? format(new Date(patient.created_at), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM d, yyyy', { locale: language === 'es' ? es : undefined }) : '—'}
-                                        </TableCell>
-
-                                        {/* Actions */}
-                                        <TableCell className="px-8 py-3 text-right pr-8" onClick={(e) => e.stopPropagation()}>
-                                            <div className="flex items-center justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-8 rounded-lg text-slate-400 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-500/25 transition-all opacity-0 group-hover:opacity-100 duration-200"
-                                                    onClick={() => navigate(`/patients/${patient.id}`)}
-                                                >
-                                                    <ExternalLink size={14} />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className={cn(
-                                                        "size-8 rounded-lg text-slate-400 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 border border-transparent hover:border-red-100 dark:hover:border-red-900/50 transition-all opacity-0 group-hover:opacity-100 duration-200",
-                                                        isDeleting === patient.id && "animate-pulse text-red-500 opacity-100"
-                                                    )}
-                                                    disabled={isDeleting === patient.id}
-                                                    onClick={(e) => confirmDelete(e, patient.id, patient.full_name)}
-                                                >
-                                                    {isDeleting === patient.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={14} />}
-                                                </Button>
-                                            </div>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading && patients.length === 0 ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell colSpan={5} className="px-8 py-4 pl-8">
+                                                <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse w-full opacity-50" />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : patients.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="px-8 py-16 text-center">
+                                            <EmptyState
+                                                icon={searchTerm ? Search : Users2}
+                                                title={searchTerm ? (language === 'es' ? "No se encontraron resultados" : "No results found") : (language === 'es' ? "Directorio Vacío" : "Directory Empty")}
+                                                description={searchTerm ? (language === 'es' ? `No pudimos encontrar ningún registro que coincida con "${searchTerm}".` : `We couldn't find any record matching "${searchTerm}".`) : (language === 'es' ? "Tu directorio clínico está vacío." : "Your clinical directory is empty.")}
+                                                action={searchTerm ? {
+                                                    label: language === 'es' ? "Limpiar Búsqueda" : "Clear Search",
+                                                    onClick: () => {
+                                                        setSearchTerm('');
+                                                        loadPatients();
+                                                    }
+                                                } : undefined}
+                                            />
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                ) : (
+                                    patients.map((patient) => (
+                                        <TableRow
+                                            key={patient.id}
+                                            onClick={() => navigate(`/patients/${patient.id}`)}
+                                            className="cursor-pointer group h-16 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors border-b border-slate-100/60 dark:border-slate-800/80 last:border-b-0"
+                                        >
+                                            {/* Identity */}
+                                            <TableCell className="px-8 py-3 pl-8">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn(
+                                                        "size-10 rounded-2xl flex items-center justify-center font-bold text-[14px] shrink-0 transition-transform duration-300 group-hover:scale-105",
+                                                        getInitialsTheme(patient.full_name)
+                                                    )}>
+                                                        {patient.full_name?.charAt(0) || '?'}
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors tracking-tight leading-snug">
+                                                            {patient.full_name}
+                                                        </span>
+                                                        {patient.phone ? (
+                                                            <span className="text-[12px] text-slate-400 dark:text-slate-400 font-normal mt-0.5 leading-none">
+                                                                {patient.phone}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[12px] text-slate-300 dark:text-slate-500 italic font-normal mt-0.5 leading-none">
+                                                                {language === 'es' ? 'Sin teléfono de contacto' : 'No contact phone'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+
+                                            {/* DOB */}
+                                            <TableCell className="py-3 text-[13px] text-slate-500 dark:text-slate-300 font-medium">
+                                                {patient.dob && !isNaN(new Date(patient.dob).getTime())
+                                                    ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM d, yyyy', { locale: language === 'es' ? es : undefined })
+                                                    : <span className="text-slate-300 dark:text-slate-600 italic font-normal">—</span>}
+                                            </TableCell>
+
+                                            {/* ID */}
+                                            <TableCell className="py-3">
+                                                {patient.emr_id ? (
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/20 dark:border-slate-800">
+                                                        {patient.emr_id}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-300 dark:text-slate-700 italic font-normal text-[13px]">—</span>
+                                                )}
+                                            </TableCell>
+
+                                            {/* Date */}
+                                            <TableCell className="py-3 text-[13px] text-slate-400 dark:text-slate-300 font-medium">
+                                                {patient.created_at ? format(new Date(patient.created_at), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM d, yyyy', { locale: language === 'es' ? es : undefined }) : '—'}
+                                            </TableCell>
+
+                                            {/* Actions */}
+                                            <TableCell className="px-8 py-3 text-right pr-8" onClick={(e) => e.stopPropagation()}>
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="size-8 rounded-lg text-slate-400 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-500/25 transition-all opacity-0 group-hover:opacity-100 duration-200"
+                                                        onClick={() => navigate(`/patients/${patient.id}`)}
+                                                    >
+                                                        <ExternalLink size={14} />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className={cn(
+                                                            "size-8 rounded-lg text-slate-400 dark:text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 border border-transparent hover:border-red-100 dark:hover:border-red-900/50 transition-all opacity-0 group-hover:opacity-100 duration-200",
+                                                            isDeleting === patient.id && "animate-pulse text-red-500 opacity-100"
+                                                        )}
+                                                        disabled={isDeleting === patient.id}
+                                                        onClick={(e) => confirmDelete(e, patient.id, patient.full_name)}
+                                                    >
+                                                        {isDeleting === patient.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={14} />}
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Mobile View */}
+                    <div className="block lg:hidden space-y-4 px-4 pb-6">
+                        {isLoading && patients.length === 0 ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="p-4 rounded-3xl bg-white/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/40 animate-pulse flex items-center gap-4">
+                                    <div className="size-12 rounded-2xl bg-slate-200/60 dark:bg-slate-800 animate-pulse shrink-0" />
+                                    <div className="flex-1 space-y-2.5">
+                                        <div className="h-4 bg-slate-200/60 dark:bg-slate-800 rounded animate-pulse w-2/3" />
+                                        <div className="h-3 bg-slate-200/60 dark:bg-slate-800 rounded animate-pulse w-1/3" />
+                                    </div>
+                                </div>
+                            ))
+                        ) : patients.length === 0 ? (
+                            <div className="py-16 text-center">
+                                <EmptyState
+                                    icon={searchTerm ? Search : Users2}
+                                    title={searchTerm ? (language === 'es' ? "No se encontraron resultados" : "No results found") : (language === 'es' ? "Directorio Vacío" : "Directory Empty")}
+                                    description={searchTerm ? (language === 'es' ? `No pudimos encontrar ningún registro que coincida con "${searchTerm}".` : `We couldn't find any record matching "${searchTerm}".`) : (language === 'es' ? "Tu directorio clínico está vacío." : "Your clinical directory is empty.")}
+                                    action={searchTerm ? {
+                                        label: language === 'es' ? "Limpiar Búsqueda" : "Clear Search",
+                                        onClick: () => {
+                                            setSearchTerm('');
+                                            loadPatients();
+                                        }
+                                    } : undefined}
+                                />
+                            </div>
+                        ) : (
+                            patients.map((patient) => (
+                                <div 
+                                    key={patient.id} 
+                                    onClick={() => navigate(`/patients/${patient.id}`)}
+                                    className="p-4 rounded-3xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:border-indigo-500/25 active:scale-[0.99] transition-all duration-300 flex items-center justify-between group cursor-pointer"
+                                >
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className={cn(
+                                            "size-12 rounded-2xl flex items-center justify-center font-bold text-base shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105",
+                                            getInitialsTheme(patient.full_name)
+                                        )}>
+                                            {patient.full_name?.charAt(0) || '?'}
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <div className="flex items-center flex-wrap gap-2">
+                                                <span className="font-bold text-slate-850 dark:text-slate-200 text-sm tracking-tight truncate leading-tight group-hover:text-primary transition-colors">
+                                                    {patient.full_name}
+                                                </span>
+                                                {patient.emr_id && (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/30 shrink-0">
+                                                        {patient.emr_id}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-semibold tracking-tight">
+                                                <span>
+                                                    {patient.dob ? `${language === 'es' ? 'F. Nac: ' : 'DOB: '}${format(new Date(patient.dob), language === 'es' ? 'dd/MM/yyyy' : 'MM/dd/yyyy')}` : (language === 'es' ? 'Sin fecha nac.' : 'No DOB')}
+                                                </span>
+                                                {patient.phone && (
+                                                    <>
+                                                        <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                                        <span className="truncate">{patient.phone}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="size-9 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 active:scale-95 transition-all"
+                                            onClick={(e) => confirmDelete(e, patient.id, patient.full_name)}
+                                        >
+                                            <Trash2 size={15} />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
             </div>
 

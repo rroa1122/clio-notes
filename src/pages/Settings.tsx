@@ -289,11 +289,11 @@ export function Settings() {
     );
 
     const tabs = [
-        { id: 'profile', label: language === 'es' ? 'Perfil Profesional' : 'Professional Profile', icon: User, color: 'text-indigo-600', bg: 'bg-indigo-50 font-black' },
-        { id: 'clinic', label: language === 'es' ? 'Información de la Clínica' : 'Clinic Information', icon: Building, color: 'text-blue-600', bg: 'bg-blue-50 font-black' },
-        { id: 'supervision', label: language === 'es' ? 'Supervisión Clínica' : 'Clinical Supervision', icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50 font-black' },
-        { id: 'signatures', label: language === 'es' ? 'Firmas Digitales' : 'Digital Signatures', icon: PenTool, color: 'text-amber-600', bg: 'bg-amber-50 font-black' },
-        { id: 'billing', label: language === 'es' ? 'Plan y Facturación' : 'Plan & Billing', icon: CreditCard, color: 'text-violet-600', bg: 'bg-violet-50 font-black' },
+        { id: 'profile', label: language === 'es' ? 'Perfil Profesional' : 'Professional Profile', icon: User, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/20 font-black' },
+        { id: 'clinic', label: language === 'es' ? 'Información de la Clínica' : 'Clinic Information', icon: Building, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20 font-black' },
+        { id: 'supervision', label: language === 'es' ? 'Supervisión Clínica' : 'Clinical Supervision', icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20 font-black' },
+        { id: 'signatures', label: language === 'es' ? 'Firmas Digitales' : 'Digital Signatures', icon: PenTool, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20 font-black' },
+        { id: 'billing', label: language === 'es' ? 'Plan y Facturación' : 'Plan & Billing', icon: CreditCard, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/20 font-black' },
     ];
     return (
         <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)] mb-4">
@@ -319,7 +319,7 @@ export function Settings() {
                                         onClick={() => setActiveTab(tab.id as any)}
                                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 ${isActive
                                             ? `${tab.bg} ${tab.color} shadow-sm ring-1 ring-slate-100 dark:ring-white/5`
-                                            : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-700 dark:hover:text-slate-200'
+                                            : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
                                             }`}
                                     >
                                         <Icon size={18} />
@@ -597,7 +597,7 @@ export function Settings() {
                                                     <textarea
                                                         value={settings.address}
                                                         onChange={(e) => handleClinicChange('address', e.target.value)}
-                                                        className="w-full h-32 px-5 py-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-[#6366f1]/60 focus:bg-white transition-all placeholder:text-slate-300 resize-none shadow-sm"
+                                                        className="w-full h-32 px-5 py-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-sm font-semibold text-slate-850 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-[#6366f1]/60 focus:bg-white dark:focus:bg-slate-950 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none shadow-sm"
                                                         placeholder={language === 'es' ? "Dirección física de la clínica" : "123 Medical Center Dr, Suite 100\nCity, State, Zip"}
                                                     />
                                                 </div>
@@ -912,7 +912,9 @@ export function Settings() {
                         {/* Security Note Footer inside the card at the bottom */}
                         <div className="flex-none flex items-center justify-center gap-2 p-4 border-t border-border/60 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
                             <ShieldCheck size={14} className="text-slate-400" />
-                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Data is encrypted and stored securely following HIPAA standards</p>
+                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">
+                                {language === 'es' ? "Los datos están cifrados y se almacenan de forma segura siguiendo los estándares de HIPAA" : "Data is encrypted and stored securely following HIPAA standards"}
+                            </p>
                         </div>
                     </div>
                 </div>
