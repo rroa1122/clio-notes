@@ -1023,17 +1023,20 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 .dark .document-page h4 {
                     color: #f8fafc !important;
                 }
+                .dark .document-page .text-slate-800 {
+                    color: #e2e8f0 !important;
+                }
                 .dark .document-page .text-slate-700 {
-                    color: #cbd5e1 !important;
+                    color: #f1f5f9 !important;
                 }
                 .dark .document-page .text-slate-600 {
-                    color: #94a3b8 !important;
+                    color: #cbd5e1 !important;
                 }
                 .dark .document-page .text-slate-500 {
-                    color: #94a3b8 !important;
+                    color: #cbd5e1 !important;
                 }
                 .dark .document-page .text-slate-400 {
-                    color: #64748b !important;
+                    color: #94a3b8 !important;
                 }
                 .dark .document-page .value-text {
                     color: #f1f5f9 !important;
