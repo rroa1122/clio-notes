@@ -626,6 +626,31 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     };
 
     useEffect(() => {
+        const handleBeforePrint = () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.setAttribute('data-theme', 'light');
+                (window as any).__wasDarkBeforePrint = true;
+            }
+        };
+        const handleAfterPrint = () => {
+            if ((window as any).__wasDarkBeforePrint) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.setAttribute('data-theme', 'dark');
+                (window as any).__wasDarkBeforePrint = false;
+            }
+        };
+
+        window.addEventListener('beforeprint', handleBeforePrint);
+        window.addEventListener('afterprint', handleAfterPrint);
+        return () => {
+            window.removeEventListener('beforeprint', handleBeforePrint);
+            window.removeEventListener('afterprint', handleAfterPrint);
+        };
+    }, []);
+
+    useEffect(() => {
         const loadTemplates = async () => {
             try {
                 const fetched = await storage.getTemplates();
