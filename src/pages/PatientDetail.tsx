@@ -432,7 +432,7 @@ export function PatientDetail() {
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-12 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-slate-800 relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
             {/* Premium Unified Tabbed Interface */}
             <Tabs defaultValue="client" className="w-full">
-                <TabsList className="bg-slate-50/50 dark:bg-slate-850/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 dark:border-slate-700 shadow-sm w-full flex overflow-x-auto whitespace-nowrap h-12 mb-10 scrollbar-none justify-start lg:justify-around">
+                <TabsList className="bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 dark:border-slate-800 shadow-sm w-full flex overflow-x-auto whitespace-nowrap h-12 mb-10 scrollbar-none justify-start lg:justify-around">
                     <PremiumTrigger value="client" icon={User} label={language === 'es' ? "Cliente" : "Client"} theme="indigo" />
                     <PremiumTrigger value="medical" icon={Stethoscope} label={language === 'es' ? "Médico" : "Medical"} theme="emerald" />
                     <PremiumTrigger value="psychiatric" icon={Brain} label={language === 'es' ? "Psiquiátrico" : "Psychiatric"} theme="purple" />
@@ -611,12 +611,12 @@ export function PatientDetail() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         {patient.diagnoses ? (
                                             patient.diagnoses.split('\n').filter(d => d.trim()).map((diag, i) => (
-                                                <div key={i} className="flex items-center gap-4 bg-white/40 backdrop-blur-sm border border-slate-200/50 h-[46px] px-4 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200 transition-all duration-300 hover:translate-x-1 group relative overflow-hidden">
+                                                <div key={i} className="flex items-center gap-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/80 h-[46px] px-4 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800/80 transition-all duration-300 hover:translate-x-1 group relative overflow-hidden">
                                                     <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/20 group-hover:bg-indigo-500 transition-colors" />
-                                                    <span className="text-[11px] font-black text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded-md border border-indigo-100/50 shadow-tiny shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 uppercase tracking-widest">
+                                                    <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-950/40 px-2 py-1 rounded-md border border-indigo-100/50 dark:border-indigo-900/50 shadow-tiny shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 uppercase tracking-widest">
                                                         {diag.split(' - ')[0]}
                                                     </span>
-                                                    <span className="text-[14px] font-bold text-slate-700 leading-snug truncate">{diag.split(' - ').slice(1).join(' ') || diag}</span>
+                                                    <span className="text-[14px] font-bold text-slate-700 dark:text-slate-300 leading-snug truncate">{diag.split(' - ').slice(1).join(' ') || diag}</span>
                                                 </div>
                                             ))
                                         ) : (
@@ -952,19 +952,19 @@ export function PatientDetail() {
 
 function PremiumTrigger({ value, label, icon: Icon, theme }: { value: string, label: string, icon: any, theme: string }) {
     const themeShadows: Record<string, string> = {
-        indigo: "data-[state=active]:shadow-indigo-100/50 data-[state=active]:text-indigo-600 data-[state=active]:bg-indigo-50/50",
-        emerald: "data-[state=active]:shadow-emerald-100/50 data-[state=active]:text-emerald-600 data-[state=active]:bg-emerald-50/50",
-        purple: "data-[state=active]:shadow-purple-100/50 data-[state=active]:text-purple-600 data-[state=active]:bg-purple-50/50",
-        blue: "data-[state=active]:shadow-blue-100/50 data-[state=active]:text-blue-600 data-[state=active]:bg-blue-50/50",
-        slate: "data-[state=active]:shadow-slate-200/50 data-[state=active]:text-slate-700 data-[state=active]:bg-slate-50",
-        amber: "data-[state=active]:shadow-amber-100/50 data-[state=active]:text-amber-600 data-[state=active]:bg-amber-50/50"
+        indigo: "data-[state=active]:shadow-indigo-100/50 dark:data-[state=active]:shadow-indigo-950/20 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-300 data-[state=active]:bg-indigo-50/50 dark:data-[state=active]:bg-indigo-950/40",
+        emerald: "data-[state=active]:shadow-emerald-100/50 dark:data-[state=active]:shadow-emerald-950/20 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-300 data-[state=active]:bg-emerald-50/50 dark:data-[state=active]:bg-emerald-950/40",
+        purple: "data-[state=active]:shadow-purple-100/50 dark:data-[state=active]:shadow-purple-950/20 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-300 data-[state=active]:bg-purple-50/50 dark:data-[state=active]:bg-purple-950/40",
+        blue: "data-[state=active]:shadow-blue-100/50 dark:data-[state=active]:shadow-blue-950/20 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-300 data-[state=active]:bg-blue-50/50 dark:data-[state=active]:bg-blue-950/40",
+        slate: "data-[state=active]:shadow-slate-200/50 dark:data-[state=active]:shadow-slate-900/20 data-[state=active]:text-slate-700 dark:data-[state=active]:text-slate-300 data-[state=active]:bg-slate-50 dark:data-[state=active]:bg-slate-900",
+        amber: "data-[state=active]:shadow-amber-100/50 dark:data-[state=active]:shadow-amber-950/20 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-300 data-[state=active]:bg-amber-50/50 dark:data-[state=active]:bg-amber-950/40"
     };
 
     return (
         <TabsTrigger
             value={value}
             className={cn(
-                "flex-1 lg:flex-none shrink-0 rounded-full flex items-center justify-center gap-2 px-5 h-full text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-lg border border-transparent data-[state=active]:border-slate-100 group",
+                "flex-1 lg:flex-none shrink-0 rounded-full flex items-center justify-center gap-2 px-5 h-full text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-lg border border-transparent data-[state=active]:border-slate-100 dark:data-[state=active]:border-slate-800/80 group",
                 themeShadows[theme]
             )}
         >
@@ -1044,15 +1044,15 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                 "rounded-[28px] border transition-all duration-300 relative overflow-hidden",
                 "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]",
                 isEditing 
-                    ? "hover:border-indigo-300 border-indigo-200 ring-2 ring-indigo-50/30 bg-white shadow-sm" 
-                    : (!value ? "border-dashed border-slate-200 bg-slate-50/30 text-slate-400 font-medium italic" : "border-slate-200/70 bg-white hover:border-indigo-100"),
+                    ? "hover:border-indigo-300 border-indigo-200 dark:border-slate-800 ring-2 ring-indigo-50/30 dark:ring-indigo-950/40 bg-white dark:bg-slate-950 shadow-sm" 
+                    : (!value ? "border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 text-slate-400 dark:text-slate-500 font-medium italic" : "border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900/40 hover:border-indigo-100 dark:hover:border-indigo-900"),
                 isTextarea ? (large ? "min-h-[170px]" : "min-h-[120px]") : "h-11"
             )}>
 
                 {isEditing ? (
                     isTextarea ? (
                         <textarea
-                            className="w-full h-full bg-transparent border-none outline-none p-4 text-[14px] font-bold text-slate-900 placeholder:text-slate-400 resize-none leading-relaxed"
+                            className="w-full h-full bg-transparent border-none outline-none p-4 text-[14px] font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none leading-relaxed"
                             value={value || ''}
                             onChange={(e) => onChange?.(name!, e.target.value)}
                             placeholder={language === 'es' ? `Documentar ${translatedLabel.toLowerCase()}...` : `Document ${label.toLowerCase()}...`}
@@ -1062,12 +1062,12 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                             value={value || ''} 
                             onValueChange={(val) => onChange?.(name!, val)}
                         >
-                            <SelectTrigger className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-5 text-[14px] font-bold text-slate-900 justify-between pr-4 hover:bg-transparent [&>svg]:opacity-50">
+                            <SelectTrigger className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-5 text-[14px] font-bold text-slate-900 dark:text-slate-100 justify-between pr-4 hover:bg-transparent [&>svg]:opacity-50">
                                 <SelectValue placeholder={language === 'es' ? "Seleccionar idioma..." : "Select language..."} />
                             </SelectTrigger>
-                            <SelectContent className="rounded-[1.5rem] border border-slate-100 shadow-2xl bg-white z-[250]">
+                            <SelectContent className="rounded-[1.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900 z-[250]">
                                 {options.map((opt) => (
-                                    <SelectItem key={opt} value={opt} className="rounded-xl font-bold text-[13px] text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:text-indigo-600 py-2.5">
+                                    <SelectItem key={opt} value={opt} className="rounded-xl font-bold text-[13px] text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 focus:bg-slate-50 dark:focus:bg-slate-800 focus:text-indigo-600 dark:focus:text-indigo-400 py-2.5">
                                         {language === 'es' ? (opt === 'English' ? 'Inglés' : opt === 'Spanish' ? 'Español' : opt) : opt}
                                     </SelectItem>
                                 ))}
@@ -1076,7 +1076,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                     ) : (
                         <input
                             type={type || "text"}
-                            className="w-full h-full bg-transparent border-none outline-none px-5 text-[14px] font-bold text-slate-900 placeholder:text-slate-400 leading-none pr-8"
+                            className="w-full h-full bg-transparent border-none outline-none px-5 text-[14px] font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 leading-none pr-8"
                             value={value || ''}
                             onChange={(e) => onChange?.(name!, e.target.value)}
                             placeholder={language === 'es' ? `Ingresar ${translatedLabel.toLowerCase()}...` : `Enter ${label.toLowerCase()}...`}
@@ -1086,7 +1086,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                     <div className="w-full h-full px-6 py-2 flex items-center">
                         <span className={cn(
                             "relative z-10 text-[14px] leading-relaxed",
-                            !value ? "text-slate-400/80" : "text-slate-700"
+                            !value ? "text-slate-400/80 dark:text-slate-500" : "text-slate-700 dark:text-slate-200"
                         )}>
                             {value || (language === 'es' ? `Sin ${translatedLabel.toLowerCase()} registrado` : `No documented ${label.toLowerCase()}`)}
                         </span>
