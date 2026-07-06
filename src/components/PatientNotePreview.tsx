@@ -48,11 +48,17 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
             {isOpen && (
                 <style>{`
                     @media print {
+                        html, body, #root, #root > div, main, [class*="min-h-screen"] {
+                            height: 0 !important;
+                            min-height: 0 !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            overflow: visible !important;
+                            position: static !important;
+                        }
                         body {
                             visibility: hidden !important;
                             background: white !important;
-                            margin: 0 !important;
-                            padding: 0 !important;
                         }
                         .print-preview-drawer-wrapper {
                             visibility: visible !important;
