@@ -902,27 +902,27 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
             {/* FLOATING TOOLBAR - PREMIUM STYLE */}
             {!hideToolbar && (
                 <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[60] no-print">
-                    <div className="flex items-center gap-2 p-2 bg-white/80 backdrop-blur-2xl border border-white/50 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] ring-1 ring-slate-900/5">
+                    <div className="flex items-center gap-2 p-2 bg-white/80 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/50 dark:border-slate-800/60 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] ring-1 ring-slate-900/5 dark:ring-white/10">
                         <button
                             disabled={isSigned}
                             onClick={() => setIsEditMode(!isEditMode)}
                             className={`flex items-center gap-2 px-6 py-3 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-300 ${
                                 isSigned
-                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
                                 : isEditMode 
-                                ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' 
-                                : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xl shadow-slate-200 dark:shadow-none' 
+                                : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
                             }`}
                         >
                             {isSigned ? <Lock size={16} /> : (isEditMode ? <Check size={16} /> : <Edit3 size={16} />)}
                             {isSigned ? 'Locked (Signed)' : (isEditMode ? 'Done' : 'Edit Note')}
                         </button>
  
-                        <div className="w-[1px] h-8 bg-slate-200/50 mx-1" />
+                        <div className="w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1" />
  
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 text-slate-600 hover:bg-indigo-600 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300 group"
+                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-indigo-600 dark:hover:bg-indigo-500 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300 group"
                         >
                             <Printer size={16} className="group-hover:scale-110 transition-transform" />
                             Print
@@ -930,15 +930,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
  
                         {!isSigned && (
                             <>
-                                <div className="w-[1px] h-8 bg-slate-200/50 mx-1" />
-
+                                <div className="w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1" />
+ 
                                 <button
                                     onClick={handleSaveNote}
                                     disabled={isSaving}
                                     className={`flex items-center gap-2 px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-300 ${
                                         isSaved 
-                                        ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-100' 
-                                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-100 hover:-translate-y-0.5'
+                                        ? 'bg-emerald-500 dark:bg-emerald-600 text-white shadow-xl shadow-emerald-100 dark:shadow-none' 
+                                        : 'bg-indigo-600 dark:bg-indigo-50 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 shadow-xl shadow-indigo-100 dark:shadow-none hover:-translate-y-0.5'
                                     } disabled:opacity-50`}
                                 >
                                     {isSaving ? (
@@ -951,11 +951,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     {isSaving ? 'Saving...' : isSaved ? 'Saved' : 'Save Record'}
                                 </button>
  
-                                <div className="w-[1px] h-8 bg-slate-200/50 mx-1" />
+                                <div className="w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1" />
  
                                 <button
                                     onClick={() => setIsRequestSignatureModalOpen(true)}
-                                    className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-900 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300"
+                                    className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-900 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 font-black text-[11px] uppercase tracking-widest transition-all duration-300"
                                 >
                                     <PenTool size={16} />
                                     Sign
