@@ -687,7 +687,7 @@ export function PatientDetail() {
 
                     {/* [MEDICAL TAB] */}
                     <TabsContent value="medical" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8">
+                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Stethoscope}
@@ -751,7 +751,7 @@ export function PatientDetail() {
 
                     {/* [PSYCHIATRIC TAB] */}
                     <TabsContent value="psychiatric" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8">
+                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Brain}
@@ -807,7 +807,7 @@ export function PatientDetail() {
 
                     {/* [PHARMACY TAB] */}
                     <TabsContent value="pharmacy" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8">
+                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Store}
@@ -854,13 +854,13 @@ export function PatientDetail() {
                         <div className="space-y-8 px-1">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
-                                    <div className="size-6 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center border border-slate-100 shadow-tiny">
+                                    <div className="size-6 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-tiny">
                                         <Clock size={14} />
                                     </div>
-                                    <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] leading-none">Clinical Audit Trail</p>
+                                    <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] leading-none">Clinical Audit Trail</p>
                                 </div>
                                 {timeline.length > 0 && !isEditing && (
-                                    <Button variant="ghost" className="text-indigo-600 font-black text-[11px] uppercase tracking-wider hover:bg-indigo-50/50 px-3 h-8 rounded-full" onClick={() => navigate(`/notes?patientId=${patient.id}`)}>
+                                    <Button variant="ghost" className="text-indigo-600 dark:text-indigo-400 font-black text-[11px] uppercase tracking-wider hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 px-3 h-8 rounded-full" onClick={() => navigate(`/notes?patientId=${patient.id}`)}>
                                         View Ledger &rarr;
                                     </Button>
                                 )}
@@ -1103,7 +1103,7 @@ function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: 
     return (
         <div
             className={cn(
-                "group relative bg-white border border-slate-100 rounded-3xl p-5 md:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_-4px_rgba(0,0,0,0.04)] hover:border-slate-200/60 transition-all duration-300 flex gap-5 md:gap-6 items-center",
+                "group relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-3xl p-5 md:p-6 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_-4px_rgba(0,0,0,0.04)] hover:border-slate-200/60 dark:hover:border-slate-700/80 transition-all duration-300 flex gap-5 md:gap-6 items-center",
                 disabled ? "opacity-50 pointer-events-none" : "cursor-pointer"
             )}
             onClick={() => !disabled && (isNote ? onPreview(item.raw) : navigate(`/calls/${item.id}`))}
@@ -1111,7 +1111,9 @@ function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: 
             {/* Left Icon: Apple-style soft pastel circles */}
             <div className={cn(
                 "size-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105",
-                isNote ? 'bg-indigo-50/70 text-indigo-600' : 'bg-emerald-50/70 text-emerald-600'
+                isNote 
+                    ? 'bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400' 
+                    : 'bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400'
             )}>
                 {isNote ? <FileText size={20} /> : <Phone size={20} />}
             </div>
@@ -1119,41 +1121,41 @@ function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: 
             {/* Middle Content */}
             <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-[11px] font-semibold text-slate-400 tracking-wider">
+                    <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 tracking-wider">
                         {format(new Date(item.timestamp), language === 'es' ? "d 'de' MMM, yyyy • h:mm a" : 'MMM d, yyyy • h:mm a', { locale: language === 'es' ? es : undefined })}
                     </span>
                     {isNote ? (
                         <>
                             {item.raw?.signature_status === 'signed' ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-50/70 text-emerald-700 border border-emerald-100/20">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 border border-emerald-100/20 dark:border-emerald-900/30">
                                     <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                     {language === 'es' ? "Firmado" : "Signed"}
                                 </span>
                             ) : item.raw?.signature_status === 'pending' ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-50/70 text-amber-700 border border-amber-100/20">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-amber-50/70 dark:bg-amber-950/30 text-amber-700 dark:text-amber-450 border border-amber-100/20 dark:border-amber-900/30">
                                     <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
                                     {language === 'es' ? "Firma pendiente" : "Pending Signature"} {item.raw?.supervisor_email ? `(${item.raw.supervisor_email})` : ''}
                                 </span>
                             ) : (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-slate-50/70 text-slate-600 border border-slate-200/20">
-                                    <span className="size-1.5 rounded-full bg-slate-400" />
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-slate-50/70 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border border-slate-200/20 dark:border-slate-700/30">
+                                    <span className="size-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />
                                     {language === 'es' ? "Borrador" : "Draft"}
                                 </span>
                             )}
                         </>
                     ) : (
                         item.status && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100/30">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-450 border border-emerald-100/30 dark:border-emerald-900/30">
                                 {item.status}
                             </span>
                         )
                     )}
                 </div>
-                <h4 className="text-[16px] font-semibold text-slate-900 mt-1 leading-snug truncate group-hover:text-indigo-600 transition-colors">
+                <h4 className="text-[16px] font-semibold text-slate-900 dark:text-slate-100 mt-1 leading-snug truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                     {item.title}
                 </h4>
                 {item.description && (
-                    <p className="text-[13px] text-slate-400 font-normal mt-1.5 line-clamp-2 leading-relaxed opacity-90">
+                    <p className="text-[13px] text-slate-400 dark:text-slate-500 font-normal mt-1.5 line-clamp-2 leading-relaxed opacity-90">
                         {item.description}
                     </p>
                 )}
@@ -1161,8 +1163,8 @@ function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: 
 
             {/* Right Action: Clean chevron */}
             <div className={cn(
-                "size-9 rounded-full flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-400 transition-all duration-300",
-                !disabled && "group-hover:bg-indigo-50 group-hover:border-indigo-100 group-hover:text-indigo-600 group-hover:translate-x-0.5"
+                "size-9 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/80 text-slate-400 dark:text-slate-500 transition-all duration-300",
+                !disabled && "group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/40 group-hover:border-indigo-100 dark:group-hover:border-indigo-900/60 group-hover:text-indigo-600 dark:group-hover:text-indigo-450 group-hover:translate-x-0.5"
             )}>
                 <ChevronRight size={16} />
             </div>
