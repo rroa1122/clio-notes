@@ -154,12 +154,12 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField }: any) 
     return (
         <div
             onClick={() => isEditMode && handleUpdateField(domain.path, isChecked ? "" : "yes")}
-            className={`flex items-center gap-2.5 py-1.5 px-2.5 transition-all group cursor-pointer border border-transparent ${isChecked ? 'bg-indigo-50/40 border-indigo-100/30 rounded-lg' : 'hover:bg-slate-50 rounded-lg'}`}
+            className={`flex items-center gap-2.5 py-1.5 px-2.5 transition-all group cursor-pointer border border-transparent ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-950/30 border-indigo-100/30 dark:border-indigo-900/30 rounded-lg' : 'hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg'}`}
         >
-            <div className={`size-4 flex items-center justify-center shrink-0 rounded-md border-2 transition-all ${isChecked ? 'bg-indigo-600 border-indigo-600 scale-105 shadow-sm shadow-indigo-100' : 'bg-white border-slate-200 group-hover:border-indigo-200'}`}>
+            <div className={`size-4 flex items-center justify-center shrink-0 rounded-md border-2 transition-all ${isChecked ? 'bg-indigo-600 border-indigo-600 scale-105 shadow-sm shadow-indigo-100' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 group-hover:border-indigo-200'}`}>
                 {isChecked && <Check size={10} className="text-white stroke-[4]" />}
             </div>
-            <span className={`text-[10px] font-bold select-none transition-colors ${isChecked ? 'text-indigo-900' : 'text-slate-500 group-hover:text-slate-700'}`}>
+            <span className={`text-[10px] font-bold select-none transition-colors ${isChecked ? 'text-indigo-900 dark:text-indigo-200' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`}>
                 {domain.label}
             </span>
         </div>
@@ -1382,13 +1382,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     <User size={11} className="text-indigo-400" />
                                     CLIENT IDENTITY
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 mb-0.5 leading-none uppercase tracking-tight flex items-center gap-2 h-5 w-full">
+                                <div className="text-[14px] font-black text-slate-900 dark:text-white mb-0.5 leading-none uppercase tracking-tight flex items-center gap-2 h-5 w-full">
                                     <GhostInput
                                         value={mergedNote.patient?.full_name}
                                         isEditMode={isEditMode}
                                         onChange={(val) => handleUpdateField('patient.full_name', val)}
                                         placeholder="Patient Name"
-                                        className="!px-0 !bg-transparent !border-0 !shadow-none !text-[14px] !font-black !text-slate-900 !uppercase !tracking-tight !h-auto !py-0"
+                                        className="!px-0 !bg-transparent !border-0 !shadow-none !text-[14px] !font-black !text-slate-900 dark:!text-white !uppercase !tracking-tight !h-auto !py-0"
                                     />
                                 </div>
                                 <div className="space-y-[2px] mt-1 w-full">
@@ -1765,7 +1765,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 {Array.isArray(mergedNote.diagnoses) && mergedNote.diagnoses.length > 0 ? (
                                     <div className="space-y-1 w-full">
                                         {(mergedNote.diagnoses as any[]).map((diag: any, idx: number) => (
-                                            <div key={idx} className="flex items-center gap-2 py-1 px-2 hover:bg-white rounded-lg transition-all group/diag border border-transparent">
+                                            <div key={idx} className="flex items-center gap-2 py-1 px-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all group/diag border border-transparent">
                                                 {(isEditMode || diag.icd10) && (
                                                     <div className="text-[11px] font-black min-w-[50px] tracking-widest text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded text-center shrink-0">
                                                         <GhostInput
