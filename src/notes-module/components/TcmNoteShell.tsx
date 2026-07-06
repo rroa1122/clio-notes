@@ -1007,6 +1007,97 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
+                /* ON-SCREEN DARK MODE PREVIEW - FORCES WHITE BACKGROUND ONLY WHEN PRINTING */
+                .dark .document-canvas-wrapper {
+                    background: #090d16 !important;
+                }
+                .dark .document-page { 
+                    background-color: #0f172a !important; 
+                    color: #cbd5e1 !important; 
+                    box-shadow: 0 50px 100px -20px rgba(0,0,0,0.3), 0 0 1px rgba(255,255,255,0.05) !important;
+                }
+                .dark .document-page .text-slate-900,
+                .dark .document-page h1,
+                .dark .document-page h2,
+                .dark .document-page h3,
+                .dark .document-page h4 {
+                    color: #f8fafc !important;
+                }
+                .dark .document-page .text-slate-700 {
+                    color: #cbd5e1 !important;
+                }
+                .dark .document-page .text-slate-600 {
+                    color: #94a3b8 !important;
+                }
+                .dark .document-page .text-slate-500 {
+                    color: #94a3b8 !important;
+                }
+                .dark .document-page .text-slate-400 {
+                    color: #64748b !important;
+                }
+                .dark .document-page .value-text {
+                    color: #f1f5f9 !important;
+                }
+                .dark .document-page .gradient-divider {
+                    background: linear-gradient(to right, transparent, #1e293b 10%, #1e293b 90%, transparent) !important;
+                }
+                .dark .document-page .border-slate-100 {
+                    border-color: #1e293b !important;
+                }
+                .dark .document-page .border-slate-200 {
+                    border-color: #334155 !important;
+                }
+                .dark .document-page .bg-slate-50 {
+                    background-color: #1e293b !important;
+                }
+                .dark .document-page .bg-slate-50\/30 {
+                    background-color: rgba(30, 41, 59, 0.3) !important;
+                }
+                .dark .document-page .bg-slate-50\/50 {
+                    background-color: rgba(30, 41, 59, 0.5) !important;
+                }
+                .dark .document-page .bg-white {
+                    background-color: #0f172a !important;
+                }
+                .dark .document-page .text-indigo-900 {
+                    color: #a5b4fc !important;
+                }
+                .dark .document-page .bg-indigo-50\/40 {
+                    background-color: rgba(99, 102, 241, 0.15) !important;
+                }
+                .dark .document-page .border-indigo-100\/30 {
+                    border-color: rgba(99, 102, 241, 0.2) !important;
+                }
+                .dark .document-page .hover\:bg-slate-50:hover {
+                    background-color: #1e293b !important;
+                }
+                .dark .document-page .group:hover .group-hover\:text-slate-700 {
+                    color: #cbd5e1 !important;
+                }
+                .dark .document-page .bg-blue-50 {
+                    background-color: rgba(59, 130, 246, 0.15) !important;
+                    color: #60a5fa !important;
+                    border-color: rgba(59, 130, 246, 0.25) !important;
+                }
+                .dark .document-page .bg-green-50 {
+                    background-color: rgba(34, 197, 94, 0.15) !important;
+                    color: #4ade80 !important;
+                    border-color: rgba(34, 197, 94, 0.25) !important;
+                }
+                .dark .document-page input,
+                .dark .document-page select,
+                .dark .document-page textarea {
+                    background-color: #1e293b !important;
+                    border-color: #334155 !important;
+                    color: #f1f5f9 !important;
+                }
+                .dark .document-page input:focus,
+                .dark .document-page select:focus,
+                .dark .document-page textarea:focus {
+                    background-color: #0f172a !important;
+                    border-color: #6366f1 !important;
+                }
+
                 .document-page h1, .document-page h2, .document-page h3, .label-small {
                     font-family: 'Outfit', sans-serif !important;
                 }
