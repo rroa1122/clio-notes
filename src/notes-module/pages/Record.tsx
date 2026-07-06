@@ -1253,7 +1253,7 @@ const Record: React.FC = () => {
                                                 placeholder={language === 'es' ? "Unid." : "Units"}
                                                 value={units}
                                                 onChange={(e) => setUnits(e.target.value)}
-                                                className="h-full border-0 bg-transparent text-slate-600 dark:text-slate-100 font-semibold focus-visible:ring-0 text-center text-[13px] w-full px-1"
+                                                className="h-full border-0 bg-transparent text-slate-600 dark:text-slate-100 font-semibold focus-visible:ring-0 focus:ring-0 outline-none text-center text-[13px] w-full px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                         </div>
                                     </div>
@@ -1683,7 +1683,7 @@ const Record: React.FC = () => {
                                                     placeholder={language === 'es' ? 'Unid.' : 'Units'}
                                                     value={units}
                                                     onChange={(e) => setUnits(e.target.value)}
-                                                    className="h-10 border-0 bg-transparent focus-visible:ring-0 font-bold text-slate-700 dark:text-slate-200 w-full p-0 text-center text-xs"
+                                                    className="h-10 border-0 bg-transparent focus-visible:ring-0 focus:ring-0 outline-none font-bold text-slate-700 dark:text-slate-200 w-full p-0 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                             </div>
                                         </div>
