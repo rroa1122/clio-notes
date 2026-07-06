@@ -12,13 +12,15 @@ interface ClioNoteViewerProps {
     loading?: boolean;
     error?: string | null;
     onSaveComplete?: (saved: boolean) => void;
+    onPrint?: () => void;
 }
 
 export const ClioNoteViewer: React.FC<ClioNoteViewerProps> = ({
     note,
     loading,
     error,
-    onSaveComplete
+    onSaveComplete,
+    onPrint
 }) => {
     if (loading) {
         return (
@@ -57,9 +59,9 @@ export const ClioNoteViewer: React.FC<ClioNoteViewerProps> = ({
     return (
         <div className="clinical-viewer-root max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20 px-4">
             {isTcm ? (
-                <TcmNoteShell note={note} onSaveComplete={onSaveComplete} />
+                <TcmNoteShell note={note} onSaveComplete={onSaveComplete} onPrint={onPrint} />
             ) : (
-                <EcwPrintNote note={note} onSaveComplete={onSaveComplete} />
+                <EcwPrintNote note={note} onSaveComplete={onSaveComplete} onPrint={onPrint} />
             )}
         </div>
     );

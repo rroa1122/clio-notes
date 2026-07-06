@@ -233,13 +233,15 @@ interface EcwPrintNoteProps {
     hideToolbar?: boolean;
     isStandalone?: boolean;
     onSaveComplete?: (saved: boolean) => void;
+    onPrint?: () => void;
 }
 
 const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
     note,
     hideToolbar = false,
     isStandalone = false,
-    onSaveComplete
+    onSaveComplete,
+    onPrint
 }) => {
     const { user } = useAuth();
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -528,7 +530,11 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
         const formattedDos = new Date(visitDate).toLocaleDateString();
 
         try {
-            window.print();
+            if (onPrint) {
+                onPrint();
+            } else {
+                window.print();
+            }
         } catch (e) {
             console.error("Print failed:", e);
             toast.error("Failed to generate print document.");

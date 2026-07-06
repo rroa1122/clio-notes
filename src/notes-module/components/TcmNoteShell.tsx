@@ -480,13 +480,15 @@ interface TcmNoteShellProps {
     hideToolbar?: boolean;
     isStandalone?: boolean;
     onSaveComplete?: (saved: boolean) => void;
+    onPrint?: () => void;
 }
 
 const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     note,
     hideToolbar = false,
     isStandalone = false,
-    onSaveComplete
+    onSaveComplete,
+    onPrint
 }) => {
     const { user } = useAuth();
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -900,7 +902,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         }
     };
 
-    const handlePrint = () => window.print();
+    const handlePrint = () => {
+        if (onPrint) {
+            onPrint();
+        } else {
+            window.print();
+        }
+    };
 
     // Calc helpers
     const rawDuration = mergedNote.encounter?.duration_minutes || mergedNote.encounter?.duration;

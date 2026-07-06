@@ -254,6 +254,16 @@ const Record: React.FC = () => {
         };
     }, [searchParams]);
 
+    useEffect(() => {
+        const isPrint = searchParams.get('print') === 'true';
+        if (isPrint && clioNote && !isLoadingFromHistory) {
+            const timer = setTimeout(() => {
+                window.print();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [searchParams, clioNote, isLoadingFromHistory]);
+
     const isPausedRef = useRef(false);
 
     useEffect(() => {

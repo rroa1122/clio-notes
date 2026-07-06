@@ -40,57 +40,11 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
         'Clinical Staff';
 
     const handlePrint = () => {
-        window.open(`/notes/print/${note.id}`, '_blank');
+        window.open(`/notes/new?id=${note.id}&print=true`, '_blank');
     };
 
     return (
         <>
-            {isOpen && (
-                <style>{`
-                    @media print {
-                        html, body, #root, #root > div, main, [class*="min-h-screen"] {
-                            height: 0 !important;
-                            min-height: 0 !important;
-                            margin: 0 !important;
-                            padding: 0 !important;
-                            overflow: visible !important;
-                            position: static !important;
-                        }
-                        body {
-                            visibility: hidden !important;
-                            background: white !important;
-                        }
-                        .print-preview-drawer-wrapper {
-                            visibility: visible !important;
-                            position: absolute !important;
-                            top: 0 !important;
-                            left: 0 !important;
-                            width: 100% !important;
-                            height: auto !important;
-                            max-width: none !important;
-                            box-shadow: none !important;
-                            transform: none !important;
-                            margin: 0 !important;
-                            padding: 0 !important;
-                        }
-                        .print-preview-drawer-wrapper * {
-                            visibility: visible !important;
-                        }
-                        /* Hide header and footer inside the drawer panel when printing */
-                        .print-preview-drawer-wrapper > div:first-child,
-                        .print-preview-drawer-wrapper > div:last-child {
-                            display: none !important;
-                        }
-                        /* Ensure the scrollable container is fully expanded for printing */
-                        .print-preview-drawer-wrapper > div:nth-child(2) {
-                            overflow: visible !important;
-                            height: auto !important;
-                            padding: 0 !important;
-                        }
-                    }
-                `}</style>
-            )}
-
             {/* Backdrop */}
             <div
                 className={`fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-[110] cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -142,7 +96,7 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
                 {/* Main Content Areas */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-900/40">
                     <div className="py-8">
-                        <ClioNoteViewer note={normalizedNote} />
+                        <ClioNoteViewer note={normalizedNote} onPrint={handlePrint} />
                     </div>
                 </div>
 

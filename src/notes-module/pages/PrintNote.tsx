@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Note, ClioNote } from '../types';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 import { storage } from '../lib/storage';
 import type { Template } from '../lib/storage';
 import { normalizeClioNote } from '../lib/clioUtils';
@@ -9,6 +9,7 @@ import TcmNoteShell from '../components/TcmNoteShell';
 import { Loader2, ArrowLeft } from 'lucide-react';
 
 const PrintNote: React.FC = () => {
+    const { id: routeId } = useParams();
     const [searchParams] = useSearchParams();
     const [note, setNote] = useState<ClioNote | null>(null);
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -16,7 +17,7 @@ const PrintNote: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const id = searchParams.get('id');
+        const id = routeId || searchParams.get('id');
         if (!id) {
             setError("No note ID provided");
             setIsLoading(false);
