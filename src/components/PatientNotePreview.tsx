@@ -45,6 +45,46 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
 
     return (
         <>
+            {isOpen && (
+                <style>{`
+                    @media print {
+                        body {
+                            visibility: hidden !important;
+                            background: white !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                        .print-preview-drawer-wrapper {
+                            visibility: visible !important;
+                            position: absolute !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                            width: 100% !important;
+                            height: auto !important;
+                            max-width: none !important;
+                            box-shadow: none !important;
+                            transform: none !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                        .print-preview-drawer-wrapper * {
+                            visibility: visible !important;
+                        }
+                        /* Hide header and footer inside the drawer panel when printing */
+                        .print-preview-drawer-wrapper > div:first-child,
+                        .print-preview-drawer-wrapper > div:last-child {
+                            display: none !important;
+                        }
+                        /* Ensure the scrollable container is fully expanded for printing */
+                        .print-preview-drawer-wrapper > div:nth-child(2) {
+                            overflow: visible !important;
+                            height: auto !important;
+                            padding: 0 !important;
+                        }
+                    }
+                `}</style>
+            )}
+
             {/* Backdrop */}
             <div
                 className={`fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-[110] cursor-pointer transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
@@ -52,7 +92,7 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
             />
 
             {/* Panel */}
-            <div className={`fixed top-0 right-0 h-full w-full max-w-2xl bg-white dark:bg-slate-950 shadow-2xl z-[120] transform transition-transform duration-500 ease-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`print-preview-drawer-wrapper fixed top-0 right-0 h-full w-full max-w-2xl bg-white dark:bg-slate-950 shadow-2xl z-[120] transform transition-transform duration-500 ease-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Sub-header / Meta (Now the top bar) */}
                 <div className="px-6 py-4 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/60 flex items-center gap-6 overflow-x-auto no-scrollbar shrink-0">
                     <div className="flex flex-col">
