@@ -1051,13 +1051,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     border-color: #334155 !important;
                 }
                 .dark .document-page .bg-slate-50 {
-                    background-color: #1e293b !important;
+                    background-color: rgba(2, 6, 23, 0.5) !important;
                 }
                 .dark .document-page .bg-slate-50\/30 {
-                    background-color: rgba(30, 41, 59, 0.3) !important;
+                    background-color: rgba(2, 6, 23, 0.4) !important;
                 }
                 .dark .document-page .bg-slate-50\/50 {
-                    background-color: rgba(30, 41, 59, 0.5) !important;
+                    background-color: rgba(2, 6, 23, 0.6) !important;
                 }
                 .dark .document-page .bg-white {
                     background-color: #0f172a !important;
