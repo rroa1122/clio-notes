@@ -52,20 +52,20 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
             />
 
             {/* Panel */}
-            <div className={`fixed top-0 right-0 h-full w-full max-w-2xl bg-white shadow-2xl z-[120] transform transition-transform duration-500 ease-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed top-0 right-0 h-full w-full max-w-2xl bg-white dark:bg-slate-950 shadow-2xl z-[120] transform transition-transform duration-500 ease-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Sub-header / Meta (Now the top bar) */}
-                <div className="px-6 py-4 bg-white border-b border-slate-100 flex items-center gap-6 overflow-x-auto no-scrollbar shrink-0">
+                <div className="px-6 py-4 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/60 flex items-center gap-6 overflow-x-auto no-scrollbar shrink-0">
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">DOS / Timestamp</span>
-                        <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                        <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
                             <Calendar size={14} className="text-slate-400" />
                             {date ? format(new Date(date), 'MMM d, yyyy • h:mm a') : 'N/A'}
                         </div>
                     </div>
-                    <Separator orientation="vertical" className="h-8" />
+                    <Separator orientation="vertical" className="h-8 dark:bg-slate-800" />
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Provider Exec</span>
-                        <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                        <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
                             <User size={14} className="text-slate-400" />
                             {providerName}
                         </div>
@@ -74,19 +74,19 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
                         <Button
                             size="sm"
                             onClick={() => onViewFull(note.id)}
-                            className="rounded-lg font-bold gap-2 h-9 px-4 animate-in fade-in"
+                            className="rounded-lg font-bold gap-2 h-9 px-4 animate-in fade-in bg-indigo-600 hover:bg-indigo-700 text-white border-0"
                         >
                             <Maximize2 size={15} />
                             Open Full
                         </Button>
                         
-                        <Separator orientation="vertical" className="h-6 mx-1" />
+                        <Separator orientation="vertical" className="h-6 mx-1 dark:bg-slate-800" />
                         
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={onClose}
-                            className="h-9 w-9 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+                            className="h-9 w-9 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
                         >
                             <X size={20} />
                         </Button>
@@ -94,18 +94,18 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
                 </div>
 
                 {/* Main Content Areas */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30">
+                <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-900/40">
                     <div className="py-8">
                         <ClioNoteViewer note={normalizedNote} />
                     </div>
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-6 border-t border-slate-100 bg-white flex items-center justify-between">
+                <div className="p-6 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 flex items-center justify-between">
                     <p className="text-[11px] font-medium text-slate-400 italic">
                         Viewing official clinical record. Locked for editing.
                     </p>
-                    <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold text-slate-500">
+                    <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold text-slate-500 dark:text-slate-400 dark:hover:bg-slate-800/60">
                         Close Preview
                     </Button>
                 </div>
