@@ -22,9 +22,9 @@ export const TimeConflictBanner: React.FC<TimeConflictBannerProps> = ({
     if (confidence === 'low') {
         return (
             <div className="mx-auto w-full max-w-none mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center gap-3">
-                    <Info size={18} className="text-slate-400 shrink-0" />
-                    <p className="text-[13px] font-medium text-slate-600">
+                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center gap-3">
+                    <Info size={18} className="text-slate-400 dark:text-slate-500 shrink-0" />
+                    <p className="text-[13px] font-medium text-slate-600 dark:text-slate-300">
                         Unable to verify provider time conflicts reliably (missing structured time fields).
                     </p>
                 </div>
@@ -36,18 +36,18 @@ export const TimeConflictBanner: React.FC<TimeConflictBannerProps> = ({
 
     return (
         <div className="mx-auto w-full max-w-none mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden group">
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-amber-200/30 transition-colors duration-500" />
 
                 <div className="flex items-center gap-4 relative z-10">
-                    <div className="size-10 rounded-full bg-amber-100 flex items-center justify-center border border-amber-200/50">
-                        <AlertTriangle size={20} className="text-amber-600" />
+                    <div className="size-10 rounded-full bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center border border-amber-200/50 dark:border-amber-900/40">
+                        <AlertTriangle size={20} className="text-amber-600 dark:text-amber-400" />
                     </div>
                     <div>
-                        <h4 className="text-[14px] font-black text-amber-900 tracking-tight leading-none mb-1">
+                        <h4 className="text-[14px] font-black text-amber-900 dark:text-amber-200 tracking-tight leading-none mb-1">
                             Time Conflict Detected
                         </h4>
-                        <p className="text-[12px] font-bold text-amber-700/80">
+                        <p className="text-[12px] font-bold text-amber-700/80 dark:text-amber-400">
                             This provider has {conflicts.length} overlapping {conflicts.length === 1 ? 'session' : 'sessions'} recorded on {conflicts[0].date}.
                         </p>
                     </div>
@@ -55,7 +55,7 @@ export const TimeConflictBanner: React.FC<TimeConflictBannerProps> = ({
 
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="relative z-10 bg-white border border-amber-200 text-amber-700 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest hover:bg-amber-100 transition-all flex items-center gap-2 shadow-sm"
+                    className="relative z-10 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-800 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest hover:bg-amber-100 dark:hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm"
                 >
                     View Conflicts
                     <ExternalLink size={12} />
