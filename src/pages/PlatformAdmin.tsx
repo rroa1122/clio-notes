@@ -232,7 +232,7 @@ export function PlatformAdmin() {
 
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-550 uppercase tracking-widest">
+                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                 {language === 'es' ? 'Pacientes Globales' : 'Global Patients'}
                             </p>
                             <h3 className="text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">
@@ -246,7 +246,7 @@ export function PlatformAdmin() {
 
                     <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex items-center justify-between">
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-550 uppercase tracking-widest">
+                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                 {language === 'es' ? 'Notas Globales' : 'Global Notes'}
                             </p>
                             <h3 className="text-3xl font-black text-slate-900 dark:text-slate-100 mt-1">
@@ -261,7 +261,7 @@ export function PlatformAdmin() {
 
                 {/* Doctors Directory Table */}
                 <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 dark:border-slate-850 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center justify-between w-full sm:w-auto">
                             <h2 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                                 {language === 'es' ? 'Proveedores Médicos Registrados' : 'Registered Medical Providers'}
@@ -278,7 +278,7 @@ export function PlatformAdmin() {
                                 placeholder={language === 'es' ? "Buscar por nombre, email o NPI..." : "Search by name, email or NPI..."}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-4 pr-10 py-2 text-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold outline-none placeholder:text-slate-400 dark:placeholder:text-slate-650"
+                                className="w-full pl-4 pr-10 py-2 text-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-semibold outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                             />
                             {searchQuery && (
                                 <button
@@ -316,7 +316,7 @@ export function PlatformAdmin() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-850 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                                    <tr className="bg-slate-50/50 dark:bg-slate-950/30 border-b border-slate-100 dark:border-slate-800 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                         <th className="px-6 py-4">{language === 'es' ? 'Identidad del Proveedor' : 'Provider Identity'}</th>
                                         <th className="px-6 py-4">{language === 'es' ? 'Credenciales' : 'Credentials'}</th>
                                         <th className="px-6 py-4">{language === 'es' ? 'Actividad' : 'Activity'}</th>
@@ -324,7 +324,7 @@ export function PlatformAdmin() {
                                         <th className="px-6 py-4 text-center">{language === 'es' ? 'Acciones' : 'Actions'}</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-slate-700 dark:text-slate-300">
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                                     {filteredDoctors.map((doctor) => {
                                         const docName = doctor.full_name || `${doctor.first_name} ${doctor.last_name}`.trim() || doctor.email.split('@')[0];
                                         const dateReg = doctor.created_at ? new Date(doctor.created_at).toLocaleDateString(undefined, {
@@ -362,11 +362,11 @@ export function PlatformAdmin() {
                                                 </td>
 
                                                 {/* Professional Credentials */}
-                                                <td className="px-6 py-4 text-xs font-semibold text-slate-500">
+                                                <td className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
                                                     <div className="space-y-1">
                                                         {doctor.professional_title && (
                                                             <div className="flex items-center gap-1.5">
-                                                                <Award size={13} className="text-slate-400" />
+                                                                <Award size={13} className="text-slate-400 dark:text-slate-500" />
                                                                 <span>{doctor.professional_title}</span>
                                                             </div>
                                                         )}
@@ -380,10 +380,10 @@ export function PlatformAdmin() {
                                                 </td>
 
                                                 {/* Activity Statistics */}
-                                                <td className="px-6 py-4 text-xs font-semibold text-slate-500">
+                                                <td className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
                                                     <div className="space-y-1">
                                                         <div className="flex items-center gap-1.5">
-                                                            <Calendar size={13} className="text-slate-400" />
+                                                            <Calendar size={13} className="text-slate-400 dark:text-slate-500" />
                                                             <span>Reg: {dateReg}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3 mt-1.5">
@@ -407,7 +407,7 @@ export function PlatformAdmin() {
                                                                         ? 'bg-indigo-50/50 dark:bg-indigo-950/40 border-indigo-100 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 font-black'
                                                                         : doctor.subscription_tier === 'premium'
                                                                         ? 'bg-amber-50/50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900 text-amber-700 dark:text-amber-300 hover:bg-amber-50 font-black'
-                                                                        : 'bg-slate-50 border-slate-200 text-slate-500 font-semibold'
+                                                                        : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold hover:bg-slate-100/80 dark:hover:bg-slate-900'
                                                                 }`}
                                                             >
                                                                 <option value="free" className="dark:bg-slate-900">{language === 'es' ? 'Gratis' : 'Free'}</option>
@@ -425,12 +425,12 @@ export function PlatformAdmin() {
                                                         disabled={isSelf}
                                                         className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm mx-auto ${
                                                             isSelf
-                                                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-550 cursor-not-allowed shadow-none'
-                                                                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow active:scale-95'
+                                                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none'
+                                                                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow active:scale-95'
                                                         }`}
                                                         title={isSelf ? (language === 'es' ? 'No puedes impersonarte a ti mismo' : 'Cannot impersonate yourself') : (language === 'es' ? `Iniciar sesión como ${docName}` : `Log in as ${docName}`)}
                                                     >
-                                                        <Terminal size={14} className={isSelf ? 'opacity-50' : 'text-slate-500'} />
+                                                        <Terminal size={14} className={isSelf ? 'opacity-50' : 'text-slate-500 dark:text-slate-400'} />
                                                         <span>{language === 'es' ? 'Impersonar' : 'Impersonate'}</span>
                                                     </button>
                                                 </td>
