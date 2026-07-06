@@ -912,7 +912,7 @@ const Record: React.FC = () => {
     return (
         <div className="flex flex-col items-center w-full pt-6 lg:pt-8 px-4 pb-12 animate-in fade-in duration-500">
             {status === 'done' && pdfResponse ? (
-                <div id="review-workspace-root" className="clio-notes-new max-w-6xl w-full bg-white border border-slate-200/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] rounded-[2.5rem] p-6 md:p-10 relative">
+                <div id="review-workspace-root" className="clio-notes-new max-w-6xl w-full bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] rounded-[2.5rem] p-6 md:p-10 relative">
                     {isTemplatesLoading && (
                         <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-[2.5rem]">
                             <Loader2 className="animate-spin text-primary" size={32} />

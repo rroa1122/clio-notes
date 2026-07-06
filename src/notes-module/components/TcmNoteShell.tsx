@@ -1062,7 +1062,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 .dark .document-page .bg-white {
                     background-color: #0f172a !important;
                 }
-                .dark .document-page .text-indigo-900 {
+                .dark .document-page .text-indigo-900,
+                .dark .document-page .text-indigo-950 {
                     color: #a5b4fc !important;
                 }
                 .dark .document-page .bg-indigo-50\/40 {
@@ -1071,11 +1072,21 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 .dark .document-page .border-indigo-100\/30 {
                     border-color: rgba(99, 102, 241, 0.2) !important;
                 }
-                .dark .document-page .hover\:bg-slate-50:hover {
+                .dark .document-page .group.cursor-pointer:hover,
+                .dark .document-page .group\/diag:hover,
+                .dark .document-page [class*="hover:bg-white"]:hover,
+                .dark .document-page [class*="hover:bg-slate-50"]:hover,
+                .dark .document-page [class*="hover:bg-slate-100"]:hover {
                     background-color: #1e293b !important;
                 }
                 .dark .document-page .group:hover .group-hover\:text-slate-700 {
                     color: #cbd5e1 !important;
+                }
+                .dark .document-page .text-indigo-600 {
+                    color: #a5b4fc !important;
+                }
+                .dark .document-page .bg-indigo-50\/50 {
+                    background-color: rgba(99, 102, 241, 0.15) !important;
                 }
                 .dark .document-page .bg-blue-50 {
                     background-color: rgba(59, 130, 246, 0.15) !important;
@@ -1099,6 +1110,42 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 .dark .document-page textarea:focus {
                     background-color: #0f172a !important;
                     border-color: #6366f1 !important;
+                }
+
+                /* Floating action bar in dark mode */
+                .dark .fixed.bottom-12.left-1\/2 > div {
+                    background-color: rgba(15, 23, 42, 0.8) !important;
+                    border-color: rgba(255, 255, 255, 0.1) !important;
+                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1) !important;
+                }
+                .dark .fixed.bottom-12.left-1\/2 button {
+                    background-color: #1e293b !important;
+                    color: #cbd5e1 !important;
+                }
+                .dark .fixed.bottom-12.left-1\/2 button:hover {
+                    background-color: #334155 !important;
+                    color: #f1f5f9 !important;
+                }
+                .dark .fixed.bottom-12.left-1\/2 button.bg-indigo-600 {
+                    background-color: #4f46e5 !important;
+                    color: white !important;
+                }
+                .dark .fixed.bottom-12.left-1\/2 button.bg-indigo-600:hover {
+                    background-color: #4338ca !important;
+                }
+                .dark .fixed.bottom-12.left-1\/2 button.bg-slate-900 {
+                    background-color: #f8fafc !important;
+                    color: #0f172a !important;
+                }
+                .dark .fixed.bottom-12.left-1\/2 button.bg-slate-900:hover {
+                    background-color: #e2e8f0 !important;
+                }
+                .dark .fixed.bottom-12.left-1\/2 button.bg-emerald-500 {
+                    background-color: #10b981 !important;
+                    color: white !important;
+                }
+                .dark .fixed.bottom-12.left-1\/2 .bg-slate-200\/50 {
+                    background-color: rgba(255, 255, 255, 0.1) !important;
                 }
 
                 .document-page h1, .document-page h2, .document-page h3, .label-small {
