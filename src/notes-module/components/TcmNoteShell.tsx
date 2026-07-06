@@ -1098,6 +1098,19 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     color: #4ade80 !important;
                     border-color: rgba(34, 197, 94, 0.25) !important;
                 }
+                .dark .document-page .bg-indigo-50 {
+                    background-color: rgba(99, 102, 241, 0.12) !important;
+                }
+                .dark .document-page .text-indigo-700 {
+                    color: #a5b4fc !important;
+                }
+                .dark .document-page .border-indigo-100 {
+                    border-color: rgba(99, 102, 241, 0.25) !important;
+                }
+                .dark .document-page .border-slate-100\/50,
+                .dark .document-page .border-slate-200\/80 {
+                    border-color: rgba(255, 255, 255, 0.08) !important;
+                }
                 .dark .document-page input,
                 .dark .document-page select,
                 .dark .document-page textarea {
