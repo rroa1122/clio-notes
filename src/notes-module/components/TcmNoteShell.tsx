@@ -938,7 +938,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     className={`flex items-center gap-2 px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-300 ${
                                         isSaved 
                                         ? 'bg-emerald-500 dark:bg-emerald-600 text-white shadow-xl shadow-emerald-100 dark:shadow-none' 
-                                        : 'bg-indigo-600 dark:bg-indigo-50 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 shadow-xl shadow-indigo-100 dark:shadow-none hover:-translate-y-0.5'
+                                        : 'bg-indigo-600 dark:bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-500 shadow-xl shadow-indigo-100 dark:shadow-none hover:-translate-y-0.5'
                                     } disabled:opacity-50`}
                                 >
                                     {isSaving ? (
@@ -1645,13 +1645,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                 </div>
                                                             </div>
                                                             <div className="col-span-5 mt-3 pt-3 border-t border-slate-100/60">
-                                                                <div className="value-text !text-[16px] font-black text-indigo-950 tracking-tight leading-tight">
+                                                                <div className="value-text !text-[16px] font-black text-indigo-950 dark:text-white tracking-tight leading-tight">
                                                                     <GhostInput
                                                                         value={svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "TCM Progress Note"}
                                                                         isEditMode={isEditMode}
                                                                         onChange={(val) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, val)}
                                                                         placeholder="Enter encounter subject..."
-                                                                        className="!px-0 !bg-transparent !border-0 !shadow-none !text-[16px] !font-black !text-indigo-950"
+                                                                        className="!px-0 !bg-transparent !border-0 !shadow-none !text-[16px] !font-black !text-indigo-950 dark:!text-white"
                                                                     />
                                                                 </div>
                                                             </div>
