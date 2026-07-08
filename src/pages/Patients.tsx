@@ -103,7 +103,7 @@ export function Patients() {
 
     return (
         <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-auto lg:h-[calc(100vh-10rem)] mb-2">
-            <div className="flex flex-col lg:flex-1 bg-transparent md:bg-surface dark:md:bg-slate-900 rounded-[2rem] shadow-none md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 md:border border-border/60 overflow-visible lg:overflow-hidden relative h-auto lg:h-full">
+            <div className="flex flex-col lg:flex-1 bg-transparent md:bg-surface md:dark:bg-slate-900 rounded-[2rem] shadow-none md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 md:border border-border/60 overflow-visible lg:overflow-hidden relative h-auto lg:h-full">
                 {/* Card Header area matching the history timeline filters */}
                 <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-6 px-8 py-8 bg-surface border-b border-border/60 z-20 shrink-0">
                     <div className="flex flex-col gap-1">
@@ -205,7 +205,7 @@ export function Patients() {
                                         <TableRow
                                             key={patient.id}
                                             onClick={() => navigate(`/patients/${patient.id}`)}
-                                            className="cursor-pointer group h-16 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors border-b border-slate-100/60 dark:border-slate-800/80 last:border-b-0"
+                                            className="cursor-pointer group h-16 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors border-b border-slate-100/60 dark:border-slate-800/80 last:border-b-0"
                                         >
                                             {/* Identity */}
                                             <TableCell className="px-8 py-3 pl-8">
@@ -217,15 +217,15 @@ export function Patients() {
                                                         {patient.full_name?.charAt(0) || '?'}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
-                                                        <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors tracking-tight leading-snug">
+                                                        <span className="font-semibold text-foreground text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors tracking-tight leading-snug">
                                                             {patient.full_name}
                                                         </span>
                                                         {patient.phone ? (
-                                                            <span className="text-[12px] text-slate-400 dark:text-slate-400 font-normal mt-0.5 leading-none">
+                                                            <span className="text-[12px] text-muted-foreground font-normal mt-0.5 leading-none">
                                                                 {patient.phone}
                                                             </span>
                                                         ) : (
-                                                            <span className="text-[12px] text-slate-300 dark:text-slate-500 italic font-normal mt-0.5 leading-none">
+                                                            <span className="text-[12px] text-muted-foreground/60 italic font-normal mt-0.5 leading-none">
                                                                 {language === 'es' ? 'Sin teléfono de contacto' : 'No contact phone'}
                                                             </span>
                                                         )}
@@ -234,7 +234,7 @@ export function Patients() {
                                             </TableCell>
 
                                             {/* DOB */}
-                                            <TableCell className="py-3 text-[13px] text-slate-500 dark:text-slate-300 font-medium">
+                                            <TableCell className="py-3 text-[13px] text-muted-foreground font-medium">
                                                 {patient.dob && !isNaN(new Date(patient.dob).getTime())
                                                     ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM d, yyyy', { locale: language === 'es' ? es : undefined })
                                                     : <span className="text-slate-300 dark:text-slate-600 italic font-normal">—</span>}
@@ -243,7 +243,7 @@ export function Patients() {
                                             {/* ID */}
                                             <TableCell className="py-3">
                                                 {patient.emr_id ? (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/20 dark:border-slate-800">
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100/70 dark:bg-slate-800 text-slate-600 dark:text-slate-200 border border-slate-200/20 dark:border-slate-700">
                                                         {patient.emr_id}
                                                     </span>
                                                 ) : (
@@ -252,7 +252,7 @@ export function Patients() {
                                             </TableCell>
 
                                             {/* Date */}
-                                            <TableCell className="py-3 text-[13px] text-slate-400 dark:text-slate-300 font-medium">
+                                            <TableCell className="py-3 text-[13px] text-muted-foreground font-medium">
                                                 {patient.created_at ? format(new Date(patient.created_at), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM d, yyyy', { locale: language === 'es' ? es : undefined }) : '—'}
                                             </TableCell>
 
@@ -331,7 +331,7 @@ export function Patients() {
                                         </div>
                                         <div className="flex flex-col min-w-0">
                                             <div className="flex items-center flex-wrap gap-2">
-                                                <span className="font-bold text-slate-850 dark:text-slate-200 text-sm tracking-tight truncate leading-tight group-hover:text-primary transition-colors">
+                                                <span className="font-bold text-foreground text-sm tracking-tight truncate leading-tight group-hover:text-primary transition-colors">
                                                     {patient.full_name}
                                                 </span>
                                                 {patient.emr_id && (
@@ -340,7 +340,7 @@ export function Patients() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-semibold tracking-tight">
+                                            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground font-semibold tracking-tight">
                                                 <span>
                                                     {patient.dob ? `${language === 'es' ? 'F. Nac: ' : 'DOB: '}${format(new Date(patient.dob), language === 'es' ? 'dd/MM/yyyy' : 'MM/dd/yyyy')}` : (language === 'es' ? 'Sin fecha nac.' : 'No DOB')}
                                                 </span>

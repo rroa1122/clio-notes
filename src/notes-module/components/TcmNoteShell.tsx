@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { 
     Save, CheckCircle2, CheckCircle, X, PenTool, Plus, Trash2, Copy, Check, AlertCircle, Lock,
     Calendar, Printer, Edit3, FileText, User, Activity, ClipboardList, MapPin, Clock, 
-    Stethoscope, Briefcase, Info, ListTodo, History
+    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw
 } from 'lucide-react';
 import { DatePicker } from '../../components/ui/date-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
@@ -513,6 +513,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     // --- Add Joint Note Overlap Check State ---
     const [hasInternalTimeConflict, setHasInternalTimeConflict] = useState(false);
     const [focusedTimeKey, setFocusedTimeKey] = useState<string | null>(null);
+    const [isSyncing, setIsSyncing] = useState(false);
 
     const handleRequestSignature = async () => {
         if (!supervisorEmailInput || !supervisorEmailInput.includes('@')) {
@@ -910,6 +911,119 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         }
     };
 
+    const handleSyncWithEhr = async () => {
+        const noteIdToSync = mergedNote.id || lastSavedId;
+        if (!noteIdToSync) {
+            toast.error("Please save the note before exporting to EHR.");
+            return;
+        }
+
+        setIsSyncing(true);
+        try {
+            // Verify integration exists and is connected
+            const { data: integration, error: intError } = await supabase
+                .from('provider_integrations')
+                .select('mfa_status')
+                .eq('user_id', user?.id)
+                .maybeSingle();
+
+            if (intError) throw intError;
+
+            if (!integration || integration.mfa_status !== 'connected') {
+                toast.error("Please configure and connect your EHR integration in Settings first.");
+                setIsSyncing(false);
+                return;
+            }
+
+            // Helper to format values
+            const formatValue = (value: any): string => {
+                if (value == null) return '';
+                if (Array.isArray(value)) return value.join(', ');
+                return String(value);
+            };
+
+            // Compile the note clinical text
+            let fullNoteText = `CLINICAL PROGRESS NOTE\n`;
+            fullNoteText += `====================================\n`;
+            fullNoteText += `Patient: ${mergedNote.patient?.full_name || 'N/A'}\n`;
+            fullNoteText += `DOB: ${mergedNote.patient?.dob || 'N/A'}\n`;
+            fullNoteText += `Date of Service: ${mergedNote.encounter?.dos_date || (mergedNote as any).meta?.visitDate || 'N/A'}\n`;
+            fullNoteText += `Duration: ${mergedNote.encounter?.duration_minutes || mergedNote.encounter?.duration || 'N/A'} minutes\n`;
+            fullNoteText += `Units: ${mergedNote.encounter?.units || 'N/A'}\n`;
+            fullNoteText += `====================================\n\n`;
+
+            if (mergedNote.hpi?.chief_complaint) {
+                fullNoteText += `[CHIEF COMPLAINT]\n${mergedNote.hpi.chief_complaint}\n\n`;
+            }
+            if (mergedNote.hpi?.narrative) {
+                fullNoteText += `[HISTORY OF PRESENT ILLNESS]\n${mergedNote.hpi.narrative}\n\n`;
+            }
+
+            if (mergedNote.mse) {
+                fullNoteText += `[MENTAL STATUS EXAM]\n`;
+                Object.entries(mergedNote.mse).forEach(([key, val]) => {
+                    const strVal = formatValue(val);
+                    if (strVal && strVal !== "Not reported") {
+                        fullNoteText += `${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}: ${strVal}\n`;
+                    }
+                });
+                fullNoteText += `\n`;
+            }
+
+            if (mergedNote.assessments && mergedNote.assessments.length > 0) {
+                fullNoteText += `[DIAGNOSES / DSM-5]\n`;
+                mergedNote.assessments.forEach(diag => {
+                    fullNoteText += `- ${diag.diagnosis}${diag.icd10 ? ` (${diag.icd10})` : ''}${diag.primary ? ' (Primary)' : ''}\n`;
+                });
+                fullNoteText += `\n`;
+            }
+
+            if (mergedNote.plan?.plan_recommendations_instructions) {
+                fullNoteText += `[PLAN / RECOMMENDATIONS]\n${mergedNote.plan.plan_recommendations_instructions}\n\n`;
+            }
+
+            if (mergedNote.plan?.pharmacological) {
+                fullNoteText += `[PHARMACOLOGICAL PLAN]\n`;
+                const pharm = mergedNote.plan.pharmacological;
+                if (pharm.start?.length > 0) fullNoteText += `Start: ${formatValue(pharm.start)}\n`;
+                if (pharm.continue?.length > 0) fullNoteText += `Continue: ${formatValue(pharm.continue)}\n`;
+                if (pharm.switch?.length > 0) fullNoteText += `Switch: ${formatValue(pharm.switch)}\n`;
+                if (pharm.discontinue?.length > 0) fullNoteText += `Discontinue: ${formatValue(pharm.discontinue)}\n`;
+                fullNoteText += `\n`;
+            }
+
+            if (mergedNote.follow_up?.instructions || mergedNote.follow_up?.interval) {
+                fullNoteText += `[FOLLOW UP]\n`;
+                if (mergedNote.follow_up.interval) fullNoteText += `Interval: ${mergedNote.follow_up.interval}\n`;
+                if (mergedNote.follow_up.instructions) fullNoteText += `Instructions: ${mergedNote.follow_up.instructions}\n`;
+                fullNoteText += `\n`;
+            }
+
+            // Insert into Supabase note tasks
+            const { error: insertError } = await supabase
+                .from('amexzone_note_tasks')
+                .insert({
+                    note_id: noteIdToSync,
+                    user_id: user?.id,
+                    clinic_id: user?.clinic_id || clinicSettings?.id || null,
+                    patient_name: mergedNote.patient?.full_name || 'Desconocido',
+                    patient_dob: mergedNote.patient?.dob || null,
+                    visit_date: mergedNote.encounter?.dos_date || (mergedNote as any).meta?.visitDate || null,
+                    note_text: fullNoteText.trim(),
+                    status: 'pending'
+                });
+
+            if (insertError) throw insertError;
+
+            toast.success("Note successfully queued for EHR synchronization!");
+        } catch (err: any) {
+            console.error("Error queueing EHR task:", err);
+            toast.error(err.message || "Failed to queue EHR sync task");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     // Calc helpers
     const rawDuration = mergedNote.encounter?.duration_minutes || mergedNote.encounter?.duration;
     const durationValue = rawDuration ? `${rawDuration} min` : "—";
@@ -959,6 +1073,21 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         >
                             <Printer size={16} className="group-hover:scale-110 transition-transform" />
                             Print
+                        </button>
+
+                        <div className="w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1" />
+
+                        <button
+                            disabled={isSyncing}
+                            onClick={handleSyncWithEhr}
+                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-cyan-600 dark:hover:bg-cyan-500 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300 group disabled:opacity-50"
+                        >
+                            {isSyncing ? (
+                                <RefreshCw size={16} className="animate-spin text-cyan-500" />
+                            ) : (
+                                <Cpu size={16} className="group-hover:scale-110 transition-transform text-cyan-500 group-hover:text-white" />
+                            )}
+                            {isSyncing ? 'Syncing...' : 'Sync EHR'}
                         </button>
  
                         {!isSigned && (

@@ -1,5 +1,7 @@
 const PDF_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/medical-note';
 const TCM_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-note';
+const TCM_ASSESSMENT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-assessment-note';
+const TCM_SERVICE_PLAN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-service-plan-note';
 const SYNTHESIS_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/nextSteps';
 
 // Minimal interface for the data we expect from/to the webhook
@@ -20,8 +22,14 @@ export const PDFService = {
      * Sends audio/metadata (FormData) to the server.
      */
     generatePDF: async (formData: FormData, options?: { template_id?: string; patient_id?: string }, signal?: AbortSignal): Promise<PDFResponse> => {
-        const isTcm = options?.template_id === 'tcm_progress_note';
-        const url = isTcm ? TCM_WEBHOOK_URL : PDF_WEBHOOK_URL;
+        let url = PDF_WEBHOOK_URL;
+        if (options?.template_id === 'tcm_progress_note') {
+            url = TCM_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_assessment_note') {
+            url = TCM_ASSESSMENT_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_service_plan_note') {
+            url = TCM_SERVICE_PLAN_WEBHOOK_URL;
+        }
         return PDFService._sendRequest(formData, undefined, signal, url);
     },
 

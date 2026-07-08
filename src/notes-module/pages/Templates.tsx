@@ -288,7 +288,7 @@ const Templates = () => {
                         >
                           {template.is_public ? <Globe size={12} className="text-emerald-500" /> : <Lock size={12} />}
                         </Button>
-                        {!['psych-eval', 'tcm_progress_note'].includes(template.id) && (
+                        {!['psych-eval', 'tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note'].includes(template.id) && (
                           <Button
                             size={confirmDeleteId === template.id ? "default" : "icon"}
                             variant={confirmDeleteId === template.id ? "destructive" : "ghost"}

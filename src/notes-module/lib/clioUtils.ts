@@ -284,7 +284,7 @@ export const normalizeClioNote = (rawResponse: any): ClioNote | null => {
 
         // Handle Specialized Templates
         const templateId = clioData.template_id || clioData.templateId || clioData.meta?.template_id || clioData.meta?.templateId;
-        if (templateId === 'tcm_progress_note') {
+        if (['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note'].includes(templateId)) {
             return normalizeTcmNote(clioData);
         }
 
@@ -480,9 +480,10 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         }
     });
 
+    const activeTemplateId = raw.template_id || raw.templateId || raw.meta?.template_id || 'tcm_progress_note';
     return applyBaseNormalization({
         ...raw,
-        template_id: 'tcm_progress_note',
+        template_id: activeTemplateId,
         encounter,
         patient,
         facility: raw.facility || {},
@@ -493,7 +494,7 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         signatures,
         meta: {
             ...(raw.meta || {}),
-            template_id: 'tcm_progress_note'
+            template_id: activeTemplateId
         }
     });
 };

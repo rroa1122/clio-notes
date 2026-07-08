@@ -58,6 +58,8 @@ const TCM_SUB_TEMPLATES = [
     'PCP Coordination / Staffing (In-Person)',
     'Coordinate Transportation',
     'Custom Template',
+    'TCM Initial Assessment & Certification',
+    'TCM Service Plan Development',
     'Other'
 ];
 
@@ -160,6 +162,16 @@ const Record: React.FC = () => {
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const initialTemplateId = useRef(storage.getActiveTemplateId());
+
+    useEffect(() => {
+        if (selectedSubTemplate === 'TCM Initial Assessment & Certification') {
+            setSelectedTemplateId('tcm_assessment_note');
+        } else if (selectedSubTemplate === 'TCM Service Plan Development') {
+            setSelectedTemplateId('tcm_service_plan_note');
+        } else if (selectedSubTemplate) {
+            setSelectedTemplateId('tcm_progress_note');
+        }
+    }, [selectedSubTemplate]);
 
     useEffect(() => {
         const loadBootstrapData = async () => {
@@ -539,7 +551,7 @@ const Record: React.FC = () => {
         }
 
         const currentTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
-        const isTcm = selectedTemplateId === 'tcm_progress_note';
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note'].includes(selectedTemplateId);
 
         setStatus('uploading');
         setError(null);
@@ -617,7 +629,7 @@ const Record: React.FC = () => {
                 }
 
                 if (isTcm) {
-                    formData.append('template_id', 'tcm_progress_note');
+                    formData.append('template_id', selectedTemplateId);
                     formData.append('service_date', svcDate);
                     formData.append('time_in', svcTimeIn);
                     formData.append('time_out', svcTimeOut);
@@ -667,11 +679,11 @@ const Record: React.FC = () => {
                     throw new Error(`Service ${i + 1} (${svc.subTemplate}) returned an empty response. Verify n8n logs.`);
                 }
 
-                if (isTcm && result.data.template_id && result.data.template_id !== 'tcm_progress_note') {
+                if (isTcm && result.data.template_id && result.data.template_id !== selectedTemplateId) {
                     console.warn('Template mismatch:', result.data.template_id);
                     // We allow it to continue if it's 'Other' but log the warning
                     if (svc.subTemplate !== 'Other') {
-                        throw new Error(`Template mismatch for ${svc.subTemplate}: expected tcm_progress_note`);
+                        throw new Error(`Template mismatch for ${svc.subTemplate}: expected ${selectedTemplateId}`);
                     }
                 }
 

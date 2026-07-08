@@ -278,28 +278,28 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
             <DialogContent 
                 onPointerDownOutside={(e) => e.preventDefault()}
                 onInteractOutside={(e) => e.preventDefault()}
-                className="max-w-[1024px] h-[85vh] max-h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-slate-200/50 shadow-2xl bg-white translate-x-0 translate-y-0 inset-0 m-auto flex flex-col"
+                className="max-w-[1024px] h-[85vh] max-h-[85vh] p-0 overflow-hidden rounded-[2.5rem] border-slate-200/50 dark:border-slate-800/80 shadow-2xl bg-white dark:bg-slate-900 translate-x-0 translate-y-0 inset-0 m-auto flex flex-col"
             >
                 <div className="flex flex-col flex-1 overflow-hidden">
                     {/* Header */}
-                    <div className="px-8 pt-5 pb-4 border-b border-slate-100 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 rounded-full blur-3xl -mr-32 -mt-32 -z-10" />
+                    <div className="px-8 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800/80 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/30 dark:bg-indigo-950/20 rounded-full blur-3xl -mr-32 -mt-32 -z-10" />
 
                         <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-6">
-                                <div className="size-14 rounded-[20px] bg-indigo-50/75 text-indigo-600 flex items-center justify-center border border-indigo-100/20 shadow-sm relative group">
+                                <div className="size-14 rounded-[20px] bg-indigo-50/75 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-100/20 dark:border-indigo-900/30 shadow-sm relative group">
                                     <UserPlus size={28} />
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-3">
-                                        <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 leading-none">
+                                        <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100 leading-none">
                                             Register New Patient
                                         </DialogTitle>
-                                        <Badge variant="outline" className="bg-indigo-50 text-indigo-600 border-indigo-100 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
+                                        <Badge variant="outline" className="bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/30 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
                                             Clinical Intake
                                         </Badge>
                                     </div>
-                                    <DialogDescription className="text-[11px] font-black text-slate-400 mt-2.5 tracking-[0.05em] uppercase opacity-70">
+                                    <DialogDescription className="text-[11px] font-black text-slate-400 dark:text-slate-500 mt-2.5 tracking-[0.05em] uppercase opacity-70">
                                         Establish a new medical record with comprehensive clinical coordination.
                                     </DialogDescription>
                                 </div>
@@ -311,7 +311,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                         {/* Tabs Navigation */}
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
                             <div className="px-8 py-3">
-                                <TabsList className="bg-slate-50 p-1 h-12 rounded-full border border-slate-200/50 shadow-sm w-full grid grid-cols-4 overflow-hidden gap-1">
+                                <TabsList className="bg-slate-50 dark:bg-slate-950 p-1 h-12 rounded-full border border-slate-200/50 dark:border-slate-800/80 shadow-sm w-full grid grid-cols-4 overflow-hidden gap-1">
                                     <PremiumTrigger value="client" label="Client" icon={User} theme="indigo" />
                                     <PremiumTrigger value="medical" label="Medical" icon={DoctorIcon} theme="emerald" />
                                     <PremiumTrigger value="psychiatric" label="Psychiatric" icon={PsychIcon} theme="purple" />
@@ -319,14 +319,14 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                 </TabsList>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto px-10 py-6 custom-scrollbar bg-slate-50/20">
+                            <div className="flex-1 overflow-y-auto px-10 py-6 custom-scrollbar bg-slate-50/20 dark:bg-slate-950/10">
                                 {/* [CLIENT TAB] */}
                                 <TabsContent value="client" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
                                     {/* AI Extraction Dropzone */}
                                     <div 
                                         className={cn(
-                                            "mb-6 relative rounded-[2rem] border border-dashed border-indigo-200 bg-indigo-50/20 overflow-hidden transition-all duration-500 group",
-                                            isExtracting ? "border-indigo-400 bg-indigo-50/40 shadow-inner" : "hover:border-indigo-300 hover:bg-white hover:shadow-[0_20px_50px_-20px_rgba(79,70,229,0.1)] focus-within:border-indigo-400 focus-within:bg-white"
+                                            "mb-6 relative rounded-[2rem] border border-dashed border-indigo-200 dark:border-indigo-900 bg-indigo-50/20 dark:bg-indigo-950/10 overflow-hidden transition-all duration-500 group",
+                                            isExtracting ? "border-indigo-400 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-inner" : "hover:border-indigo-300 dark:hover:border-indigo-800 hover:bg-white dark:hover:bg-slate-950 hover:shadow-[0_20px_50px_-20px_rgba(79,70,229,0.1)] dark:hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.4)] focus-within:border-indigo-400 focus-within:bg-white dark:focus-within:bg-slate-950"
                                         )}
                                         onDragOver={(e) => e.preventDefault()}
                                         onDrop={handleFileUpload}
@@ -342,21 +342,21 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                         <div className="flex flex-col items-center justify-center py-6 px-6 text-center relative z-0">
                                             {isExtracting ? (
                                                 <div className="animate-in fade-in duration-500 flex flex-col items-center">
-                                                    <div className="size-16 rounded-3xl bg-indigo-100/50 text-indigo-500 flex items-center justify-center mb-5 relative group-hover:scale-110 transition-transform">
-                                                        <Loader2 className="absolute h-7 w-7 animate-spin text-indigo-600" />
+                                                    <div className="size-16 rounded-3xl bg-indigo-100/50 dark:bg-indigo-950/50 text-indigo-500 flex items-center justify-center mb-5 relative group-hover:scale-110 transition-transform">
+                                                        <Loader2 className="absolute h-7 w-7 animate-spin text-indigo-600 dark:text-indigo-400" />
                                                         <FileText className="h-7 w-7 opacity-20" />
                                                     </div>
-                                                    <h3 className="text-[15px] font-black text-indigo-950 uppercase tracking-[0.2em] mb-1">Analyzing...</h3>
-                                                    <p className="text-[11px] font-bold text-indigo-500/70 tracking-tight">Extracting patient demographics and clinical data.</p>
+                                                    <h3 className="text-[15px] font-black text-indigo-950 dark:text-indigo-200 uppercase tracking-[0.2em] mb-1">Analyzing...</h3>
+                                                    <p className="text-[11px] font-bold text-indigo-500/70 dark:text-indigo-400 tracking-tight">Extracting patient demographics and clinical data.</p>
                                                 </div>
                                             ) : (
                                                 <div className="animate-in fade-in duration-500 flex flex-col items-center transition-transform group-hover:-translate-y-1">
-                                                    <div className="size-16 rounded-[22px] bg-white text-indigo-500 flex items-center justify-center shadow-md mb-5 border border-indigo-50 ring-8 ring-indigo-50/30 group-hover:scale-110 transition-all duration-500">
+                                                    <div className="size-16 rounded-[22px] bg-white dark:bg-slate-900 text-indigo-500 flex items-center justify-center shadow-md mb-5 border border-indigo-50 dark:border-indigo-950 ring-8 ring-indigo-50/30 dark:ring-indigo-950/40 group-hover:scale-110 transition-all duration-500">
                                                         <UploadCloud size={28} />
                                                     </div>
-                                                    <h3 className="text-[15px] font-black text-slate-900 uppercase tracking-[0.25em] mb-3">Upload Clinical Intake</h3>
-                                                    <p className="text-[11px] font-bold text-slate-400 max-w-sm mb-5 leading-relaxed tracking-wide opacity-80">Drag and drop forms to <span className="text-indigo-500 font-black">auto-fill</span> the profile using Health AI.</p>
-                                                    <Badge variant="outline" className="bg-white border-slate-200/55 text-slate-400 font-black px-4 py-1.5 text-[9px] uppercase tracking-widest rounded-full shadow-sm">
+                                                    <h3 className="text-[15px] font-black text-slate-900 dark:text-slate-100 uppercase tracking-[0.25em] mb-3">Upload Clinical Intake</h3>
+                                                    <p className="text-[11px] font-bold text-slate-400 dark:text-slate-400 max-w-sm mb-5 leading-relaxed tracking-wide opacity-80">Drag and drop forms to <span className="text-indigo-500 font-black">auto-fill</span> the profile using Health AI.</p>
+                                                    <Badge variant="outline" className="bg-white dark:bg-slate-950 border-slate-200/55 dark:border-slate-800 text-slate-400 dark:text-slate-400 font-black px-4 py-1.5 text-[9px] uppercase tracking-widest rounded-full shadow-sm">
                                                         PDF • JPG • PNG
                                                     </Badge>
                                                 </div>
@@ -367,9 +367,9 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     <div className={cn("transition-all duration-700 space-y-6", isExtracting && "opacity-40 blur-[4px] pointer-events-none scale-[0.98]")}>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             {/* Left Column: Identity & Contact */}
-                                            <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
+                                            <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
                                                 <div className="mb-2">
-                                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 uppercase">Identity & Contact</h4>
+                                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">Identity & Contact</h4>
                                                 </div>
                                                 <PremiumGlassField icon={User} label="First Name" name="first_name" value={formData.first_name} onChange={handleFieldChange} theme="indigo" placeholder="E.g. Alice" required />
                                                 <PremiumGlassField icon={User} label="Last Name" name="last_name" value={formData.last_name} onChange={handleFieldChange} theme="indigo" placeholder="E.g. Wonder" required />
@@ -380,9 +380,9 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                             </div>
 
                                             {/* Right Column: Clinical Coordination */}
-                                            <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
+                                            <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
                                                 <div className="mb-2">
-                                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 uppercase">Clinical Coordination</h4>
+                                                    <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">Clinical Coordination</h4>
                                                 </div>
                                                 <PremiumGlassField icon={Shield} label="Insurance Company" name="insurance_company" value={formData.insurance_company} onChange={handleFieldChange} theme="indigo" />
                                                 <PremiumGlassField icon={Shield} label="Member ID" name="insurance_id" value={formData.insurance_id} onChange={handleFieldChange} theme="indigo" />
@@ -391,8 +391,8 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                                 <PremiumGlassField icon={User} label="Preferred Language" name="preferred_language" value={formData.preferred_language} onChange={handleFieldChange} theme="indigo" options={['English', 'Spanish']} />
 
                                                 {/* Emergency Protocol */}
-                                                <div className="mt-4 pt-4 border-t border-slate-200/50">
-                                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-4">Emergency Protocol</p>
+                                                <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/55">
+                                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">Emergency Protocol</p>
                                                     <div className="space-y-4">
                                                         <PremiumGlassField icon={User} label="Emergency Contact" name="emergency_contact_name" value={formData.emergency_contact_name} onChange={handleFieldChange} theme="amber" />
                                                         <PremiumGlassField icon={Phone} label="Emergency Phone" name="emergency_contact_phone" value={formData.emergency_contact_phone} onChange={handleFieldChange} theme="amber" />
@@ -402,26 +402,26 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                         </div>
 
                                         {/* Clinical Overview & ICD-10 */}
-                                        <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 shadow-sm">
                                             <div className="space-y-6">
                                                 <div className="mb-2">
-                                                    <h4 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Clinical Overview</h4>
+                                                    <h4 className="text-[11px] font-black tracking-[0.2em] text-slate-400 dark:text-slate-500 uppercase">Clinical Overview</h4>
                                                 </div>
                                                 <PremiumGlassField icon={ClipboardList} label="Primary Case Narrative" name="presenting_problems" value={formData.presenting_problems} onChange={handleFieldChange} theme="indigo" isTextarea large className="col-span-2" />
                                                 
-                                                <div className="space-y-4 px-0.5 mt-8 border-t border-slate-100 pt-8">
+                                                <div className="space-y-4 px-0.5 mt-8 border-t border-slate-100 dark:border-slate-800/80 pt-8">
                                                     <div className="flex items-center gap-3 transition-transform duration-300 hover:translate-x-1">
-                                                        <div className="size-6 rounded-lg flex items-center justify-center bg-indigo-500/10 text-indigo-500 relative border border-indigo-100/50">
+                                                        <div className="size-6 rounded-lg flex items-center justify-center bg-indigo-500/10 text-indigo-500 relative border border-indigo-100/50 dark:border-indigo-900/30">
                                                             <Activity size={13} className="relative z-10" />
                                                         </div>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none opacity-90">Diagnostic Registry (ICD-10)</p>
+                                                        <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] leading-none opacity-90">Diagnostic Registry (ICD-10)</p>
                                                     </div>
 
                                                     <div className="relative group">
                                                         <div className="absolute -inset-1 rounded-[32px] bg-gradient-to-b from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                                        <div className="rounded-[24px] border border-slate-200/60 bg-white transition-all duration-500 relative overflow-hidden group-focus-within:border-indigo-300 group-focus-within:ring-4 group-focus-within:ring-indigo-500/5 shadow-sm">
+                                                        <div className="rounded-[24px] border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-950 transition-all duration-500 relative overflow-hidden group-focus-within:border-indigo-300 group-focus-within:ring-4 group-focus-within:ring-indigo-500/5 shadow-sm">
                                                             <textarea
-                                                                className="w-full min-h-[120px] bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none px-6 py-4 text-[14px] font-bold text-slate-900 placeholder:text-slate-300 resize-none leading-relaxed relative z-10"
+                                                                className="w-full min-h-[120px] bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none px-6 py-4 text-[14px] font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none leading-relaxed relative z-10"
                                                                 value={formData.diagnoses || ''}
                                                                 onChange={(e) => {
                                                                     const val = e.target.value;
@@ -440,8 +440,8 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                                         </div>
 
                                                         {suggestions.length > 0 && (
-                                                            <div className="absolute z-50 bottom-full mb-3 left-0 w-full bg-white border border-slate-100 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                                <div className="p-4 border-b border-slate-50 bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest px-8">
+                                                            <div className="absolute z-50 bottom-full mb-3 left-0 w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                                <div className="p-4 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-8">
                                                                     Clinical Suggestions
                                                                 </div>
                                                                 <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
@@ -455,11 +455,11 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                                                                 handleFieldChange('diagnoses', lines.join('\n') + '\n');
                                                                                 setSuggestions([]);
                                                                             }}
-                                                                            className="w-full text-left px-8 py-4 hover:bg-indigo-50/50 transition-colors border-b border-slate-50 last:border-0 group flex items-center justify-between gap-4"
+                                                                            className="w-full text-left px-8 py-4 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0 group flex items-center justify-between gap-4"
                                                                         >
                                                                             <div className="flex items-center gap-4">
-                                                                                <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded shadow-tiny shrink-0">{s.code}</span>
-                                                                                <span className="text-sm font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors">{s.description}</span>
+                                                                                <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1 rounded shadow-tiny shrink-0">{s.code}</span>
+                                                                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{s.description}</span>
                                                                             </div>
                                                                             <Plus size={14} className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                                         </button>
@@ -476,7 +476,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
 
                                 {/* [MEDICAL TAB] */}
                                 <TabsContent value="medical" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
-                                    <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-8 shadow-sm">
+                                    <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                                             <PremiumGlassField icon={DoctorIcon} label="PCP Name" name="pcp_name" value={formData.pcp_name} onChange={handleFieldChange} theme="emerald" />
                                             <PremiumGlassField icon={Store} label="PCP Clinic Name" name="pcp_clinic_name" value={formData.pcp_clinic_name} onChange={handleFieldChange} theme="emerald" />
@@ -490,7 +490,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
 
                                 {/* [PSYCHIATRIC TAB] */}
                                 <TabsContent value="psychiatric" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
-                                    <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-8 shadow-sm">
+                                    <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                                             <PremiumGlassField icon={Brain} label="Psychiatrist Name" name="psych_name" value={formData.psych_name} onChange={handleFieldChange} theme="purple" />
                                             <PremiumGlassField icon={Phone} label="Psych Phone" name="psych_phone" value={formData.psych_phone} onChange={handleFieldChange} theme="purple" />
@@ -503,7 +503,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
 
                                 {/* [PHARMACY TAB] */}
                                 <TabsContent value="pharmacy" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
-                                    <div className="bg-slate-50/80 border border-slate-200/60 rounded-[1.5rem] p-8 shadow-sm">
+                                    <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                                             <PremiumGlassField icon={Store} label="Pharmacy Name" name="pharmacy_name" value={formData.pharmacy_name} onChange={handleFieldChange} theme="amber" />
                                             <PremiumGlassField icon={Phone} label="Pharmacy Phone" name="pharmacy_phone" value={formData.pharmacy_phone} onChange={handleFieldChange} theme="amber" />
@@ -516,10 +516,10 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                         </Tabs>
 
                         {/* Footer Actions */}
-                        <div className="px-10 py-4 border-t border-slate-100/60 bg-white flex items-center justify-between gap-6">
+                        <div className="px-10 py-4 border-t border-slate-100/60 dark:border-slate-800/80 bg-white dark:bg-slate-900 flex items-center justify-between gap-6">
                             <div className="hidden md:flex items-center gap-3 ml-2">
                                 <div className="size-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Ready for validation</span>
+                                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Ready for validation</span>
                             </div>
 
                             <div className="flex items-center gap-4 flex-1 md:flex-none">
@@ -527,7 +527,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     type="button"
                                     variant="ghost"
                                     onClick={onClose}
-                                    className="flex-1 md:w-32 h-12 rounded-full font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-100/50 transition-colors"
+                                    className="flex-1 md:w-32 h-12 rounded-full font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
                                 >
                                     Discard
                                 </Button>
@@ -562,18 +562,18 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
 
 function PremiumTrigger({ value, label, icon: Icon, theme }: { value: string, label: string, icon: any, theme: string }) {
     const themeShadows: Record<string, string> = {
-        indigo: "data-[state=active]:shadow-indigo-100/50 data-[state=active]:text-indigo-600 data-[state=active]:bg-indigo-50/50",
-        emerald: "data-[state=active]:shadow-emerald-100/50 data-[state=active]:text-emerald-600 data-[state=active]:bg-emerald-50/50",
-        purple: "data-[state=active]:shadow-purple-100/50 data-[state=active]:text-purple-600 data-[state=active]:bg-purple-50/50",
-        blue: "data-[state=active]:shadow-blue-100/50 data-[state=active]:text-blue-600 data-[state=active]:bg-blue-50/50",
-        amber: "data-[state=active]:shadow-amber-100/50 data-[state=active]:text-amber-600 data-[state=active]:bg-amber-50/50"
+        indigo: "data-[state=active]:shadow-indigo-100/50 dark:data-[state=active]:shadow-indigo-950/20 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:bg-indigo-50/50 dark:data-[state=active]:bg-indigo-950/30",
+        emerald: "data-[state=active]:shadow-emerald-100/50 dark:data-[state=active]:shadow-emerald-950/20 data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400 data-[state=active]:bg-emerald-50/50 dark:data-[state=active]:bg-emerald-950/30",
+        purple: "data-[state=active]:shadow-purple-100/50 dark:data-[state=active]:shadow-purple-950/20 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 data-[state=active]:bg-purple-50/50 dark:data-[state=active]:bg-purple-950/30",
+        blue: "data-[state=active]:shadow-blue-100/50 dark:data-[state=active]:shadow-blue-950/20 data-[state=active]:text-blue-600 dark:data-[state=active]:text-blue-400 data-[state=active]:bg-blue-50/50 dark:data-[state=active]:bg-blue-950/30",
+        amber: "data-[state=active]:shadow-amber-100/50 dark:data-[state=active]:shadow-amber-950/20 data-[state=active]:text-amber-600 dark:data-[state=active]:text-amber-400 data-[state=active]:bg-amber-50/50 dark:data-[state=active]:bg-amber-950/30"
     };
 
     return (
         <TabsTrigger
             value={value}
             className={cn(
-                "flex-1 rounded-full flex items-center justify-center gap-2.5 px-4 h-full text-[10px] font-black uppercase tracking-[0.12em] transition-all duration-300 text-slate-500 data-[state=active]:text-indigo-600 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:shadow-slate-200/40 border border-transparent data-[state=active]:border-slate-100 group",
+                "flex-1 rounded-full flex items-center justify-center gap-2.5 px-4 h-full text-[10px] font-black uppercase tracking-[0.12em] transition-all duration-300 text-slate-500 dark:text-slate-400 data-[state=active]:text-indigo-600 dark:data-[state=active]:text-indigo-400 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-lg data-[state=active]:shadow-slate-200/40 dark:data-[state=active]:shadow-slate-950/40 border border-transparent data-[state=active]:border-slate-100 dark:data-[state=active]:border-slate-800/60 group",
                 themeShadows[theme]
             )}
         >
@@ -602,11 +602,11 @@ interface ModalFieldProps {
 function PremiumGlassField({ icon: Icon, label, name, value, onChange, placeholder, type = 'text', className, isTextarea, large, required, theme, options }: ModalFieldProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const iconBgThemes = {
-        indigo: "bg-indigo-500/10 text-indigo-500 border-indigo-100/50",
-        emerald: "bg-emerald-500/10 text-emerald-500 border-emerald-100/50",
-        purple: "bg-purple-500/10 text-purple-500 border-purple-100/50",
-        blue: "bg-blue-500/10 text-blue-500 border-blue-100/50",
-        amber: "bg-amber-500/10 text-amber-500 border-amber-100/50"
+        indigo: "bg-indigo-500/10 text-indigo-500 border-indigo-100/50 dark:border-indigo-900/30",
+        emerald: "bg-emerald-500/10 text-emerald-500 border-emerald-100/50 dark:border-emerald-900/30",
+        purple: "bg-purple-500/10 text-purple-500 border-purple-100/50 dark:border-purple-900/30",
+        blue: "bg-blue-500/10 text-blue-500 border-blue-100/50 dark:border-blue-900/30",
+        amber: "bg-amber-500/10 text-amber-500 border-amber-100/50 dark:border-amber-900/30"
     };
 
     return (
@@ -616,22 +616,22 @@ function PremiumGlassField({ icon: Icon, label, name, value, onChange, placehold
                     <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 transition-opacity rounded-lg" />
                     <Icon size={13} className="relative z-10" />
                 </div>
-                <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest leading-none opacity-90">
+                <p className="text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none opacity-90">
                     {label} {required && <span className="text-red-500">*</span>}
                 </p>
             </div>
 
             <div className={cn(
-                "rounded-[28px] border border-slate-200/70 bg-white transition-[border-color,box-shadow,background-color] duration-200 relative overflow-hidden",
-                "shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]",
-                "hover:border-primary/35",
-                "focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-500/5",
+                "rounded-[28px] border border-slate-200/70 dark:border-slate-800/60 bg-white dark:bg-slate-950 transition-[border-color,box-shadow,background-color] duration-200 relative overflow-hidden",
+                "shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.4)]",
+                "hover:border-primary/35 dark:hover:border-primary/50",
+                "focus-within:border-indigo-300 dark:focus-within:border-indigo-800 focus-within:ring-4 focus-within:ring-indigo-500/5 dark:focus-within:ring-indigo-500/10",
                 isTextarea ? (large ? "min-h-[160px]" : "min-h-[110px]") : "h-11"
             )}>
 
                 {isTextarea ? (
                         <textarea
-                            className="absolute inset-0 w-full h-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none px-6 py-4 text-[14px] font-bold text-slate-900 placeholder:text-slate-300 resize-none leading-relaxed shadow-none hover:shadow-none animate-none"
+                            className="absolute inset-0 w-full h-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none px-6 py-4 text-[14px] font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-650 resize-none leading-relaxed shadow-none hover:shadow-none animate-none"
                             value={value || ''}
                             onChange={(e) => onChange(name, e.target.value)}
                             placeholder={placeholder || `Document ${label.toLowerCase()}...`}
@@ -642,12 +642,12 @@ function PremiumGlassField({ icon: Icon, label, name, value, onChange, placehold
                             value={value || ''} 
                             onValueChange={(val) => onChange(name, val)}
                         >
-                            <SelectTrigger className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-6 text-[14px] font-bold text-slate-900 justify-between pr-4 hover:bg-transparent [&>svg]:opacity-50">
+                            <SelectTrigger className="w-full h-full border-none bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-6 text-[14px] font-bold text-slate-900 dark:text-slate-100 justify-between pr-4 hover:bg-transparent [&>svg]:opacity-50">
                                 <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}...`} />
                             </SelectTrigger>
-                            <SelectContent className="rounded-[1.5rem] border border-slate-100 shadow-2xl bg-white z-[250]">
+                            <SelectContent className="rounded-[1.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900 z-[250]">
                                 {options.map((opt) => (
-                                    <SelectItem key={opt} value={opt} className="rounded-xl font-bold text-[13px] text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:text-indigo-600 py-2.5">
+                                    <SelectItem key={opt} value={opt} className="rounded-xl font-bold text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 focus:bg-slate-50 dark:focus:bg-slate-800 focus:text-indigo-600 dark:focus:text-indigo-400 py-2.5">
                                         {opt}
                                     </SelectItem>
                                 ))}
@@ -660,7 +660,7 @@ function PremiumGlassField({ icon: Icon, label, name, value, onChange, placehold
                             <DatePicker 
                                 date={value || ''} 
                                 setDate={(newDate) => onChange(name, newDate)} 
-                                className="w-full h-full bg-transparent border-none shadow-none ring-0 focus-within:ring-0 px-6 font-bold text-slate-800"
+                                className="w-full h-full bg-transparent border-none shadow-none ring-0 focus-within:ring-0 px-6 font-bold text-slate-800 dark:text-slate-100 placeholder:placeholder-slate-300 dark:placeholder:placeholder-slate-650"
                                 placeholder={placeholder || "MM/DD/YYYY"}
                                 mode="input"
                             />
@@ -669,7 +669,7 @@ function PremiumGlassField({ icon: Icon, label, name, value, onChange, placehold
                                 ref={inputRef}
                                 type={type}
                                 className={cn(
-                                    "w-full h-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none px-6 text-[14px] font-bold text-slate-900 placeholder:text-slate-300 leading-none shadow-none hover:shadow-none"
+                                    "w-full h-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none px-6 text-[14px] font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-650 leading-none shadow-none hover:shadow-none"
                                 )}
                                 value={value || ''}
                                 onChange={(e) => onChange(name, e.target.value)}

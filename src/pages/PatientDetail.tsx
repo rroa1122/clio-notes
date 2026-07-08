@@ -216,6 +216,11 @@ export function PatientDetail() {
     const handleAIAutofill = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        if (file.size === 0) {
+            toast.error(language === 'es' ? "El archivo seleccionado está vacío (0 bytes)." : "The selected file is empty (0 bytes).");
+            if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
+            return;
+        }
         setSelectedAutofillFile(file);
         setShowAutofillModeModal(true);
         if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
@@ -293,8 +298,8 @@ export function PatientDetail() {
 
     if (!patient) {
         return (
-            <div className="max-w-2xl mx-auto my-20 p-12 text-center bg-white rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50">
-                <h2 className="text-3xl font-black text-slate-900 mb-4">Client Not Found</h2>
+            <div className="max-w-2xl mx-auto my-20 p-12 text-center bg-white dark:bg-slate-900 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+                <h2 className="text-3xl font-black text-slate-900 dark:text-slate-100 mb-4">Client Not Found</h2>
                 <Button onClick={() => navigate('/patients')} className="h-12 px-8 rounded-full bg-indigo-600 font-bold hover:bg-indigo-700">
                     <ArrowLeft size={18} className="mr-2" />
                     Back to Registry
@@ -610,15 +615,53 @@ export function PatientDetail() {
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         {patient.diagnoses ? (
-                                            patient.diagnoses.split('\n').filter(d => d.trim()).map((diag, i) => (
-                                                <div key={i} className="flex items-center gap-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/80 h-[46px] px-4 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-800/80 transition-all duration-300 hover:translate-x-1 group relative overflow-hidden">
-                                                    <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/20 group-hover:bg-indigo-500 transition-colors" />
-                                                    <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-950/40 px-2 py-1 rounded-md border border-indigo-100/50 dark:border-indigo-900/50 shadow-tiny shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 uppercase tracking-widest">
-                                                        {diag.split(' - ')[0]}
-                                                    </span>
-                                                    <span className="text-[14px] font-bold text-slate-700 dark:text-slate-300 leading-snug truncate">{diag.split(' - ').slice(1).join(' ') || diag}</span>
-                                                </div>
-                                            ))
+                                            patient.diagnoses.split('\n').filter(d => d.trim()).map((diag, i) => {
+                                                const isPsych = (() => {
+                                                    const trimmed = diag.trim().toUpperCase();
+                                                    if (/^[F]\d/i.test(trimmed)) return true;
+                                                    if (/^G3[01]/i.test(trimmed)) return true;
+                                                    const psychKeywords = [
+                                                        'depres', 'anxiet', 'ansied', 'insomn', 'bipolar', 'schizo', 
+                                                        'esquizo', 'adhd', 'tdah', 'psych', 'psic', 'ptsd', 'panic', 
+                                                        'panico', 'dement', 'demenc', 'cognitive', 'cognit', 'mental'
+                                                    ];
+                                                    return psychKeywords.some(keyword => trimmed.toLowerCase().includes(keyword));
+                                                })();
+
+                                                return (
+                                                    <div 
+                                                        key={i} 
+                                                        className={cn(
+                                                            "flex items-center gap-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/80 h-[46px] px-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:translate-x-1 group relative overflow-hidden",
+                                                            isPsych 
+                                                                ? "hover:border-indigo-200 dark:hover:border-indigo-800/80" 
+                                                                : "hover:border-emerald-200 dark:hover:border-emerald-800/80"
+                                                        )}
+                                                    >
+                                                        <div 
+                                                            className={cn(
+                                                                "absolute top-0 left-0 w-1 h-full transition-colors",
+                                                                isPsych 
+                                                                    ? "bg-indigo-500/20 group-hover:bg-indigo-500" 
+                                                                    : "bg-emerald-500/20 group-hover:bg-emerald-500"
+                                                            )} 
+                                                        />
+                                                        <span 
+                                                            className={cn(
+                                                                "text-[11px] font-black px-2 py-1 rounded-md border shadow-tiny shrink-0 transition-all duration-300 uppercase tracking-widest",
+                                                                isPsych 
+                                                                    ? "text-indigo-600 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-950/40 border-indigo-100/50 dark:border-indigo-900/50 group-hover:bg-indigo-600 group-hover:text-white" 
+                                                                    : "text-emerald-600 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/40 border-emerald-100/50 dark:border-emerald-900/50 group-hover:bg-emerald-600 group-hover:text-white"
+                                                            )}
+                                                        >
+                                                            {diag.split(' - ')[0]}
+                                                        </span>
+                                                        <span className="text-[14px] font-bold text-slate-700 dark:text-slate-300 leading-snug truncate">
+                                                            {diag.split(' - ').slice(1).join(' ') || diag}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })
                                         ) : (
                                             <p className="text-[14px] font-medium text-slate-400 italic bg-gray-50/20 h-[46px] flex items-center justify-center rounded-xl border border-dashed border-gray-200/80 w-full col-span-2">No active diagnoses found.</p>
                                         )}
@@ -634,7 +677,7 @@ export function PatientDetail() {
                                     </div>
                                     <div className="relative">
                                         <textarea
-                                            className="w-full min-h-[120px] rounded-[16px] border border-slate-200/50 bg-white/40 shadow-sm p-4 text-[14px] font-bold text-slate-700 placeholder:text-slate-300 resize-none leading-relaxed outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 transition-all focus:bg-white"
+                                            className="w-full min-h-[120px] rounded-[16px] border border-slate-200/50 dark:border-slate-800 bg-white/40 dark:bg-slate-950/40 shadow-sm p-4 text-[14px] font-bold text-slate-700 dark:text-slate-200 placeholder:text-slate-300 dark:placeholder:text-slate-600 resize-none leading-relaxed outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 dark:focus:ring-indigo-500/5 transition-all focus:bg-white dark:focus:bg-slate-950"
                                             value={editData.diagnoses || ''}
                                             onChange={(e) => {
                                                 const val = e.target.value;
@@ -652,8 +695,8 @@ export function PatientDetail() {
                                         />
 
                                         {suggestions.length > 0 && (
-                                            <div className="absolute z-50 bottom-full mb-2 left-0 w-full bg-white border border-slate-100 rounded-[16px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                                <div className="p-2 border-b border-slate-50 bg-slate-50/50 text-[11px] font-black text-slate-400 uppercase tracking-widest px-4">
+                                            <div className="absolute z-50 bottom-full mb-2 left-0 w-full bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[16px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                <div className="p-2 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-4">
                                                     Clinical Suggestions
                                                 </div>
                                                 <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
@@ -663,15 +706,15 @@ export function PatientDetail() {
                                                             type="button"
                                                             onClick={() => {
                                                                 const lines = (editData.diagnoses || '').split('\n');
-                                                                lines[lines.length - 1] = `${s.code} - ${s.description}`;
+                                                                lines[lines.length - 1] = `${s.code} - ${s.description} `;
                                                                 handleFieldChange('diagnoses', lines.join('\n') + '\n');
                                                                 setSuggestions([]);
                                                             }}
-                                                            className="w-full text-left px-4 py-3 hover:bg-indigo-50/50 transition-colors border-b border-slate-50 last:border-0 group flex items-center justify-between gap-4"
+                                                            className="w-full text-left px-4 py-3.5 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0 group flex items-center justify-between gap-4"
                                                         >
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded shadow-tiny shrink-0">{s.code}</span>
-                                                                <span className="text-[13px] font-bold text-slate-600 truncate group-hover:text-indigo-600 transition-colors">{s.description}</span>
+                                                            <div className="flex items-center gap-4">
+                                                                <span className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-1 rounded shadow-tiny shrink-0">{s.code}</span>
+                                                                <span className="text-sm font-bold text-slate-700 dark:text-slate-350 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{s.description}</span>
                                                             </div>
                                                             <Plus size={14} className="text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                         </button>
@@ -867,9 +910,9 @@ export function PatientDetail() {
                             </div>
 
                             {timeline.length === 0 ? (
-                                <div className="py-24 text-center border-2 border-dashed border-slate-100 rounded-[40px] bg-slate-50/20">
-                                    <Clock className="mx-auto size-14 text-slate-200 mb-6 drop-shadow-sm" />
-                                    <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.2em]">Historical interactions empty</p>
+                                <div className="py-24 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[40px] bg-slate-50/20 dark:bg-slate-900/20">
+                                    <Clock className="mx-auto size-14 text-slate-200 dark:text-slate-700 mb-6 drop-shadow-sm" />
+                                    <p className="text-[11px] font-black text-slate-300 dark:text-slate-500 uppercase tracking-[0.2em]">Historical interactions empty</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -893,10 +936,10 @@ export function PatientDetail() {
 
             {showAutofillModeModal && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[4px] animate-in fade-in duration-200">
-                    <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-[0_24px_70px_-10px_rgba(0,0,0,0.15)] border border-slate-100/60 space-y-6 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-[32px] p-8 max-w-sm w-full shadow-[0_24px_70px_-10px_rgba(0,0,0,0.15)] dark:shadow-[0_24px_70px_-10px_rgba(0,0,0,0.5)] border border-slate-100/60 dark:border-slate-800 space-y-6 animate-in zoom-in-95 duration-200">
                         <div className="space-y-2 text-center">
-                            <h3 className="text-lg font-black text-slate-900 tracking-tight">AI Autofill Mode</h3>
-                            <p className="text-slate-400 font-medium text-[11px] leading-relaxed max-w-[280px] mx-auto">
+                            <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">AI Autofill Mode</h3>
+                            <p className="text-slate-400 dark:text-slate-500 font-medium text-[11px] leading-relaxed max-w-[280px] mx-auto">
                                 How should the extracted data be applied to this patient's chart?
                             </p>
                         </div>
@@ -904,20 +947,20 @@ export function PatientDetail() {
                         <div className="space-y-3">
                             <button
                                 onClick={() => executeAIAutofill('fill_blanks')}
-                                className="w-full text-left p-5 rounded-2xl border border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/10 transition-all duration-200 group"
+                                className="w-full text-left p-5 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/10 transition-all duration-200 group"
                             >
-                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 group-hover:text-indigo-600 transition-colors">Fill missing info</h4>
-                                <p className="text-slate-400 text-[11px] font-medium mt-1 leading-normal">
+                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Fill missing info</h4>
+                                <p className="text-slate-400 dark:text-slate-500 text-[11px] font-medium mt-1 leading-normal">
                                     Safely populate empty fields. Current data will not be overwritten.
                                 </p>
                             </button>
 
                             <button
                                 onClick={() => executeAIAutofill('overwrite_all')}
-                                className="w-full text-left p-5 rounded-2xl border border-slate-100 hover:border-indigo-500 hover:bg-indigo-50/10 transition-all duration-200 group"
+                                className="w-full text-left p-5 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-500 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/10 transition-all duration-200 group"
                             >
-                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 group-hover:text-indigo-600 transition-colors">Overwrite all</h4>
-                                <p className="text-slate-400 text-[11px] font-medium mt-1 leading-normal">
+                                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Overwrite all</h4>
+                                <p className="text-slate-400 dark:text-slate-500 text-[11px] font-medium mt-1 leading-normal">
                                     Replace all existing data with the newly extracted values.
                                 </p>
                             </button>
@@ -929,7 +972,7 @@ export function PatientDetail() {
                                     setShowAutofillModeModal(false);
                                     setSelectedAutofillFile(null);
                                 }}
-                                className="text-slate-400 hover:text-slate-600 font-bold text-xs transition-colors"
+                                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-bold text-xs transition-colors"
                             >
                                 Cancel
                             </button>

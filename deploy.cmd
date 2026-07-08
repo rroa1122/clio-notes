@@ -5,7 +5,7 @@ echo ===========================================
 echo.
 
 echo [1/4] Compilando el proyecto...
-call npm.cmd run build
+call npx.cmd vite build
 if %errorlevel% neq 0 (
     echo Error en la compilacion. Despliegue cancelado.
     exit /b %errorlevel%

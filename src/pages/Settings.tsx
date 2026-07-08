@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 import SignatureModal from '../notes-module/components/SignatureModal';
+import { AmexzoneSyncTab } from '../components/AmexzoneSyncTab';
 
 export function Settings() {
     const { user, refreshUser } = useAuth();
@@ -14,10 +15,10 @@ export function Settings() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'profile' | 'clinic' | 'supervision' | 'signatures' | 'billing'>(() => {
+    const [activeTab, setActiveTab] = useState<'profile' | 'clinic' | 'supervision' | 'signatures' | 'billing' | 'amexzone'>(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
-        if (tab === 'billing' || tab === 'profile' || tab === 'clinic' || tab === 'supervision' || tab === 'signatures') {
+        if (tab === 'billing' || tab === 'profile' || tab === 'clinic' || tab === 'supervision' || tab === 'signatures' || tab === 'amexzone') {
             return tab;
         }
         return 'profile';
@@ -294,6 +295,7 @@ export function Settings() {
         { id: 'supervision', label: language === 'es' ? 'Supervisión Clínica' : 'Clinical Supervision', icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20 font-black' },
         { id: 'signatures', label: language === 'es' ? 'Firmas Digitales' : 'Digital Signatures', icon: PenTool, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20 font-black' },
         { id: 'billing', label: language === 'es' ? 'Plan y Facturación' : 'Plan & Billing', icon: CreditCard, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/20 font-black' },
+        { id: 'amexzone', label: language === 'es' ? 'Sincronización Amexzone' : 'Amexzone Sync', icon: SettingsIcon, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-950/20 font-black' },
     ];
     return (
         <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)] mb-4">
@@ -906,6 +908,9 @@ export function Settings() {
                                         </div>
                                     </div>
                                 </div>
+                            )}
+                            {activeTab === 'amexzone' && (
+                                <AmexzoneSyncTab />
                             )}
                         </div>
 
