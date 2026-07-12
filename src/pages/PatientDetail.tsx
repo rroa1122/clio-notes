@@ -28,7 +28,20 @@ import {
     CheckCircle2,
     Store,
     UploadCloud,
-    Loader2
+    Loader2,
+    Fingerprint,
+    Coins,
+    DollarSign,
+    Heart,
+    ShieldAlert,
+    GraduationCap,
+    Globe,
+    UserCheck,
+    AlertTriangle,
+    Home,
+    Car,
+    CheckSquare,
+    MoreHorizontal
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -178,6 +191,32 @@ export function PatientDetail() {
 
     const handleFieldChange = (name: string, value: string) => {
         setEditData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSocialNeedsChange = (key: string, checked: boolean) => {
+        setEditData(prev => {
+            const currentNeeds = prev.tcm_social_needs || patient?.tcm_social_needs || {};
+            return {
+                ...prev,
+                tcm_social_needs: {
+                    ...currentNeeds,
+                    [key]: checked
+                }
+            };
+        });
+    };
+
+    const handleSocialNeedsTextChange = (key: string, value: string) => {
+        setEditData(prev => {
+            const currentNeeds = prev.tcm_social_needs || patient?.tcm_social_needs || {};
+            return {
+                ...prev,
+                tcm_social_needs: {
+                    ...currentNeeds,
+                    [key]: value
+                }
+            };
+        });
     };
 
     const handleSave = async () => {
@@ -442,6 +481,7 @@ export function PatientDetail() {
                     <PremiumTrigger value="medical" icon={Stethoscope} label={language === 'es' ? "Médico" : "Medical"} theme="emerald" />
                     <PremiumTrigger value="psychiatric" icon={Brain} label={language === 'es' ? "Psiquiátrico" : "Psychiatric"} theme="purple" />
                     <PremiumTrigger value="pharmacy" icon={Store} label={language === 'es' ? "Farmacia" : "Pharmacy"} theme="amber" />
+                    <PremiumTrigger value="social" icon={ClipboardList} label={language === 'es' ? "Social (TCM)" : "Social (TCM)"} theme="blue" />
                     <PremiumTrigger value="history" icon={Clock} label={language === 'es' ? "Historial" : "History"} theme="slate" />
                 </TabsList>
 
@@ -930,6 +970,594 @@ export function PatientDetail() {
                             )}
                         </div>
                     </TabsContent>
+
+                    {/* [SOCIAL TAB] */}
+                    <TabsContent value="social" className="m-0 focus-visible:outline-none">
+                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-6">
+                            <div className="mb-2">
+                                <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">
+                                    {language === 'es' ? 'Ficha de Evaluación Social y Necesidades (TCM)' : 'Social Assessment & Needs Form (TCM)'}
+                                </h3>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-1 leading-normal">
+                                    {language === 'es' 
+                                        ? 'Completa y administra los determinantes sociales del paciente. Estos datos conducen de forma automática el plan de servicio de Clio.'
+                                        : 'Complete and manage the patient\'s social determinants. This data automatically drives Clio\'s service plan generation.'}
+                                </p>
+                            </div>
+
+                            {(() => {
+                                const socialNeeds = (isEditing ? editData.tcm_social_needs : patient?.tcm_social_needs) || {};
+                                return (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Panel 1: Identificación Básica */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <User size={14} /> {language === 'es' ? '1. Identificación Básica' : '1. Basic Identification'}
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <PremiumGlassField
+                                                    icon={User}
+                                                    label="First Name"
+                                                    name="first_name"
+                                                    value={isEditing ? (editData.first_name || '') : (patient?.first_name || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={User}
+                                                    label="Last Name"
+                                                    name="last_name"
+                                                    value={isEditing ? (editData.last_name || '') : (patient?.last_name || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Phone}
+                                                    label="Telephone"
+                                                    name="phone"
+                                                    value={isEditing ? (editData.phone || '') : (patient?.phone || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Calendar}
+                                                    label="Date of Birth"
+                                                    name="dob"
+                                                    value={isEditing ? (editData.dob || '') : (patient?.dob ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM dd, yyyy', { locale: language === 'es' ? es : undefined }) : '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                    type="date"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Fingerprint}
+                                                    label="Social Security"
+                                                    name="ssn"
+                                                    value={isEditing ? (editData.ssn || '') : (patient?.ssn || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={MapPin}
+                                                    label="Residential Address"
+                                                    name="address"
+                                                    value={isEditing ? (editData.address || '') : (patient?.address || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 2: Ayudas de Gobierno */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <Coins size={14} /> {language === 'es' ? '2. Ayudas de Gobierno' : '2. Government Assistance'}
+                                                </h4>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <PremiumGlassField
+                                                        icon={DollarSign}
+                                                        label="Food Stamps Amount"
+                                                        name="food_stamps_amount"
+                                                        value={socialNeeds.food_stamps_amount || ''}
+                                                        isEditing={isEditing}
+                                                        onChange={handleSocialNeedsTextChange}
+                                                        theme="indigo"
+                                                    />
+                                                    <PremiumGlassField
+                                                        icon={Calendar}
+                                                        label="Food Stamps Since"
+                                                        name="food_stamps_since"
+                                                        value={socialNeeds.food_stamps_since || ''}
+                                                        isEditing={isEditing}
+                                                        onChange={handleSocialNeedsTextChange}
+                                                        theme="indigo"
+                                                    />
+                                                </div>
+                                                <PremiumGlassField
+                                                    icon={FileText}
+                                                    label="Medicaid Status/No."
+                                                    name="medicaid_details"
+                                                    value={socialNeeds.medicaid_details || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={FileText}
+                                                    label="Medicare Status/No."
+                                                    name="medicare_details"
+                                                    value={socialNeeds.medicare_details || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={FileText}
+                                                    label="SSI Details"
+                                                    name="ssi_details"
+                                                    value={socialNeeds.ssi_details || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 3: Perfil Personal y Clínico */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <Heart size={14} /> {language === 'es' ? '3. Perfil Personal y Clínico' : '3. Personal & Clinical Profile'}
+                                                </h4>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <PremiumGlassField
+                                                    icon={ShieldAlert}
+                                                    label="Religious Beliefs"
+                                                    name="religion"
+                                                    value={socialNeeds.religion || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Activity}
+                                                    label="Psychiatric Diagnosis"
+                                                    name="psych_conditions"
+                                                    value={isEditing ? (editData.psych_conditions || '') : (patient?.psych_conditions || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    isTextarea
+                                                    theme="indigo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 4: Proveedores Médicos */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <Stethoscope size={14} /> {language === 'es' ? '4. Proveedores' : '4. Providers'}
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <PremiumGlassField
+                                                    icon={User}
+                                                    label="PCP Name"
+                                                    name="pcp_name"
+                                                    value={isEditing ? (editData.pcp_name || '') : (patient?.pcp_name || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={MapPin}
+                                                    label="PCP Address"
+                                                    name="pcp_address"
+                                                    value={isEditing ? (editData.pcp_address || '') : (patient?.pcp_address || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Clock}
+                                                    label="Time at PCP Clinic"
+                                                    name="pcp_duration"
+                                                    value={socialNeeds.pcp_duration || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={User}
+                                                    label="Psychiatrist Name"
+                                                    name="psych_name"
+                                                    value={isEditing ? (editData.psych_name || '') : (patient?.psych_name || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={MapPin}
+                                                    label="Psychiatrist Address"
+                                                    name="psych_address"
+                                                    value={isEditing ? (editData.psych_address || '') : (patient?.psych_address || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Clock}
+                                                    label="Time with Psychiatrist"
+                                                    name="psych_duration"
+                                                    value={socialNeeds.psych_duration || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Store}
+                                                    label="Pharmacy Name"
+                                                    name="pharmacy_name"
+                                                    value={isEditing ? (editData.pharmacy_name || '') : (patient?.pharmacy_name || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={MapPin}
+                                                    label="Pharmacy Address"
+                                                    name="pharmacy_address"
+                                                    value={isEditing ? (editData.pharmacy_address || '') : (patient?.pharmacy_address || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 5: Convivencia y Familia */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <Users size={14} /> {language === 'es' ? '5. Educación, Estado Civil y Convivencia' : '5. Family & Cohabitation'}
+                                                </h4>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <PremiumGlassField
+                                                    icon={GraduationCap}
+                                                    label="Education Level"
+                                                    name="education_level"
+                                                    value={socialNeeds.education_level || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Heart}
+                                                    label="Marital Status"
+                                                    name="marital_status"
+                                                    value={socialNeeds.marital_status || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                    options={['Single', 'Married', 'Divorced', 'Widowed', 'Separated']}
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Users}
+                                                    label="Who they live with (Name, relationship, age)"
+                                                    name="co_habitants"
+                                                    value={socialNeeds.co_habitants || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    isTextarea
+                                                    theme="indigo"
+                                                />
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <PremiumGlassField
+                                                        icon={Users}
+                                                        label="Number of Children"
+                                                        name="children_count"
+                                                        value={socialNeeds.children_count || ''}
+                                                        isEditing={isEditing}
+                                                        onChange={handleSocialNeedsTextChange}
+                                                        type="number"
+                                                        theme="indigo"
+                                                    />
+                                                    <PremiumGlassField
+                                                        icon={MapPin}
+                                                        label="Where children live"
+                                                        name="children_location"
+                                                        value={socialNeeds.children_location || ''}
+                                                        isEditing={isEditing}
+                                                        onChange={handleSocialNeedsTextChange}
+                                                        theme="indigo"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 6: Trabajo y Finanzas */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <Briefcase size={14} /> {language === 'es' ? '6. Situación Laboral e Ingresos' : '6. Employment & Financials'}
+                                                </h4>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <PremiumGlassField
+                                                    icon={Briefcase}
+                                                    label="Occupation (Current or pre-retirement)"
+                                                    name="occupation"
+                                                    value={socialNeeds.occupation || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <PremiumGlassField
+                                                        icon={DollarSign}
+                                                        label="Supplemental SSI Amount"
+                                                        name="ssi_amount"
+                                                        value={socialNeeds.ssi_amount || ''}
+                                                        isEditing={isEditing}
+                                                        onChange={handleSocialNeedsTextChange}
+                                                        theme="indigo"
+                                                    />
+                                                    <PremiumGlassField
+                                                        icon={DollarSign}
+                                                        label="SSA Amount"
+                                                        name="ssa_amount"
+                                                        value={socialNeeds.ssa_amount || ''}
+                                                        isEditing={isEditing}
+                                                        onChange={handleSocialNeedsTextChange}
+                                                        theme="indigo"
+                                                    />
+                                                </div>
+                                                <PremiumGlassField
+                                                    icon={Calendar}
+                                                    label="Retirement / Disability Date"
+                                                    name="retirement_date"
+                                                    value={socialNeeds.retirement_date || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 7: Estatus Migratorio */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <Globe size={14} /> {language === 'es' ? '7. Origen y Estatus Migratorio' : '7. Origin & Immigration'}
+                                                </h4>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <PremiumGlassField
+                                                    icon={Globe}
+                                                    label="Country of Origin"
+                                                    name="origin_country"
+                                                    value={socialNeeds.origin_country || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Calendar}
+                                                    label="US Entry Date"
+                                                    name="us_entry_date"
+                                                    value={socialNeeds.us_entry_date || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={UserCheck}
+                                                    label="Citizen? (Include Year)"
+                                                    name="citizenship_status"
+                                                    value={socialNeeds.citizenship_status || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={UserCheck}
+                                                    label="Resident?"
+                                                    name="residence_status"
+                                                    value={socialNeeds.residence_status || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 8: Contacto de Emergencia */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <AlertTriangle size={14} /> {language === 'es' ? '8. Contacto de Emergencia' : '8. Emergency Contact'}
+                                                </h4>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <PremiumGlassField
+                                                    icon={User}
+                                                    label="Emergency Contact Name"
+                                                    name="emergency_contact_name"
+                                                    value={isEditing ? (editData.emergency_contact_name || '') : (patient?.emergency_contact_name || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Phone}
+                                                    label="Emergency Contact Phone"
+                                                    name="emergency_contact_phone"
+                                                    value={isEditing ? (editData.emergency_contact_phone || '') : (patient?.emergency_contact_phone || '')}
+                                                    isEditing={isEditing}
+                                                    onChange={handleFieldChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Users}
+                                                    label="Relationship / Parentesco"
+                                                    name="emergency_contact_relationship"
+                                                    value={socialNeeds.emergency_contact_relationship || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 9: Vivienda */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <Home size={14} /> {language === 'es' ? '9. Vivienda y Transporte' : '9. Housing & Transport'}
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <PremiumGlassField
+                                                    icon={Home}
+                                                    label="Living Situation (Type, # of rooms)"
+                                                    name="housing_type"
+                                                    value={socialNeeds.housing_type || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Car}
+                                                    label="Drives? / ¿Maneja?"
+                                                    name="drives"
+                                                    value={socialNeeds.drives || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                    options={['Yes', 'No']}
+                                                />
+                                                <PremiumGlassField
+                                                    icon={DollarSign}
+                                                    label="Rent Amount"
+                                                    name="rent_payment"
+                                                    value={socialNeeds.rent_payment || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                
+                                                <TcmCheckbox 
+                                                    label="Regular Rent" 
+                                                    labelEs="Renta Regular" 
+                                                    field="regular_rent" 
+                                                    isEditing={isEditing} 
+                                                    needs={socialNeeds} 
+                                                    onChange={handleSocialNeedsChange} 
+                                                />
+                                                <TcmCheckbox 
+                                                    label="Plan 8 / Section 8" 
+                                                    labelEs="Plan 8 / Sección 8" 
+                                                    field="plan_8" 
+                                                    isEditing={isEditing} 
+                                                    needs={socialNeeds} 
+                                                    onChange={handleSocialNeedsChange} 
+                                                />
+                                                <TcmCheckbox 
+                                                    label="Low Income Housing (Current)" 
+                                                    labelEs="Vivienda de Bajo Recurso (Actual)" 
+                                                    field="low_income" 
+                                                    isEditing={isEditing} 
+                                                    needs={socialNeeds} 
+                                                    onChange={handleSocialNeedsChange} 
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 10: Servicios que Necesita (Checklist) */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <CheckSquare size={14} /> {language === 'es' ? '10. Servicios que Necesita' : '10. Services Needed'}
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                                <TcmCheckbox label="LIHEAP Needed" labelEs="Necesita LIHEAP (Ayuda de Luz)" field="needs_liheap" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                                <TcmCheckbox label="Assurance Phone Needed" labelEs="Teléfono Assurance (Free Phone)" field="needs_assurance" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                                <TcmCheckbox label="Recreational Programs" labelEs="Programas Recreacionales" field="needs_recreational" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                                <TcmCheckbox label="Citizenship Assistance" labelEs="Ayuda de Ciudadanía" field="needs_citizenship" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                                <TcmCheckbox label="Golden Pass Card" labelEs="Golden Pass (Tránsito Gratis)" field="needs_golden_pass" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                                <TcmCheckbox label="Disabled Parking Permit (DPP)" labelEs="Permiso de Parqueo DPP" field="needs_parking" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                                <TcmCheckbox label="Housing Assistance (Needed)" labelEs="Asistencia de Vivienda (Necesaria)" field="needs_housing" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                                <TcmCheckbox label="SNAP / Food Stamps" labelEs="Cupones de Alimentos (SNAP)" field="needs_food_stamps" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                                <TcmCheckbox label="Donaciones / Ropa" labelEs="Donaciones / Ropa" field="needs_donations" isEditing={isEditing} needs={socialNeeds} onChange={handleSocialNeedsChange} />
+                                            </div>
+                                        </div>
+
+                                        {/* Panel 11: Otros Detalles */}
+                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <MoreHorizontal size={14} /> {language === 'es' ? '11. Otros Detalles y Cirugías' : '11. Other Details & Surgeries'}
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <PremiumGlassField
+                                                    icon={FileText}
+                                                    label="Bank Name (Where benefits are deposited)"
+                                                    name="bank_name"
+                                                    value={socialNeeds.bank_name || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Activity}
+                                                    label="Special Accommodations"
+                                                    name="special_accommodation"
+                                                    value={socialNeeds.special_accommodation || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={Activity}
+                                                    label="Surgeries (Date / Hospital)"
+                                                    name="surgeries"
+                                                    value={socialNeeds.surgeries || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    isTextarea
+                                                    theme="indigo"
+                                                />
+                                                <PremiumGlassField
+                                                    icon={MoreHorizontal}
+                                                    label="Other Needs to Add"
+                                                    name="other_needs"
+                                                    value={socialNeeds.other_needs || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    isTextarea
+                                                    theme="indigo"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </TabsContent>
                 </div>
             </Tabs>
             </div>
@@ -1089,7 +1717,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                 isEditing 
                     ? "hover:border-indigo-300 border-indigo-200 dark:border-slate-800 ring-2 ring-indigo-50/30 dark:ring-indigo-950/40 bg-white dark:bg-slate-950 shadow-sm" 
                     : (!value ? "border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 text-slate-400 dark:text-slate-500 font-medium italic" : "border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900/40 hover:border-indigo-100 dark:hover:border-indigo-900"),
-                isTextarea ? (large ? "min-h-[170px]" : "min-h-[120px]") : "h-11"
+                isTextarea ? (large ? "min-h-[170px]" : "min-h-[120px]") : (isEditing ? "h-11" : "min-h-[2.75rem] py-1.5 flex items-center")
             )}>
 
                 {isEditing ? (
@@ -1126,12 +1754,12 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                         />
                     )
                 ) : (
-                    <div className="w-full h-full px-6 py-2 flex items-center">
+                    <div className="w-full px-6 py-0.5">
                         <span className={cn(
-                            "relative z-10 text-[14px] leading-relaxed",
-                            !value ? "text-slate-400/80 dark:text-slate-500" : "text-slate-700 dark:text-slate-200"
+                            "relative z-10 text-[14px] leading-relaxed break-words block",
+                            !value ? "text-slate-400/80 dark:text-slate-500 font-medium italic" : "text-slate-900 dark:text-slate-100 font-semibold"
                         )}>
-                            {value || (language === 'es' ? `Sin ${translatedLabel.toLowerCase()} registrado` : `No documented ${label.toLowerCase()}`)}
+                            {value || (language === 'es' ? 'Sin documentar' : 'No documented')}
                         </span>
                     </div>
                 )}
@@ -1212,5 +1840,55 @@ function TimelineEntry({ item, isLast, navigate, onPreview, disabled }: { item: 
                 <ChevronRight size={16} />
             </div>
         </div>
+    );
+}
+
+function TcmCheckbox({ 
+    label, 
+    labelEs, 
+    field, 
+    isEditing, 
+    needs, 
+    onChange 
+}: { 
+    label: string, 
+    labelEs: string, 
+    field: string, 
+    isEditing: boolean, 
+    needs: any, 
+    onChange: (key: string, checked: boolean) => void 
+}) {
+    const { language } = useLanguage();
+    const isChecked = !!(needs && needs[field]);
+    const displayLabel = language === 'es' ? labelEs : label;
+
+    if (!isEditing) {
+        return (
+            <div className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-300",
+                isChecked 
+                    ? "bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-750 dark:text-emerald-300 border-emerald-500/20" 
+                    : "bg-slate-50/50 dark:bg-slate-900/10 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-slate-850 opacity-50"
+            )}>
+                {isChecked ? (
+                    <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                ) : (
+                    <div className="size-4 rounded-full border border-slate-300 dark:border-slate-700 shrink-0" />
+                )}
+                <span className="text-xs font-bold select-none">{displayLabel}</span>
+            </div>
+        );
+    }
+
+    return (
+        <label className="flex items-center gap-3 px-4 py-3 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer transition-all active:scale-[0.98]">
+            <input 
+                type="checkbox" 
+                checked={isChecked} 
+                onChange={(e) => onChange(field, e.target.checked)} 
+                className="size-4 rounded border-slate-300 dark:border-slate-700 text-indigo-650 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-0 dark:bg-slate-950" 
+            />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 select-none">{displayLabel}</span>
+        </label>
     );
 }

@@ -80,7 +80,8 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
         pharmacy_phone: '',
         pharmacy_fax: '',
         pharmacy_address: '',
-        presenting_problems: ''
+        presenting_problems: '',
+        tcm_social_needs: {}
     });
 
     const [suggestions, setSuggestions] = useState<DiagnosisCode[]>([]);
@@ -202,6 +203,16 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleSocialNeedsChange = (field: string, checked: boolean) => {
+        setFormData(prev => ({
+            ...prev,
+            tcm_social_needs: {
+                ...(prev.tcm_social_needs || {}),
+                [field]: checked
+            }
+        }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const firstName = formData.first_name?.trim() || '';
@@ -311,11 +322,12 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                         {/* Tabs Navigation */}
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
                             <div className="px-8 py-3">
-                                <TabsList className="bg-slate-50 dark:bg-slate-950 p-1 h-12 rounded-full border border-slate-200/50 dark:border-slate-800/80 shadow-sm w-full grid grid-cols-4 overflow-hidden gap-1">
+                                <TabsList className="bg-slate-50 dark:bg-slate-950 p-1 h-12 rounded-full border border-slate-200/50 dark:border-slate-800/80 shadow-sm w-full grid grid-cols-5 overflow-hidden gap-1">
                                     <PremiumTrigger value="client" label="Client" icon={User} theme="indigo" />
                                     <PremiumTrigger value="medical" label="Medical" icon={DoctorIcon} theme="emerald" />
                                     <PremiumTrigger value="psychiatric" label="Psychiatric" icon={PsychIcon} theme="purple" />
                                     <PremiumTrigger value="pharmacy" label="Pharmacy" icon={Store} theme="amber" />
+                                    <PremiumTrigger value="social" label="Social" icon={ClipboardList} theme="blue" />
                                 </TabsList>
                             </div>
 
@@ -512,6 +524,70 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                         </div>
                                     </div>
                                 </TabsContent>
+
+                                {/* [SOCIAL TAB] */}
+                                <TabsContent value="social" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
+                                    <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm space-y-6">
+                                        <div>
+                                            <h3 className="text-sm font-black uppercase text-slate-800 dark:text-slate-250 tracking-wider">
+                                                TCM Social Needs Checklist / Necesidades Sociales
+                                            </h3>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* Group 1: Gobierno e Ingresos */}
+                                            <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 rounded-[1.25rem] p-5 space-y-4">
+                                                <h4 className="text-[11px] font-black uppercase text-indigo-650 dark:text-indigo-400 tracking-wider">
+                                                    Government & Income
+                                                </h4>
+                                                <div className="space-y-3">
+                                                    <TcmModalCheckbox label="SSI Recipient (Recibe SSI)" field="ssi_recipient" value={formData.tcm_social_needs?.ssi_recipient} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="SNAP Recipient (Food Stamps)" field="snap_recipient" value={formData.tcm_social_needs?.snap_recipient} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Medicaid Recipient" field="medicaid_recipient" value={formData.tcm_social_needs?.medicaid_recipient} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Medicare Recipient" field="medicare_recipient" value={formData.tcm_social_needs?.medicare_recipient} onChange={handleSocialNeedsChange} />
+                                                </div>
+                                            </div>
+
+                                            {/* Group 2: Vivienda y Utilidades */}
+                                            <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 rounded-[1.25rem] p-5 space-y-4">
+                                                <h4 className="text-[11px] font-black uppercase text-emerald-650 dark:text-emerald-400 tracking-wider">
+                                                    Utilities & Housing
+                                                </h4>
+                                                <div className="space-y-3">
+                                                    <TcmModalCheckbox label="LIHEAP Needed (Ayuda de Luz)" field="liheap_needed" value={formData.tcm_social_needs?.liheap_needed} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Lifeline Free Phone Needed" field="lifeline_needed" value={formData.tcm_social_needs?.lifeline_needed} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Section 8 / Voucher Needed" field="housing_voucher" value={formData.tcm_social_needs?.housing_voucher} onChange={handleSocialNeedsChange} />
+                                                </div>
+                                            </div>
+
+                                            {/* Group 3: Transporte y Movilidad */}
+                                            <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 rounded-[1.25rem] p-5 space-y-4">
+                                                <h4 className="text-[11px] font-black uppercase text-purple-650 dark:text-purple-400 tracking-wider">
+                                                    Transportation & Mobility
+                                                </h4>
+                                                <div className="space-y-3">
+                                                    <TcmModalCheckbox label="STS Needed (Miami-Dade door-to-door)" field="sts_needed" value={formData.tcm_social_needs?.sts_needed} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Golden Passport Needed (Free Transit)" field="golden_passport_needed" value={formData.tcm_social_needs?.golden_passport_needed} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Handicap Parking Permit (DPP) Needed" field="parking_permit_needed" value={formData.tcm_social_needs?.parking_permit_needed} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Modivcare / Freebee needed" field="modivcare_needed" value={formData.tcm_social_needs?.modivcare_needed} onChange={handleSocialNeedsChange} />
+                                                </div>
+                                            </div>
+
+                                            {/* Group 4: Bienestar y Apoyo */}
+                                            <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 rounded-[1.25rem] p-5 space-y-4">
+                                                <h4 className="text-[11px] font-black uppercase text-amber-650 dark:text-amber-400 tracking-wider">
+                                                    Wellness & Social Support
+                                                </h4>
+                                                <div className="space-y-3">
+                                                    <TcmModalCheckbox label="Food Insecurity / Hot Meals needed" field="food_insecurity" value={formData.tcm_social_needs?.food_insecurity} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Emergency Alarm Needed (Lives alone)" field="emergency_alarm_needed" value={formData.tcm_social_needs?.emergency_alarm_needed} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="Evacuation registry (Hurricane EEP)" field="hurricane_evac_registration" value={formData.tcm_social_needs?.hurricane_evac_registration} onChange={handleSocialNeedsChange} />
+                                                    <TcmModalCheckbox label="No family/social support network" field="has_no_family_support" value={formData.tcm_social_needs?.has_no_family_support} onChange={handleSocialNeedsChange} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </TabsContent>
                             </div>
                         </Tabs>
 
@@ -680,5 +756,29 @@ function PremiumGlassField({ icon: Icon, label, name, value, onChange, placehold
                 )}
             </div>
         </div>
+    );
+}
+
+function TcmModalCheckbox({ 
+    label, 
+    field, 
+    value, 
+    onChange 
+}: { 
+    label: string, 
+    field: string, 
+    value: boolean | undefined, 
+    onChange: (field: string, checked: boolean) => void 
+}) {
+    return (
+        <label className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer transition-all active:scale-[0.98]">
+            <input 
+                type="checkbox" 
+                checked={!!value} 
+                onChange={(e) => onChange(field, e.target.checked)} 
+                className="size-4 rounded border-slate-300 dark:border-slate-700 text-indigo-650 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-0 dark:bg-slate-950" 
+            />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 select-none">{label}</span>
+        </label>
     );
 }

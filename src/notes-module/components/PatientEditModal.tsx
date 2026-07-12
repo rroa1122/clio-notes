@@ -66,7 +66,8 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
         pharmacy_fax: '',
         pharmacy_address: '',
         // Clinical
-        presenting_problems: ''
+        presenting_problems: '',
+        tcm_social_needs: {}
     });
 
     const [activeTab, setActiveTab] = useState("client");
@@ -105,10 +106,21 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
                 pharmacy_phone: patient.pharmacy_phone || '',
                 pharmacy_fax: patient.pharmacy_fax || '',
                 pharmacy_address: patient.pharmacy_address || '',
-                presenting_problems: patient.presenting_problems || ''
+                presenting_problems: patient.presenting_problems || '',
+                tcm_social_needs: patient.tcm_social_needs || {}
             });
         }
     }, [patient]);
+
+    const handleSocialNeedsChange = (field: string, checked: boolean) => {
+        setFormData(prev => ({
+            ...prev,
+            tcm_social_needs: {
+                ...(prev.tcm_social_needs || {}),
+                [field]: checked
+            }
+        }));
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -152,7 +164,8 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
                 pharmacy_phone: formData.pharmacy_phone || null,
                 pharmacy_fax: formData.pharmacy_fax || null,
                 pharmacy_address: formData.pharmacy_address || null,
-                presenting_problems: formData.presenting_problems || null
+                presenting_problems: formData.presenting_problems || null,
+                tcm_social_needs: formData.tcm_social_needs || null
             };
 
             const updatedPatient = await storage.upsertPatient(sanitizedData);
@@ -193,11 +206,12 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
 
                     <div className="flex-1 overflow-y-auto px-8 py-6">
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="grid grid-cols-4 w-full h-12 bg-slate-50 p-1 rounded-2xl mb-8 border border-slate-100">
+                            <TabsList className="grid grid-cols-5 w-full h-12 bg-slate-50 p-1 rounded-2xl mb-8 border border-slate-100">
                                 <TabsTrigger value="client" className="rounded-xl text-[11px] font-bold uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:shadow-sm">CLIENT</TabsTrigger>
                                 <TabsTrigger value="pcp" className="rounded-xl text-[11px] font-bold uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:shadow-sm">PCP</TabsTrigger>
                                 <TabsTrigger value="psych" className="rounded-xl text-[11px] font-bold uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:shadow-sm">PSYCH</TabsTrigger>
                                 <TabsTrigger value="pharmacy" className="rounded-xl text-[11px] font-bold uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:shadow-sm">PHARMACY</TabsTrigger>
+                                <TabsTrigger value="social" className="rounded-xl text-[11px] font-bold uppercase tracking-wider data-[state=active]:bg-white data-[state=active]:shadow-sm">SOCIAL</TabsTrigger>
                             </TabsList>
 
                             {/* TAB 1: CLIENT */}
@@ -398,6 +412,75 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
                                 </div>
                             </TabsContent>
 
+                            {/* TAB 5: SOCIAL */}
+                            <TabsContent value="social" className="mt-0 outline-none animate-in fade-in zoom-in-95 duration-200">
+                                {(() => {
+                                    const socialNeeds = (formData.tcm_social_needs || {}) as any;
+                                    return (
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm space-y-6">
+                                            <div>
+                                                <h3 className="text-sm font-bold uppercase text-slate-800 dark:text-slate-255 tracking-wider">
+                                                    TCM Social Needs Checklist / Necesidades Sociales
+                                                </h3>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                {/* Group 1: Gobierno e Ingresos */}
+                                                <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 rounded-[1.25rem] p-5 space-y-4">
+                                                    <h4 className="text-[11px] font-black uppercase text-indigo-650 dark:text-indigo-400 tracking-wider">
+                                                        Government & Income
+                                                    </h4>
+                                                    <div className="space-y-3">
+                                                        <TcmModalCheckbox label="SSI Recipient (Recibe SSI)" field="ssi_recipient" value={socialNeeds.ssi_recipient} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="SNAP Recipient (Food Stamps)" field="snap_recipient" value={socialNeeds.snap_recipient} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Medicaid Recipient" field="medicaid_recipient" value={socialNeeds.medicaid_recipient} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Medicare Recipient" field="medicare_recipient" value={socialNeeds.medicare_recipient} onChange={handleSocialNeedsChange} />
+                                                    </div>
+                                                </div>
+
+                                                {/* Group 2: Vivienda y Utilidades */}
+                                                <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 rounded-[1.25rem] p-5 space-y-4">
+                                                    <h4 className="text-[11px] font-black uppercase text-emerald-650 dark:text-emerald-400 tracking-wider">
+                                                        Utilities & Housing
+                                                    </h4>
+                                                    <div className="space-y-3">
+                                                        <TcmModalCheckbox label="LIHEAP Needed (Ayuda de Luz)" field="liheap_needed" value={socialNeeds.liheap_needed} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Lifeline Free Phone Needed" field="lifeline_needed" value={socialNeeds.lifeline_needed} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Section 8 / Voucher Needed" field="housing_voucher" value={socialNeeds.housing_voucher} onChange={handleSocialNeedsChange} />
+                                                    </div>
+                                                </div>
+
+                                                {/* Group 3: Transporte y Movilidad */}
+                                                <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 rounded-[1.25rem] p-5 space-y-4">
+                                                    <h4 className="text-[11px] font-black uppercase text-purple-650 dark:text-purple-400 tracking-wider">
+                                                        Transportation & Mobility
+                                                    </h4>
+                                                    <div className="space-y-3">
+                                                        <TcmModalCheckbox label="STS Needed (Miami-Dade door-to-door)" field="sts_needed" value={socialNeeds.sts_needed} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Golden Passport Needed (Free Transit)" field="golden_passport_needed" value={socialNeeds.golden_passport_needed} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Handicap Parking Permit (DPP) Needed" field="parking_permit_needed" value={socialNeeds.parking_permit_needed} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Modivcare / Freebee needed" field="modivcare_needed" value={socialNeeds.modivcare_needed} onChange={handleSocialNeedsChange} />
+                                                    </div>
+                                                </div>
+
+                                                {/* Group 4: Bienestar y Apoyo */}
+                                                <div className="bg-white/60 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 rounded-[1.25rem] p-5 space-y-4">
+                                                    <h4 className="text-[11px] font-black uppercase text-amber-650 dark:text-amber-405 tracking-wider">
+                                                        Wellness & Social Support
+                                                    </h4>
+                                                    <div className="space-y-3">
+                                                        <TcmModalCheckbox label="Food Insecurity / Hot Meals needed" field="food_insecurity" value={socialNeeds.food_insecurity} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Emergency Alarm Needed (Lives alone)" field="emergency_alarm_needed" value={socialNeeds.emergency_alarm_needed} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="Evacuation registry (Hurricane EEP)" field="hurricane_evac_registration" value={socialNeeds.hurricane_evac_registration} onChange={handleSocialNeedsChange} />
+                                                        <TcmModalCheckbox label="No family/social support network" field="has_no_family_support" value={socialNeeds.has_no_family_support} onChange={handleSocialNeedsChange} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </TabsContent>
+
 
                         </Tabs>
                     </div>
@@ -411,5 +494,29 @@ export function PatientEditModal({ isOpen, onClose, patient, onUpdated }: Patien
                 </form>
             </DialogContent>
         </Dialog>
+    );
+}
+
+function TcmModalCheckbox({ 
+    label, 
+    field, 
+    value, 
+    onChange 
+}: { 
+    label: string, 
+    field: string, 
+    value: boolean | undefined, 
+    onChange: (field: string, checked: boolean) => void 
+}) {
+    return (
+        <label className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-55 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer transition-all active:scale-[0.98]">
+            <input 
+                type="checkbox" 
+                checked={!!value} 
+                onChange={(e) => onChange(field, e.target.checked)} 
+                className="size-4 rounded border-slate-300 dark:border-slate-700 text-indigo-650 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-0 dark:bg-slate-950" 
+            />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-350 select-none">{label}</span>
+        </label>
     );
 }

@@ -76,6 +76,9 @@ export interface Patient {
 
     // Clinical Intake
     presenting_problems?: string | null;
+
+    // TCM Social Needs
+    tcm_social_needs?: Record<string, any> | null;
 }
 
 /**

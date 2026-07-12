@@ -912,7 +912,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     };
 
     const handleSyncWithEhr = async () => {
-        const noteIdToSync = mergedNote.id || lastSavedId;
+        const note = mergedNote as any;
+        const noteIdToSync = note.id || lastSavedId;
         if (!noteIdToSync) {
             toast.error("Please save the note before exporting to EHR.");
             return;
@@ -929,9 +930,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             if (intError) throw intError;
 
-            if (!integration || integration.mfa_status !== 'connected') {
-                toast.error("Please configure and connect your EHR integration in Settings first.");
-                setIsSyncing(false);
+            if (!integration) {
+                toast.error("Please connect your EHR integration in settings first.");
                 return;
             }
 
@@ -942,26 +942,17 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 return String(value);
             };
 
-            // Compile the note clinical text
-            let fullNoteText = `CLINICAL PROGRESS NOTE\n`;
-            fullNoteText += `====================================\n`;
-            fullNoteText += `Patient: ${mergedNote.patient?.full_name || 'N/A'}\n`;
-            fullNoteText += `DOB: ${mergedNote.patient?.dob || 'N/A'}\n`;
-            fullNoteText += `Date of Service: ${mergedNote.encounter?.dos_date || (mergedNote as any).meta?.visitDate || 'N/A'}\n`;
-            fullNoteText += `Duration: ${mergedNote.encounter?.duration_minutes || mergedNote.encounter?.duration || 'N/A'} minutes\n`;
-            fullNoteText += `Units: ${mergedNote.encounter?.units || 'N/A'}\n`;
-            fullNoteText += `====================================\n\n`;
+            // Construct full clinical text note for EHR
+            let fullNoteText = ``;
 
-            if (mergedNote.hpi?.chief_complaint) {
-                fullNoteText += `[CHIEF COMPLAINT]\n${mergedNote.hpi.chief_complaint}\n\n`;
-            }
-            if (mergedNote.hpi?.narrative) {
-                fullNoteText += `[HISTORY OF PRESENT ILLNESS]\n${mergedNote.hpi.narrative}\n\n`;
-            }
+            // Enforce default header
+            fullNoteText += `TCM TARGETED CASE MANAGEMENT VISIT NOTE\n`;
+            fullNoteText += `Date of Service: ${note.encounter?.dos_date || 'N/A'}\n`;
+            fullNoteText += `Patient: ${note.patient?.full_name || 'N/A'} (DOB: ${note.patient?.dob || 'N/A'})\n\n`;
 
-            if (mergedNote.mse) {
-                fullNoteText += `[MENTAL STATUS EXAM]\n`;
-                Object.entries(mergedNote.mse).forEach(([key, val]) => {
+            if (note.meta?.extractedDetails) {
+                fullNoteText += `[VISIT SUMMARY DETAILS]\n`;
+                Object.entries(note.meta.extractedDetails).forEach(([key, val]) => {
                     const strVal = formatValue(val);
                     if (strVal && strVal !== "Not reported") {
                         fullNoteText += `${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}: ${strVal}\n`;
@@ -970,21 +961,21 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 fullNoteText += `\n`;
             }
 
-            if (mergedNote.assessments && mergedNote.assessments.length > 0) {
+            if (note.assessments && note.assessments.length > 0) {
                 fullNoteText += `[DIAGNOSES / DSM-5]\n`;
-                mergedNote.assessments.forEach(diag => {
+                note.assessments.forEach((diag: any) => {
                     fullNoteText += `- ${diag.diagnosis}${diag.icd10 ? ` (${diag.icd10})` : ''}${diag.primary ? ' (Primary)' : ''}\n`;
                 });
                 fullNoteText += `\n`;
             }
 
-            if (mergedNote.plan?.plan_recommendations_instructions) {
-                fullNoteText += `[PLAN / RECOMMENDATIONS]\n${mergedNote.plan.plan_recommendations_instructions}\n\n`;
+            if (note.plan?.plan_recommendations_instructions) {
+                fullNoteText += `[PLAN / RECOMMENDATIONS]\n${note.plan.plan_recommendations_instructions}\n\n`;
             }
 
-            if (mergedNote.plan?.pharmacological) {
+            if (note.plan?.pharmacological) {
                 fullNoteText += `[PHARMACOLOGICAL PLAN]\n`;
-                const pharm = mergedNote.plan.pharmacological;
+                const pharm = note.plan.pharmacological;
                 if (pharm.start?.length > 0) fullNoteText += `Start: ${formatValue(pharm.start)}\n`;
                 if (pharm.continue?.length > 0) fullNoteText += `Continue: ${formatValue(pharm.continue)}\n`;
                 if (pharm.switch?.length > 0) fullNoteText += `Switch: ${formatValue(pharm.switch)}\n`;
@@ -992,10 +983,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 fullNoteText += `\n`;
             }
 
-            if (mergedNote.follow_up?.instructions || mergedNote.follow_up?.interval) {
+            if (note.follow_up?.instructions || note.follow_up?.interval) {
                 fullNoteText += `[FOLLOW UP]\n`;
-                if (mergedNote.follow_up.interval) fullNoteText += `Interval: ${mergedNote.follow_up.interval}\n`;
-                if (mergedNote.follow_up.instructions) fullNoteText += `Instructions: ${mergedNote.follow_up.instructions}\n`;
+                if (note.follow_up.interval) fullNoteText += `Interval: ${note.follow_up.interval}\n`;
+                if (note.follow_up.instructions) fullNoteText += `Instructions: ${note.follow_up.instructions}\n`;
                 fullNoteText += `\n`;
             }
 
@@ -1006,9 +997,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     note_id: noteIdToSync,
                     user_id: user?.id,
                     clinic_id: user?.clinic_id || clinicSettings?.id || null,
-                    patient_name: mergedNote.patient?.full_name || 'Desconocido',
-                    patient_dob: mergedNote.patient?.dob || null,
-                    visit_date: mergedNote.encounter?.dos_date || (mergedNote as any).meta?.visitDate || null,
+                    patient_name: note.patient?.full_name || 'Desconocido',
+                    patient_dob: note.patient?.dob || null,
+                    visit_date: note.encounter?.dos_date || note.meta?.visitDate || null,
                     note_text: fullNoteText.trim(),
                     status: 'pending'
                 });
