@@ -1959,10 +1959,10 @@ export function PatientDetail() {
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        <div className="overflow-x-auto rounded-2xl border border-slate-800/60 dark:border-slate-800 bg-slate-950/20 dark:bg-slate-900/20 backdrop-blur-md">
+                                                        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/20 backdrop-blur-md">
                                                             <table className="w-full text-left border-collapse text-xs">
                                                                 <thead>
-                                                                    <tr className="bg-slate-900/60 dark:bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                                                    <tr className="bg-slate-100/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                                                         <th className="p-3 w-[40%]">Name</th>
                                                                         <th className="p-3 w-[30%]">Agency</th>
                                                                         <th className="p-3 w-[25%]">Relationship</th>
@@ -1982,7 +1982,7 @@ export function PatientDetail() {
                                                                             );
                                                                         }
                                                                         return list.map((row, idx) => (
-                                                                            <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-700 dark:text-slate-300">
+                                                                            <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3">
                                                                                     {isEditing ? (
                                                                                         <input
@@ -2148,10 +2148,10 @@ export function PatientDetail() {
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        <div className="overflow-x-auto rounded-2xl border border-slate-800/60 dark:border-slate-800 bg-slate-950/20 dark:bg-slate-900/20 backdrop-blur-md">
+                                                        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/20 backdrop-blur-md">
                                                             <table className="w-full text-left border-collapse text-xs">
                                                                 <thead>
-                                                                    <tr className="bg-slate-900/60 dark:bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                                                    <tr className="bg-slate-100/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                                                         <th className="p-3 w-[25%]">Type of Services</th>
                                                                         <th className="p-3 w-[25%]">Provider / Agency</th>
                                                                         <th className="p-3 w-[20%]">Date Received</th>
@@ -2172,7 +2172,7 @@ export function PatientDetail() {
                                                                             );
                                                                         }
                                                                         return list.map((row, idx) => (
-                                                                            <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-700 dark:text-slate-300">
+                                                                            <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3">
                                                                                     {isEditing ? (
                                                                                         <input
@@ -2297,10 +2297,10 @@ export function PatientDetail() {
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        <div className="overflow-x-auto rounded-2xl border border-slate-800/60 dark:border-slate-800 bg-slate-950/20 dark:bg-slate-900/20 backdrop-blur-md">
+                                                        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/20 backdrop-blur-md">
                                                             <table className="w-full text-left border-collapse text-xs">
                                                                 <thead>
-                                                                    <tr className="bg-slate-900/60 dark:bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                                                    <tr className="bg-slate-100/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                                                         <th className="p-3 w-[30%]">Medication</th>
                                                                         <th className="p-3 w-[25%]">Doses/Frequency</th>
                                                                         <th className="p-3 w-[25%]">Prescribing Physician</th>
@@ -2340,7 +2340,7 @@ export function PatientDetail() {
                                                                         }
                                                                         
                                                                         return medsList.map((row, idx) => (
-                                                                            <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-700 dark:text-slate-300">
+                                                                            <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3">
                                                                                     {isEditing ? (
                                                                                         <input
@@ -2644,10 +2644,10 @@ export function PatientDetail() {
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        <div className="overflow-x-auto rounded-2xl border border-slate-800/60 dark:border-slate-800 bg-slate-950/20 dark:bg-slate-900/20 backdrop-blur-md">
+                                                        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/20 backdrop-blur-md">
                                                             <table className="w-full text-left border-collapse text-xs">
                                                                 <thead>
-                                                                    <tr className="bg-slate-900/60 dark:bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                                                    <tr className="bg-slate-100/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                                                         <th className="p-3 w-[40%]">Hospital / Facility</th>
                                                                         <th className="p-3 w-[20%]">Date</th>
                                                                         <th className="p-3 w-[35%]">Reason</th>
@@ -2667,7 +2667,7 @@ export function PatientDetail() {
                                                                             );
                                                                         }
                                                                         return list.map((row, idx) => (
-                                                                            <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-700 dark:text-slate-300">
+                                                                            <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3">
                                                                                     {isEditing ? (
                                                                                         <input
@@ -2837,10 +2837,10 @@ export function PatientDetail() {
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        <div className="overflow-x-auto rounded-2xl border border-slate-800/60 dark:border-slate-800 bg-slate-950/20 dark:bg-slate-900/20 backdrop-blur-md">
+                                                        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/20 backdrop-blur-md">
                                                             <table className="w-full text-left border-collapse text-xs">
                                                                 <thead>
-                                                                    <tr className="bg-slate-900/60 dark:bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                                                    <tr className="bg-slate-100/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                                                         <th className="p-3 w-[40%]">Condition</th>
                                                                         <th className="p-3 w-[15%] text-center">Client</th>
                                                                         <th className="p-3 w-[15%] text-center">Family</th>
@@ -2870,7 +2870,7 @@ export function PatientDetail() {
                                                                             );
                                                                         }
                                                                         return list.map((row, idx) => (
-                                                                            <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-700 dark:text-slate-300">
+                                                                            <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3">
                                                                                     {isEditing ? (
                                                                                         <input
@@ -2971,10 +2971,10 @@ export function PatientDetail() {
                                                     {/* Preventive care dates Grid Table */}
                                                     <div className="space-y-3">
                                                         <h5 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Preventive Care Checkups</h5>
-                                                        <div className="overflow-x-auto rounded-2xl border border-slate-800/60 dark:border-slate-800 bg-slate-950/20 dark:bg-slate-900/20 backdrop-blur-md">
+                                                        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/20 backdrop-blur-md">
                                                             <table className="w-full text-left border-collapse text-xs">
                                                                 <thead>
-                                                                    <tr className="bg-slate-900/60 dark:bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                                                    <tr className="bg-slate-100/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                                                         <th className="p-3 w-[40%]">Exam Type</th>
                                                                         <th className="p-3 w-[25%]">Date</th>
                                                                         <th className="p-3 w-[35%]">Provider / Comments</th>
@@ -2992,7 +2992,7 @@ export function PatientDetail() {
                                                                         ];
                                                                         const list = socialNeeds.preventive_care_grid || defaultRows;
                                                                         return list.map((row, idx) => (
-                                                                            <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-700 dark:text-slate-300">
+                                                                            <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3 font-bold text-slate-850 dark:text-slate-250">{row.exam_type}</td>
                                                                                 <td className="p-3">
                                                                                     {isEditing ? (
@@ -3175,10 +3175,10 @@ export function PatientDetail() {
                                                     {/* Food Programs Grid Table */}
                                                     <div className="space-y-3">
                                                         <h5 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Food Assistance & Nutrition Programs</h5>
-                                                        <div className="overflow-x-auto rounded-2xl border border-slate-800/60 dark:border-slate-800 bg-slate-950/20 dark:bg-slate-900/20 backdrop-blur-md">
+                                                        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/20 backdrop-blur-md">
                                                             <table className="w-full text-left border-collapse text-xs">
                                                                 <thead>
-                                                                    <tr className="bg-slate-900/60 dark:bg-slate-950/40 border-b border-slate-800/80 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                                                    <tr className="bg-slate-100/80 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800/80 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                                                         <th className="p-3 w-[35%]">Program Type</th>
                                                                         <th className="p-3 w-[15%] text-center">Enrolled</th>
                                                                         <th className="p-3 w-[20%]">Frequency</th>
@@ -3195,7 +3195,7 @@ export function PatientDetail() {
                                                                         ];
                                                                         const list = socialNeeds.food_programs || defaultRows;
                                                                         return list.map((row, idx) => (
-                                                                            <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-700 dark:text-slate-300">
+                                                                            <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3 font-bold text-slate-850 dark:text-slate-250">{row.program_type}</td>
                                                                                 <td className="p-3 text-center">
                                                                                     <input
