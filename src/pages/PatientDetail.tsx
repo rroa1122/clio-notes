@@ -653,7 +653,7 @@ export function PatientDetail() {
                     <Button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isExtracting || isSaving}
-                        className="h-11 px-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-indigo-200 dark:hover:border-indigo-900 hover:text-indigo-600 dark:hover:text-indigo-450 font-bold shadow-sm transition-all flex items-center gap-2 group disabled:opacity-50"
+                        className="h-11 px-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-indigo-200 dark:hover:border-indigo-900 hover:text-indigo-600 dark:hover:text-indigo-450 font-bold shadow-sm transition-all flex items-center gap-2 group disabled:opacity-50"
                     >
                         {isExtracting ? (
                             <Loader2 size={16} className="animate-spin text-indigo-500" />
@@ -677,7 +677,7 @@ export function PatientDetail() {
                                     }
                                     setIsEditing(true);
                                 }}
-                                className="h-11 px-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 hover:border-indigo-200 dark:hover:border-indigo-900 hover:text-indigo-600 dark:hover:text-indigo-450 font-bold shadow-sm transition-all flex items-center gap-2 group"
+                                className="h-11 px-5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-indigo-200 dark:hover:border-indigo-900 hover:text-indigo-600 dark:hover:text-indigo-450 font-bold shadow-sm transition-all flex items-center gap-2 group"
                             >
                                 <Edit3 size={16} className="text-slate-400 dark:text-slate-500 group-hover:text-indigo-500 transition-colors" />
                                 <span className="text-[10px] uppercase tracking-[0.15em]">{t('patient.edit_profile', 'Edit Profile')}</span>
@@ -854,7 +854,7 @@ export function PatientDetail() {
                                     theme="indigo"
                                     options={['English', 'Spanish']}
                                 />
-                                <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-850">
+                                <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/30">
                                     <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
                                         {language === 'es' ? 'Protocolo de Emergencia' : 'Emergency Protocol'}
                                     </p>
@@ -1993,7 +1993,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], name: e.target.value };
                                                                                                 handleSocialNeedsValChange('info_providers', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Dr. Hernandez"
                                                                                         />
                                                                                     ) : (
@@ -2010,7 +2010,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], agency: e.target.value };
                                                                                                 handleSocialNeedsValChange('info_providers', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Arc Mental Health"
                                                                                         />
                                                                                     ) : (
@@ -2027,7 +2027,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], relationship: e.target.value };
                                                                                                 handleSocialNeedsValChange('info_providers', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Psychiatrist / Case Manager"
                                                                                         />
                                                                                     ) : (
@@ -2183,7 +2183,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], type: e.target.value };
                                                                                                 handleSocialNeedsValChange('past_services', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Psychiatric Treatment"
                                                                                         />
                                                                                     ) : (
@@ -2200,7 +2200,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], provider: e.target.value };
                                                                                                 handleSocialNeedsValChange('past_services', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Agency name"
                                                                                         />
                                                                                     ) : (
@@ -2217,7 +2217,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], date_received: e.target.value };
                                                                                                 handleSocialNeedsValChange('past_services', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. 2024"
                                                                                         />
                                                                                     ) : (
@@ -2234,7 +2234,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], effectiveness: e.target.value };
                                                                                                 handleSocialNeedsValChange('past_services', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Partially effective"
                                                                                         />
                                                                                     ) : (
@@ -2351,7 +2351,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], medication: e.target.value };
                                                                                                 handleSocialNeedsValChange('medications_grid', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Sertraline"
                                                                                         />
                                                                                     ) : (
@@ -2368,7 +2368,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], dose: e.target.value };
                                                                                                 handleSocialNeedsValChange('medications_grid', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. 100 mg daily"
                                                                                         />
                                                                                     ) : (
@@ -2385,7 +2385,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], physician: e.target.value };
                                                                                                 handleSocialNeedsValChange('medications_grid', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Dr. Reinaldo Hernandez"
                                                                                         />
                                                                                     ) : (
@@ -2402,7 +2402,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], purpose: e.target.value };
                                                                                                 handleSocialNeedsValChange('medications_grid', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Depression"
                                                                                         />
                                                                                     ) : (
@@ -2678,7 +2678,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], facility: e.target.value };
                                                                                                 handleSocialNeedsValChange('psych_hospitalizations', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Jackson Memorial"
                                                                                         />
                                                                                     ) : (
@@ -2695,7 +2695,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], date: e.target.value };
                                                                                                 handleSocialNeedsValChange('psych_hospitalizations', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. 10/2024"
                                                                                         />
                                                                                     ) : (
@@ -2712,7 +2712,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], reason: e.target.value };
                                                                                                 handleSocialNeedsValChange('psych_hospitalizations', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Depressive crisis"
                                                                                         />
                                                                                     ) : (
@@ -2881,7 +2881,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], condition: e.target.value };
                                                                                                 handleSocialNeedsValChange('chronic_conditions', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Hypertension"
                                                                                         />
                                                                                     ) : (
@@ -2924,7 +2924,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], comments: e.target.value };
                                                                                                 handleSocialNeedsValChange('chronic_conditions', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Diagnosed in 2021"
                                                                                         />
                                                                                     ) : (
@@ -3004,7 +3004,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], date: e.target.value };
                                                                                                 handleSocialNeedsValChange('preventive_care_grid', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. 10/12/2025"
                                                                                         />
                                                                                     ) : (
@@ -3021,7 +3021,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], provider_comments: e.target.value };
                                                                                                 handleSocialNeedsValChange('preventive_care_grid', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Dr. Luis Felipe"
                                                                                         />
                                                                                     ) : (
@@ -3220,7 +3220,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], frequency: e.target.value };
                                                                                                 handleSocialNeedsValChange('food_programs', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Monthly"
                                                                                         />
                                                                                     ) : (
@@ -3237,7 +3237,7 @@ export function PatientDetail() {
                                                                                                 updated[idx] = { ...updated[idx], provider: e.target.value };
                                                                                                 handleSocialNeedsValChange('food_programs', updated);
                                                                                             }}
-                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
+                                                                                            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500"
                                                                                             placeholder="e.g. Local pantry"
                                                                                         />
                                                                                     ) : (
@@ -3560,7 +3560,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                 <div className={cn(
                     "rounded-2xl border transition-all duration-300 relative overflow-hidden w-full",
                     "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.03)]",
-                    "border-slate-200/80 dark:border-slate-850 bg-slate-100/50 dark:bg-slate-950/60 backdrop-blur-md hover:border-indigo-500/20 dark:hover:border-indigo-500/10 hover:shadow-[0_4px_16px_rgba(99,102,241,0.02)]",
+                    "border-slate-200/80 dark:border-slate-800/30 bg-slate-100/50 dark:bg-slate-950/60 backdrop-blur-md hover:border-indigo-500/20 dark:hover:border-indigo-500/10 hover:shadow-[0_4px_16px_rgba(99,102,241,0.02)]",
                     isTextarea ? (large ? "min-h-[120px] py-4" : "min-h-[90px] py-4") : "min-h-[2.5rem] py-1.5 flex items-center"
                 )}>
                     <div className="w-full px-5">
@@ -3731,7 +3731,7 @@ function TcmCheckbox({
                 "flex flex-col gap-2 px-4 py-3 rounded-xl border transition-all duration-300 w-full",
                 isChecked 
                     ? "bg-indigo-500/10 dark:bg-indigo-500/5 text-indigo-750 dark:text-indigo-300 border-indigo-500/25 shadow-[0_4px_16px_rgba(99,102,241,0.03)]" 
-                    : "bg-slate-50/50 dark:bg-slate-900/10 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-slate-850 opacity-50"
+                    : "bg-slate-50/50 dark:bg-slate-900/10 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-slate-800/30 opacity-50"
             )}>
                 <div className="flex items-center gap-3">
                     {isChecked ? (
