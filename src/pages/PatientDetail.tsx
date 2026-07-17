@@ -821,7 +821,7 @@ export function PatientDetail() {
                                     <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
                                         {language === 'es' ? 'Protocolo de Emergencia' : 'Emergency Protocol'}
                                     </p>
-                                    <div className="space-y-4">
+                                    <div className="flex flex-col gap-6">
                                         <PremiumGlassField
                                             icon={User}
                                             label="Emergency Contact"
@@ -1787,7 +1787,7 @@ export function PatientDetail() {
                                             : 'Complete the client\'s comprehensive clinical assessment and export it in the official format.'}
                                     </p>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+                                <div className="flex flex-row items-center gap-3.5 self-start md:self-auto shrink-0">
                                     <button
                                         type="button"
                                         disabled={isExtracting}
@@ -1866,6 +1866,7 @@ export function PatientDetail() {
                                                             onChange={handleSocialNeedsTextChange}
                                                             options={['Yes', 'No']}
                                                             theme="indigo"
+                                                            className="col-span-1 md:col-span-2"
                                                         />
                                                     </div>
                                                 </div>
