@@ -101,35 +101,19 @@ const PrintAssessment: React.FC = () => {
         const dateString = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
         document.title = `${patient.full_name} - Assessment - ${dateString}`;
 
-        const isDownloadMode = window.location.search.includes('download=true');
-
-        if (isDownloadMode) {
-            const timer = setTimeout(async () => {
-                try {
-                    // @ts-ignore
-                    const html2pdf = (await import('html2pdf.js')).default;
-                    const element = document.getElementById('assessment-pdf-content');
-                    const opt = {
-                        margin:       0,
-                        filename:     `${patient.full_name} - Case Management Assessment.pdf`,
-                        image:        { type: 'jpeg', quality: 0.98 },
-                        html2canvas:  { scale: 2, useCORS: true, letterRendering: false, logging: false },
-                        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-                        pagebreak:    { mode: 'css' }
-                    };
-                    await html2pdf().from(element).set(opt).save();
-                } catch (err) {
-                    console.error("Failed to generate PDF download:", err);
-                }
-            }, 1500);
-            return () => clearTimeout(timer);
-        } else {
-            const timer = setTimeout(() => {
-                window.print();
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
+        const timer = setTimeout(() => {
+            window.print();
+        }, 1200);
+        return () => clearTimeout(timer);
     }, [patient, isLoading]);
+
+    useEffect(() => {
+        const handleAfterPrint = () => {
+            window.close();
+        };
+        window.addEventListener('afterprint', handleAfterPrint);
+        return () => window.removeEventListener('afterprint', handleAfterPrint);
+    }, []);
 
     if (isLoading) {
         return (
@@ -216,23 +200,33 @@ const PrintAssessment: React.FC = () => {
     );
 
     return (
-        <div className={`bg-slate-100 dark:bg-slate-950 min-h-screen py-10 print:py-0 print:bg-white text-slate-800 flex flex-col items-center ${window.location.search.includes('download=true') ? 'download-active' : ''}`}>
+        <div className="bg-slate-100 dark:bg-slate-950 min-h-screen py-10 print:py-0 print:bg-white text-slate-800 flex flex-col items-center">
             {/* Custom Print Styles */}
             <style>{`
                 @media print {
+                    @page {
+                        size: letter;
+                        margin: 0;
+                    }
                     body {
                         background-color: white;
                         color: black;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
                     }
                     .print-page {
-                        width: 8.5in;
-                        height: 11in;
-                        margin: 0;
-                        padding: 0.35in 0.35in 0.25in 0.35in;
-                        page-break-after: always;
+                        width: 8.5in !important;
+                        height: 11in !important;
+                        margin: 0 !important;
+                        padding: 0.35in 0.35in 0.25in 0.35in !important;
+                        page-break-after: always !important;
+                        break-after: page !important;
                         border: none !important;
                         box-shadow: none !important;
                         background: white !important;
+                        box-sizing: border-box !important;
                     }
                     .no-print {
                         display: none !important;
@@ -248,47 +242,11 @@ const PrintAssessment: React.FC = () => {
                     padding: 0.35in 0.35in 0.25in 0.35in;
                     display: flex;
                     flex-direction: column;
+                    box-sizing: border-box;
                 }
                 #assessment-pdf-content, #assessment-pdf-content * {
                     font-family: Arial, sans-serif !important;
                     word-spacing: 2px !important;
-                }
-                .download-active .print-page {
-                    margin: 0 !important;
-                    border: none !important;
-                    box-shadow: none !important;
-                    height: 10.6in !important;
-                }
-                .download-active #assessment-pdf-content {
-                    background-color: white !important;
-                }
-                #assessment-pdf-content .grid {
-                    display: flex !important;
-                    flex-wrap: wrap !important;
-                }
-                #assessment-pdf-content .grid-cols-1 > * {
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                }
-                #assessment-pdf-content .grid-cols-2 > * {
-                    width: 50% !important;
-                    box-sizing: border-box !important;
-                    padding-right: 8px !important;
-                }
-                #assessment-pdf-content .grid-cols-3 > * {
-                    width: 33.333% !important;
-                    box-sizing: border-box !important;
-                    padding-right: 8px !important;
-                }
-                #assessment-pdf-content .grid-cols-4 > * {
-                    width: 25% !important;
-                    box-sizing: border-box !important;
-                    padding-right: 6px !important;
-                }
-                #assessment-pdf-content .grid-cols-5 > * {
-                    width: 20% !important;
-                    box-sizing: border-box !important;
-                    padding-right: 4px !important;
                 }
             `}</style>
 

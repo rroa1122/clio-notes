@@ -314,11 +314,8 @@ export function PatientDetail() {
 
     const handleDownloadAssessmentPDF = () => {
         if (!patient) return;
-        toast.info(language === 'es' ? "Generando y descargando PDF..." : "Generating and downloading PDF...", { icon: "📥" });
-        setDownloadIframeUrl(`/patients/print-assessment/${patient.id}?download=true`);
-        setTimeout(() => {
-            setDownloadIframeUrl(null);
-        }, 10000);
+        toast.info(language === 'es' ? "Abriendo panel de impresión..." : "Opening print panel...", { icon: "🖨️" });
+        window.open(`/patients/print-assessment/${patient.id}`, '_blank');
     };
 
     const handleAutofillAssessment = async () => {
