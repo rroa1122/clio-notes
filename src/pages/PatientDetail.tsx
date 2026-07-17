@@ -1817,7 +1817,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('clientInfo')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>1. Client's Information</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.clientInfo ? 'rotate-90' : ''}`} />
@@ -1878,7 +1878,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('referrals')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>2. Referral & Information Sources</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.referrals ? 'rotate-90' : ''}`} />
@@ -2027,7 +2027,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('presentingProblems')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>3. Presenting Problems</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.presentingProblems ? 'rotate-90' : ''}`} />
@@ -2057,7 +2057,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('familyInfo')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>4. Family Information</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.familyInfo ? 'rotate-90' : ''}`} />
@@ -2086,7 +2086,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('pastServicesMedications')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>5. Past Services & Current Medications</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.pastServicesMedications ? 'rotate-90' : ''}`} />
@@ -2530,7 +2530,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('mentalHealth')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>6. Mental Health & Psychiatric History</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.mentalHealth ? 'rotate-90' : ''}`} />
@@ -2760,7 +2760,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('physicalHealth')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>7. Physical Health, Dental & Medical</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.physicalHealth ? 'rotate-90' : ''}`} />
@@ -3023,7 +3023,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('independenceDailyLiving')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>8. Independence & Daily Functioning</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.independenceDailyLiving ? 'rotate-90' : ''}`} />
@@ -3118,7 +3118,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('environmentFinancesLegal')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>9. Environment, Finances & Legal</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.environmentFinancesLegal ? 'rotate-90' : ''}`} />
@@ -3248,7 +3248,7 @@ export function PatientDetail() {
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('summarySignatures')}
-                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
+                                                className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-[13px] uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>10. Summary, Strengths & Signatures</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.summarySignatures ? 'rotate-90' : ''}`} />
@@ -3509,7 +3509,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                     "rounded-2xl border transition-all duration-300 relative overflow-hidden w-full",
                     "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.03)]",
                     "border-slate-800/50 dark:border-slate-850 bg-slate-950/40 dark:bg-slate-950/60 backdrop-blur-md hover:border-indigo-500/20 dark:hover:border-indigo-500/10 hover:shadow-[0_4px_16px_rgba(99,102,241,0.02)]",
-                    isTextarea ? (large ? "min-h-[120px] py-4.5" : "min-h-[90px] py-4.5") : "min-h-[2.5rem] py-1.5 flex items-center"
+                    isTextarea ? (large ? "min-h-[120px] py-4" : "min-h-[90px] py-4") : "min-h-[2.5rem] py-1.5 flex items-center"
                 )}>
                     <div className="w-full px-5">
                         <span className="relative z-10 text-[13.5px] leading-relaxed text-slate-100 dark:text-slate-100 font-semibold block whitespace-pre-wrap">
