@@ -253,6 +253,34 @@ const PrintAssessment: React.FC = () => {
                     font-family: Arial, sans-serif !important;
                     word-spacing: 2px !important;
                 }
+                #assessment-pdf-content .grid {
+                    display: flex !important;
+                    flex-wrap: wrap !important;
+                }
+                #assessment-pdf-content .grid-cols-1 > * {
+                    width: 100% !important;
+                    box-sizing: border-box !important;
+                }
+                #assessment-pdf-content .grid-cols-2 > * {
+                    width: 50% !important;
+                    box-sizing: border-box !important;
+                    padding-right: 8px !important;
+                }
+                #assessment-pdf-content .grid-cols-3 > * {
+                    width: 33.333% !important;
+                    box-sizing: border-box !important;
+                    padding-right: 8px !important;
+                }
+                #assessment-pdf-content .grid-cols-4 > * {
+                    width: 25% !important;
+                    box-sizing: border-box !important;
+                    padding-right: 6px !important;
+                }
+                #assessment-pdf-content .grid-cols-5 > * {
+                    width: 20% !important;
+                    box-sizing: border-box !important;
+                    padding-right: 4px !important;
+                }
             `}</style>
 
             {/* Back Button for preview mode */}
