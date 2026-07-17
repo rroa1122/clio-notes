@@ -344,7 +344,9 @@ export function PatientDetail() {
                         psych_medications: patient.psych_medications,
                         address: patient.address,
                         phone: patient.phone,
-                        insurance_company: patient.insurance_company
+                        insurance_company: patient.insurance_company,
+                        pcp_name: patient.pcp_name,
+                        psych_name: patient.psych_name
                     })
                 });
 
@@ -356,6 +358,30 @@ export function PatientDetail() {
                     if (Array.isArray(resData) && resData.length > 0) content = resData[0];
                     if (content && content.json) content = content.json;
                     tcm_social_needs = content.tcm_social_needs || content;
+                    if (tcm_social_needs) {
+                        // Map past services 'date' to 'date_received'
+                        if (Array.isArray(tcm_social_needs.past_services)) {
+                            tcm_social_needs.past_services = tcm_social_needs.past_services.map((item: any) => ({
+                                ...item,
+                                date_received: item.date_received || item.date || ''
+                            }));
+                        }
+                        // Clean up medications_grid doctor names from placeholders
+                        if (Array.isArray(tcm_social_needs.medications_grid)) {
+                            tcm_social_needs.medications_grid = tcm_social_needs.medications_grid.map((item: any) => {
+                                let phys = item.physician || '';
+                                if (!phys || phys.includes('PCP') || phys.toLowerCase().includes('primary')) {
+                                    phys = patient.pcp_name || 'Primary Care Physician';
+                                } else if (phys.includes('Psych') || phys.toLowerCase().includes('psychiatrist')) {
+                                    phys = patient.psych_name || 'Psychiatrist';
+                                }
+                                return {
+                                    ...item,
+                                    physician: phys
+                                };
+                            });
+                        }
+                    }
                     console.log("Extracted tcm_social_needs payload:", tcm_social_needs);
                 } else {
                     const errText = await response.text();
