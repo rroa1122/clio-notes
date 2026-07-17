@@ -558,7 +558,7 @@ export function PatientDetail() {
     }
 
     return (
-        <div className="max-w-[1100px] mx-auto p-4 lg:p-8 space-y-12 animate-in fade-in duration-1000">
+        <div className="max-w-[1440px] mx-auto p-4 lg:p-8 space-y-12 animate-in fade-in duration-1000">
             {/* Sophisticated Context Header */}
             <header className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100/70 dark:border-slate-800 rounded-[32px] p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative shadow-[0_2px_12px_rgba(0,0,0,0.01)] transition-all">
                 <div className="flex items-center gap-6 min-w-0">
@@ -701,7 +701,7 @@ export function PatientDetail() {
                     <TabsContent value="client" className="m-0 focus-visible:outline-none">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Left Column: Identity & Contact */}
-                            <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                 <div className="mb-2">
                                     <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
                                         {language === 'es' ? 'Identidad y Contacto' : 'Identity & Contact'}
@@ -765,7 +765,7 @@ export function PatientDetail() {
                             </div>
 
                             {/* Right Column: Coordination & Insurance */}
-                            <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                 <div className="mb-2">
                                     <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
                                         {language === 'es' ? 'Coordinación Clínica' : 'Clinical Coordination'}
@@ -845,7 +845,7 @@ export function PatientDetail() {
                             </div>
                         </div>
 
-                        <div className="mt-8 bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8">
+                        <div className="mt-8 bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
                             <PremiumGlassField
                                 icon={ClipboardList}
                                 label="Primary Case Narrative / Presenting Problem"
@@ -981,7 +981,7 @@ export function PatientDetail() {
 
                     {/* [MEDICAL TAB] */}
                     <TabsContent value="medical" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8">
+                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Stethoscope}
@@ -1045,7 +1045,7 @@ export function PatientDetail() {
 
                     {/* [PSYCHIATRIC TAB] */}
                     <TabsContent value="psychiatric" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8">
+                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Brain}
@@ -1101,7 +1101,7 @@ export function PatientDetail() {
 
                     {/* [PHARMACY TAB] */}
                     <TabsContent value="pharmacy" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8">
+                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Store}
@@ -1184,7 +1184,7 @@ export function PatientDetail() {
 
                     {/* [SOCIAL TAB] */}
                     <TabsContent value="social" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-6">
+                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-6">
                             <div className="mb-2">
                                 <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">
                                     {language === 'es' ? 'Ficha de Evaluación Social y Necesidades (TCM)' : 'Social Assessment & Needs Form (TCM)'}
@@ -1201,7 +1201,7 @@ export function PatientDetail() {
                                 return (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {/* Panel 1: Identificación Básica */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <User size={14} /> {language === 'es' ? '1. Identificación Básica' : '1. Basic Identification'}
@@ -1267,7 +1267,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 2: Ayudas de Gobierno */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <Coins size={14} /> {language === 'es' ? '2. Ayudas de Gobierno' : '2. Government Assistance'}
@@ -1325,7 +1325,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 3: Perfil Personal y Clínico */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <Heart size={14} /> {language === 'es' ? '3. Perfil Personal y Clínico' : '3. Personal & Clinical Profile'}
@@ -1355,7 +1355,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 4: Proveedores Médicos */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <Stethoscope size={14} /> {language === 'es' ? '4. Proveedores' : '4. Providers'}
@@ -1438,7 +1438,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 5: Convivencia y Familia */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <Users size={14} /> {language === 'es' ? '5. Educación, Estado Civil y Convivencia' : '5. Family & Cohabitation'}
@@ -1499,7 +1499,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 6: Trabajo y Finanzas */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <Briefcase size={14} /> {language === 'es' ? '6. Situación Laboral e Ingresos' : '6. Employment & Financials'}
@@ -1548,7 +1548,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 7: Estatus Migratorio */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <Globe size={14} /> {language === 'es' ? '7. Origen y Estatus Migratorio' : '7. Origin & Immigration'}
@@ -1595,7 +1595,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 8: Contacto de Emergencia */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <AlertTriangle size={14} /> {language === 'es' ? '8. Contacto de Emergencia' : '8. Emergency Contact'}
@@ -1633,7 +1633,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 9: Vivienda */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <Home size={14} /> {language === 'es' ? '9. Vivienda y Transporte' : '9. Housing & Transport'}
@@ -1697,7 +1697,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 10: Servicios que Necesita (Checklist) */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <CheckSquare size={14} /> {language === 'es' ? '10. Servicios que Necesita' : '10. Services Needed'}
@@ -1720,7 +1720,7 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* Panel 11: Otros Detalles */}
-                                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
+                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
                                                     <MoreHorizontal size={14} /> {language === 'es' ? '11. Otros Detalles y Cirugías' : '11. Other Details & Surgeries'}
@@ -1775,7 +1775,7 @@ export function PatientDetail() {
 
                     {/* [ASSESSMENT TAB] */}
                     <TabsContent value="assessment" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/80 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800 rounded-[1.5rem] p-6 md:p-8 flex flex-col gap-6">
+                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-6">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/80 pb-6">
                                 <div>
                                     <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">
@@ -1813,17 +1813,17 @@ export function PatientDetail() {
                                 return (
                                     <div className="space-y-4">
                                         {/* SECTION 1: CLIENT'S INFORMATION */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('clientInfo')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>1. Client's Information</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.clientInfo ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.clientInfo && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-4">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <PremiumGlassField icon={User} label="Client's Name" value={patient.full_name || ''} theme="indigo" isEditing={false} />
                                                         <PremiumGlassField icon={Calendar} label="Date of Birth" value={patient.dob || ''} theme="indigo" isEditing={false} />
@@ -1873,17 +1873,17 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* SECTION 2: REFERRAL & INFORMATION SOURCES */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('referrals')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>2. Referral & Information Sources</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.referrals ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.referrals && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-6">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-6">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <PremiumGlassField icon={User} label="Referred By" name="referred_by" value={socialNeeds.referred_by || ''} isEditing={isEditing} onChange={handleSocialNeedsTextChange} theme="indigo" />
                                                         <PremiumGlassField icon={Phone} label="Referral Phone No" name="referral_phone" value={socialNeeds.referral_phone || ''} isEditing={isEditing} onChange={handleSocialNeedsTextChange} theme="indigo" />
@@ -2022,17 +2022,17 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* SECTION 3: PRESENTING PROBLEMS */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('presentingProblems')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>3. Presenting Problems</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.presentingProblems ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.presentingProblems && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-4">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-4">
                                                     <PremiumGlassField
                                                         icon={FileText}
                                                         label="Presenting Problems Narrative"
@@ -2052,17 +2052,17 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* SECTION 4: FAMILY INFORMATION */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('familyInfo')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>4. Family Information</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.familyInfo ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.familyInfo && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-4">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <PremiumGlassField icon={CheckSquare} label="Is the client a child?" name="is_client_child" value={socialNeeds.is_client_child || 'No'} isEditing={isEditing} onChange={handleSocialNeedsTextChange} options={['Yes', 'No']} theme="indigo" />
                                                     </div>
@@ -2081,17 +2081,17 @@ export function PatientDetail() {
                                         </div>
 
                                         
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('pastServicesMedications')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>5. Past Services & Current Medications</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.pastServicesMedications ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.pastServicesMedications && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-6">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-6">
                                                     {/* Past Services Grid Table */}
                                                     <div className="space-y-3">
                                                         <div className="flex justify-between items-center">
@@ -2525,17 +2525,17 @@ export function PatientDetail() {
                                             )}
                                         </div>
                                         {/* SECTION 6: MENTAL HEALTH & PSYCHIATRIC HISTORY */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('mentalHealth')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>6. Mental Health & Psychiatric History</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.mentalHealth ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.mentalHealth && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-6">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-6">
                                                     <PremiumGlassField
                                                         icon={Brain}
                                                         label="Mental Health / Psychiatric History Narrative"
@@ -2755,17 +2755,17 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* SECTION 7: PHYSICAL HEALTH, DENTAL & MEDICAL */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('physicalHealth')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>7. Physical Health, Dental & Medical</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.physicalHealth ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.physicalHealth && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-6">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-6">
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                         <PremiumGlassField icon={User} label="PCP Doctor Name" value={patient.pcp_name || ''} theme="emerald" isEditing={false} />
                                                         <PremiumGlassField icon={Phone} label="PCP Phone" value={patient.pcp_phone || ''} theme="emerald" isEditing={false} />
@@ -3018,17 +3018,17 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* SECTION 8: INDEPENDENCE & DAILY FUNCTIONING */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('independenceDailyLiving')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>8. Independence & Daily Functioning</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.independenceDailyLiving ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.independenceDailyLiving && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-6">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-6">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <PremiumGlassField icon={Briefcase} label="Employment Status" name="employment_status" value={socialNeeds.employment_status || 'Disabled'} isEditing={isEditing} onChange={handleSocialNeedsTextChange} options={['Employed', 'Unemployed', 'Disabled', 'Retired']} theme="indigo" />
                                                         <PremiumGlassField icon={GraduationCap} label="Highest Education Level" name="education_level" value={socialNeeds.education_level || 'Middle School'} isEditing={isEditing} onChange={handleSocialNeedsTextChange} options={['Elementary School', 'Middle School', 'High School', 'College / University', 'None']} theme="indigo" />
@@ -3113,17 +3113,17 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* SECTION 9: ENVIRONMENT, FINANCES & LEGAL */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('environmentFinancesLegal')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>9. Environment, Finances & Legal</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.environmentFinancesLegal ? 'rotate-90' : ''}`} />
                                             </button>
                                             {expandedSections.environmentFinancesLegal && (
-                                                <div className="p-6 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/20 dark:bg-slate-950/10 space-y-6">
+                                                <div className="p-6 md:p-8 border-t border-slate-100/50 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-950/5 space-y-6">
                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                         <PremiumGlassField icon={Coins} label="Rent Payment" name="rent_payment" value={socialNeeds.rent_payment || '994'} isEditing={isEditing} onChange={handleSocialNeedsTextChange} type="number" theme="indigo" />
                                                         <PremiumGlassField icon={FileText} label="SSI Details" name="ssi_details" value={socialNeeds.ssi_details || ''} isEditing={isEditing} onChange={handleSocialNeedsTextChange} theme="indigo" />
@@ -3243,11 +3243,11 @@ export function PatientDetail() {
                                         </div>
 
                                         {/* SECTION 10: SUMMARY, STRENGTHS & SIGNATURES */}
-                                        <div className="border border-slate-200 dark:border-slate-800 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900/50">
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md shadow-[0_4px_20px_-6px_rgba(0,0,0,0.015)] dark:shadow-[0_4px_20px_-6px_rgba(0,0,0,0.15)] hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500">
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSection('summarySignatures')}
-                                                className="w-full px-6 py-4 flex items-center justify-between text-left font-black text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-colors"
+                                                className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-slate-850 dark:text-slate-200 text-xs uppercase tracking-wider hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all duration-300"
                                             >
                                                 <span>10. Summary, Strengths & Signatures</span>
                                                 <ChevronRight size={16} className={`transition-transform duration-200 ${expandedSections.summarySignatures ? 'rotate-90' : ''}`} />
@@ -3501,13 +3501,13 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                         <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 transition-opacity rounded-lg" />
                         <Icon size={11} className="relative z-10" />
                     </div>
-                    <p className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest leading-none">{translatedLabel}</p>
+                    <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[9px]">{translatedLabel}</p>
                 </div>
 
                 <div className={cn(
                     "rounded-2xl border transition-all duration-300 relative overflow-hidden w-full",
                     "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.03)]",
-                    "border-slate-200/70 dark:border-slate-800/70 bg-white dark:bg-slate-900/40 hover:border-indigo-200/50 dark:hover:border-indigo-900/50 hover:bg-white dark:hover:bg-slate-900/70",
+                    "border-slate-200/50 dark:border-slate-850 bg-white dark:bg-slate-900/20 backdrop-blur-md hover:border-indigo-500/20 dark:hover:border-indigo-500/10 hover:shadow-[0_4px_16px_rgba(99,102,241,0.02)]",
                     isTextarea ? (large ? "min-h-[120px]" : "min-h-[90px]") : "min-h-[2.5rem] py-1.5 flex items-center"
                 )}>
                     <div className="w-full px-5">
@@ -3527,13 +3527,13 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                     <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 transition-opacity rounded-lg" />
                     <Icon size={11} className="relative z-10" />
                 </div>
-                <p className="text-[10px] font-black text-indigo-650 dark:text-indigo-400 uppercase tracking-widest leading-none">{translatedLabel}</p>
+                <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[9px]">{translatedLabel}</p>
             </div>
 
             <div className={cn(
                 "rounded-2xl border transition-all duration-300 relative overflow-hidden w-full",
                 "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]",
-                "hover:border-indigo-300 border-indigo-200 dark:border-slate-800 ring-2 ring-indigo-50/30 dark:ring-indigo-950/40 bg-white dark:bg-slate-950 shadow-sm",
+                "border-indigo-500/30 dark:border-indigo-500/20 hover:border-indigo-500/50 ring-2 ring-indigo-500/5 dark:ring-indigo-500/10 bg-white dark:bg-slate-950 shadow-[0_4px_16px_rgba(99,102,241,0.03)]",
                 isTextarea ? (large ? "min-h-[170px]" : "min-h-[120px]") : "h-11 flex items-center"
             )}>
                 {isTextarea ? (
@@ -3677,12 +3677,12 @@ function TcmCheckbox({
             <div className={cn(
                 "flex flex-col gap-2 px-4 py-3 rounded-xl border transition-all duration-300 w-full",
                 isChecked 
-                    ? "bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-750 dark:text-emerald-300 border-emerald-500/20" 
+                    ? "bg-indigo-500/10 dark:bg-indigo-500/5 text-indigo-750 dark:text-indigo-300 border-indigo-500/25 shadow-[0_4px_16px_rgba(99,102,241,0.03)]" 
                     : "bg-slate-50/50 dark:bg-slate-900/10 text-slate-400 dark:text-slate-500 border-slate-100 dark:border-slate-850 opacity-50"
             )}>
                 <div className="flex items-center gap-3">
                     {isChecked ? (
-                        <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                        <CheckCircle2 size={16} className="text-indigo-500 shrink-0" />
                     ) : (
                         <div className="size-4 rounded-full border border-slate-300 dark:border-slate-700 shrink-0" />
                     )}
