@@ -3384,7 +3384,18 @@ export function PatientDetail() {
             />
 
             {downloadIframeUrl && (
-                <iframe src={downloadIframeUrl} className="hidden" style={{ display: 'none' }} />
+                <iframe
+                    src={downloadIframeUrl}
+                    style={{
+                        position: 'absolute',
+                        left: '-9999px',
+                        top: '-9999px',
+                        width: '1200px',
+                        height: '1600px',
+                        border: 'none',
+                        pointerEvents: 'none'
+                    }}
+                />
             )}
         </div>
     );
