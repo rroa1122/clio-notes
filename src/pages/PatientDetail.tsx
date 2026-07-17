@@ -3507,11 +3507,11 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                 <div className={cn(
                     "rounded-2xl border transition-all duration-300 relative overflow-hidden w-full",
                     "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.03)]",
-                    "border-slate-200/50 dark:border-slate-850 bg-white dark:bg-slate-900/20 backdrop-blur-md hover:border-indigo-500/20 dark:hover:border-indigo-500/10 hover:shadow-[0_4px_16px_rgba(99,102,241,0.02)]",
+                    "border-slate-800/50 dark:border-slate-850 bg-slate-950/40 dark:bg-slate-950/60 backdrop-blur-md hover:border-indigo-500/20 dark:hover:border-indigo-500/10 hover:shadow-[0_4px_16px_rgba(99,102,241,0.02)]",
                     isTextarea ? (large ? "min-h-[120px]" : "min-h-[90px]") : "min-h-[2.5rem] py-1.5 flex items-center"
                 )}>
                     <div className="w-full px-5">
-                        <span className="relative z-10 text-[13.5px] leading-relaxed text-slate-850 dark:text-slate-100 font-bold block whitespace-pre-wrap">
+                        <span className="relative z-10 text-[13.5px] leading-relaxed text-slate-100 dark:text-slate-100 font-semibold block whitespace-pre-wrap">
                             {value}
                         </span>
                     </div>
@@ -3533,13 +3533,13 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
             <div className={cn(
                 "rounded-2xl border transition-all duration-300 relative overflow-hidden w-full",
                 "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]",
-                "border-indigo-500/30 dark:border-indigo-500/20 hover:border-indigo-500/50 ring-2 ring-indigo-500/5 dark:ring-indigo-500/10 bg-white dark:bg-slate-950 shadow-[0_4px_16px_rgba(99,102,241,0.03)]",
+                "border-indigo-500/30 dark:border-indigo-500/20 hover:border-indigo-500/50 ring-2 ring-indigo-500/5 dark:ring-indigo-500/10 bg-slate-950 dark:bg-slate-950 shadow-[0_4px_16px_rgba(99,102,241,0.03)]",
                 isTextarea ? (large ? "min-h-[170px]" : "min-h-[120px]") : "h-11 flex items-center"
             )}>
                 {isTextarea ? (
                     <textarea
                         ref={textareaRef}
-                        className="w-full bg-transparent border-none outline-none p-4 text-[14px] font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none leading-relaxed overflow-hidden"
+                        className="w-full bg-transparent border-none outline-none p-4 text-[14px] font-bold text-slate-100 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 resize-none leading-relaxed overflow-hidden"
                         value={value || ''}
                         onChange={(e) => onChange?.(name!, e.target.value)}
                         placeholder={language === 'es' ? `Documentar ${translatedLabel.toLowerCase()}...` : `Document ${label.toLowerCase()}...`}
@@ -3563,7 +3563,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                 ) : (
                     <input
                         type={type || "text"}
-                        className="w-full h-full bg-transparent border-none outline-none px-5 text-[14px] font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 leading-none pr-8"
+                        className="w-full h-full bg-transparent border-none outline-none px-5 text-[14px] font-bold text-slate-100 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-500 leading-none pr-8"
                         value={value || ''}
                         onChange={(e) => onChange?.(name!, e.target.value)}
                         placeholder={language === 'es' ? `Ingresar ${translatedLabel.toLowerCase()}...` : `Enter ${label.toLowerCase()}...`}
