@@ -216,7 +216,7 @@ const PrintAssessment: React.FC = () => {
     );
 
     return (
-        <div className="bg-slate-100 dark:bg-slate-950 min-h-screen py-10 print:py-0 print:bg-white text-slate-800 flex flex-col items-center">
+        <div className={`bg-slate-100 dark:bg-slate-950 min-h-screen py-10 print:py-0 print:bg-white text-slate-800 flex flex-col items-center ${window.location.search.includes('download=true') ? 'download-active' : ''}`}>
             {/* Custom Print Styles */}
             <style>{`
                 @media print {
@@ -252,6 +252,15 @@ const PrintAssessment: React.FC = () => {
                 #assessment-pdf-content, #assessment-pdf-content * {
                     font-family: Arial, sans-serif !important;
                     word-spacing: 2px !important;
+                }
+                .download-active .print-page {
+                    margin: 0 !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    height: 10.6in !important;
+                }
+                .download-active #assessment-pdf-content {
+                    background-color: white !important;
                 }
                 #assessment-pdf-content .grid {
                     display: flex !important;
@@ -782,31 +791,31 @@ const PrintAssessment: React.FC = () => {
                         </div>
                         <div>
                             <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Diagnosis Code (ICD-10)</span>
-                            <span className="font-extrabold text-slate-800">{patient.diagnoses?.split(' - ')[0] || 'N/A'}</span>
+                            <span className="font-extrabold text-slate-800">{patient.diagnoses?.split(' - ')[0] || needs.diagnosis_code || 'N/A'}</span>
                         </div>
                         <div>
                             <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Diagnosis Descriptor</span>
-                            <span className="font-bold text-slate-800">{patient.diagnoses?.split(' - ')[1]?.split('\n')[0] || 'N/A'}</span>
+                            <span className="font-bold text-slate-800">{patient.diagnoses?.split(' - ')[1]?.split('\n')[0] || needs.diagnosis_descriptor || 'N/A'}</span>
                         </div>
                     </div>
 
                     <div>
                         <h4 className="font-black text-slate-800 uppercase tracking-wider mb-2">Does the client currently have or have had any of the following?:</h4>
                         <div className="grid grid-cols-3 gap-y-2 gap-x-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                            {renderCheckbox(needs.symptom_depression !== false, 'Depression')}
-                            {renderCheckbox(needs.symptom_sadness !== false, 'Sadness')}
-                            {renderCheckbox(needs.symptom_hopelessness !== false, 'Hopelessness')}
-                            {renderCheckbox(needs.symptom_helplessness !== false, 'Helplessness')}
+                            {renderCheckbox(needs.symptom_depression === true, 'Depression')}
+                            {renderCheckbox(needs.symptom_sadness === true, 'Sadness')}
+                            {renderCheckbox(needs.symptom_hopelessness === true, 'Hopelessness')}
+                            {renderCheckbox(needs.symptom_helplessness === true, 'Helplessness')}
                             {renderCheckbox(needs.symptom_negative === true, 'Negative thoughts')}
-                            {renderCheckbox(needs.symptom_withdrawal !== false, 'Withdrawal')}
+                            {renderCheckbox(needs.symptom_withdrawal === true, 'Withdrawal')}
                             {renderCheckbox(needs.symptom_neglect === true, 'Self-neglect')}
-                            {renderCheckbox(needs.symptom_interest !== false, 'Loss of interest')}
-                            {renderCheckbox(needs.symptom_esteem !== false, 'Low self-esteem')}
-                            {renderCheckbox(needs.symptom_anxiety !== false, 'Anxiety')}
-                            {renderCheckbox(needs.symptom_nervousness !== false, 'Nervousness')}
+                            {renderCheckbox(needs.symptom_interest === true, 'Loss of interest')}
+                            {renderCheckbox(needs.symptom_esteem === true, 'Low self-esteem')}
+                            {renderCheckbox(needs.symptom_anxiety === true, 'Anxiety')}
+                            {renderCheckbox(needs.symptom_nervousness === true, 'Nervousness')}
                             {renderCheckbox(needs.symptom_irritability === true, 'Irritability')}
-                            {renderCheckbox(needs.symptom_sleep !== false, 'Sleep disturbance')}
-                            {renderCheckbox(needs.symptom_concentration !== false, 'Poor concentration')}
+                            {renderCheckbox(needs.symptom_sleep === true, 'Sleep disturbance')}
+                            {renderCheckbox(needs.symptom_concentration === true, 'Poor concentration')}
                             {renderCheckbox(needs.symptom_panic === true, 'Panic attacks')}
                             {renderCheckbox(needs.symptom_fearfulness === true, 'Fearfulness')}
                             {renderCheckbox(needs.symptom_paranoia === true, 'Paranoia')}
