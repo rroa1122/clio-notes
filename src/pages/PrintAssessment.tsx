@@ -173,7 +173,7 @@ const PrintAssessment: React.FC = () => {
             <div>
                 <span className="block font-bold text-slate-400 uppercase tracking-wider text-[8px]">DOB</span>
                 <span className="font-extrabold text-slate-800">
-                    {patient.dob ? format(new Date(patient.dob), 'MM/dd/yyyy') : 'N/A'}
+                    {patient.dob ? (() => { const parts = patient.dob.split('-'); return parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : patient.dob; })() : 'N/A'}
                 </span>
             </div>
         </div>
@@ -285,7 +285,7 @@ const PrintAssessment: React.FC = () => {
                             </div>
                             <div>
                                 <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Date of Birth</span>
-                                <span className="font-bold text-slate-800">{patient.dob ? format(new Date(patient.dob), 'MM/dd/yyyy') : 'N/A'}</span>
+                                <span className="font-bold text-slate-800">{patient.dob ? (() => { const parts = patient.dob.split('-'); return parts.length === 3 ? `${parts[1]}/${parts[2]}/${parts[0]}` : patient.dob; })() : 'N/A'}</span>
                             </div>
                             <div>
                                 <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">SSN</span>
@@ -498,7 +498,7 @@ const PrintAssessment: React.FC = () => {
                             Describe reason for referral, elaborating on client's presenting problems and chief complaints. Use client's own words and include prominent symptoms and precipitating events. Describe how current situation and problems are affecting client's normal functioning, emotional stability, safety and wellbeing.
                         </h4>
                         <div className="p-4 border border-slate-300 rounded-2xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed text-justify min-h-[180px]">
-                            {patient.presenting_problems || 'No presenting problems recorded.'}
+                            {needs.presenting_problems_description || patient.presenting_problems || 'No presenting problems recorded.'}
                         </div>
                     </div>
 
@@ -686,8 +686,8 @@ const PrintAssessment: React.FC = () => {
                     <div>
                         <h4 className="font-black text-slate-800 uppercase tracking-wider mb-2">Has the client had problems getting the medication dispensed or refilled on time?</h4>
                         <div className="flex gap-8 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                            {renderCheckbox(needs.med_refill_problems === 'Yes', 'Yes')}
-                            {renderCheckbox(needs.med_refill_problems !== 'Yes', 'No')}
+                            {renderCheckbox(needs.med_refill_yes === true, 'Yes')}
+                            {renderCheckbox(needs.med_refill_no === true, 'No')}
                         </div>
                     </div>
 

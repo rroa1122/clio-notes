@@ -1867,7 +1867,7 @@ export function PatientDetail() {
                                                         <PremiumGlassField icon={MapPin} label="Address" value={patient.address || ''} theme="indigo" isEditing={false} />
                                                         <PremiumGlassField icon={User} label="Race" value={patient.race || ''} theme="indigo" isEditing={false} />
                                                         <PremiumGlassField icon={User} label="Ethnicity" value={patient.ethnicity || ''} theme="indigo" isEditing={false} />
-                                                        <PremiumGlassField icon={User} label="Marital Status" value={patient.marital_status || ''} theme="indigo" isEditing={false} />
+                                                        <PremiumGlassField icon={User} label="Marital Status" value={socialNeeds.marital_status || ''} theme="indigo" isEditing={false} />
                                                         <PremiumGlassField icon={Globe} label="Primary Language" value={patient.preferred_language || ''} theme="indigo" isEditing={false} />
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
