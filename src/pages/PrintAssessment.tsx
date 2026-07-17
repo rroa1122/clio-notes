@@ -114,7 +114,8 @@ const PrintAssessment: React.FC = () => {
                         filename:     `${patient.full_name} - Case Management Assessment.pdf`,
                         image:        { type: 'jpeg', quality: 0.98 },
                         html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
-                        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+                        pagebreak:    { mode: 'css' }
                     };
                     await html2pdf().from(element).set(opt).save();
                 } catch (err) {
@@ -203,8 +204,12 @@ const PrintAssessment: React.FC = () => {
 
     const renderCheckbox = (checked: boolean, text: string) => (
         <div className="flex items-center gap-2">
-            <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${checked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'}`}>
-                {checked && <span className="text-[9px] font-black leading-none">&#10003;</span>}
+            <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center shrink-0 ${checked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300'}`}>
+                {checked && (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                )}
             </div>
             <span className="text-slate-700">{text}</span>
         </div>
@@ -223,7 +228,7 @@ const PrintAssessment: React.FC = () => {
                         width: 8.5in;
                         height: 11in;
                         margin: 0;
-                        padding: 0.5in 0.5in 0.4in 0.5in;
+                        padding: 0.4in 0.4in 0.3in 0.4in;
                         page-break-after: always;
                         border: none !important;
                         box-shadow: none !important;
@@ -240,9 +245,12 @@ const PrintAssessment: React.FC = () => {
                     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
                     border: 1px solid #e2e8f0;
                     margin-bottom: 2rem;
-                    padding: 0.5in 0.5in 0.4in 0.5in;
+                    padding: 0.4in 0.4in 0.3in 0.4in;
                     display: flex;
                     flex-direction: column;
+                }
+                #assessment-pdf-content, #assessment-pdf-content * {
+                    font-family: Arial, sans-serif !important;
                 }
             `}</style>
 
@@ -484,16 +492,16 @@ const PrintAssessment: React.FC = () => {
                 {renderHeader(3)}
                 {renderPatientBox()}
 
-                <div className="space-y-6 text-[10px] flex-1 flex flex-col">
+                <div className="space-y-4 text-[10px] flex flex-col">
                     <h3 className="text-xs font-black uppercase tracking-wider border-b border-slate-300 pb-1.5 text-slate-800">
                         Presenting Problems
                     </h3>
 
-                    <div className="space-y-2 flex-1 flex flex-col">
+                    <div className="space-y-2 flex flex-col">
                         <h4 className="font-black text-slate-500 uppercase tracking-wider text-[8px]">
                             Describe reason for referral, elaborating on client's presenting problems and chief complaints. Use client's own words and include prominent symptoms and precipitating events. Describe how current situation and problems are affecting client's normal functioning, emotional stability, safety and wellbeing.
                         </h4>
-                        <div className="p-4 border border-slate-300 rounded-2xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed flex-1 text-justify min-h-[350px]">
+                        <div className="p-4 border border-slate-300 rounded-2xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed text-justify min-h-[180px]">
                             {patient.presenting_problems || 'No presenting problems recorded.'}
                         </div>
                     </div>
