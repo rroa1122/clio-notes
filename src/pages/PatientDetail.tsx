@@ -41,7 +41,8 @@ import {
     Home,
     Car,
     CheckSquare,
-    MoreHorizontal
+    MoreHorizontal,
+    FileDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -125,6 +126,7 @@ export function PatientDetail() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [showAutofillModeModal, setShowAutofillModeModal] = useState(false);
     const [selectedAutofillFile, setSelectedAutofillFile] = useState<File | null>(null);
+    const [downloadIframeUrl, setDownloadIframeUrl] = useState<string | null>(null);
 
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         clientInfo: true,
@@ -308,6 +310,15 @@ export function PatientDetail() {
         setSelectedAutofillFile(file);
         setShowAutofillModeModal(true);
         if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
+    };
+
+    const handleDownloadAssessmentPDF = () => {
+        if (!patient) return;
+        toast.info(language === 'es' ? "Generando y descargando PDF..." : "Generating and downloading PDF...", { icon: "📥" });
+        setDownloadIframeUrl(`/patients/print-assessment/${patient.id}?download=true`);
+        setTimeout(() => {
+            setDownloadIframeUrl(null);
+        }, 10000);
     };
 
     const handleAutofillAssessment = async () => {
@@ -1825,11 +1836,11 @@ export function PatientDetail() {
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => window.open(`/patients/print-assessment/${patient?.id}`, '_blank')}
-                                        className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-750 dark:text-slate-200 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+                                        onClick={handleDownloadAssessmentPDF}
+                                        className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all active:scale-95 shadow-md flex items-center justify-center"
+                                        title={language === 'es' ? "Descargar Evaluación PDF" : "Download Assessment PDF"}
                                     >
-                                        <FileText size={14} />
-                                        {language === 'es' ? "Exportar Evaluación PDF" : "Export Assessment PDF"}
+                                        <FileDown size={18} />
                                     </button>
                                 </div>
                             </div>
@@ -3371,6 +3382,10 @@ export function PatientDetail() {
                 onClose={() => setSelectedNote(null)}
                 onViewFull={(id) => navigate(`/notes/new?id=${id}`)}
             />
+
+            {downloadIframeUrl && (
+                <iframe src={downloadIframeUrl} className="hidden" style={{ display: 'none' }} />
+            )}
         </div>
     );
 }

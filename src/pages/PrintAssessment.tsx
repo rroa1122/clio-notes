@@ -101,11 +101,33 @@ const PrintAssessment: React.FC = () => {
         const dateString = new Date().toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
         document.title = `${patient.full_name} - Assessment - ${dateString}`;
 
-        const timer = setTimeout(() => {
-            window.print();
-        }, 1000);
+        const isDownloadMode = window.location.search.includes('download=true');
 
-        return () => clearTimeout(timer);
+        if (isDownloadMode) {
+            const timer = setTimeout(async () => {
+                try {
+                    // @ts-ignore
+                    const html2pdf = (await import('html2pdf.js')).default;
+                    const element = document.getElementById('assessment-pdf-content');
+                    const opt = {
+                        margin:       0,
+                        filename:     `${patient.full_name} - Case Management Assessment.pdf`,
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                    };
+                    await html2pdf().from(element).set(opt).save();
+                } catch (err) {
+                    console.error("Failed to generate PDF download:", err);
+                }
+            }, 1500);
+            return () => clearTimeout(timer);
+        } else {
+            const timer = setTimeout(() => {
+                window.print();
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
     }, [patient, isLoading]);
 
     if (isLoading) {
@@ -235,6 +257,7 @@ const PrintAssessment: React.FC = () => {
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vista de Impresión</p>
             </div>
 
+            <div id="assessment-pdf-content" className="flex flex-col items-center">
             {/* ================= PAGE 1 ================= */}
             <div className="print-page">
                 {renderHeader(1)}
@@ -1650,6 +1673,7 @@ const PrintAssessment: React.FC = () => {
 
                 {renderFooter(17)}
             </div>
+            </div> {/* Closing #assessment-pdf-content */}
         </div>
     );
 };
