@@ -113,7 +113,7 @@ const PrintAssessment: React.FC = () => {
                         margin:       0,
                         filename:     `${patient.full_name} - Case Management Assessment.pdf`,
                         image:        { type: 'jpeg', quality: 0.98 },
-                        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                        html2canvas:  { scale: 2, useCORS: true, letterRendering: false, logging: false },
                         jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
                         pagebreak:    { mode: 'css' }
                     };
@@ -228,7 +228,7 @@ const PrintAssessment: React.FC = () => {
                         width: 8.5in;
                         height: 11in;
                         margin: 0;
-                        padding: 0.4in 0.4in 0.3in 0.4in;
+                        padding: 0.35in 0.35in 0.25in 0.35in;
                         page-break-after: always;
                         border: none !important;
                         box-shadow: none !important;
@@ -245,12 +245,13 @@ const PrintAssessment: React.FC = () => {
                     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
                     border: 1px solid #e2e8f0;
                     margin-bottom: 2rem;
-                    padding: 0.4in 0.4in 0.3in 0.4in;
+                    padding: 0.35in 0.35in 0.25in 0.35in;
                     display: flex;
                     flex-direction: column;
                 }
                 #assessment-pdf-content, #assessment-pdf-content * {
                     font-family: Arial, sans-serif !important;
+                    word-spacing: 2px !important;
                 }
             `}</style>
 
@@ -706,9 +707,9 @@ const PrintAssessment: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col gap-2">
+                    <div className="flex flex-col gap-1.5 mt-2">
                         <h4 className="font-black text-slate-500 uppercase tracking-wider text-[8px]">Any other significant medication issue or concern?:</h4>
-                        <div className="p-4 border border-slate-300 rounded-2xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed flex-1 text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed text-justify min-h-[50px]">
                             {needs.med_issues_concern || 'No other significant medication issues or concerns reported. The client is generally compliant with medications when reminders and organization are set up by family or caregivers.'}
                         </div>
                     </div>
@@ -733,7 +734,7 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="space-y-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Mental Health / Psychiatric History:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[140px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.psych_history_narrative || 'The client has a history of chronic psychiatric symptoms managed via regular outpatient psychiatric appointments and psychotropic medications. Outpatient records show relative compliance with appointments, with occasional support needed for coordination.'}
                         </div>
                     </div>
@@ -842,14 +843,14 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="grid grid-cols-1 gap-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Provide details:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 font-medium text-slate-700 leading-relaxed min-h-[50px]">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 font-medium text-slate-700 leading-relaxed min-h-[40px]">
                             {needs.risk_details || 'No suicidal or homicidal attempts or ideation were reported. No signs of abuse or violence reported.'}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Describe any risk taking behavior that client may have:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 font-medium text-slate-700 leading-relaxed min-h-[90px]">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 font-medium text-slate-700 leading-relaxed min-h-[40px]">
                             {needs.risk_behavior_description || 'The client does not report engaging in intentional high-risk behaviors. The primary risk factors relate to clinical management (potential nonadherence to medication due to cognitive limitations if unmonitored) and lack of family support.'}
                         </div>
                     </div>
@@ -1099,7 +1100,7 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="space-y-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Vocational/Employment history:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[90px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.vocational_history || 'The client is currently disabled and unable to work due to psychiatric and medical conditions. He receives disability benefits.'}
                         </div>
                     </div>
@@ -1181,7 +1182,7 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="space-y-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Describe client's cultural affiliations and/or spiritual/religious beliefs:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[60px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.religion ? `Client identifies as ${needs.religion}. Spiritual beliefs play a supportive role in coping and emotional stability.` : 'No religious or cultural barriers to treatment reported.'}
                         </div>
                     </div>
@@ -1202,14 +1203,14 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="space-y-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">What activities or things does client enjoy doing or which ones would he/she like to do?:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[60px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.enjoyable_activities || 'Enjoys watching television, listening to music, resting, and short walks.'}
                         </div>
                     </div>
 
                     <div className="space-y-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Describe client's relationships and support system:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[120px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.support_system_description || `Limited support network. Patient has emergency contact ${patient.emergency_contact_name || 'Family member'} (${needs.emergency_contact_relationship || patient.emergency_contact_relation || 'Relation'}), but lives alone and experiences social isolation.`}
                         </div>
                     </div>
@@ -1319,7 +1320,7 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="space-y-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Describe client's living and sleeping arrangements:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[50px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.housing_arrangements_description || 'Resides alone in a rented apartment. Sleeps in own bedroom, arrangements are clean and stable.'}
                         </div>
                     </div>
@@ -1347,7 +1348,7 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="space-y-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Describe neighborhood:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[50px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.neighborhood_description || 'Urban neighborhood, generally safe, close to community facilities.'}
                         </div>
                     </div>
@@ -1507,7 +1508,7 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="space-y-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Transportation Needs Explanation:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[50px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.domain_transportation_note || 'Needs coordination of specialized medical transport (Modivcare) for specialist appointments.'}
                         </div>
                     </div>
@@ -1573,14 +1574,14 @@ const PrintAssessment: React.FC = () => {
 
                     <div className="space-y-1.5">
                         <span className="block font-bold text-slate-500 uppercase tracking-wider text-[8px]">A. List client's current and potential strengths, abilities, assets, interests, preferences, resources that may contribute to his/her recovery and wellbeing:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[140px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.patient_strengths || 'The client is cooperative, compliant with medication schedules when reminders are set, and has stable housing. He maintains regular attendance at clinical appointments and communicates needs clearly.'}
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
                         <span className="block font-bold text-slate-500 uppercase tracking-wider text-[8px]">B. List client's current and potential weakness, needs, barriers, challenges, etc. that may interfere with his/her recovery and wellbeing:</span>
-                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[140px] text-justify">
+                        <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
                             {needs.patient_weaknesses || 'The client has chronic mental health symptoms, lack of family support, financial difficulties, and cognitive limitations that affect independent management of appointments and social services.'}
                         </div>
                     </div>
@@ -1612,13 +1613,13 @@ const PrintAssessment: React.FC = () => {
                 {renderHeader(17)}
                 {renderPatientBox()}
 
-                <div className="space-y-6 text-[10px] flex-1 flex flex-col justify-between">
+                <div className="space-y-3 text-[10px] flex-1 flex flex-col justify-between">
                     <div>
                         <h3 className="text-xs font-black uppercase tracking-wider border-b border-slate-300 pb-1.5 text-slate-800 leading-none">
                             Signatures
                         </h3>
 
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
+                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2">
                             <h4 className="font-black text-slate-800 uppercase tracking-wider mb-2">I certify that either one of the following requirements was met prior to the completion of client's Assessment:</h4>
                             <div className="space-y-2">
                                 {renderCheckbox(needs.home_visit_conducted !== false, `A home visit was conducted prior to the completion of this Assessment on: ${needs.home_visit_date || '01/05/2026'}`)}
@@ -1626,7 +1627,7 @@ const PrintAssessment: React.FC = () => {
                             </div>
                         </div>
 
-                        <table className="w-full border-collapse border border-slate-300 text-left mt-6">
+                        <table className="w-full border-collapse border border-slate-300 text-left mt-2">
                             <thead>
                                 <tr className="bg-slate-100 text-[8px] font-bold text-slate-500 uppercase tracking-wider">
                                     <th className="border border-slate-300 p-2">Responsibility</th>
@@ -1659,7 +1660,7 @@ const PrintAssessment: React.FC = () => {
                     </div>
 
                     {/* Digital Signatures Display */}
-                    <div className="grid grid-cols-2 gap-8 border-t border-slate-200 pt-8 pb-10">
+                    <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-3 pb-3">
                         <div className="flex flex-col items-center text-center">
                             <span className="text-[11px] font-black text-slate-800">{patient.case_manager || 'Claudia Leyva'}</span>
                             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Case Manager</span>
