@@ -109,6 +109,65 @@ const getInitialsTheme = (name: string) => {
     };
 };
 
+const DOMAIN_DEFAULTS: Record<string, { label: string, goal: string, obj1: string, obj2: string, obj3: string }> = {
+    domain_mental_health: {
+        label: "Mental Health / Substance Abuse",
+        goal: "I want to comply with my psychiatric treatment and appointments scheduled by my psychiatrist to avoid crisis and improve my mental condition.",
+        obj1: "Client will attend his psychiatrist's appointment as scheduled within the next six months to improve his level of functioning.",
+        obj2: "TCM will advocate on behalf of client during psychiatrist appointments as needed and monitor clinic outcomes.",
+        obj3: "Client's living environment, level of functioning, and compliance with medications will be monitored by the TCM."
+    },
+    domain_physical_health: {
+        label: "Physical Health / Medical / Dental",
+        goal: "I want to receive medical treatment from my PCP and follow medical appointments to keep my medical conditions under control.",
+        obj1: "Client is committed to attending all of his scheduled primary care and specialist medical appointments.",
+        obj2: "Client will inform his PCP/specialist about any health progress and medication side effects.",
+        obj3: "TCM will monitor client's compliance with medical follow-up and treatment recommendations."
+    },
+    domain_recreational: {
+        label: "Recreational / Social Support",
+        goal: "I would like to participate in social and recreational activities to expand my support network and reduce isolation.",
+        obj1: "Client will obtain information about libraries and senior community centers with the assistance of the TCM.",
+        obj2: "TCM will assist client in obtaining membership applications and forms for community programs.",
+        obj3: "TCM will monitor client's social engagement and participation outcomes."
+    },
+    domain_daily_living: {
+        label: "Activities of Daily Living",
+        goal: "I want to stay independent and make sure I don't lose my benefits or miss important appointments.",
+        obj1: "TCM will assist client in completing and submitting utility, SNAP, or other community service applications.",
+        obj2: "TCM will provide monthly assistance reviewing provider correspondence, notifications, and letters.",
+        obj3: "TCM will coordinate referrals and linkage to additional community-based support services."
+    },
+    domain_housing: {
+        label: "Housing / Shelter",
+        goal: "I want to obtain a better and safe place to live according to my monthly income.",
+        obj1: "Client will obtain and fill out housing application forms for low-income housing programs.",
+        obj2: "TCM will link client with housing programs and assist with gathering required documentation.",
+        obj3: "TCM will monitor the outcome of the housing application and update contact info as needed."
+    },
+    domain_financial: {
+        label: "Economic / Financial",
+        goal: "I want to obtain assistance with utility bills and phone services to reduce my financial burden.",
+        obj1: "Client will obtain required documentation to complete LIHEAP utility assistance application.",
+        obj2: "Client will apply for and activate a lifeline cell phone to maintain communication with providers.",
+        obj3: "TCM will monitor application outcomes and coordinate with assistance offices."
+    },
+    domain_basic_needs: {
+        label: "Basic Needs",
+        goal: "I want to obtain food donations, hot meals, and personal care items to cover some of my basic needs.",
+        obj1: "Client will receive assistance accessing food resources and pantry programs in the community.",
+        obj2: "TCM will link client with food banks, churches, and charitable donation resources.",
+        obj3: "TCM will monitor client's food security and basic needs status."
+    },
+    domain_transportation: {
+        label: "Transportation",
+        goal: "I want reliable transportation so I can get to my medical appointments and take care of my needs.",
+        obj1: "Client will be linked to community-based transportation services such as Freebee or SafeRide.",
+        obj2: "TCM will assist client with account setup, registration, and scheduling procedures.",
+        obj3: "TCM will monitor transit access and resolve any transportation barriers."
+    }
+};
+
 export function PatientDetail() {
     const { t, language } = useLanguage();
     const { user } = useAuth();
@@ -442,6 +501,18 @@ export function PatientDetail() {
             certObj.setDate(certObj.getDate() - 1);
             const defaultCertDate = socialNeeds.service_plan_certification_date || formatDate(certObj);
 
+            const activeDomainsData: Record<string, any> = {};
+            Object.keys(DOMAIN_DEFAULTS).forEach(key => {
+                if (socialNeeds[key] === true) {
+                    activeDomainsData[key] = {
+                        long_term_goal: socialNeeds[`service_plan_goal_${key}`] || DOMAIN_DEFAULTS[key].goal,
+                        objective_1: socialNeeds[`service_plan_obj1_${key}`] || DOMAIN_DEFAULTS[key].obj1,
+                        objective_2: socialNeeds[`service_plan_obj2_${key}`] || DOMAIN_DEFAULTS[key].obj2,
+                        objective_3: socialNeeds[`service_plan_obj3_${key}`] || DOMAIN_DEFAULTS[key].obj3
+                    };
+                }
+            });
+
             const payload = {
                 type: 'TCM_SERVICE_PLAN',
                 patient_emr_id: patient.emr_id,
@@ -463,7 +534,8 @@ export function PatientDetail() {
                     service_plan_intake_date: defaultIntakeDate,
                     service_plan_records_date: defaultRecordsDate,
                     service_plan_assessment_date: defaultAssessmentDate,
-                    service_plan_certification_date: defaultCertDate
+                    service_plan_certification_date: defaultCertDate,
+                    domains: activeDomainsData
                 }
             };
 
@@ -3671,14 +3743,104 @@ export function PatientDetail() {
                                                 theme="emerald" 
                                             />
                                         </div>
+
+                                        {/* Metas y Objetivos por Dominio */}
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md p-6 md:p-8 space-y-6">
+                                            <div>
+                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
+                                                    <Brain size={14} /> {language === 'es' ? 'Metas y Objetivos por Dominio Activo' : 'Goals & Objectives by Active Domain'}
+                                                </h4>
+                                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-1 leading-normal">
+                                                    {language === 'es' 
+                                                        ? 'Se muestran solo los dominios activos de la evaluación del paciente. Los valores por defecto se rellenarán automáticamente si se dejan vacíos.'
+                                                        : 'Showing only active domains from the client\'s assessment. Default values will be automatically populated if left blank.'}
+                                                </p>
+                                            </div>
+
+                                            {(() => {
+                                                const activeKeys = Object.keys(DOMAIN_DEFAULTS).filter(k => socialNeeds[k] === true);
+                                                if (activeKeys.length === 0) {
+                                                    return (
+                                                        <div className="text-center py-6 text-slate-400 font-medium">
+                                                            {language === 'es' 
+                                                                ? 'No hay dominios activos seleccionados en la Ficha Social.' 
+                                                                : 'No active domains selected in the Social Tab.'}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div className="space-y-6">
+                                                        {activeKeys.map(key => {
+                                                            const item = DOMAIN_DEFAULTS[key];
+                                                            return (
+                                                                <div key={key} className="p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/10 dark:bg-slate-950/5 space-y-4">
+                                                                    <h5 className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{item.label}</h5>
+                                                                    
+                                                                    <div className="space-y-4">
+                                                                        <PremiumGlassField 
+                                                                            icon={Brain} 
+                                                                            label={language === 'es' ? "Meta a Largo Plazo" : "Long Term Goal"} 
+                                                                            name={`service_plan_goal_${key}`} 
+                                                                            value={socialNeeds[`service_plan_goal_${key}`] || ''} 
+                                                                            placeholder={item.goal}
+                                                                            isEditing={isEditing} 
+                                                                            onChange={handleSocialNeedsTextChange} 
+                                                                            isTextarea 
+                                                                            theme="emerald" 
+                                                                        />
+
+                                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                            <PremiumGlassField 
+                                                                                icon={CheckSquare} 
+                                                                                label={language === 'es' ? "Objetivo 1" : "Objective 1"} 
+                                                                                name={`service_plan_obj1_${key}`} 
+                                                                                value={socialNeeds[`service_plan_obj1_${key}`] || ''} 
+                                                                                placeholder={item.obj1}
+                                                                                isEditing={isEditing} 
+                                                                                onChange={handleSocialNeedsTextChange} 
+                                                                                isTextarea 
+                                                                                theme="emerald" 
+                                                                            />
+                                                                            <PremiumGlassField 
+                                                                                icon={CheckSquare} 
+                                                                                label={language === 'es' ? "Objetivo 2" : "Objective 2"} 
+                                                                                name={`service_plan_obj2_${key}`} 
+                                                                                value={socialNeeds[`service_plan_obj2_${key}`] || ''} 
+                                                                                placeholder={item.obj2}
+                                                                                isEditing={isEditing} 
+                                                                                onChange={handleSocialNeedsTextChange} 
+                                                                                isTextarea 
+                                                                                theme="emerald" 
+                                                                            />
+                                                                            <PremiumGlassField 
+                                                                                icon={CheckSquare} 
+                                                                                label={language === 'es' ? "Objetivo 3" : "Objective 3"} 
+                                                                                name={`service_plan_obj3_${key}`} 
+                                                                                value={socialNeeds[`service_plan_obj3_${key}`] || ''} 
+                                                                                placeholder={item.obj3}
+                                                                                isEditing={isEditing} 
+                                                                                onChange={handleSocialNeedsTextChange} 
+                                                                                isTextarea 
+                                                                                theme="emerald" 
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
                                     </div>
                                 );
                             })()}
                         </div>
                         )}
                     </TabsContent>
-                    </Tabs>
                 </div>
+            </Tabs>
             </div>
 
             {showAutofillModeModal && (
