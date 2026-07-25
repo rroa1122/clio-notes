@@ -64,16 +64,16 @@ export function Overview() {
             {/* B) KPI / Summary Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {kpiData.map((kpi, i) => (
-                    <Card key={i} className="p-6 flex flex-col gap-4">
+                    <Card key={i} className="p-6 flex flex-col gap-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
                         <div className="flex items-center justify-between">
-                            <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
-                                <kpi.icon className="size-4 text-slate-600" />
+                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50">
+                                <kpi.icon className="size-4 text-slate-600 dark:text-slate-350" />
                             </div>
                             <div className={cn(
                                 "flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold border",
                                 kpi.isPositive
-                                    ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                                    : "bg-amber-50 text-amber-700 border-amber-100"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30"
+                                    : "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30"
                             )}>
                                 {kpi.isPositive ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
                                 {kpi.delta}
@@ -81,7 +81,7 @@ export function Overview() {
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{kpi.label}</span>
-                            <span className="text-2xl font-semibold tracking-tight text-slate-900">{kpi.value}</span>
+                            <span className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">{kpi.value}</span>
                         </div>
                     </Card>
                 ))}
@@ -91,8 +91,8 @@ export function Overview() {
             <div className="flex flex-col gap-6">
                 <header className="flex items-center justify-between">
                     <div className="flex flex-col gap-1">
-                        <h2 className="text-lg font-semibold tracking-tight text-slate-900">Clinical schedule</h2>
-                        <p className="text-sm font-medium text-slate-500">Manage your daily appointments and patient encounters.</p>
+                        <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Clinical schedule</h2>
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Manage your daily appointments and patient encounters.</p>
                     </div>
                 </header>
                 <div className="w-full">

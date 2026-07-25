@@ -1,0 +1,221 @@
+[
+  {
+    "startData": "1",
+    "resultData": "2",
+    "executionData": "3"
+  },
+  {},
+  {
+    "error": "4",
+    "runData": "5",
+    "lastNodeExecuted": "6"
+  },
+  {
+    "contextData": "7",
+    "nodeExecutionStack": "8",
+    "metadata": "9",
+    "waitingExecution": "10",
+    "waitingExecutionSource": "11",
+    "runtimeData": "12"
+  },
+  {
+    "level": "13",
+    "tags": "14",
+    "description": "15",
+    "timestamp": 1783490890227,
+    "context": "16",
+    "functionality": "17",
+    "name": "18",
+    "node": "19",
+    "messages": "20",
+    "message": "21",
+    "stack": "22"
+  },
+  {
+    "Webhook": "23",
+    "Upload PDF to OpenAI": "24"
+  },
+  "Upload PDF to OpenAI",
+  {},
+  [
+    "25"
+  ],
+  {},
+  {},
+  {},
+  {
+    "version": 1,
+    "establishedAt": 1783490890226,
+    "source": "26"
+  },
+  "warning",
+  {},
+  "Make sure that the previous node outputs a binary file",
+  {
+    "itemIndex": 0
+  },
+  "regular",
+  "NodeOperationError",
+  {
+    "parameters": "27",
+    "type": "28",
+    "typeVersion": 1.8,
+    "position": "29",
+    "id": "30",
+    "name": "6",
+    "credentials": "31"
+  },
+  [],
+  "This operation expects the node's input data to contain a binary file 'file', but none was found [item 0]",
+  "NodeOperationError: This operation expects the node's input data to contain a binary file 'file', but none was found [item 0]\n    at assertBinaryData (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_08b575bec2313d5d8a4cc75358971443/node_modules/n8n-core/src/execution-engine/node-execution-context/utils/binary-helper-functions.ts:93:9)\n    at Object.assertBinaryData (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_08b575bec2313d5d8a4cc75358971443/node_modules/n8n-core/src/execution-engine/node-execution-context/execute-context.ts:104:21)\n    at getBinaryDataFile (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/@n8n+n8n-nodes-langchain@file+packages+@n8n+nodes-langchain_20900c8302166d11a7199f732c8d7bf5/node_modules/@n8n/n8n-nodes-langchain/nodes/vendors/OpenAi/helpers/binary-data.ts:16:33)\n    at ExecuteContext.execute (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/@n8n+n8n-nodes-langchain@file+packages+@n8n+nodes-langchain_20900c8302166d11a7199f732c8d7bf5/node_modules/@n8n/n8n-nodes-langchain/nodes/vendors/OpenAi/v1/actions/file/upload.operation.ts:65:55)\n    at ExecuteContext.router (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/@n8n+n8n-nodes-langchain@file+packages+@n8n+nodes-langchain_20900c8302166d11a7199f732c8d7bf5/node_modules/@n8n/n8n-nodes-langchain/nodes/vendors/OpenAi/v1/actions/router.ts:54:39)\n    at ExecuteContext.execute (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/@n8n+n8n-nodes-langchain@file+packages+@n8n+nodes-langchain_20900c8302166d11a7199f732c8d7bf5/node_modules/@n8n/n8n-nodes-langchain/nodes/vendors/OpenAi/v1/OpenAiV1.node.ts:83:23)\n    at WorkflowExecute.executeNode (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_08b575bec2313d5d8a4cc75358971443/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1074:31)\n    at WorkflowExecute.runNode (/usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_08b575bec2313d5d8a4cc75358971443/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1255:22)\n    at /usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_08b575bec2313d5d8a4cc75358971443/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1691:38\n    at /usr/local/lib/node_modules/n8n/node_modules/.pnpm/n8n-core@file+packages+core_@opentelemetry+api@1.9.0_@opentelemetry+sdk-trace-base@1.30_08b575bec2313d5d8a4cc75358971443/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:2307:11",
+  [
+    "32"
+  ],
+  [
+    "33"
+  ],
+  {
+    "node": "19",
+    "data": "34",
+    "source": "35"
+  },
+  "webhook",
+  {
+    "resource": "36",
+    "operation": "37",
+    "binaryPropertyName": "36",
+    "options": "38"
+  },
+  "@n8n/n8n-nodes-langchain.openAi",
+  [
+    -112,
+    16
+  ],
+  "c3c3a93f-c651-4e8b-8dd9-1d0b60c26f44",
+  {
+    "openAiApi": "39"
+  },
+  {
+    "startTime": 1783490890226,
+    "executionIndex": 0,
+    "source": "40",
+    "hints": "41",
+    "executionTime": 0,
+    "executionStatus": "42",
+    "data": "43"
+  },
+  {
+    "startTime": 1783490890226,
+    "executionIndex": 1,
+    "source": "44",
+    "hints": "45",
+    "executionTime": 2,
+    "executionStatus": "46",
+    "error": "47"
+  },
+  {
+    "main": "48"
+  },
+  {
+    "main": "44"
+  },
+  "file",
+  "upload",
+  {},
+  {
+    "id": "49",
+    "name": "50"
+  },
+  [],
+  [],
+  "success",
+  {
+    "main": "51"
+  },
+  [
+    "52"
+  ],
+  [],
+  "error",
+  {
+    "level": "13",
+    "tags": "14",
+    "description": "15",
+    "timestamp": 1783490890227,
+    "context": "16",
+    "functionality": "17",
+    "name": "18",
+    "node": "19",
+    "messages": "20",
+    "message": "21",
+    "stack": "22"
+  },
+  [
+    "53"
+  ],
+  "rs5I2HRPkABGxSc5",
+  "OpenAi account",
+  [
+    "54"
+  ],
+  {
+    "previousNode": "55"
+  },
+  [
+    "56"
+  ],
+  [
+    "57"
+  ],
+  "Webhook",
+  {
+    "json": "58",
+    "pairedItem": "59"
+  },
+  {
+    "json": "58",
+    "pairedItem": "60"
+  },
+  {
+    "headers": "61",
+    "params": "62",
+    "query": "63",
+    "body": "64",
+    "webhookUrl": "65",
+    "executionMode": "66"
+  },
+  {
+    "item": 0
+  },
+  {
+    "item": 0
+  },
+  {
+    "host": "67",
+    "user-agent": "68",
+    "content-length": "69",
+    "accept": "70",
+    "accept-encoding": "71",
+    "accept-language": "72",
+    "sec-fetch-mode": "73",
+    "via": "74",
+    "x-forwarded-for": "75",
+    "x-forwarded-host": "67",
+    "x-forwarded-proto": "76"
+  },
+  {},
+  {},
+  {},
+  "https://n8n.clinicflow.dev/webhook/pacienteinfo",
+  "production",
+  "n8n.clinicflow.dev",
+  "node",
+  "0",
+  "*/*",
+  "br, gzip, deflate",
+  "*",
+  "cors",
+  "1.1 Caddy",
+  "71.38.64.173",
+  "https"
+]

@@ -8,7 +8,8 @@ db_path = '/root/n8n/database.sqlite'
 wf_mapping = {
     'edM28zeSNCBx6QFI': '/tmp/tcm_prompt.md',
     'GppDFTdj19n9o3Q2': '/tmp/prompt_assessment.txt',
-    'RvtViS0iE8lV67ye': '/tmp/prompt_service_plan.txt'
+    'RvtViS0iE8lV67ye': '/tmp/prompt_service_plan.txt',
+    'K3aJ8zeSNCBx6QFL': '/tmp/prompt_initial_home_visit.txt'
 }
 
 def update_workflow(wf_id, prompt_path):

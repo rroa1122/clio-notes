@@ -20,6 +20,7 @@ export interface User {
     setup_complete?: boolean;
     subscription_tier?: string;
     role: string;
+    screen_lock_passcode?: string;
 }
 
 interface AuthContextType {
@@ -38,6 +39,8 @@ interface AuthContextType {
     isImpersonating: boolean;
     impersonateUser: (targetUserId: string) => Promise<void>;
     stopImpersonating: () => Promise<void>;
+    isLocked: boolean;
+    setIsLocked: (val: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
     const [mfaRequired, setMfaRequired] = useState(false);
     const [mfaEnrollmentRequired, setMfaEnrollmentRequired] = useState(false);
+    const [isLocked, setIsLocked] = useState(() => sessionStorage.getItem('clio_screen_locked') === 'true');
     const [isImpersonating, setIsImpersonating] = useState(false);
 
     const userRef = useRef<User | null>(null);
@@ -98,7 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 clinic_id: profile?.clinic_id,
                 signature_url: profile?.signature_url,
                 setup_complete: profile?.setup_complete,
-                subscription_tier: profile?.subscription_tier || 'free'
+                subscription_tier: profile?.subscription_tier || 'free',
+                screen_lock_passcode: profile?.screen_lock_passcode
             };
             setUser(newUser);
 
@@ -346,9 +351,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    // HIPAA Inactivity Timeout (15 minutes)
+    // HIPAA Inactivity Timeout (15 minutes) or Screen Lock
     useEffect(() => {
-        if (!session?.user) return;
+        if (!session?.user || isLocked) return;
 
         const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
         let timeoutId: ReturnType<typeof setTimeout>;
@@ -359,14 +364,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         const handleInactivityTimeout = async () => {
-            console.log('[Auth] Inactivity timeout reached. Logging out...');
-            try {
-                const { toast } = await import('sonner');
-                toast.warning("Sesión cerrada automáticamente por 15 minutos de inactividad para cumplir con regulaciones HIPAA.");
-            } catch (err) {
-                console.error("Failed to show inactivity toast:", err);
+            const userPasscode = userRef.current?.screen_lock_passcode;
+            if (userPasscode && userPasscode.trim().length === 4) {
+                console.log('[Auth] Inactivity reached. Locking screen...');
+                setIsLocked(true);
+                sessionStorage.setItem('clio_screen_locked', 'true');
+            } else {
+                console.log('[Auth] Inactivity timeout reached. Logging out (fallback)...');
+                try {
+                    const { toast } = await import('sonner');
+                    toast.warning("Sesión cerrada automáticamente por 15 minutos de inactividad para cumplir con regulaciones HIPAA.");
+                } catch (err) {
+                    console.error("Failed to show inactivity toast:", err);
+                }
+                await signOut('inactivity');
             }
-            await signOut('inactivity');
         };
 
         // Events to listen for to detect user activity
@@ -394,7 +406,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 window.removeEventListener(event, resetTimer);
             });
         };
-    }, [session]);
+    }, [session, isLocked]);
 
     const verifyMfaCode = async (code: string, trustDevice?: boolean) => {
         const { data: mfaData, error: listError } = await supabase.auth.mfa.listFactors();
@@ -471,7 +483,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, mfaRequired, mfaEnrollmentRequired, setMfaEnrollmentRequired, login, signOut, logout, signup, refreshUser, verifyMfaCode, isImpersonating, impersonateUser, stopImpersonating }}>
+        <AuthContext.Provider value={{ user, session, loading, mfaRequired, mfaEnrollmentRequired, setMfaEnrollmentRequired, login, signOut, logout, signup, refreshUser, verifyMfaCode, isImpersonating, impersonateUser, stopImpersonating, isLocked, setIsLocked }}>
             {children}
         </AuthContext.Provider>
     );

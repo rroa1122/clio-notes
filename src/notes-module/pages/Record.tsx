@@ -1,8 +1,10 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mic, FileCheck, Loader2, AlertCircle, RefreshCw, Pause, Play, ChevronsUpDown, ChevronDown, User, Upload, CheckCircle2, Sparkles, FileText, ClipboardList, Check, Lock, Layers, Trash2, Plus, Calendar, Clock, Target, Compass } from 'lucide-react';
+import { Mic, FileCheck, Loader2, AlertCircle, RefreshCw, Pause, Play, ChevronsUpDown, ChevronDown, User, Upload, CheckCircle2, Sparkles, FileText, ClipboardList, Check, Lock, Layers, Trash2, Plus, Calendar, Clock, Target, Compass, Edit2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { format, parseISO, isValid } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -15,6 +17,7 @@ import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileInto
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
 import { supabase } from '../../lib/supabaseClient';
+import { settingsService } from '../../services/settingsService';
 import { PatientSelector } from '../components/PatientSelector';
 import { PatientSummaryCard } from '../components/PatientSummaryCard';
 import { PatientCreateModal } from '../components/PatientCreateModal';
@@ -39,6 +42,19 @@ const getLocalDateString = () => {
     return `${year}-${month}-${day}`;
 };
 
+const formatServiceDate = (dateStr?: string, lang?: string) => {
+    if (!dateStr) return '';
+    try {
+        const parsed = parseISO(dateStr);
+        if (isValid(parsed)) {
+            return format(parsed, "PPP", { locale: lang === 'es' ? es : undefined });
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    return dateStr;
+};
+
 const parseTimeToMinutes = (timeStr: string): number | null => {
     if (!timeStr) return null;
     const match = timeStr.match(/(\d+):(\d+)\s*(am|pm)/i);
@@ -52,14 +68,18 @@ const parseTimeToMinutes = (timeStr: string): number | null => {
 };
 
 const TCM_SUB_TEMPLATES = [
+    'TCM Initial Home Visit',
+    'TCM Collateral & Contact Note',
+    'TCM Initial Assessment & Certification',
+    'TCM Service Plan Development',
+    'TCM Service Plan Discussion',
     'Monthly Home Visit (MHV)',
     'Update Information in the Community',
     'Obtain Supply Donation',
     'PCP Coordination / Staffing (In-Person)',
     'Coordinate Transportation',
+    'OTC Benefit Assistance (3 Services)',
     'Custom Template',
-    'TCM Initial Assessment & Certification',
-    'TCM Service Plan Development',
     'Other'
 ];
 
@@ -115,6 +135,22 @@ const Record: React.FC = () => {
     const navigate = useNavigate();
     useTheme();
 
+    const [clinicSettings, setClinicSettings] = useState<any>(null);
+
+    useEffect(() => {
+        const loadClinicSettings = async () => {
+            if (user?.clinic_id) {
+                try {
+                    const settings = await settingsService.fetchSettings(user.clinic_id);
+                    setClinicSettings(settings);
+                } catch (err) {
+                    console.error("Record: Failed to load clinic settings:", err);
+                }
+            }
+        };
+        loadClinicSettings();
+    }, [user?.clinic_id]);
+
     // Core State
     const [isRecording, setIsRecording] = useState(false);
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -147,6 +183,7 @@ const Record: React.FC = () => {
     const [timeOut, setTimeOut] = useState('');
     const [units, setUnits] = useState('');
     const [activeTab, setActiveTab] = useState<'info' | 'capture' | 'services'>('info');
+    const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
     const [showGuide, setShowGuide] = useState(() => localStorage.getItem('clio_hide_guide') !== 'true');
     const [isTemplatesLoading, setIsTemplatesLoading] = useState(true);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -160,6 +197,89 @@ const Record: React.FC = () => {
     const [userClinic, setUserClinic] = useState<any>(null);
     const [noteCount, setNoteCount] = useState<number>(0);
 
+    const isRestoredRef = useRef(false);
+
+    // Persistence: Save state to sessionStorage
+    useEffect(() => {
+        if (!isRestoredRef.current) return;
+
+        const hasContent = selectedPatient || 
+                           recordedServices.length > 0 || 
+                           clioNote || 
+                           timeIn || 
+                           timeOut || 
+                           units || 
+                           patientInfo.name || 
+                           patientInfo.dob;
+
+        if (hasContent) {
+            const draft = {
+                status,
+                pdfResponse,
+                clioNote,
+                selectedPatient,
+                recordedServices: recordedServices.map(s => ({ ...s, audioBlob: null })),
+                selectedTemplateId,
+                selectedSubTemplate,
+                serviceDate,
+                timeIn,
+                timeOut,
+                units,
+                patientInfo,
+                activeTab
+            };
+            sessionStorage.setItem('clio_encounter_draft', JSON.stringify(draft));
+        } else {
+            sessionStorage.removeItem('clio_encounter_draft');
+        }
+    }, [status, pdfResponse, clioNote, selectedPatient, recordedServices, selectedTemplateId, selectedSubTemplate, serviceDate, timeIn, timeOut, units, patientInfo, activeTab]);
+
+    // Persistence: Restore state from sessionStorage on mount
+    useEffect(() => {
+        try {
+            const saved = sessionStorage.getItem('clio_encounter_draft');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                
+                const urlId = searchParams.get('id');
+                const urlPatientId = searchParams.get('patientId');
+                
+                const draftId = parsed.clioNote?.id || parsed.pdfResponse?.data?.id;
+                const draftPatientId = parsed.selectedPatient?.id;
+                
+                if (urlId && urlId !== draftId) {
+                    return;
+                }
+                if (urlPatientId && urlPatientId !== draftPatientId) {
+                    return;
+                }
+                
+                if (parsed.status !== undefined) setStatus(parsed.status);
+                if (parsed.pdfResponse !== undefined) setPdfResponse(parsed.pdfResponse);
+                if (parsed.clioNote !== undefined) setClioNote(parsed.clioNote);
+                if (parsed.selectedPatient !== undefined) setSelectedPatient(parsed.selectedPatient);
+                if (parsed.recordedServices !== undefined) {
+                    setRecordedServices(parsed.recordedServices.map((s: any) => ({
+                        ...s,
+                        audioBlob: null
+                    })));
+                }
+                if (parsed.selectedTemplateId !== undefined) setSelectedTemplateId(parsed.selectedTemplateId);
+                if (parsed.selectedSubTemplate !== undefined) setSelectedSubTemplate(parsed.selectedSubTemplate);
+                if (parsed.serviceDate !== undefined) setServiceDate(parsed.serviceDate);
+                if (parsed.timeIn !== undefined) setTimeIn(parsed.timeIn);
+                if (parsed.timeOut !== undefined) setTimeOut(parsed.timeOut);
+                if (parsed.units !== undefined) setUnits(parsed.units);
+                if (parsed.patientInfo !== undefined) setPatientInfo(parsed.patientInfo);
+                if (parsed.activeTab !== undefined) setActiveTab(parsed.activeTab);
+            }
+        } catch (e) {
+            console.error("Error restoring encounter draft:", e);
+        } finally {
+            isRestoredRef.current = true;
+        }
+    }, []);
+
     const dropdownRef = useRef<HTMLDivElement>(null);
     const initialTemplateId = useRef(storage.getActiveTemplateId());
 
@@ -168,6 +288,12 @@ const Record: React.FC = () => {
             setSelectedTemplateId('tcm_assessment_note');
         } else if (selectedSubTemplate === 'TCM Service Plan Development') {
             setSelectedTemplateId('tcm_service_plan_note');
+        } else if (selectedSubTemplate === 'TCM Service Plan Discussion') {
+            setSelectedTemplateId('tcm_service_plan_discussion');
+        } else if (selectedSubTemplate === 'TCM Initial Home Visit') {
+            setSelectedTemplateId('tcm_initial_home_visit_note');
+        } else if (selectedSubTemplate === 'TCM Collateral & Contact Note') {
+            setSelectedTemplateId('tcm_collateral_note');
         } else if (selectedSubTemplate) {
             setSelectedTemplateId('tcm_progress_note');
         }
@@ -195,6 +321,20 @@ const Record: React.FC = () => {
             storage.getNotesCount(user.id).then(count => setNoteCount(count));
         }
     }, [user]);
+
+    // Auto-calculate units from timeIn and timeOut using Medicaid 8-minute rule
+    useEffect(() => {
+        const startMins = parseTimeToMinutes(timeIn);
+        const endMins = parseTimeToMinutes(timeOut);
+        if (startMins !== null && endMins !== null) {
+            let duration = endMins - startMins;
+            if (duration < 0) duration += 24 * 60;
+            const calculatedUnits = Math.floor(duration / 15) + (duration % 15 >= 8 ? 1 : 0);
+            setUnits(calculatedUnits.toString());
+        } else {
+            setUnits('');
+        }
+    }, [timeIn, timeOut]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -455,7 +595,11 @@ const Record: React.FC = () => {
                 id: Date.now().toString(),
                 audioBlob: file,
                 subTemplate: selectedSubTemplate,
-                duration: 0
+                duration: 0,
+                serviceDate: serviceDate,
+                timeIn: timeIn,
+                timeOut: timeOut,
+                units: units
             }]);
             setSelectedSubTemplate('');
             toast.success('Audio file imported successfully');
@@ -468,7 +612,58 @@ const Record: React.FC = () => {
     };
 
     const handleRemoveService = (idToRemove: string) => {
+        if (editingServiceId === idToRemove) {
+            handleCancelEdit();
+        }
         setRecordedServices(prev => prev.filter(s => s.id !== idToRemove));
+    };
+
+    const handleEditService = (svc: typeof recordedServices[0]) => {
+        setEditingServiceId(svc.id);
+        setSelectedSubTemplate(svc.subTemplate);
+        setServiceDate(svc.serviceDate || getLocalDateString());
+        setTimeIn(svc.timeIn || '');
+        setTimeOut(svc.timeOut || '');
+        setUnits(svc.units || '');
+        setPatientInfo(prev => ({
+            ...prev,
+            context: svc.manualText || '',
+            customTemplateText: svc.customTemplateText || ''
+        }));
+        
+        if (svc.audioBlob) {
+            setAudioBlob(svc.audioBlob);
+            const url = URL.createObjectURL(svc.audioBlob);
+            setAudioUrl(url);
+            setTimer(svc.duration || 0);
+        } else {
+            setAudioBlob(null);
+            if (audioUrl) URL.revokeObjectURL(audioUrl);
+            setAudioUrl(null);
+            setTimer(0);
+        }
+        
+        setActiveTab('info');
+        toast.info(language === 'es' ? 'Detalles cargados en el formulario para editar' : 'Details loaded into form for editing');
+    };
+
+    const handleCancelEdit = () => {
+        setEditingServiceId(null);
+        setSelectedSubTemplate('');
+        setTimeIn('');
+        setTimeOut('');
+        setUnits('');
+        setPatientInfo(prev => ({
+            ...prev,
+            context: '',
+            customTemplateText: ''
+        }));
+        setAudioBlob(null);
+        if (audioUrl) URL.revokeObjectURL(audioUrl);
+        setAudioUrl(null);
+        setTimer(0);
+        
+        toast.info(language === 'es' ? 'Edición cancelada' : 'Editing cancelled');
     };
 
     const handleAddService = () => {
@@ -480,32 +675,90 @@ const Record: React.FC = () => {
             toast.error('Please select a service provided.');
             return;
         }
+
+        if (selectedSubTemplate === 'OTC Benefit Assistance (3 Services)') {
+            // Add three independent services: OTC Obt, OTC Comp, OTC Sub
+            setRecordedServices(prev => [
+                ...prev,
+                {
+                    id: 'manual-obt-' + Date.now().toString(),
+                    audioBlob: null,
+                    subTemplate: 'OTC Obt',
+                    duration: 42 * 60, // 42 minutes in seconds
+                    manualText: 'The Targeted Case Manager (TCM) will assist the patient in obtaining the OTC benefit form from the pharmacy.',
+                    customTemplateText: '',
+                    serviceDate: serviceDate,
+                    timeIn: '09:38 AM',
+                    timeOut: '10:20 AM',
+                    units: '3'
+                },
+                {
+                    id: 'manual-comp-' + (Date.now() + 1).toString(),
+                    audioBlob: null,
+                    subTemplate: 'OTC Comp',
+                    duration: 43 * 60, // 43 minutes
+                    manualText: 'The Targeted Case Manager (TCM) will assist the patient in completing the OTC items catalog selection.',
+                    customTemplateText: '',
+                    serviceDate: serviceDate,
+                    timeIn: '12:50 PM',
+                    timeOut: '01:33 PM',
+                    units: '3'
+                },
+                {
+                    id: 'manual-sub-' + (Date.now() + 2).toString(),
+                    audioBlob: null,
+                    subTemplate: 'OTC Sub',
+                    duration: 44 * 60, // 44 minutes
+                    manualText: 'The Targeted Case Manager (TCM) will assist the patient in submitting the OTC catalog order.',
+                    customTemplateText: '',
+                    serviceDate: serviceDate,
+                    timeIn: '04:15 PM',
+                    timeOut: '04:59 PM',
+                    units: '3'
+                }
+            ]);
+            setSelectedSubTemplate('');
+            toast.success(language === 'es' ? 'Se agregaron los 3 bloques de servicio OTC' : 'Added all 3 OTC service blocks');
+            return;
+        }
         
         const hasAudio = !!audioBlob;
-        const hasText = (!!patientInfo.context && patientInfo.context.trim() !== '') || (!!patientInfo.customTemplateText && patientInfo.customTemplateText.trim() !== '');
 
         if (selectedSubTemplate === 'Custom Template' && (!patientInfo.customTemplateText || patientInfo.customTemplateText.trim() === '')) {
             toast.error('Please provide the Custom Template text.');
             return;
         }
 
-        if (!hasAudio && !hasText) {
-            toast.error('Please provide either an audio recording, encounter goals, or custom template text.');
-            return;
+        if (editingServiceId) {
+            setRecordedServices(prev => prev.map(s => s.id === editingServiceId ? {
+                ...s,
+                audioBlob: audioBlob,
+                subTemplate: selectedSubTemplate,
+                duration: timer,
+                manualText: patientInfo.context,
+                customTemplateText: patientInfo.customTemplateText,
+                serviceDate: serviceDate,
+                timeIn: timeIn,
+                timeOut: timeOut,
+                units: units
+            } : s));
+            setEditingServiceId(null);
+            toast.success(language === 'es' ? 'Servicio actualizado' : 'Service updated');
+        } else {
+            setRecordedServices(prev => [...prev, {
+                id: (hasAudio ? 'audio-' : 'manual-') + Date.now().toString(),
+                audioBlob: audioBlob,
+                subTemplate: selectedSubTemplate,
+                duration: timer,
+                manualText: patientInfo.context,
+                customTemplateText: patientInfo.customTemplateText,
+                serviceDate: serviceDate,
+                timeIn: timeIn,
+                timeOut: timeOut,
+                units: units
+            }]);
+            toast.success('Service added to joint note');
         }
-
-        setRecordedServices(prev => [...prev, {
-            id: (hasAudio ? 'audio-' : 'manual-') + Date.now().toString(),
-            audioBlob: audioBlob,
-            subTemplate: selectedSubTemplate,
-            duration: timer,
-            manualText: patientInfo.context,
-            customTemplateText: patientInfo.customTemplateText,
-            serviceDate: serviceDate,
-            timeIn: timeIn,
-            timeOut: timeOut,
-            units: units
-        }]);
 
         // Clean up pending states
         setAudioBlob(null);
@@ -518,8 +771,6 @@ const Record: React.FC = () => {
         setTimeOut('');
         setUnits('');
         setActiveTab('services');
-        
-        toast.success('Service added to joint note');
     };
 
     const sendToGenerate = async () => {
@@ -551,7 +802,7 @@ const Record: React.FC = () => {
         }
 
         const currentTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
-        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note'].includes(selectedTemplateId);
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion'].includes(selectedTemplateId);
 
         setStatus('uploading');
         setError(null);
@@ -619,6 +870,15 @@ const Record: React.FC = () => {
                 formData.append('joint_note_index', (i + 1).toString());
                 formData.append('joint_note_total', allServicesToProcess.length.toString());
                 formData.append('is_joint_note', allServicesToProcess.length > 1 ? 'true' : 'false');
+
+                if (clinicSettings) {
+                    formData.append('agency_name', clinicSettings.clinicName || '');
+                    formData.append('facility_name', clinicSettings.clinicName || '');
+                    formData.append('facility_address', clinicSettings.physicalAddress || '');
+                    formData.append('facility_phone', clinicSettings.mainPhone || '');
+                    formData.append('facility_fax', clinicSettings.faxNumber || '');
+                    formData.append('facility_email', clinicSettings.clinicEmail || '');
+                }
 
                 // Compute a unique service title to avoid n8n deduplicating multiple identical templates 
                 const sameTypeBefore = allServicesToProcess.slice(0, i).filter(s => s.subTemplate === svc.subTemplate).length;
@@ -704,9 +964,8 @@ const Record: React.FC = () => {
                     normalized.encounter.dos_date = svcDate;
                     normalized.encounter.time_in = svcTimeIn;
                     normalized.encounter.time_out = svcTimeOut;
-                    normalized.encounter.units = svcUnits;
                     
-                    // Calculate duration in minutes
+                    // Calculate duration in minutes and units strictly based on time span
                     const startMins = parseTimeToMinutes(svcTimeIn);
                     const endMins = parseTimeToMinutes(svcTimeOut);
                     let calcDuration = 0;
@@ -714,14 +973,19 @@ const Record: React.FC = () => {
                         let diff = endMins - startMins;
                         if (diff < 0) diff += 1440;
                         calcDuration = diff;
-                    } else if (svcUnits) {
+                    }
+                    if (calcDuration === 0 && svcUnits) {
                         calcDuration = parseInt(svcUnits) * 15;
                     }
                     if (calcDuration === 0) {
                         calcDuration = Math.round(svc.duration / 60) || 15;
                     }
+                    
+                    const calcUnits = Math.floor(calcDuration / 15) + (calcDuration % 15 >= 8 ? 1 : 0);
+                    
                     normalized.encounter.duration = calcDuration.toString();
                     normalized.encounter.duration_minutes = calcDuration.toString();
+                    normalized.encounter.units = calcUnits.toString();
                     
                     generatedNotes.push(normalized);
                 }
@@ -851,6 +1115,7 @@ const Record: React.FC = () => {
     };
 
     const handleReset = () => {
+        sessionStorage.removeItem('clio_encounter_draft');
         if (audioUrl) URL.revokeObjectURL(audioUrl);
         recordedServices.forEach(s => {
             if (s.audioBlob) URL.revokeObjectURL(URL.createObjectURL(s.audioBlob));
@@ -1099,7 +1364,7 @@ const Record: React.FC = () => {
                                                         {hasInput ? "✓" : "4"}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
-                                                        <span className="text-[9px] font-black uppercase tracking-wider opacity-75">{t('record.step.capture', 'Capture')}</span>
+                                                        <span className="text-[9px] font-black uppercase tracking-wider opacity-75">{t('record.step.capture', 'Capture')} <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 lowercase">({language === 'es' ? 'opcional' : 'optional'})</span></span>
                                                         <span className="text-[11px] leading-tight truncate">
                                                             {audioBlob 
                                                                 ? (language === 'es' ? "Audio grabado" : "Audio Recorded") 
@@ -1113,8 +1378,8 @@ const Record: React.FC = () => {
                                                 <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-2.5 w-60 p-3 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-sm text-white text-[11px] rounded-xl shadow-lg opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 -translate-y-1 transition-all duration-300 text-center font-medium leading-relaxed">
                                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900/95 dark:border-b-slate-950/95" />
                                                     {language === 'es' 
-                                                        ? "Presiona el icono de micrófono para grabar la sesión o describe de forma escrita los objetivos/detalles en el panel de texto."
-                                                        : "Press the microphone icon to record the session, or write the goals/details in the text panel."}
+                                                        ? "Presiona el icono de micrófono para grabar la sesión o describe los objetivos en el panel de texto. (Este paso es opcional si solo deseas registrar la información del servicio sin audio ni objetivos)."
+                                                        : "Press the microphone icon to record the session, or write the goals/details in the text panel. (This step is optional if you only want to register the service info without audio or goals)."}
                                                 </div>
                                             </div>
                                         );
@@ -1269,13 +1534,14 @@ const Record: React.FC = () => {
                                         </div>
                                         {/* Units */}
                                         <div className="w-[85px] h-full flex items-center px-2 shrink-0">
-                                            <Input 
+                                            <input 
                                                 type="number"
                                                 min="0"
+                                                autoComplete="off"
                                                 placeholder={language === 'es' ? "Unid." : "Units"}
                                                 value={units}
-                                                onChange={(e) => setUnits(e.target.value)}
-                                                className="h-full border-0 bg-transparent text-slate-600 dark:text-slate-100 font-semibold focus-visible:ring-0 focus:ring-0 outline-none text-center text-[13px] w-full px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                readOnly={true}
+                                                className="h-full border-0 bg-transparent text-slate-400 dark:text-slate-400 font-semibold focus:ring-0 outline-none text-center text-[13px] w-full px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-not-allowed"
                                             />
                                         </div>
                                     </div>
@@ -1538,46 +1804,71 @@ const Record: React.FC = () => {
                                 <div className="flex flex-row items-stretch gap-4 w-full max-w-3xl mx-auto px-4">
                                     {(() => {
                                         const hasIdentity = selectedPatient || patientInfo.name.trim().length > 0;
-                                        const canAdd = hasIdentity && serviceDate && selectedSubTemplate && (audioBlob || patientInfo.context.trim().length > 0 || (selectedSubTemplate === 'Custom Template' && patientInfo.customTemplateText?.trim().length > 0));
+                                        const canAdd = hasIdentity && serviceDate && selectedSubTemplate && (selectedSubTemplate !== 'Custom Template' || patientInfo.customTemplateText?.trim().length > 0);
                                         return (
-                                            <Button
-                                                onClick={handleAddService}
-                                                disabled={!canAdd}
-                                                className={cn(
-                                                    "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 shadow-sm border",
-                                                    canAdd 
-                                                        ? "bg-white dark:bg-slate-900 text-primary border-primary/20 dark:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/40 active:scale-[0.98]" 
-                                                        : "bg-slate-50/50 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 border-slate-100 dark:border-slate-900 shadow-none cursor-not-allowed"
+                                            <>
+                                                <Button
+                                                    onClick={handleAddService}
+                                                    disabled={!canAdd}
+                                                    className={cn(
+                                                        "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 shadow-sm border",
+                                                        canAdd 
+                                                            ? (editingServiceId 
+                                                                ? "bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 border-transparent active:scale-[0.98]"
+                                                                : "bg-white dark:bg-slate-900 text-primary border-primary/20 dark:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/40 active:scale-[0.98]") 
+                                                            : "bg-slate-50/50 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 border-slate-100 dark:border-slate-900 shadow-none cursor-not-allowed"
+                                                    )}
+                                                >
+                                                    {editingServiceId ? <Check size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={3} />}
+                                                    <span>
+                                                        {editingServiceId 
+                                                            ? (language === 'es' ? "Guardar Cambios" : "Save Changes") 
+                                                            : (audioBlob && (patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) 
+                                                                ? (language === 'es' ? "Añadir Combinado" : "Add Combined") 
+                                                                : (audioBlob 
+                                                                    ? (language === 'es' ? "Añadir Audio" : "Add Audio") 
+                                                                    : ((patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) 
+                                                                        ? (language === 'es' ? "Añadir Texto" : "Add Text") 
+                                                                        : (language === 'es' ? "Añadir Servicio" : "Add Service"))))}
+                                                    </span>
+                                                </Button>
+                                                {editingServiceId && (
+                                                    <Button
+                                                        onClick={handleCancelEdit}
+                                                        variant="outline"
+                                                        className="h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 border border-slate-200 dark:border-slate-800 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-950"
+                                                    >
+                                                        {language === 'es' ? "Cancelar" : "Cancel"}
+                                                    </Button>
                                                 )}
-                                            >
-                                                <Plus size={14} strokeWidth={3} />
-                                                <span>{audioBlob && (patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) ? (language === 'es' ? "Añadir Combinado" : "Add Combined") : (audioBlob ? (language === 'es' ? "Añadir Audio" : "Add Audio") : ((patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) ? (language === 'es' ? "Añadir Texto" : "Add Text") : (language === 'es' ? "Añadir Servicio" : "Add Service")))}</span>
-                                            </Button>
+                                            </>
                                         );
                                     })()}
 
-                                    <Button
-                                        onClick={sendToGenerate}
-                                        disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
-                                        className={cn(
-                                            "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 active:scale-[0.98] shadow-md",
-                                            recordedServices.length > 0
-                                                ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600 shadow-slate-900/10"
-                                                : "bg-slate-50 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 pointer-events-none border border-slate-100 dark:border-slate-900"
-                                        )}
-                                    >
-                                        {status === 'processing' || status === 'uploading' ? (
-                                            <>
-                                                <Loader2 className="animate-spin" size={14} />
-                                                <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FileCheck size={14} />
-                                                <span>{language === 'es' ? "Finalizar" : "Finalize"} ({recordedServices.length})</span>
-                                            </>
-                                        )}
-                                    </Button>
+                                    {!editingServiceId && (
+                                        <Button
+                                            onClick={sendToGenerate}
+                                            disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
+                                            className={cn(
+                                                "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 active:scale-[0.98] shadow-md",
+                                                recordedServices.length > 0
+                                                    ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600 shadow-slate-900/10"
+                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 pointer-events-none border border-slate-100 dark:border-slate-900"
+                                            )}
+                                        >
+                                            {status === 'processing' || status === 'uploading' ? (
+                                                <>
+                                                    <Loader2 className="animate-spin" size={14} />
+                                                    <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FileCheck size={14} />
+                                                    <span>{language === 'es' ? "Finalizar" : "Finalize"} ({recordedServices.length})</span>
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
                                 </div>
                                 {(!selectedPatient && !patientInfo.name.trim()) || !selectedSubTemplate ? (
                                     <p className="text-center text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] animate-pulse transition-opacity duration-1000">
@@ -1619,28 +1910,71 @@ const Record: React.FC = () => {
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                         {recordedServices.map((svc, i) => (
-                                            <div key={svc.id} className="bg-slate-50/30 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800 rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-300 group overflow-hidden">
+                                            <div key={svc.id} className={cn(
+                                                "border rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm transition-all duration-300 group overflow-hidden",
+                                                editingServiceId === svc.id 
+                                                    ? "bg-indigo-500/5 dark:bg-indigo-950/10 border-indigo-200 dark:border-indigo-800/80 ring-1 ring-indigo-500/20"
+                                                    : "bg-slate-50/30 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                            )}>
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="flex items-center justify-center size-5 rounded-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 dark:text-slate-500 shrink-0 shadow-sm">
+                                                    <div className={cn(
+                                                        "flex items-center justify-center size-5 rounded-full border text-[11px] font-bold shrink-0 shadow-sm transition-colors",
+                                                        editingServiceId === svc.id 
+                                                            ? "bg-indigo-600 border-indigo-600 text-white" 
+                                                            : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500"
+                                                    )}>
                                                         {i + 1}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
                                                         <h5 className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 truncate leading-tight tracking-tight">{svc.subTemplate}</h5>
-                                                        <div className="flex items-center gap-1.5 mt-0.5 opacity-60">
-                                                            {svc.audioBlob && <Mic size={9} className="text-slate-400 dark:text-slate-500" />}
-                                                            {svc.manualText && <FileText size={9} className="text-slate-400 dark:text-slate-500" />}
-                                                            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                                                                {svc.audioBlob && svc.manualText ? (language === 'es' ? "Ambos" : "Both") : (svc.audioBlob ? "Audio" : (language === 'es' ? "Texto" : "Text"))}
-                                                            </span>
-                                                        </div>
+
+                                                        {(svc.serviceDate || svc.timeIn || svc.timeOut || svc.units) && (
+                                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[9px] font-bold text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/60 pt-1">
+                                                                {svc.serviceDate && (
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Calendar size={10} className="shrink-0 opacity-70" />
+                                                                        <span className="truncate">{formatServiceDate(svc.serviceDate, language)}</span>
+                                                                    </span>
+                                                                )}
+                                                                {(svc.timeIn || svc.timeOut || svc.units) && (
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Clock size={10} className="shrink-0 opacity-70" />
+                                                                        <span>
+                                                                            {svc.timeIn && svc.timeOut ? (
+                                                                                `${svc.timeIn} - ${svc.timeOut}` 
+                                                                            ) : svc.timeIn ? (
+                                                                                `In: ${svc.timeIn}${svc.units ? ` (${svc.units} U)` : ''}` 
+                                                                            ) : svc.units ? (
+                                                                                `${svc.units} ${language === 'es' ? 'U' : 'U'}` 
+                                                                            ) : ''}
+                                                                        </span>
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <button 
-                                                    onClick={() => handleRemoveService(svc.id)} 
-                                                    className="size-7 flex items-center justify-center rounded-full text-slate-300 hover:text-red-400 hover:bg-red-50 transition-all duration-300 shrink-0"
-                                                >
-                                                    <Trash2 size={13} strokeWidth={1.5} />
-                                                </button>
+                                                <div className="flex items-center gap-1 shrink-0 ml-2">
+                                                    <button 
+                                                        onClick={() => handleEditService(svc)} 
+                                                        className={cn(
+                                                            "size-7 flex items-center justify-center rounded-full transition-all duration-300",
+                                                            editingServiceId === svc.id 
+                                                                ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30" 
+                                                                : "text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20"
+                                                        )}
+                                                        title={language === 'es' ? "Editar" : "Edit"}
+                                                    >
+                                                        <Edit2 size={12} strokeWidth={1.5} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleRemoveService(svc.id)} 
+                                                        className="size-7 flex items-center justify-center rounded-full text-slate-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-300"
+                                                        title={language === 'es' ? "Eliminar" : "Delete"}
+                                                    >
+                                                        <Trash2 size={13} strokeWidth={1.5} />
+                                                    </button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -1699,13 +2033,14 @@ const Record: React.FC = () => {
                                             
                                             {/* Units Input Field */}
                                             <div className="col-span-4 bg-slate-50 dark:bg-slate-950 rounded-xl flex items-center px-3 border border-transparent focus-within:border-primary/20">
-                                                <Input 
+                                                <input 
                                                     type="number"
                                                     min="0"
+                                                    autoComplete="off"
                                                     placeholder={language === 'es' ? 'Unid.' : 'Units'}
                                                     value={units}
-                                                    onChange={(e) => setUnits(e.target.value)}
-                                                    className="h-10 border-0 bg-transparent focus-visible:ring-0 focus:ring-0 outline-none font-bold text-slate-700 dark:text-slate-200 w-full p-0 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    readOnly={true}
+                                                    className="h-10 border-0 bg-transparent focus:ring-0 outline-none font-bold text-slate-400 dark:text-slate-400 w-full p-0 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-not-allowed"
                                                 />
                                             </div>
                                         </div>
@@ -1923,21 +2258,34 @@ const Record: React.FC = () => {
                                     <div className="pt-2">
                                         {(() => {
                                             const hasIdentity = selectedPatient || patientInfo.name.trim().length > 0;
-                                            const canAdd = hasIdentity && serviceDate && selectedSubTemplate && (audioBlob || patientInfo.context.trim().length > 0 || (selectedSubTemplate === 'Custom Template' && patientInfo.customTemplateText?.trim().length > 0));
+                                            const canAdd = hasIdentity && serviceDate && selectedSubTemplate && (selectedSubTemplate !== 'Custom Template' || patientInfo.customTemplateText?.trim().length > 0);
                                             return (
-                                                <Button
-                                                    onClick={handleAddService}
-                                                    disabled={!canAdd}
-                                                    className={cn(
-                                                        "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 shadow-sm transition-all duration-300 active:scale-95",
-                                                        canAdd 
-                                                            ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600" 
-                                                            : "bg-slate-100 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-800 shadow-none"
-                                                    )}
-                                                >
-                                                    <Plus size={14} strokeWidth={3} />
-                                                    <span>{language === 'es' ? 'Añadir Servicio a la Nota' : 'Add Service to Note'}</span>
-                                                </Button>
+                                                 <div className="flex flex-col gap-2 w-full">
+                                                     <Button
+                                                         onClick={handleAddService}
+                                                         disabled={!canAdd}
+                                                         className={cn(
+                                                             "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 shadow-sm transition-all duration-300 active:scale-95",
+                                                             canAdd 
+                                                                 ? (editingServiceId 
+                                                                     ? "bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-650"
+                                                                     : "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600")
+                                                                 : "bg-slate-100 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-800 shadow-none"
+                                                         )}
+                                                     >
+                                                         {editingServiceId ? <Check size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={3} />}
+                                                         <span>{editingServiceId ? (language === 'es' ? 'Guardar Cambios' : 'Save Changes') : (language === 'es' ? 'Añadir Servicio a la Nota' : 'Add Service to Note')}</span>
+                                                     </Button>
+                                                     {editingServiceId && (
+                                                         <Button
+                                                             onClick={handleCancelEdit}
+                                                             variant="ghost"
+                                                             className="h-10 w-full rounded-full font-bold text-[11px] uppercase tracking-wider text-slate-400 hover:text-slate-600 border border-slate-200 dark:border-slate-850"
+                                                         >
+                                                             {language === 'es' ? 'Cancelar Edición' : 'Cancel Editing'}
+                                                         </Button>
+                                                     )}
+                                                 </div>
                                             );
                                         })()}
                                     </div>
@@ -1977,57 +2325,113 @@ const Record: React.FC = () => {
                                             {/* Stack List */}
                                             <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
                                                 {recordedServices.map((svc, i) => (
-                                                    <div key={svc.id} className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/70 dark:border-slate-800 rounded-2xl py-2 px-3.5 flex items-center justify-between shadow-sm">
+                                                    <div key={svc.id} className={cn(
+                                                        "border rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm transition-all duration-300 group overflow-hidden",
+                                                        editingServiceId === svc.id 
+                                                            ? "bg-indigo-500/5 dark:bg-indigo-950/10 border-indigo-200 dark:border-indigo-800/80 ring-1 ring-indigo-500/20"
+                                                            : "bg-slate-50/30 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
+                                                    )}>
                                                         <div className="flex items-center gap-3 min-w-0">
-                                                            <div className="flex items-center justify-center size-5 rounded-full bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-[10px] font-black text-slate-400 dark:text-slate-500 shrink-0">
+                                                            <div className={cn(
+                                                                "flex items-center justify-center size-5 rounded-full border text-[11px] font-bold shrink-0 shadow-sm transition-colors",
+                                                                editingServiceId === svc.id 
+                                                                    ? "bg-indigo-600 border-indigo-600 text-white" 
+                                                                    : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500"
+                                                            )}>
                                                                 {i + 1}
                                                             </div>
                                                             <div className="flex flex-col min-w-0">
-                                                                <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-300 truncate">{svc.subTemplate}</h5>
+                                                                <h5 className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 truncate leading-tight tracking-tight">{svc.subTemplate}</h5>
                                                                 <div className="flex items-center gap-1.5 mt-0.5 opacity-60">
                                                                     {svc.audioBlob && <Mic size={9} className="text-slate-400 dark:text-slate-500" />}
-                                                                    {svc.manualText && <FileText size={9} className="text-slate-400 dark:text-slate-500" />}
-                                                                    <span className="text-[9px] font-black text-slate-400 dark:text-slate-500">
-                                                                        {svc.audioBlob && svc.manualText ? (language === 'es' ? "Ambos" : "Both") : (svc.audioBlob ? "Audio" : (language === 'es' ? "Texto" : "Text"))}
+                                                                    {(svc.manualText || svc.customTemplateText) && <FileText size={9} className="text-slate-400 dark:text-slate-500" />}
+                                                                    <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
+                                                                        {(() => {
+                                                                            const hasText = Boolean(svc.manualText?.trim()) || Boolean(svc.customTemplateText?.trim());
+                                                                            if (svc.audioBlob && hasText) return language === 'es' ? "Ambos" : "Both";
+                                                                            if (svc.audioBlob) return "Audio";
+                                                                            if (hasText) return language === 'es' ? "Texto" : "Text";
+                                                                            return language === 'es' ? "Solo Info" : "Info Only";
+                                                                        })()}
                                                                     </span>
                                                                 </div>
+                                                                {(svc.serviceDate || svc.timeIn || svc.timeOut || svc.units) && (
+                                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[9px] font-bold text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/60 pt-1">
+                                                                        {svc.serviceDate && (
+                                                                            <span className="flex items-center gap-1">
+                                                                                <Calendar size={10} className="shrink-0 opacity-70" />
+                                                                                <span className="truncate">{formatServiceDate(svc.serviceDate, language)}</span>
+                                                                            </span>
+                                                                        )}
+                                                                        {(svc.timeIn || svc.timeOut || svc.units) && (
+                                                                            <span className="flex items-center gap-1">
+                                                                                <Clock size={10} className="shrink-0 opacity-70" />
+                                                                                <span>
+                                                                                    {svc.timeIn && svc.timeOut ? (
+                                                                                        `${svc.timeIn} - ${svc.timeOut}` 
+                                                                                    ) : svc.timeIn ? (
+                                                                                        `In: ${svc.timeIn}${svc.units ? ` (${svc.units} U)` : ''}` 
+                                                                                    ) : svc.units ? (
+                                                                                        `${svc.units} ${language === 'es' ? 'U' : 'U'}` 
+                                                                                    ) : ''}
+                                                                                </span>
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <button 
-                                                            onClick={() => handleRemoveService(svc.id)} 
-                                                            className="size-7 flex items-center justify-center rounded-full text-slate-300 dark:text-slate-650 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all shrink-0"
-                                                        >
-                                                            <Trash2 size={13} strokeWidth={1.5} />
-                                                        </button>
+                                                        <div className="flex items-center gap-1 shrink-0 ml-2">
+                                                            <button 
+                                                                onClick={() => handleEditService(svc)} 
+                                                                className={cn(
+                                                                    "size-7 flex items-center justify-center rounded-full transition-all duration-300",
+                                                                    editingServiceId === svc.id 
+                                                                        ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30" 
+                                                                        : "text-slate-300 dark:text-slate-650 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20"
+                                                                )}
+                                                                title={language === 'es' ? "Editar" : "Edit"}
+                                                            >
+                                                                <Edit2 size={12} strokeWidth={1.5} />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleRemoveService(svc.id)} 
+                                                                className="size-7 flex items-center justify-center rounded-full text-slate-300 dark:text-slate-650 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-300"
+                                                                title={language === 'es' ? "Eliminar" : "Delete"}
+                                                            >
+                                                                <Trash2 size={13} strokeWidth={1.5} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
 
-                                            {/* Finalize Button */}
-                                            <div className="pt-2">
-                                                <Button
-                                                    onClick={sendToGenerate}
-                                                    disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
-                                                    className={cn(
-                                                        "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 transition-all duration-300 active:scale-95 shadow-md",
-                                                        recordedServices.length > 0
-                                                            ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600"
-                                                            : "bg-slate-100 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 pointer-events-none border border-slate-200 dark:border-slate-800 shadow-none"
-                                                    )}
-                                                >
-                                                    {status === 'processing' || status === 'uploading' ? (
-                                                        <>
-                                                            <Loader2 className="animate-spin" size={14} />
-                                                            <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <FileCheck size={14} />
-                                                            <span>{language === 'es' ? "Finalizar Nota" : "Finalize Note"} ({recordedServices.length})</span>
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </div>
+                                            {!editingServiceId && (
+                                                <div className="pt-2">
+                                                    <Button
+                                                        onClick={sendToGenerate}
+                                                        disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
+                                                        className={cn(
+                                                            "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 transition-all duration-300 active:scale-95 shadow-md",
+                                                            recordedServices.length > 0
+                                                                ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600"
+                                                                : "bg-slate-100 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 pointer-events-none border border-slate-200 dark:border-slate-800 shadow-none"
+                                                        )}
+                                                    >
+                                                        {status === 'processing' || status === 'uploading' ? (
+                                                            <>
+                                                                <Loader2 className="animate-spin" size={14} />
+                                                                <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <FileCheck size={14} />
+                                                                <span>{language === 'es' ? "Finalizar Nota" : "Finalize Note"} ({recordedServices.length})</span>
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>

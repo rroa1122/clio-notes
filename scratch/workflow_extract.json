@@ -1,0 +1,149 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pacienteinfo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -304,
+        16
+      ],
+      "id": "c6ff12f9-b521-4ecb-8dd9-1d0b60c26f34",
+      "name": "Webhook",
+      "webhookId": "9b405cdf-0135-472a-a315-27118332b0ae"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        512,
+        16
+      ],
+      "id": "8d7d49d2-b560-4ae1-904c-467e6e80cc53",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -112,
+        16
+      ],
+      "id": "c3c3a93f-c651-4e8b-8dd9-1d0b60c26f44",
+      "name": "Upload PDF to OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-5.4\",\n  \"input\": [\n    {\n      \"role\": \"system\",\n      \"content\": [\n        {\n          \"type\": \"input_text\",\n          \"text\": \"Eres un extractor experto de informaci\u00f3n cl\u00ednica estructurada.\\n\\nVas a recibir un documento cl\u00ednico (PDF). Anal\u00edzalo de forma directa.\\n\\nReglas:\\n- Extrae \u00fanicamente informaci\u00f3n expl\u00edcita en el texto.\\n- No inventes, no completes, no infieras.\\n- El documento puede contener ruido de extracci\u00f3n como headers, footers, URLs, timestamps, n\u00fameros de p\u00e1gina.\\n- Ignora todo ese ruido y enf\u00f3cate solo en la informaci\u00f3n cl\u00ednica y demogr\u00e1fica real.\\n- No mezcles datos del paciente con datos de la facility, del proveedor, del firmante o del sistema.\\n- Conserva el formato original de nombres, fechas, tel\u00e9fonos, IDs, c\u00f3digos y medicamentos.\\n- Si un campo simple no aparece, devuelve null.\\n- Si una lista no tiene elementos o el texto dice \\\"No ... recorded\\\", devuelve [].\\n- Si una secci\u00f3n existe como narrativa cl\u00ednica, gu\u00e1rdala como texto.\\n- Si una secci\u00f3n existe como lista estructurada, convi\u00e9rtela en array de objetos.\\n- Devuelve solo JSON v\u00e1lido.\\n- No incluyas markdown, comentarios ni texto adicional.\"\n        }\n      ]\n    },\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"input_text\",\n          \"text\": \"Analiza el documento PDF cl\u00ednico adjunto y extrae toda la informaci\u00f3n del paciente usando exactamente este esquema JSON.\\n\\nInstrucciones espec\u00edficas:\\n- El input es el documento PDF original completo.\\n- Debes reconstruir correctamente la estructura l\u00f3gica del documento.\\n- \\\"document_type\\\": tipo general del documento si es identificable.\\n- \\\"source_system\\\": sistema fuente si aparece expl\u00edcitamente o es claramente identificable en el texto; si no, null.\\n- Usa null para campos ausentes.\\n- Usa [] para listas vac\u00edas.\\n- No agregues campos fuera del esquema.\\n- Si un valor aparece como \\\"-\\\" o \\\"No selection made\\\", tr\u00e1talo como null, salvo que sea una lista vac\u00eda expl\u00edcita, en cuyo caso usa [].\\n- En \\\"raw_sections_found\\\", incluye los nombres de las secciones detectadas en el texto.\\n\\nEsquema:\\n\\n{\\n  \\\"document_type\\\": null,\\n  \\\"source_system\\\": null,\\n  \\\"patient\\\": {\\n    \\\"full_name\\\": null,\\n    \\\"first_name\\\": null,\\n    \\\"middle_name\\\": null,\\n    \\\"last_name\\\": null,\\n    \\\"dob\\\": null,\\n    \\\"age\\\": null,\\n    \\\"sex\\\": null,\\n    \\\"ssn\\\": null,\\n    \\\"prn\\\": null,\\n    \\\"race\\\": null,\\n    \\\"ethnicity\\\": null,\\n    \\\"preferred_language\\\": null,\\n    \\\"status\\\": null,\\n    \\\"date_of_death\\\": null\\n  },\\n  \\\"contact_information\\\": {\\n    \\\"address_line_1\\\": null,\\n    \\\"address_line_2\\\": null,\\n    \\\"city\\\": null,\\n    \\\"state\\\": null,\\n    \\\"zip_code\\\": null,\\n    \\\"contact_by\\\": null,\\n    \\\"email\\\": null,\\n    \\\"home_phone\\\": null,\\n    \\\"mobile_phone\\\": null,\\n    \\\"office_phone\\\": null,\\n    \\\"office_extension\\\": null\\n  },\\n  \\\"family_information\\\": {\\n    \\\"next_of_kin\\\": null,\\n    \\\"relation_to_patient\\\": null,\\n    \\\"phone\\\": null,\\n    \\\"address\\\": null,\\n    \\\"mother_maiden_name\\\": null\\n  },\\n  \\\"facility\\\": {\\n    \\\"name\\\": null,\\n    \\\"phone\\\": null,\\n    \\\"fax\\\": null,\\n    \\\"address\\\": null\\n  },\\n  \\\"encounter\\\": {\\n    \\\"encounter_type\\\": null,\\n    \\\"note_type\\\": null,\\n    \\\"visit_mode\\\": null,\\n    \\\"seen_by\\\": null,\\n    \\\"date_of_service\\\": null,\\n    \\\"age_at_dos\\\": null,\\n    \\\"signed_by\\\": null,\\n    \\\"signed_at\\\": null\\n  },\\n  \\\"insurance\\\": {\\n    \\\"primary_payer\\\": {\\n      \\\"payer\\\": null,\\n      \\\"priority\\\": null,\\n      \\\"type\\\": null,\\n      \\\"relationship_to_insured\\\": null,\\n      \\\"start_date\\\": null,\\n      \\\"end_date\\\": null,\\n      \\\"insured_id_number\\\": null,\\n      \\\"group_number\\\": null,\\n      \\\"employer_name\\\": null,\\n      \\\"insurance_payment_type\\\": null,\\n      \\\"payment_type\\\": null,\\n      \\\"copay_amount\\\": null,\\n      \\\"status\\\": null\\n    },\\n    \\\"payment_information\\\": {\\n      \\\"payment_preference\\\": null,\\n      \\\"relationship_to_guarantor\\\": null,\\n      \\\"guarantor_name\\\": null,\\n      \\\"guarantor_address\\\": null,\\n      \\\"guarantor_dob\\\": null,\\n      \\\"guarantor_sex\\\": null,\\n      \\\"guarantor_ssn\\\": null,\\n      \\\"primary_phone_number\\\": null,\\n      \\\"secondary_phone_number\\\": null\\n    }\\n  },\\n  \\\"vitals\\\": {\\n    \\\"raw_text\\\": null\\n  },\\n  \\\"diagnoses\\\": {\\n    \\\"reconciliation_completed\\\": null,\\n    \\\"current\\\": [],\\n    \\\"historical\\\": [],\\n    \\\"attached_to_encounter\\\": []\\n  },\\n  \\\"allergies\\\": {\\n    \\\"medication_reconciliation_completed\\\": null,\\n    \\\"drug_allergies\\\": [],\\n    \\\"food_allergies\\\": [],\\n    \\\"environmental_allergies\\\": []\\n  },\\n  \\\"immunizations\\\": [],\\n  \\\"family_health_history\\\": {\\n    \\\"structured\\\": [],\\n    \\\"free_text\\\": null\\n  },\\n  \\\"advance_directive\\\": {\\n    \\\"directive_recorded\\\": null\\n  },\\n  \\\"subjective\\\": {\\n    \\\"chief_complaint\\\": null,\\n    \\\"history_of_present_illness\\\": null,\\n    \\\"review_of_signs_and_symptoms\\\": null\\n  },\\n  \\\"objective\\\": {\\n    \\\"mental_status_exam\\\": {\\n      \\\"general_appearance\\\": null,\\n      \\\"attitude_and_behavior\\\": null,\\n      \\\"psychomotor\\\": null,\\n      \\\"speech\\\": null,\\n      \\\"thought_content\\\": null,\\n      \\\"thought_process\\\": null,\\n      \\\"perceptual_disturb\\\": null,\\n      \\\"mood\\\": null,\\n      \\\"affect\\\": null,\\n      \\\"orientation\\\": null,\\n      \\\"recent_memory\\\": null,\\n      \\\"remote_memory\\\": null,\\n      \\\"attention_concentration\\\": null,\\n      \\\"coping_skills\\\": null,\\n      \\\"insight\\\": null,\\n      \\\"judgment\\\": null,\\n      \\\"reliability_of_information\\\": null,\\n      \\\"motivation_energy\\\": null,\\n      \\\"si_hi\\\": null\\n    }\\n  },\\n  \\\"assessment\\\": {\\n    \\\"summary\\\": null,\\n    \\\"diagnosis_statement\\\": [],\\n    \\\"progress_note\\\": null\\n  },\\n  \\\"plan\\\": {\\n    \\\"instructions_recommendations\\\": null,\\n    \\\"eforcse\\\": null,\\n    \\\"plan_text\\\": null,\\n    \\\"patient_education_and_consultation\\\": null,\\n    \\\"risk_factors\\\": null,\\n    \\\"next_appointment\\\": null,\\n    \\\"supervising_physician\\\": null\\n  },\\n  \\\"medications\\\": [],\\n  \\\"orders\\\": {\\n    \\\"lab_orders\\\": [],\\n    \\\"imaging_orders\\\": []\\n  },\\n  \\\"screenings_interventions_assessments\\\": [],\\n  \\\"raw_sections_found\\\": []\\n}\\n\\nReglas de objetos dentro de arrays:\\n\\n- \\\"diagnoses.current\\\" y \\\"diagnoses.historical\\\":\\n  {\\n    \\\"code\\\": null,\\n    \\\"description\\\": null,\\n    \\\"acuity\\\": null,\\n    \\\"start\\\": null,\\n    \\\"stop\\\": null\\n  }\\n\\n- \\\"diagnoses.attached_to_encounter\\\":\\n  {\\n    \\\"description\\\": null,\\n    \\\"icd_10\\\": null,\\n    \\\"icd_9\\\": null,\\n    \\\"snomed\\\": null\\n  }\\n\\n- \\\"allergies.drug_allergies\\\", \\\"allergies.food_allergies\\\", \\\"allergies.environmental_allergies\\\":\\n  {\\n    \\\"name\\\": null,\\n    \\\"severity_or_reactions\\\": null,\\n    \\\"onset\\\": null\\n  }\\n\\n- \\\"immunizations\\\":\\n  {\\n    \\\"date\\\": null,\\n    \\\"vaccine\\\": null,\\n    \\\"source\\\": null,\\n    \\\"lot_number\\\": null,\\n    \\\"expires\\\": null,\\n    \\\"comment\\\": null\\n  }\\n\\n- \\\"medications\\\":\\n  {\\n    \\\"name\\\": null,\\n    \\\"sig\\\": null,\\n    \\\"start_date\\\": null\\n  }\"\n        },\n        {\n          \"type\": \"input_file\",\n          \"file_id\": \"{{ $('Upload PDF to OpenAI').item.json.id }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {
+          "timeout": 900000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        96,
+        16
+      ],
+      "id": "719cb325-2dc9-4046-9dcf-bf56440b1a6c",
+      "name": "OpenAI Responses API",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nfunction tryParseJson(text) {\n  if (typeof text !== 'string') return null;\n  const trimmed = text.trim();\n  if (!trimmed) return null;\n  \n  try {\n    return JSON.parse(trimmed);\n  } catch (e) {}\n\n  const firstBrace = trimmed.indexOf('{');\n  const lastBrace = trimmed.lastIndexOf('}');\n\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    const possibleJson = trimmed.slice(firstBrace, lastBrace + 1);\n    try {\n      return JSON.parse(possibleJson);\n    } catch (e) {}\n  }\n  return null;\n}\n\nfunction extractResponseObject(item) {\n  const j = item.json ?? {};\n  \n  if (typeof j.text === 'string' && j.text.trim()) {\n    const parsed = tryParseJson(j.text);\n    if (parsed) return parsed;\n  }\n\n  if (Array.isArray(j.output)) {\n    for (const outputItem of j.output) {\n      if (Array.isArray(outputItem.content)) {\n        for (const contentItem of outputItem.content) {\n          if (typeof contentItem.text === 'string' && contentItem.text.trim()) {\n            const parsed = tryParseJson(contentItem.text);\n            if (parsed) return parsed;\n          }\n        }\n      }\n      if (typeof outputItem.text === 'string' && outputItem.text.trim()) {\n        const parsed = tryParseJson(outputItem.text);\n        if (parsed) return parsed;\n      }\n    }\n  }\n  return j;\n}\n\nconst output = [];\nfor (const item of items) {\n  const parsed = extractResponseObject(item);\n  output.push({ json: parsed });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        16
+      ],
+      "id": "b182cb32-c651-4e8b-8dd9-1d0b60c26f44",
+      "name": "Parse OpenAI Response"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Upload PDF to OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload PDF to OpenAI": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Responses API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Responses API": {
+      "main": [
+        [
+          {
+            "node": "Parse OpenAI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse OpenAI Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

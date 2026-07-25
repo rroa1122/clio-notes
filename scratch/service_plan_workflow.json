@@ -1,0 +1,313 @@
+{
+  "updatedAt": "2026-06-16T23:05:27.000Z",
+  "createdAt": "2026-01-28T04:18:10.983Z",
+  "id": "RvtViS0iE8lV67ye",
+  "name": "NOTA MEDICA SERVICE PLAN",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1008,
+        -416
+      ],
+      "id": "6e589162-6443-479d-8e72-2c0c5d5f441e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tcm-service-plan-note",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "audio"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -416
+      ],
+      "id": "e99fb69a-39eb-4379-92f7-2c0a3753fed7",
+      "name": "Webhook",
+      "webhookId": "2c3c7f49-0b4c-4dd8-b148-aab2531947ac"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "=audio0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -416
+      ],
+      "id": "e5fde99f-8745-43b0-9c7a-f6285eec8eec",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a clinical writer specialized in TCM (Targeted Case Management), with experience in professional, objective, clear medical documentation ready for record keeping. Your role is to analyze and convert the information received in the input into a well-written, coherent, precise clinical note that is useful for auditing, continuity of care, and documentary compliance.\n------------------------------------------------\n\nINPUTS\n\nHEADER INPUTS (authoritative)\n- Primary service provided: {{ $('Code in JavaScript2').item.json.body.primary_service_provided }}\n- Patient Name: {{ $('Code in JavaScript4').item.json.body.patient_name }}\n- Patient DOB: {{ $('Code in JavaScript4').item.json.body.patient_dob }}\n- Patient Gender: {{ $('Code in JavaScript2').item.json.patient_gender }}\n- Patient Address: {{ $('Code in JavaScript2').item.json.patient_address }}\n- Patient Context: {{ $('Code in JavaScript4').item.json.body.patient_context }}\n- Custom Template: {{ $('Code in JavaScript2').item.json.body.custom_template_text }}\n- Patient Presenting Problems: {{ $('Code in JavaScript2').item.json.patient_presenting_problems }}\n- Clinical Context/History: {{ $('Code in JavaScript4').item.json.body.patient_clinical_context }}\n\nVISIT TRANSCRIPT\n<<<TRANSCRIPT_START>>>\n{{ $json.text }}\n<<<TRANSCRIPT_END>>>\n\n------------------------------------------------\n\nGLOBAL RULES (CRITICAL)\n1) ENGLISH ONLY.\n2) NO HALLUCINATIONS: Never invent factual data, except when strictly applying the Default Stability rule below.\n3) DYNAMIC PARAPHRASING PROTOCOL (CRITICAL)\nThe template provided below is a STRUCTURAL AND CONTENT BLUEPRINT, not a literal copy-paste template. You are STRICTLY PROHIBITED from copying the template text word-for-word. Instead, you MUST paraphrase, reword, and restructure the sentences to sound like a naturally written, unique medical record. Vary the syntax and vocabulary across notes so that they do not appear identical.\n\n4) DEEP PATIENT PERSONALIZATION & CLINICAL ARGUMENTATION (CRITICAL)\nYou MUST actively customize the narrative using the patient's specific clinical context, diagnoses, symptoms, medical history, medications, housing barriers, and family circumstances provided in the HEADER INPUTS.\n- Do not use generic placeholders or boilerplate text; instead, seamlessly integrate the actual patient facts into the narrative.\n- For every action, barrier, or plan you document, deeply analyze the patient's unique case and explicitly argue WHY the TCM's specific action was medically necessary to prevent clinical or functional deterioration.\n- Justify the expected clinical outcome based on the patient's specific conditions. Use proactive, analytical clinical verbs.\n\n5) THIRD-PERSON NARRATIVE: ALWAYS write in the third person (e.g., \"The TCM arrived...\", \"He/she stated...\"). Do NOT use first-person.\n6) PROFESSIONAL CLINICAL TONE: Maintain a strict, objective clinical style. You are strictly PROHIBITED from quoting casual conversational filler.\n7) MANDATORY DEFAULT STABILITY: If the input DOES NOT mention a specific mandatory clinical point, you MUST describe the patient as safe, functional, and compliant by default. NEVER state \"not described\" or \"not mentioned\". Apply this stability assumption silently and seamlessly as if you observed it yourself.\n8) NO META-COMMENTARY (CRITICAL): You are writing a final, official medical record. NEVER refer to your system instructions, the 'transcript', 'patient context', or 'default stability rules' in your text. Act entirely as the authoring clinician. DO NOT explain *how* or *why* you deduced the information, and DO NOT explicitly state that you are applying default rules; just write the clinical facts neutrally, professionally, and directly.\n9) TIME AND DURATION STRICT ISOLATION: Any mention in the input regarding the start time, end time, duration of the service, or billing units MUST be used EXCLUSIVELY to populate the `encounter` fields (`time_in`, `time_out`, `duration_minutes`, `units`) in the JSON output. You are STRICTLY PROHIBITED from including any time, duration, scheduling, or unit details in the `summary_notes`, `outcome_of_services`, or any other narrative text.\n10) The title must be exactly: \"TCM Service Plan: Collaborative Care Plan and Intervention Design\".\n11) Rule for Service Domains (STRICT): After conducting a professional clinical analysis of the note, you MUST select in \"services.domains_selected\" ONLY the service domains strictly supported by concrete patient needs and active interventions/planning performed today. \n- Do NOT select a domain merely because it is listed in the template guide. If a template section (e.g. transportation, housing, nutrition) is not relevant to the patient's actual conditions and needs, you MUST prune and completely remove that section/bullet point from the \"summary_notes\" text, and set the corresponding domain flag to false.\n- Do NOT over-select; omit any domain merely mentioned in passing or present only in the patient's history without an active intervention today.\n12) PRONOUN DYNAMISM: You MUST dynamically replace all slash-pronouns (e.g., \"he/she\", \"his/her\", \"him/her\", \"himself/herself\", \"his/hers\") in the templates with the correct gender-specific pronoun based on the patient's actual gender provided in the inputs (use \"he\", \"his\", \"him\", \"himself\" for males, and \"she\", \"her\", \"herself\" for females). Never output slash-pronouns like \"he/she\" or \"his/her\" in the final text.\n13) LENGTH AND DETAIL RETENTION (CRITICAL): The generated narrative MUST be comprehensive and highly detailed, matching the length and depth of the template guide. You MUST expand upon each of the case management interventions (care coordination, medication monitoring, transportation, nutrition, social support, documentation, safety, etc.) with rich clinical detail, explaining the specific actions the TCM will take and their medical necessity for this patient. Never summarize or omit these intervention sections; each should be written as a detailed clinical narrative.\n14) PARAGRAPH BREAKS FOR READABILITY (CRITICAL): The narrative written in the JSON field \"summary_notes\" MUST be separated into multiple distinct paragraphs using double newline characters (\"\\n\\n\") as paragraph separators. Never output the entire summary as a single giant paragraph. Each major service domain or clinical area must be written in its own paragraph.\n15) MAPPING PATIENT INFO TO SERVICE PLAN GOALS (THE CHEAT SHEET MAPPING):\nWhen writing the Service Plan development notes in \"summary_notes\", you MUST match the patient's specific clinical, social, and economic information to the appropriate services and goals. You MUST read the patient's checklist in the \"Clinical Context/History\" input field `tcm_social_needs` (an object mapping keys to booleans). Do NOT write about a service or goal if the corresponding checkmark is false or missing. Use this exact mapping:\n- Mental Health Care Coordination: Include psychiatric provider care coordination ONLY if the patient has a mental health diagnosis or if `tcm_social_needs.medicaid_recipient` or `tcm_social_needs.medicare_recipient` is true.\n- Medical Care Coordination: Include PCP and specialist coordination if the patient has chronic physical diagnoses.\n- Over-the-counter (OTC) Medications: Include assistance with health insurance forms for OTC ONLY if `tcm_social_needs.medicaid_recipient` is true.\n- Emergency Alarm System: Include ONLY if `tcm_social_needs.emergency_alarm_needed` is true.\n- Social/Recreational Support (Libraries/Community Centers): Include ONLY if `tcm_social_needs.has_no_family_support` is true.\n- Activities of Daily Living (ADLs/IADLs) & Correspondence: Include assistance with mail, letters, and notifications ONLY if the patient has cognitive/attention problems or struggles to understand written information.\n- Low-Income Housing / Recertification: Include low-income housing applications or voucher recertifications ONLY if `tcm_social_needs.housing_voucher` is true.\n- Economic Assistance (LIHEAP & Free Phone):\n  * Include LIHEAP (electricity bill credit) ONLY if `tcm_social_needs.liheap_needed` is true.\n  * Include Free Phone (lifeline phone) ONLY if `tcm_social_needs.lifeline_needed` is true.\n  * Include SNAP/Food Stamps recertification ONLY if `tcm_social_needs.snap_recipient` is true.\n- Basic Needs & Nutrition (Food donations / Hot Meals): Include food banks or hot meals ONLY if `tcm_social_needs.food_insecurity` is true.\n- Transportation Services:\n  * Special Transportation Services (STS): Include door-to-door paratransit ONLY if `tcm_social_needs.sts_needed` is true.\n  * Golden Passport: Include public transit card ONLY if `tcm_social_needs.golden_passport_needed` is true.\n  * Handicap Parking Permit (DPP): Include ONLY if `tcm_social_needs.parking_permit_needed` is true.\n  * Modivcare / Freebee: Include coordinate rides ONLY if `tcm_social_needs.modivcare_needed` is true.\n- Emergency Evacuation Plan (EEP): Include hurricane evacuation registration ONLY if `tcm_social_needs.hurricane_evac_registration` is true.\n- Personal & Demographic Integration: You MUST read the patient's demographic details from `tcm_social_needs` and weave them naturally into the narrative paragraphs:\n  * US Entry & Origin: Mention country of origin (`tcm_social_needs.origin_country`), date of US entry (`tcm_social_needs.us_entry_date`), and citizenship/residence status (`tcm_social_needs.citizenship_status` / `tcm_social_needs.residence_status`).\n  * Convivencia & Family: Mention marital status (`tcm_social_needs.marital_status`), education (`tcm_social_needs.education_level`), who they live with (`tcm_social_needs.co_habitants`), and children count/locations (`tcm_social_needs.children_count`, `tcm_social_needs.children_location`).\n  * Employment & Income: Mention previous or current occupation (`tcm_social_needs.occupation`), SSI supplementary amount (`tcm_social_needs.ssi_amount`), SSA amount (`tcm_social_needs.ssa_amount`), and retirement/disability date (`tcm_social_needs.retirement_date`).\n  * Vivienda: Detail housing type (`tcm_social_needs.housing_type`), rent payment amount (`tcm_social_needs.rent_payment`), and whether they are on regular rent (`tcm_social_needs.regular_rent` is true), section 8 (`tcm_social_needs.plan_8` is true), or low-income housing (`tcm_social_needs.low_income` is true).\n  * Medical & Others: Mention surgeries (`tcm_social_needs.surgeries`), bank name for deposits (`tcm_social_needs.bank_name`), and special accommodations (`tcm_social_needs.special_accommodation`).\n------------------------------------------------\n\nDOMAIN SELECTION LOGIC (STRICT SELECTION)\n- For Service Plan: Only select domains where active planning, coordination, or interventions are required for the patient's specific conditions and are explicitly discussed today. Disable and set to false any domain that does not directly apply to the patient.\n\n------------------------------------------------\nTEMPLATE STRUCTURE & CONTENT BLUEPRINT (GUIDE ONLY - MUST PARAPHRASE AND PERSONALIZE):\n\n### TCM SERVICE PLAN DEVELOPMENT\n\nThe Targeted Case Manager (TCM) developed {{ $('Code in JavaScript2').item.json.patient_full_name }}'s Service Plan based on the needs identified during the initial assessment. \n\n{{ $('Code in JavaScript2').item.json.patient_full_name }} is an [Age]-year-old [Race/Ethnicity] male/female diagnosed with [Mental Health Diagnoses, e.g., Major Depressive Disorder, Generalized Anxiety Disorder, and Prolonged Grief Disorder], presenting with longstanding symptoms including [psychiatric symptoms list, e.g., depressed mood, excessive worry, low energy, irritability, social isolation, loss of pleasure, and chronic insomnia]. He/she reports ongoing emotional distress related to [stressors, e.g., separation from family remaining in Cuba], profound loneliness, and grief associated with [reasons, e.g., leaving behind homeland], all of which contribute to the worsening of his/her psychiatric symptoms. Although he/she denies suicidal ideation, he/she remains emotionally vulnerable and continues to experience symptoms that significantly interfere with his/her daily functioning. His/her most recent PHQ-9 score of [Score, e.g., 6] reflects [severity, e.g., mild depression], and overall psychiatric status was reported as stable at his/her last evaluation.\n\n{{ $('Code in JavaScript2').item.json.patient_full_name }} presents with multiple chronic medical conditions including [Medical Conditions list, e.g., hypertensive heart disease, diastolic heart failure, meningioma resection sequelae, seizure disorder, non-Hodgkin lymphoma, sleep apnea, and hypothyroidism]. These conditions, combined with his/her psychiatric symptoms, complex polypharmacy involving approximately [number, e.g., 18] active medications spanning multiple prescribing providers, cognitive difficulties, and fall risk, contribute to fatigue, decreased mental clarity, and significant difficulty managing complex tasks independently. His/her limited local support network, financial hardship, identified need for nutritional support and [specific goals, e.g., Florida ID renewal], and limited familiarity with available community resources represent ongoing areas of concern requiring structured monitoring and intervention.\n\nAs part of the Service Plan, the TCM will assist {{ $('Code in JavaScript2').item.json.patient_full_name }} with the following:\n- Coordinating care across psychiatric provider {{ $('Code in JavaScript2').item.json.patient_psych_name }} at {{ $('Code in JavaScript2').item.json.patient_psych_address || 'their clinic' }}, primary care provider {{ $('Code in JavaScript2').item.json.patient_pcp_name }} at {{ $('Code in JavaScript2').item.json.patient_pcp_address || 'their clinic' }}, and multiple specialists to support compliance with follow-up appointments and ensure continuity of care.\n- Supporting medication adherence and monitoring concerns related to polypharmacy, cognitive difficulties, and fall risk associated with [specific medication risk factors, e.g., benzodiazepine use in an elderly patient with gait instability].\n- Assisting with scheduling and attending appointments and facilitating communication between providers.\n- Assisting {{ $('Code in JavaScript2').item.json.patient_full_name }} with organizing medical documentation and navigating healthcare-related paperwork, with referral to appropriate bilingual provider services as needed to ensure instructions are received in a language they fully understand.\n- Coordinating transportation through [transit resources, e.g., SafeRide and FreeBee] to support consistent attendance at appointments across multiple provider locations.\n- Linking client to nutritional support programs including [meal programs, e.g., frozen/hot meal delivery and SNAP benefits through DCF ACCESS] to address identified food insecurity and financial hardship.\n- Facilitating connection to recreational and social community programs such as [programs name, e.g., Miami-Dade Active Older Adults Program and Alliance for Aging] to reduce isolation, promote social engagement, and support emotional wellbeing.\n- Assisting with [legal/personal documentation, e.g., Florida identification card renewal] including guidance on required documentation and transportation coordination.\n- Monitoring overall safety and wellbeing within the home environment given their [safety/health risks, e.g., fall risk, left hemiparesis, cognitive difficulties, and complex medical needs].\n\n{{ $('Code in JavaScript2').item.json.patient_full_name }} expressed a desire to feel better emotionally, manage health more effectively, and achieve greater stability in daily life. He/she actively participated in the development of the Service Plan and provided verbal consent to proceed with Targeted Case Management services. The long-term objective of this Service Plan is to improve {{ $('Code in JavaScript2').item.json.patient_full_name }}'s quality of life, maintain psychiatric and medical stability, reduce social isolation, ensure consistent access to healthcare services and community resources, and support safety and independence in the community through ongoing Targeted Case Management support.\n\n------------------------------------------------\n\nOUTCOME OF SERVICES (CONCISE)\n- Return exactly: \"{{ $('Code in JavaScript2').item.json.patient_full_name }}'s Service Plan was successfully developed and completed based on the client's identified needs and clinical objectives.\"\n\n------------------------------------------------\n\nNEXT STEPS & PLANNING (COMPACT NARRATIVE)\n- Return exactly:\n  - TCM will: Finalize plan approval and schedule follow-up coordination contacts.\n  - Client will: Focus on scheduling initial primary care and psychiatric follow-ups.\n\n------------------------------------------------\n\nEXTRACTION GUIDANCE - POS FORMATTING (STRICT)\n- Field `pos`: Return ONLY the code and label. NO ADDRESS, NO EXTRA TEXT.\n    - If Home: \"12 - Home\"\n    - If Office: \"11 - Office\"\n    - Else: \"\"\n------------------------------------------------\nSERVICE_FOCUS_TITLE\n- Use exactly: \"TCM Service Plan: Collaborative Care Plan and Intervention Design\"\n\nOUTPUT JSON SCHEMA (exact keys)\n{\n\"template_id\": \"tcm_service_plan_note\",\n\"encounter\": { \"dos_date\": \"\", \"pos\": \"\", \"service_location\": \"\", \"time_in\": \"\", \"time_out\": \"\", \"duration_minutes\": \"\", \"units\": \"\" },\n\"patient\": { \"full_name\": \"\", \"dob\": \"\", \"sex\": \"\", \"emr\": \"\", \"case_no\": \"\", \"mobile\": \"\" },\n\"facility\": { \"name\": \"\", \"address\": \"\", \"phone\": \"\", \"fax\": \"\", \"email\": \"\" },\n\"staff\": { \"case_manager_name\": \"\", \"case_manager_lic\": \"\", \"supervisor_name\": \"\", \"supervisor_lic\": \"\" },\n\"services\": {\n\"service_focus_title\": \"TCM Service Plan: Collaborative Care Plan and Intervention Design\",\n\"domains_selected\": {\n\"1_mental_health_substance_abuse\": false,\n\"2_physical_health_medical_dental\": false,\n\"3_vocational_employment_job_training\": false,\n\"4_school_education\": false,\n\"5_recreational_social_support\": false,\n\"6_activities_of_daily_living\": false,\n\"7_housing_shelter\": false,\n\"8_economic_financial\": false,\n\"9_basic_needs\": false,\n\"10_transportation\": false,\n\"11_legal_immigration\": false,\n\"12_other\": false\n},\n\"other_specify\": \"\"\n},\n\"narrative\": { \"summary_notes\": \"\", \"outcome_of_services\": \"\", \"next_steps\": \"\" },\n\"diagnosis\": { \"primary_diagnosis_name\": \"\", \"icd10_code\": \"\", \"icd10_description\": \"\", \"type\": \"\" },\n\"signatures\": { \"case_manager_signature_date\": \"\", \"supervisor_signature_date\": \"\" },\n\"evidence\": { \"key_facts_quotes\": [] },\n\"meta\": { \"confidence_overall\": \"\", \"missing_fields\": [], \"warnings\": [] }\n}\n\nReturn JSON only.\n"
+            },
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -416
+      ],
+      "id": "48704574-2e0c-4e2b-b467-47612f3f1555",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node - enforce correct metadata for webm recordings\nfor (const item of items) {\n  if (item.binary?.audio0) {\n    const b = item.binary.audio0;\n\n    // Force consistent filename\n    b.fileName = \"recording.webm\";\n\n    // Force correct mimetype for webm\n    b.mimeType = \"audio/webm\";\n  }\n}\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -416
+      ],
+      "id": "a616b10e-1df3-410d-b944-c099c977ad99",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node — Parse OpenAI \"Message a model\" output (new Responses shape)\n * Extracts: item.json.output[0].content[0].text\n * Returns: parsed note JSON at root, plus ok/meta helpers\n */\n\nfunction extractJsonString(raw) {\n  if (raw == null) return null;\n\n  let s = String(raw).trim();\n\n  // Remove ```json fences if present\n  s = s.replace(/^```(?:json)?\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\n  // Try direct object extraction\n  const firstBrace = s.indexOf(\"{\");\n  const lastBrace = s.lastIndexOf(\"}\");\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    return s.slice(firstBrace, lastBrace + 1).trim();\n  }\n\n  // Try array extraction\n  const firstBracket = s.indexOf(\"[\");\n  const lastBracket = s.lastIndexOf(\"]\");\n  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {\n    return s.slice(firstBracket, lastBracket + 1).trim();\n  }\n\n  return null;\n}\n\nfunction safeJsonParseFromText(text) {\n  const jsonStr = extractJsonString(text);\n  if (!jsonStr) throw new Error(\"Could not locate JSON in model output text.\");\n  return JSON.parse(jsonStr);\n}\n\nreturn items.map((item) => {\n  // ✅ This is the actual model text in your screenshot\n  const text =\n    item.json?.output?.[0]?.content?.[0]?.text ??\n    item.json?.output?.[0]?.content?.find?.((c) => c?.type === \"output_text\")?.text ??\n    item.json?.content ??\n    item.json?.message?.content ??\n    item.json?.text;\n\n  try {\n    const note = safeJsonParseFromText(text);\n\n    return {\n      json: {\n        ok: true,\n        ...note, // <-- IMPORTANT: put the note fields at the root for the UI\n        meta: {\n          ...(note.meta || {}),\n          confidence_overall: note.meta?.confidence_overall || \"\",\n        },\n      },\n    };\n  } catch (e) {\n    return {\n      json: {\n        ok: false,\n        error: e.message,\n        raw_preview: (text ? String(text).slice(0, 2000) : null),\n      },\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "47a060c5-6092-4e8c-9e61-8a747bfdbb61",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize webhook payload AND preserve binary (audio0)\n\nreturn items.map((item) => {\n  const j = item.json ?? {};\n  const outerBody = j.body ?? {};\n\n  let inner = null;\n\n  // If body.body is a JSON string, parse it\n  if (typeof outerBody.body === \"string\") {\n    try {\n      inner = JSON.parse(outerBody.body);\n    } catch (e) {\n      inner = null;\n    }\n  } else if (typeof outerBody.body === \"object\" && outerBody.body) {\n    inner = outerBody.body;\n  }\n\n  // Build normalized payload\n  const normalized = {\n    ...j,\n    body: {\n      ...outerBody,\n      ...(inner ?? {}),\n    },\n  };\n\n  // Ensure transcript field exists consistently\n  normalized.text =\n    j.text ??\n    normalized.body?.text ??\n    normalized.body?.transcript ??\n    normalized.body?.transcription ??\n    \"not_provided\";\n\n  // ✅ IMPORTANT: preserve binary (audio0, etc.)\n  return {\n    json: normalized,\n    binary: item.binary, // keeps audio0 for Transcribe a recording\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -416
+      ],
+      "id": "32cd2a18-d0c2-49ff-818c-8b4cbb4ade37",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Iteramos por cada elemento que llega (normalmente es 1, pero n8n maneja arrays de items)\nfor (const item of $input.all()) {\n  try {\n    // Obtenemos el texto original que viene en 'patient_clinical_context'\n    const contextString = item.json.body.patient_clinical_context;\n\n    if (contextString) {\n      // Parseamos el texto a un objeto JSON\n      const patientData = JSON.parse(contextString);\n\n      // Ahora asignamos TODOS los campos principales a nuevas variables en el item.json\n      // para que sean fácilmente accesibles en los siguientes nodos.\n      \n      // -- Datos Generales del Paciente --\n      item.json.patient_full_name = patientData.full_name;\n      item.json.patient_first_name = patientData.first_name;\n      item.json.patient_last_name = patientData.last_name;\n      item.json.patient_dob = patientData.dob;\n      item.json.patient_gender = patientData.gender;\n      item.json.patient_phone = patientData.phone;\n      item.json.patient_email = patientData.email;\n      item.json.patient_ssn = patientData.ssn;\n      item.json.patient_emr_id = patientData.emr_id;\n      item.json.patient_address = patientData.address;\n      item.json.patient_citizenship = patientData.citizenship;\n      \n      // -- Seguro y Coordinación --\n      item.json.patient_case_manager = patientData.case_manager;\n      item.json.patient_insurance_company = patientData.insurance_company;\n      item.json.patient_diagnoses = patientData.diagnoses;\n      item.json.patient_presenting_problems = patientData.presenting_problems;\n\n      // -- Datos del PCP (Primary Care Physician) --\n      item.json.patient_pcp_name = patientData.pcp_name;\n      item.json.patient_pcp_phone = patientData.pcp_phone;\n      item.json.patient_pcp_address = patientData.pcp_address;\n      item.json.patient_pcp_conditions = patientData.pcp_conditions;\n      item.json.patient_pcp_medications = patientData.pcp_medications;\n\n      // -- Datos Psiquiátricos --\n      item.json.patient_psych_name = patientData.psych_name;\n      item.json.patient_psych_phone = patientData.psych_phone;\n      item.json.patient_psych_address = patientData.psych_address;\n      item.json.patient_psych_conditions = patientData.psych_conditions;\n      item.json.patient_psych_medications = patientData.psych_medications;\n\n      // -- Datos de Farmacia --\n      item.json.patient_pharmacy_name = patientData.pharmacy_name;\n      item.json.patient_pharmacy_phone = patientData.pharmacy_phone;\n      item.json.patient_pharmacy_fax = patientData.pharmacy_fax;\n      item.json.patient_pharmacy_address = patientData.pharmacy_address;\n      \n      // Opcional: También puedes guardar todo el objeto parseado directamente si quieres\n      item.json.patient_full_object = patientData;\n    }\n    \n  } catch (error) {\n    // Si hay un error al parsear el JSON, imprimimos el error pero no rompemos el flujo\n    console.error(\"Error parseando patient_clinical_context:\", error.message);\n    item.json.parsing_error = error.message;\n  }\n}\n\n// Retornamos el item modificado a n8n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -416
+      ],
+      "id": "f53cced0-ab61-400d-9bd3-fe35363d1653",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.clinicflow.dev",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+            "content-length": "2106",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "es-419,es;q=0.9",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryBXqDi94h66wCe70e",
+            "origin": "http://localhost:5173",
+            "priority": "u=1, i",
+            "referer": "http://localhost:5173/",
+            "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "via": "2.0 Caddy",
+            "x-forwarded-for": "71.38.84.91",
+            "x-forwarded-host": "n8n.clinicflow.dev",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "text": "dsfsdf",
+            "custom_template_text": "sdfsdfsdfdsfsdfsdfsdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "patient_name": "as",
+            "patient_dob": "",
+            "patient_context": "Encounter Context:\r\ndsfsdf\r\n\r\nDate: 2026-04-15\r\nTime In: Not specified\r\nTime Out: Not specified",
+            "service_id": "manual-1776305617296",
+            "joint_note_index": "1",
+            "joint_note_total": "1",
+            "is_joint_note": "false",
+            "template_id": "tcm_progress_note",
+            "service_date": "2026-04-15",
+            "time_in": "",
+            "time_out": "",
+            "primary_service_provided": "Custom Template",
+            "user_id": "12022246-87fb-4d3b-ace0-1ed2836133a0"
+          },
+          "webhookUrl": "https://n8n.clinicflow.dev/webhook/tcm-note",
+          "executionMode": "production"
+        },
+        "binary": {
+          "audio0": {
+            "mimeType": "audio/webm",
+            "fileType": "audio",
+            "fileExtension": "weba",
+            "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+            "fileName": "encounter_audio.webm",
+            "fileSize": "100 B"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "19c95c1c-44b2-4a0f-8ee7-83bae790994f",
+  "triggerCount": 1,
+  "tags": []
+}

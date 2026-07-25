@@ -18,6 +18,8 @@ import { ResetPassword } from './pages/auth/ResetPassword';
 import { Company } from './pages/Company';
 import { Setup } from './pages/Setup';
 import { SetupGuard } from './components/auth/SetupGuard';
+import { ScreenLockOverlay } from './components/auth/ScreenLockOverlay';
+import PrintAssessment from './pages/PrintAssessment';
 
 // Notes Module Pages (Real)
 import Record from './notes-module/pages/Record';
@@ -54,7 +56,7 @@ const RoleProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
 };
 
 const Root = () => {
-  const { user, loading, mfaRequired, mfaEnrollmentRequired } = useAuth();
+  const { user, loading, mfaRequired, mfaEnrollmentRequired, isLocked } = useAuth();
  
   if (loading) {
     return (
@@ -89,6 +91,7 @@ const Root = () => {
 
         {/* Clean Print Route - No Sidebar/Header */}
         <Route path="/notes/print/:id" element={<PrintNote />} />
+        <Route path="/patients/print-assessment/:id" element={<PrintAssessment />} />
 
         {/* Signature Route - No Auth Required */}
         <Route path="/sign-note/:token" element={<SignNote />} />
@@ -132,7 +135,12 @@ const Root = () => {
     )
   );
 
-  return <RouterProvider router={router} />;
+  return (
+    <div className="relative w-full h-full">
+      <RouterProvider router={router} />
+      {isLocked && <ScreenLockOverlay />}
+    </div>
+  );
 };
 
 function App() {

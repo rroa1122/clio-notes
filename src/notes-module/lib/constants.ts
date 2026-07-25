@@ -131,8 +131,8 @@ Disposition and Follow Up:
 export const TCM_DOMAINS = [
     { label: "#1 Mental Health / Substance Abuse", path: "services.domains_selected.1_mental_health_substance_abuse" },
     { label: "#2 Physical Health / Medical / Dental", path: "services.domains_selected.2_physical_health_medical_dental" },
-    { label: "#3 Developmental / Intellectual Disability", path: "services.domains_selected.3_developmental_intellectual_disability" },
-    { label: "#4 Vocational / Educational", path: "services.domains_selected.4_vocational_educational" },
+    { label: "#3 Vocational / Employment / Job Training", path: "services.domains_selected.3_vocational_employment_job_training" },
+    { label: "#4 School / Education", path: "services.domains_selected.4_school_education" },
     { label: "#5 Recreational / Social Support", path: "services.domains_selected.5_recreational_social_support" },
     { label: "#6 Activities of Daily Living", path: "services.domains_selected.6_activities_of_daily_living" },
     { label: "#7 Housing / Shelter", path: "services.domains_selected.7_housing_shelter" },
@@ -140,7 +140,7 @@ export const TCM_DOMAINS = [
     { label: "#9 Basic Needs", path: "services.domains_selected.9_basic_needs" },
     { label: "#10 Transportation", path: "services.domains_selected.10_transportation" },
     { label: "#11 Legal / Immigration", path: "services.domains_selected.11_legal_immigration" },
-    { label: "#12 Other", path: "services.domains_selected.12_other" }
+    { label: "#12 Other (Hurricane Season)", path: "services.domains_selected.12_other" }
 ];
 
 export const DEFAULT_TEMPLATES: Template[] = [
@@ -230,6 +230,126 @@ export const DEFAULT_TEMPLATES: Template[] = [
         name: 'TCM Service Plan Development',
         category: 'CASE MANAGEMENT',
         content: 'TCM SERVICE PLAN DEVELOPMENT:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_service_plan_discussion',
+        version: '1.0',
+        name: 'TCM Service Plan Discussion',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM SERVICE PLAN DISCUSSION:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_initial_home_visit_note',
+        version: '1.0',
+        name: 'TCM Initial Home Visit',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM INITIAL HOME VISIT:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_collateral_note',
+        version: '1.0',
+        name: 'TCM Collateral & Contact Note',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM COLLATERAL & CONTACT NOTE:\n\nSUMMARY NOTES:',
         definition: JSON.stringify([
             {
                 title: "Progress Note",

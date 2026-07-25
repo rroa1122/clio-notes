@@ -235,8 +235,8 @@ export function Patients() {
 
                                             {/* DOB */}
                                             <TableCell className="py-3 text-[13px] text-muted-foreground font-medium">
-                                                {patient.dob && !isNaN(new Date(patient.dob).getTime())
-                                                    ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM d, yyyy', { locale: language === 'es' ? es : undefined })
+                                                {patient.dob && !isNaN(new Date(patient.dob + "T00:00:00").getTime())
+                                                    ? format(new Date(patient.dob + "T00:00:00"), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM d, yyyy', { locale: language === 'es' ? es : undefined })
                                                     : <span className="text-slate-300 dark:text-slate-600 italic font-normal">—</span>}
                                             </TableCell>
 
@@ -342,7 +342,7 @@ export function Patients() {
                                             </div>
                                             <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground font-semibold tracking-tight">
                                                 <span>
-                                                    {patient.dob ? `${language === 'es' ? 'F. Nac: ' : 'DOB: '}${format(new Date(patient.dob), language === 'es' ? 'dd/MM/yyyy' : 'MM/dd/yyyy')}` : (language === 'es' ? 'Sin fecha nac.' : 'No DOB')}
+                                                    {patient.dob ? `${language === 'es' ? 'F. Nac: ' : 'DOB: '}${format(new Date(patient.dob + "T00:00:00"), language === 'es' ? 'dd/MM/yyyy' : 'MM/dd/yyyy')}` : (language === 'es' ? 'Sin fecha nac.' : 'No DOB')}
                                                 </span>
                                                 {patient.phone && (
                                                     <>

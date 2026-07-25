@@ -37,23 +37,17 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
     }, []);
 
     useEffect(() => {
-        if (!query.trim()) {
-            setResults([]);
-            return;
-        }
-
         const delayDebounceFn = setTimeout(async () => {
             setIsLoading(true);
             try {
                 const searchResults = await storage.searchPatients(query);
                 setResults(searchResults);
-                setIsOpen(true);
             } catch (err) {
                 console.error("Search failed:", err);
             } finally {
                 setIsLoading(false);
             }
-        }, 300);
+        }, query.trim() ? 300 : 0);
 
         return () => clearTimeout(delayDebounceFn);
     }, [query]);
@@ -72,7 +66,8 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
                         setQuery(val);
                         onInputChange?.(val);
                     }}
-                    onFocus={() => query.trim() && results.length > 0 && setIsOpen(true)}
+                    onFocus={() => setIsOpen(true)}
+                    onClick={() => setIsOpen(true)}
                 />
                 <Button
                     size="icon"

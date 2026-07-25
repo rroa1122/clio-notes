@@ -79,6 +79,7 @@ export interface Patient {
 
     // TCM Social Needs
     tcm_social_needs?: Record<string, any> | null;
+    otc_benefit?: Record<string, any> | null;
 }
 
 /**

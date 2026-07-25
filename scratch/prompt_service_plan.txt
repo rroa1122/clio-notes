@@ -135,8 +135,8 @@ OUTPUT JSON SCHEMA (exact keys)
 "domains_selected": {
 "1_mental_health_substance_abuse": false,
 "2_physical_health_medical_dental": false,
-"3_developmental_intellectual_disability": false,
-"4_vocational_educational": false,
+"3_vocational_employment_job_training": false,
+"4_school_education": false,
 "5_recreational_social_support": false,
 "6_activities_of_daily_living": false,
 "7_housing_shelter": false,

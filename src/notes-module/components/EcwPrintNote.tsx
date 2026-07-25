@@ -711,7 +711,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                             <div className="space-y-4 group/patient relative">
                                                 <div className="absolute -top-6 right-0 no-print opacity-0 group-hover/patient:opacity-100 transition-opacity">
                                                     <button
-                                                        onClick={() => handleCopy(`Patient: ${mergedNote.patient?.full_name}\nDOB: ${mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toLocaleDateString() : '—'}\nCase No: ${mergedNote.patient?.account_number || mergedNote.patient?.case_no || '—'}\nSex: ${mergedNote.patient?.sex_at_birth || '—'}`, "patient")}
+                                                        onClick={() => handleCopy(`Patient: ${mergedNote.patient?.full_name}\nDOB: ${mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString() : '—'}\nCase No: ${mergedNote.patient?.account_number || mergedNote.patient?.case_no || '—'}\nSex: ${mergedNote.patient?.sex_at_birth || '—'}`, "patient")}
                                                         className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${copyingField === 'patient' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-blue-50 text-blue-600 border-blue-100'} border text-[10px] font-bold uppercase hover:bg-blue-600 hover:text-white`}
                                                     >
                                                         {copyingField === 'patient' ? <Check size={12} /> : <Copy size={12} />}

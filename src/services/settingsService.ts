@@ -21,6 +21,7 @@ export interface UserProfile {
     clinic_id?: string;
     setup_complete: boolean;
     subscription_tier?: string;
+    screen_lock_passcode?: string;
 }
 
 export interface ClinicSettings {
@@ -92,7 +93,8 @@ export const settingsService = {
                 signature_url: profile.signature_url || '',
                 role: profile.role || 'doctor',
                 clinic_id: profile.clinic_id,
-                setup_complete: !!profile.setup_complete
+                setup_complete: !!profile.setup_complete,
+                screen_lock_passcode: profile.screen_lock_passcode || ''
             };
         } catch (err) {
             console.error('Error fetching profile:', err);

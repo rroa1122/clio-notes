@@ -44,6 +44,33 @@ const formatValueForPrint = (value: any): string | null => {
     return null;
 };
 
+const highlightWarnings = (text: any): React.ReactNode => {
+    if (text == null) return '';
+    const textStr = String(text);
+    const warningRegex = /(not reported during the visit|not reported|not documented|was not reported|were not reported|no reportado|no documentado|not available|not specified)/gi;
+    
+    const parts = textStr.split(warningRegex);
+    if (parts.length === 1) return textStr;
+    
+    return (
+        <>
+            {parts.map((part, idx) => {
+                if (part.match(warningRegex)) {
+                    return (
+                        <span 
+                            key={idx} 
+                            className="bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/30 px-1.5 py-0.5 rounded font-semibold italic text-[11px] inline-flex items-center gap-0.5 mx-0.5 leading-none"
+                        >
+                            ⚠️ {part}
+                        </span>
+                    );
+                }
+                return part;
+            })}
+        </>
+    );
+};
+
 const formatDosDate = (rawDate: string | null | undefined): string => {
     if (!rawDate) return "N/A";
     try {
@@ -148,20 +175,42 @@ const SectionHeader = ({ title, onCopy, isCopied, icon: Icon }: { title: string,
 );
 
 const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField }: any) => {
-    const val = getValueByPath(mergedNote, domain.path);
-    const isChecked = val === true || val === "yes" || val === "X" || val === "x" || (typeof val === "string" && val.trim() !== "" && val !== "no" && val !== "false");
+    const isOtcNote = (
+        (mergedNote.subTemplate || "").toLowerCase().includes("otc") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("otc") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")
+    );
+
+    // Exactly one domain checked: OTC -> #2, otherwise -> #1
+    let isChecked = false;
+    if (isOtcNote) {
+        isChecked = domain.path === 'services.domains_selected.2_physical_health_medical_dental';
+    } else {
+        isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse';
+    }
 
     return (
-        <div
-            onClick={() => isEditMode && handleUpdateField(domain.path, isChecked ? "" : "yes")}
-            className={`flex items-center gap-2.5 py-1.5 px-2.5 transition-all group cursor-pointer border border-transparent ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-950/30 border-indigo-100/30 dark:border-indigo-900/30 rounded-lg' : 'hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg'}`}
-        >
-            <div className={`size-4 flex items-center justify-center shrink-0 rounded-md border-2 transition-all ${isChecked ? 'bg-indigo-600 border-indigo-600 scale-105 shadow-sm shadow-indigo-100' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 group-hover:border-indigo-200'}`}>
-                {isChecked && <Check size={10} className="text-white stroke-[4]" />}
+        <div className="flex flex-col gap-1 w-full">
+            <div
+                className={`flex items-center gap-2.5 py-1.5 px-2.5 transition-all group border border-transparent ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-950/30 border-indigo-100/30 dark:border-indigo-900/30 rounded-lg' : 'rounded-lg'} cursor-default`}
+            >
+                <div className={`size-4 flex items-center justify-center shrink-0 rounded-md border-2 transition-all ${isChecked ? 'bg-indigo-600 border-indigo-600 scale-105 shadow-sm shadow-indigo-100' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'}`}>
+                    {isChecked && <Check size={10} className="text-white stroke-[4]" />}
+                </div>
+                <span className={`text-[10px] font-bold select-none transition-colors ${isChecked ? 'text-indigo-900 dark:text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>
+                    {domain.label}
+                </span>
             </div>
-            <span className={`text-[10px] font-bold select-none transition-colors ${isChecked ? 'text-indigo-900 dark:text-indigo-200' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'}`}>
-                {domain.label}
-            </span>
+            {isChecked && domain.path === 'services.domains_selected.2_physical_health_medical_dental' && (
+                <div className="pl-6 flex items-center gap-2 py-0.5 select-none">
+                    <div className="size-3.5 flex items-center justify-center rounded border-2 border-indigo-600 bg-indigo-600 text-white">
+                        <Check size={8} className="stroke-[4]" />
+                    </div>
+                    <span className="text-[9px] font-bold text-indigo-900 dark:text-indigo-250">
+                        Over the counter (OTC) medications.
+                    </span>
+                </div>
+            )}
         </div>
     );
 };
@@ -323,7 +372,7 @@ const GhostInput = ({
                 />
             ) : (
                 <span className={`inline-block break-words ${className}`}>
-                    {value || ''}
+                    {highlightWarnings(value)}
                 </span>
             )}
         </div>
@@ -379,7 +428,7 @@ const GhostTextarea = ({
                 />
             ) : (
                 <div className={`w-full text-[13px] font-medium text-slate-700 leading-relaxed whitespace-pre-wrap ${className}`}>
-                    {value || <span className="text-slate-300 italic">{placeholder}</span>}
+                    {value ? highlightWarnings(value) : <span className="text-slate-300 italic">{placeholder}</span>}
                 </div>
             )}
         </div>
@@ -795,7 +844,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     let duration = endMins - startMins;
                     if (duration < 0) duration += 24 * 60;
                     
-                    const units = Math.ceil(duration / 15);
+                    const units = Math.floor(duration / 15) + (duration % 15 >= 8 ? 1 : 0);
                     
                     next[`${prefix}encounter.duration`] = duration.toString();
                     next[`${prefix}encounter.billing_units`] = units.toString();
@@ -1018,7 +1067,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     // Calc helpers
     const rawDuration = mergedNote.encounter?.duration_minutes || mergedNote.encounter?.duration;
     const durationValue = rawDuration ? `${rawDuration} min` : "—";
-    const unitsValue = mergedNote.encounter?.units || (rawDuration ? Math.ceil(parseInt(String(rawDuration)) / 15).toString() : "—");
+    const unitsValue = mergedNote.encounter?.units || (rawDuration ? (Math.floor(parseInt(String(rawDuration), 10) / 15) + (parseInt(String(rawDuration), 10) % 15 >= 8 ? 1 : 0)).toString() : "—");
 
     const posValue = (() => {
         const code = (mergedNote.encounter?.pos || "").trim();
@@ -1040,58 +1089,58 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
             {/* FLOATING TOOLBAR - PREMIUM STYLE */}
             {!hideToolbar && (
                 <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[60] no-print">
-                    <div className="flex items-center gap-2 p-2 bg-white/80 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/50 dark:border-slate-800/60 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] ring-1 ring-slate-900/5 dark:ring-white/10">
+                    <div className="flex items-center gap-2 p-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/60 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] ring-1 ring-slate-900/5 dark:ring-white/10">
                         <button
                             disabled={isSigned}
                             onClick={() => setIsEditMode(!isEditMode)}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-300 ${
+                            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 ${
                                 isSigned
-                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
+                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                                 : isEditMode 
-                                ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xl shadow-slate-200 dark:shadow-none' 
-                                : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-lg' 
+                                : 'bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
                             }`}
                         >
                             {isSigned ? <Lock size={16} /> : (isEditMode ? <Check size={16} /> : <Edit3 size={16} />)}
-                            {isSigned ? 'Locked (Signed)' : (isEditMode ? 'Done' : 'Edit Note')}
+                            {isSigned ? 'Locked' : (isEditMode ? 'Done' : 'Edit')}
                         </button>
  
-                        <div className="w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1" />
+                        <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
  
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-indigo-600 dark:hover:bg-indigo-500 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300 group"
+                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-indigo-650 dark:hover:text-indigo-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 group"
                         >
                             <Printer size={16} className="group-hover:scale-110 transition-transform" />
                             Print
                         </button>
 
-                        <div className="w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1" />
+                        <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
 
                         <button
                             disabled={isSyncing}
                             onClick={handleSyncWithEhr}
-                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-cyan-600 dark:hover:bg-cyan-500 hover:text-white font-black text-[11px] uppercase tracking-widest transition-all duration-300 group disabled:opacity-50"
+                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-cyan-650 dark:hover:text-cyan-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 group disabled:opacity-50"
                         >
                             {isSyncing ? (
                                 <RefreshCw size={16} className="animate-spin text-cyan-500" />
                             ) : (
                                 <Cpu size={16} className="group-hover:scale-110 transition-transform text-cyan-500 group-hover:text-white" />
                             )}
-                            {isSyncing ? 'Syncing...' : 'Sync EHR'}
+                            {isSyncing ? 'Syncing' : 'Sync'}
                         </button>
  
                         {!isSigned && (
                             <>
-                                <div className="w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1" />
+                                <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
  
                                 <button
                                     onClick={handleSaveNote}
                                     disabled={isSaving}
-                                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-300 ${
+                                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 ${
                                         isSaved 
-                                        ? 'bg-emerald-500 dark:bg-emerald-600 text-white shadow-xl shadow-emerald-100 dark:shadow-none' 
-                                        : 'bg-indigo-600 dark:bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-500 shadow-xl shadow-indigo-100 dark:shadow-none hover:-translate-y-0.5'
+                                        ? 'bg-emerald-500 dark:bg-emerald-600 text-white shadow-lg' 
+                                        : 'bg-indigo-600 dark:bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-500 shadow-lg hover:-translate-y-0.5'
                                     } disabled:opacity-50`}
                                 >
                                     {isSaving ? (
@@ -1101,14 +1150,14 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     ) : (
                                         <Save size={16} />
                                     )}
-                                    {isSaving ? 'Saving...' : isSaved ? 'Saved' : 'Save Record'}
+                                    {isSaving ? 'Saving' : (isSaved ? 'Saved' : 'Save')}
                                 </button>
  
-                                <div className="w-[1px] h-8 bg-slate-200/50 dark:bg-slate-700/50 mx-1" />
+                                <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
  
                                 <button
                                     onClick={() => setIsRequestSignatureModalOpen(true)}
-                                    className="flex items-center gap-2 px-6 py-3 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-900 dark:hover:bg-slate-100 hover:text-white dark:hover:text-slate-900 font-black text-[11px] uppercase tracking-widest transition-all duration-300"
+                                    className="flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300"
                                 >
                                     <PenTool size={16} />
                                     Sign
@@ -1145,8 +1194,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 .document-page { 
                     background-color: white; 
                     width: 100%; 
-                    max-width: 950px; 
+                    max-width: 100%; 
                     min-height: 11in; 
+
                     padding: 0.4in 0.5in; 
                     box-shadow: 0 50px 100px -20px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.1);
                     border: none; 
@@ -1247,6 +1297,16 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 }
                 .dark .document-page .bg-indigo-50 {
                     background-color: rgba(99, 102, 241, 0.12) !important;
+                }
+                .document-page .diagnoses-badge {
+                    color: #4f46e5 !important;
+                    background-color: rgba(239, 246, 255, 0.9) !important;
+                    border: 1px solid rgba(199, 210, 254, 0.5) !important;
+                }
+                .dark .document-page .diagnoses-badge {
+                    color: #c7d2fe !important;
+                    background-color: rgba(30, 27, 75, 0.75) !important;
+                    border: 1px solid rgba(99, 102, 241, 0.35) !important;
                 }
                 .dark .document-page .text-indigo-700 {
                     color: #a5b4fc !important;
@@ -1531,7 +1591,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             <div className="flex flex-col items-start group/patient relative w-full">
                                 <div className="absolute -top-6 right-0 no-print opacity-0 group-hover/patient:opacity-100 transition-opacity">
                                     <button
-                                        onClick={() => handleCopy(`Patient: ${mergedNote.patient?.full_name}\nDOB: ${mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toLocaleDateString() : '—'}\nCase No: ${mergedNote.patient?.account_number || mergedNote.patient?.case_no || '—'}\nSex: ${mergedNote.patient?.sex_at_birth || '—'}`, "Patient Info", "patient")}
+                                        onClick={() => handleCopy(`Patient: ${mergedNote.patient?.full_name}\nDOB: ${mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString() : '—'}\nCase No: ${mergedNote.patient?.account_number || mergedNote.patient?.case_no || '—'}\nSex: ${mergedNote.patient?.sex_at_birth || '—'}`, "Patient Info", "patient")}
                                         className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${copyingSection === 'patient' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-blue-50 text-blue-600 border-blue-100'} border text-[10px] font-bold uppercase hover:bg-blue-600 hover:text-white`}
                                     >
                                         {copyingSection === 'patient' ? <Check size={12} /> : <Copy size={12} />}
@@ -1609,15 +1669,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                             {isEditMode ? (
                                                 <GhostInput
                                                     type="date"
-                                                    value={mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toISOString().split('T')[0] : ''}
+                                                    value={mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toISOString().split('T')[0] : ''}
                                                     onChange={(val) => handleUpdateField('patient.dob', val)}
                                                     isEditMode={true}
                                                     className="!px-2 !py-0.5 !text-[12px] !h-6"
                                                 />
                                             ) : (
                                                 <>
-                                                    <span className="font-semibold text-slate-800 leading-none">{mergedNote.patient?.dob ? new Date(mergedNote.patient.dob).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "—"}</span>
-                                                    <span className="text-slate-400 font-semibold text-[10px] ml-1 leading-none">({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"} years old)</span>
+                                                    <span className="font-semibold text-slate-800 leading-none">{mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "—"}</span>
+                                                    <span className="text-slate-400 font-semibold text-[10px] ml-1 leading-none">({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"} years old)</span>
                                                 </>
                                             )}
                                         </div>
@@ -1710,7 +1770,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                 <span className="label-small !mb-0 text-[9px]">POS</span>
                                                                 <div className="value-text text-[12px]">
                                                                     <GhostInput
-                                                                        value={svc.encounter?.location_name || (svc.encounter as any)?.place_of_service_name || "12 - Home"}
+                                                                        value={svc.encounter?.location_name || (svc.encounter as any)?.place_of_service_name || (((svc.subTemplate || svc._frontend_service_title || mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")) ? "11 - Office" : "12 - Home")}
                                                                         isEditMode={isEditMode}
                                                                         onChange={(val) => handleUpdateField(`${pathPrefix}encounter.location_name`, val)}
                                                                         className="text-center"
@@ -1791,15 +1851,18 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                 <div className="value-text">
                                                                     {isEditMode ? (
                                                                         <GhostInput
-                                                                            value={svc.encounter?.billing_units}
+                                                                            value={svc.encounter?.billing_units || svc.encounter?.units || ''}
                                                                             isEditMode={true}
-                                                                            onChange={(val) => handleUpdateField(`${pathPrefix}encounter.billing_units`, val)}
+                                                                            onChange={(val) => {
+                                                                                handleUpdateField(`${pathPrefix}encounter.billing_units`, val);
+                                                                                handleUpdateField(`${pathPrefix}encounter.units`, val);
+                                                                            }}
                                                                             className="text-center !px-2 !py-0.5 !h-6 !text-[11px] w-12"
                                                                             placeholder="0"
                                                                         />
                                                                     ) : (
                                                                         <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[11px] font-black border border-indigo-100">
-                                                                            {svc.encounter?.billing_units || 0}
+                                                                            {svc.encounter?.billing_units || svc.encounter?.units || 0}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -1807,7 +1870,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                             <div className="col-span-5 mt-3 pt-3 border-t border-slate-100/60">
                                                                 <div className="value-text !text-[16px] font-black text-indigo-950 dark:text-white tracking-tight leading-tight">
                                                                     <GhostInput
-                                                                        value={svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "TCM Progress Note"}
+                                                                        value={(() => {
+                                                                            const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
+                                                                            const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
+                                                                            if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
+                                                                            if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
+                                                                            if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
+                                                                            if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
+                                                                            return rawTitle || "TCM Progress Note";
+                                                                        })()}
                                                                         isEditMode={isEditMode}
                                                                         onChange={(val) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, val)}
                                                                         placeholder="Enter encounter subject..."
@@ -1922,43 +1993,58 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 <h2 className="text-[9px] font-black text-slate-900 tracking-[0.25em] uppercase leading-none">Diagnoses</h2>
                             </div>
                             <div className="mt-1 p-2 bg-slate-50/30 dark:!bg-slate-950/40 rounded-xl border border-slate-100/50 dark:!border-slate-800/80">
-                                {Array.isArray(mergedNote.diagnoses) && mergedNote.diagnoses.length > 0 ? (
-                                    <div className="space-y-1 w-full">
-                                        {(mergedNote.diagnoses as any[]).map((diag: any, idx: number) => (
-                                            <div key={idx} className="flex items-center gap-2 py-1 px-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all group/diag border border-transparent">
-                                                {(isEditMode || diag.icd10) && (
-                                                    <div className="text-[11px] font-black min-w-[50px] tracking-widest text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded text-center shrink-0">
-                                                        <GhostInput
-                                                            value={diag.icd10}
-                                                            isEditMode={isEditMode}
-                                                            onChange={(val) => {
-                                                                const next = [...(mergedNote.diagnoses as any[])];
-                                                                next[idx] = { ...next[idx], icd10: val };
-                                                                handleUpdateField('diagnoses', next);
-                                                            }}
-                                                            placeholder="CODE"
-                                                            className="text-center"
-                                                        />
+                                {(() => {
+                                    const isOtc = (
+                                        (mergedNote.subTemplate || "").toLowerCase().includes("otc") ||
+                                        (mergedNote._frontend_service_title || "").toLowerCase().includes("otc") ||
+                                        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")
+                                    );
+                                    const list = Array.isArray(mergedNote.diagnoses) ? mergedNote.diagnoses : [];
+                                    const diagnosesToRender = (isOtc && list.length > 0) ? [list[0]] : list;
+
+                                    if (diagnosesToRender.length > 0) {
+                                        return (
+                                            <div className="space-y-1 w-full">
+                                                {diagnosesToRender.map((diag: any, idx: number) => (
+                                                    <div key={idx} className="flex items-center gap-2 py-1 px-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all group/diag border border-transparent">
+                                                        {(isEditMode || diag.icd10) && (
+                                                            <div className="diagnoses-badge text-[11px] font-black min-w-[55px] tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 shadow-sm">
+                                                                <GhostInput
+                                                                    value={diag.icd10}
+                                                                    isEditMode={isEditMode}
+                                                                    onChange={(val) => {
+                                                                        const next = [...list];
+                                                                        next[idx] = { ...next[idx], icd10: val };
+                                                                        handleUpdateField('diagnoses', next);
+                                                                    }}
+                                                                    placeholder="CODE"
+                                                                    className="text-center"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                        <div className="value-text flex-1 !font-bold text-slate-700 text-[12px] flex flex-col gap-0.5">
+                                                            <GhostInput
+                                                                value={diag.name}
+                                                                isEditMode={isEditMode}
+                                                                onChange={(val) => {
+                                                                    const next = [...list];
+                                                                    next[idx] = { ...next[idx], name: val };
+                                                                    handleUpdateField('diagnoses', next);
+                                                                }}
+                                                                placeholder="Diagnosis name..."
+                                                            />
+                                                            <span className="text-[10px] text-slate-400 font-bold tracking-tight select-none">
+                                                                Type: Rule-Out
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                )}
-                                                <div className="value-text flex-1 !font-bold text-slate-700 text-[12px]">
-                                                    <GhostInput
-                                                        value={diag.name}
-                                                        isEditMode={isEditMode}
-                                                        onChange={(val) => {
-                                                            const next = [...(mergedNote.diagnoses as any[])];
-                                                            next[idx] = { ...next[idx], name: val };
-                                                            handleUpdateField('diagnoses', next);
-                                                        }}
-                                                        placeholder="Diagnosis name..."
-                                                    />
-                                                </div>
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-[10px] text-slate-400 text-center py-2">No diagnoses documented</p>
-                                )}
+                                        );
+                                    } else {
+                                        return <p className="text-[10px] text-slate-400 text-center py-2">No diagnoses documented</p>;
+                                    }
+                                })()}
                             </div>
                         </section>
 

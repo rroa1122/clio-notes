@@ -287,6 +287,9 @@
 }
 
 @media screen {
+  html {
+    zoom: 0.9;
+  }
   table#note-print-root,
   table#note-print-root > tbody,
   table#note-print-root > tbody > tr,

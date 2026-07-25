@@ -9,7 +9,7 @@ import SignatureModal from '../notes-module/components/SignatureModal';
 import { AmexzoneSyncTab } from '../components/AmexzoneSyncTab';
 
 export function Settings() {
-    const { user, refreshUser } = useAuth();
+    const { user, refreshUser, setIsLocked } = useAuth();
     const { t, language } = useLanguage();
     const [settings, setSettings] = useState<ClinicSettings | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -256,6 +256,11 @@ export function Settings() {
         try {
             const promises: Promise<void>[] = [];
             if (profile && user?.id) {
+                if (profile.screen_lock_passcode) {
+                    localStorage.setItem(`clio_screen_lock_passcode_${user.id}`, profile.screen_lock_passcode);
+                } else {
+                    localStorage.removeItem(`clio_screen_lock_passcode_${user.id}`);
+                }
                 promises.push(settingsService.updateProfile(user.id, profile));
             }
             if (settings) {
@@ -404,6 +409,50 @@ export function Settings() {
                                                      placeholder={language === 'es' ? "Número de licencia estatal" : "State license number"}
                                                      icon={Hash}
                                                  />
+                                            </div>
+                                        </div>
+
+                                        {/* Section 3: Security Passcode (HIPAA) */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
+                                                <Lock size={12} className="text-slate-400" /> {language === 'es' ? "Código de Seguridad (Bloqueo HIPAA)" : "Security Passcode (HIPAA Screen Lock)"}
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                                <InputField
+                                                    label={language === 'es' ? "Código de Acceso de 4 Dígitos" : "4-Digit Access Code"}
+                                                    value={profile.screen_lock_passcode || ''}
+                                                    onChange={(val) => {
+                                                        const digits = val.replace(/[^0-9]/g, '').substring(0, 4);
+                                                        handleProfileChange('screen_lock_passcode', digits);
+                                                    }}
+                                                    placeholder={language === 'es' ? "Ej: 1234" : "e.g. 1234"}
+                                                    icon={Lock}
+                                                    type="password"
+                                                    maxLength={4}
+                                                />
+                                                <div className="flex flex-col justify-center px-1">
+                                                    <p className="text-[11px] leading-relaxed text-slate-400 dark:text-slate-500 font-medium">
+                                                        {language === 'es' 
+                                                            ? "Establece un código numérico de 4 dígitos para bloquear automáticamente la pantalla en lugar de cerrar la sesión cuando esté inactivo. Déjalo en blanco para desactivarlo."
+                                                            : "Set a 4-digit numeric code to automatically lock the screen instead of logging out when inactive. Leave blank to disable."}
+                                                    </p>
+                                                    {profile.screen_lock_passcode && profile.screen_lock_passcode.length === 4 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                if (user?.id) {
+                                                                    localStorage.setItem(`clio_screen_lock_passcode_${user.id}`, profile.screen_lock_passcode || '');
+                                                                    sessionStorage.setItem('clio_screen_locked', 'true');
+                                                                    setIsLocked(true);
+                                                                }
+                                                            }}
+                                                            className="mt-3.5 self-start px-4 py-1.5 rounded-xl border border-indigo-100 hover:border-indigo-200 dark:border-slate-800 text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-all active:scale-95 flex items-center gap-1.5"
+                                                        >
+                                                            <Lock size={12} />
+                                                            {language === 'es' ? "Probar Bloqueo Ahora" : "Test Lock Now"}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -935,7 +984,7 @@ export function Settings() {
     );
 }
 
-function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text" }: any) {
+function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text", ...props }: any) {
     return (
         <div className="group space-y-2.5">
             <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 group-focus-within:text-[#6366f1] transition-colors">
@@ -950,6 +999,7 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                 onChange={(e) => onChange(e.target.value)}
                 className="w-full h-12 px-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-[#6366f1]/60 transition-all shadow-sm"
                 placeholder={placeholder}
+                {...props}
             />
         </div>
     );

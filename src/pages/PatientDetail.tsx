@@ -121,6 +121,7 @@ export function PatientDetail() {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<Partial<StoragePatient>>({});
     const [isSaving, setIsSaving] = useState(false);
+    const [activeTab, setActiveTab] = useState("client");
     const [suggestions, setSuggestions] = useState<DiagnosisCode[]>([]);
     const [isExtracting, setIsExtracting] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -719,7 +720,7 @@ export function PatientDetail() {
 
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-12 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-slate-800 relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
             {/* Premium Unified Tabbed Interface */}
-            <Tabs defaultValue="client" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 dark:border-slate-800 shadow-sm w-full flex overflow-x-auto whitespace-nowrap h-12 mb-10 scrollbar-none justify-start lg:justify-around">
                     <PremiumTrigger value="client" icon={User} label={language === 'es' ? "Cliente" : "Client"} theme="indigo" />
                     <PremiumTrigger value="medical" icon={Stethoscope} label={language === 'es' ? "Médico" : "Medical"} theme="emerald" />
@@ -733,7 +734,9 @@ export function PatientDetail() {
                 <div className="animate-in slide-in-from-bottom-5 duration-700 ease-out">
                     {/* [CLIENT TAB] */}
                     <TabsContent value="client" className="m-0 focus-visible:outline-none">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {activeTab === "client" && (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Left Column: Identity & Contact */}
                             <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                 <div className="mb-2">
@@ -1011,11 +1014,14 @@ export function PatientDetail() {
                                 </div>
                             )}
                         </div>
+                            </>
+                        )}
                     </TabsContent>
 
                     {/* [MEDICAL TAB] */}
                     <TabsContent value="medical" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
+                        {activeTab === "medical" && (
+                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Stethoscope}
@@ -1075,11 +1081,13 @@ export function PatientDetail() {
                             />
                         </div>
                         </div>
+                        )}
                     </TabsContent>
 
                     {/* [PSYCHIATRIC TAB] */}
                     <TabsContent value="psychiatric" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
+                        {activeTab === "psychiatric" && (
+                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Brain}
@@ -1131,11 +1139,13 @@ export function PatientDetail() {
                             />
                         </div>
                         </div>
+                        )}
                     </TabsContent>
 
                     {/* [PHARMACY TAB] */}
                     <TabsContent value="pharmacy" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
+                        {activeTab === "pharmacy" && (
+                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
                             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                             <PremiumGlassField
                                 icon={Store}
@@ -1175,11 +1185,13 @@ export function PatientDetail() {
                             />
                         </div>
                         </div>
+                        )}
                     </TabsContent>
 
                     {/* [HISTORY TAB] */}
                     <TabsContent value="history" className="m-0 focus-visible:outline-none">
-                        <div className="space-y-8 px-1">
+                        {activeTab === "history" && (
+                            <div className="space-y-8 px-1">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-3">
                                     <div className="size-6 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 flex items-center justify-center border border-slate-100 dark:border-slate-800 shadow-tiny">
@@ -1214,11 +1226,13 @@ export function PatientDetail() {
                                 </div>
                             )}
                         </div>
+                        )}
                     </TabsContent>
 
                     {/* [SOCIAL TAB] */}
                     <TabsContent value="social" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-6">
+                        {activeTab === "social" && (
+                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-6">
                             <div className="mb-2">
                                 <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">
                                     {language === 'es' ? 'Ficha de Evaluación Social y Necesidades (TCM)' : 'Social Assessment & Needs Form (TCM)'}
@@ -1805,11 +1819,13 @@ export function PatientDetail() {
                                 );
                             })()}
                         </div>
+                        )}
                     </TabsContent>
 
                     {/* [ASSESSMENT TAB] */}
                     <TabsContent value="assessment" className="m-0 focus-visible:outline-none">
-                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-6">
+                        {activeTab === "assessment" && (
+                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-6">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/80 pb-6">
                                 <div>
                                     <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">
@@ -3321,6 +3337,7 @@ export function PatientDetail() {
                                 );
                             })()}
                         </div>
+                        )}
                     </TabsContent>
                 </div>
             </Tabs>

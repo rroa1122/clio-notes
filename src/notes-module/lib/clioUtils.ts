@@ -22,15 +22,29 @@ export const mergePatientIntoNote = (note: ClioNote, patient: Patient): ClioNote
     if (patient.gender) note.patient.sex_at_birth = patient.gender;
     if (patient.emr_id) note.patient.account_number = patient.emr_id;
     if (patient.phone) note.patient.mobile = patient.phone;
+    if (patient.case_number) note.patient.case_no = patient.case_number;
 
     // Map Patient Diagnoses to Note Diagnoses section
     if (patient.diagnoses) {
-        // Parse string diagnoses into array of objects { name: "..." }
+        // Parse string diagnoses into array of objects, splitting by semicolon, actual newline, or literal \n
         const diagList = patient.diagnoses
-            .split(/[;\n]/) // Split by common delimiters (avoid commas as they exist within ICD-10 names)
+            .split(/[;\n]|\\n/)
             .map(d => d.trim())
             .filter(d => d.length > 0)
-            .map(d => ({ name: d }));
+            .map(d => {
+                // Try to match ICD-10 code at the beginning
+                const match = d.match(/^([A-Z]\d[0-9A-Z](?:\.[0-9A-Z]{1,4})?)\s*[:-]?\s*(.*)$/i);
+                if (match) {
+                    return {
+                        icd10: match[1].toUpperCase(),
+                        name: match[2].trim()
+                    };
+                }
+                return {
+                    icd10: '',
+                    name: d
+                };
+            });
 
         if (diagList.length > 0) {
             // Initialize array if missing
@@ -284,7 +298,7 @@ export const normalizeClioNote = (rawResponse: any): ClioNote | null => {
 
         // Handle Specialized Templates
         const templateId = clioData.template_id || clioData.templateId || clioData.meta?.template_id || clioData.meta?.templateId;
-        if (['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note'].includes(templateId)) {
+        if (['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion'].includes(templateId)) {
             return normalizeTcmNote(clioData);
         }
 
@@ -313,10 +327,10 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     const signatures = raw.signatures || {};
 
     // 1. Units Calculation (15-minute rule)
-    if (!encounter.units || encounter.units === "" || encounter.units === "—") {
+    if (!encounter.units || encounter.units === "" || encounter.units === "—" || encounter.units === "0") {
         const duration = parseInt(encounter.duration_minutes || encounter.duration || "0", 10);
         if (duration > 0) {
-            encounter.units = Math.ceil(duration / 15).toString();
+            encounter.units = (Math.floor(duration / 15) + (duration % 15 >= 8 ? 1 : 0)).toString();
         }
     }
 
@@ -480,6 +494,39 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         }
     });
 
+    // 9. Enforce exactly one checked domain per block/note
+    if (!services.domains_selected) services.domains_selected = {};
+    const isOtc = (
+        (raw.subTemplate || "").toLowerCase().includes("otc") ||
+        (raw._frontend_service_title || "").toLowerCase().includes("otc") ||
+        (encounter?.primary_service_provided || "").toLowerCase().includes("otc")
+    );
+
+    const domainKeys = [
+        "1_mental_health_substance_abuse",
+        "2_physical_health_medical_dental",
+        "3_vocational_employment_job_training",
+        "4_school_education",
+        "5_recreational_social_support",
+        "6_activities_of_daily_living",
+        "7_housing_shelter",
+        "8_economic_financial",
+        "9_basic_needs",
+        "10_transportation",
+        "11_legal_immigration",
+        "12_other"
+    ];
+    
+    domainKeys.forEach(d => {
+        services.domains_selected[d] = false;
+    });
+
+    if (isOtc) {
+        services.domains_selected["2_physical_health_medical_dental"] = true;
+    } else {
+        services.domains_selected["1_mental_health_substance_abuse"] = true;
+    }
+
     const activeTemplateId = raw.template_id || raw.templateId || raw.meta?.template_id || 'tcm_progress_note';
     return applyBaseNormalization({
         ...raw,
@@ -554,10 +601,13 @@ export const mergeJointNotes = (notes: ClioNote[]): ClioNote => {
     baseNote.encounter.duration_minutes = totalDuration.toString();
     baseNote.encounter.duration = totalDuration.toString();
     
-    // Recalculate 15-minute units if > 0
-    if (totalDuration > 0) {
-        baseNote.encounter.units = Math.ceil(totalDuration / 15).toString();
-    }
+    // Recalculate units: compute each block independently, then sum
+    let totalUnits = 0;
+    notes.forEach(note => {
+        const dur = parseInt(note.encounter?.duration_minutes?.toString() || note.encounter?.duration?.toString() || "0", 10) || 0;
+        totalUnits += Math.floor(dur / 15) + (dur % 15 >= 8 ? 1 : 0);
+    });
+    baseNote.encounter.units = totalUnits.toString();
 
     if (!baseNote.narrative) baseNote.narrative = {};
     baseNote.narrative.outcome_of_services = jointOutcome.trim();

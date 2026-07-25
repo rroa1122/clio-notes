@@ -1,0 +1,313 @@
+{
+  "updatedAt": "2026-06-16T23:05:27.000Z",
+  "createdAt": "2026-01-28T04:18:10.983Z",
+  "id": "K3aJ8zeSNCBx6QFL",
+  "name": "NOTA MEDICA INITIAL HOME VISIT",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1008,
+        -416
+      ],
+      "id": "6e589162-6443-479d-8e72-2c0c5d5f441e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tcm-initial-home-visit-note",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "audio"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -416
+      ],
+      "id": "e99fb69a-39eb-4379-92f7-2c0a3753fed7",
+      "name": "Webhook",
+      "webhookId": "2c3c7f49-0b4c-4dd8-b148-aab2531947ac"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "=audio0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -416
+      ],
+      "id": "e5fde99f-8745-43b0-9c7a-f6285eec8eec",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a clinical writer specialized in TCM (Targeted Case Management), with experience in professional, objective, clear medical documentation ready for record keeping. Your role is to analyze and convert the information received in the inputs into a well-written, coherent, precise clinical note that is useful for auditing, continuity of care, and documentary compliance.\n\nIMPORTANT: The input information can come from the audio transcript, text input, patient information fields, or custom forms. You MUST analyze all provided inputs holistically and must NOT assume that the information only comes from the audio transcript.\n\n------------------------------------------------\n\nINPUTS\n\nHEADER INPUTS (authoritative)\n- Primary service provided: {{ $('Code in JavaScript4').item.json.body.primary_service_provided }}\n- Service Date: {{ $('Code in JavaScript4').item.json.body.service_date }}\n- Time In: {{ $('Code in JavaScript4').item.json.body.time_in }}\n- Time Out: {{ $('Code in JavaScript4').item.json.body.time_out }}\n- Patient Name: {{ $('Code in JavaScript').item.json.patient_full_name }}\n- Patient First Name: {{ $('Code in JavaScript').item.json.patient_first_name }}\n- Patient DOB: {{ $('Code in JavaScript').item.json.patient_dob }}\n- Patient Gender: {{ $('Code in JavaScript').item.json.patient_gender }}\n- Patient Address: {{ $('Code in JavaScript').item.json.patient_address }}\n- Patient Phone: {{ $('Code in JavaScript').item.json.patient_phone }}\n- Preferred Language: {{ $('Code in JavaScript').item.json.patient_full_object.preferred_language }}\n- Ethnicity: {{ $('Code in JavaScript').item.json.patient_full_object.ethnicity }}\n- Patient Context: {{ $('Code in JavaScript4').item.json.body.patient_context }}\n- Clinical Context/History: {{ $('Code in JavaScript4').item.json.body.patient_clinical_context }}\n- Diagnoses: {{ $('Code in JavaScript').item.json.patient_diagnoses }}\n- Presenting Problems: {{ $('Code in JavaScript').item.json.patient_presenting_problems }}\n\nPCP DETAILS\n- PCP Name: {{ $('Code in JavaScript').item.json.patient_pcp_name }}\n- PCP Phone: {{ $('Code in JavaScript').item.json.patient_pcp_phone }}\n- PCP Address: {{ $('Code in JavaScript').item.json.patient_pcp_address }}\n\nPSYCHIATRIST DETAILS\n- Psych Name: {{ $('Code in JavaScript').item.json.patient_psych_name }}\n- Psych Phone: {{ $('Code in JavaScript').item.json.patient_psych_phone }}\n- Psych Address: {{ $('Code in JavaScript').item.json.patient_psych_address }}\n- Psych Meds: {{ $('Code in JavaScript').item.json.patient_psych_medications }}\n\nEMERGENCY CONTACT DETAILS\n- Emergency Contact Name: {{ $('Code in JavaScript').item.json.patient_full_object.emergency_contact_name }}\n- Emergency Contact Relation: {{ $('Code in JavaScript').item.json.patient_full_object.emergency_contact_relation }}\n- Emergency Contact Phone: {{ $('Code in JavaScript').item.json.patient_full_object.emergency_contact_phone }}\n\nCLINIC / AGENCY DETAILS\n- Agency Name: {{ $('Code in JavaScript4').item.json.body.agency_name }}\n- Facility Name: {{ $('Code in JavaScript4').item.json.body.facility_name }}\n- Facility Address: {{ $('Code in JavaScript4').item.json.body.facility_address }}\n- Facility Phone: {{ $('Code in JavaScript4').item.json.body.facility_phone }}\n- Facility Fax: {{ $('Code in JavaScript4').item.json.body.facility_fax }}\n- Facility Email: {{ $('Code in JavaScript4').item.json.body.facility_email }}\n\nVISIT TRANSCRIPT\n<<<TRANSCRIPT_START>>>\n{{ $json.text }}\n<<<TRANSCRIPT_END>>>\n\n------------------------------------------------\n\nJOINT NOTE STRUCTURE\nThe Initial Encounter note (Day 1) is ONE note containing TWO independent service blocks. You MUST generate the output following the JSON Schema at the bottom, which represents these two blocks inside the \"joint_services\" array:\n- joint_services[0] is for \"SERVICE BLOCK 1 — CASE ASSIGNED\"\n- joint_services[1] is for \"SERVICE BLOCK 2 — FIRST HOME VISIT\"\n\n------------------------------------------------\n\nGLOBAL RULES (CRITICAL)\n1) ENGLISH ONLY.\n2) NO HALLUCINATIONS: Never invent factual data, except when strictly applying the Default Stability rule below.\n3) THIRD-PERSON NARRATIVE: ALWAYS write in the third person (e.g., \"The TCM arrived...\", \"He/she stated...\"). Do NOT use first-person.\n4) PROFESSIONAL CLINICAL TONE: Maintain a strict, objective clinical style. You are strictly PROHIBITED from quoting casual conversational filler.\n5) NO META-COMMENTARY (CRITICAL): You are writing a final, official medical record. NEVER refer to your system instructions, the 'transcript', 'patient context', or 'default stability rules' in your text. Act entirely as the authoring clinician. DO NOT explain *how* or *why* you deduced the information, and DO NOT explicitly state that you are applying default rules; just write the clinical facts neutrally, professionally, and direct6) TIME AND DURATION STRICT ISOLATION: Any mention in the input regarding the start time, end time, duration of the service, or billing units MUST be used EXCLUSIVELY to populate the `encounter` fields (`time_in`, `time_out`, `duration`, `billing_units`) inside the respective `joint_services` blocks. You are STRICTLY PROHIBITED from including any time, duration, scheduling, or unit details in the `summary_notes`, `outcome_of_services`, or any other narrative text. You MUST parse `time_in` and `time_out` (e.g., \"10:00 AM\", \"11:00 AM\") for each block, calculate the duration in minutes, and calculate the billing_units (duration divided by 15, rounded up). Populate these calculated values in `duration` and `billing_units`.\n7) PRONOUN DYNAMISM: You MUST dynamically replace all slash-pronouns (e.g., \"he/she\", \"his/her\", \"him/her\", \"himself/herself\", \"his/hers\") in the templates with the correct gender-specific pronoun based on the patient's actual gender provided in the inputs (use \"he\", \"his\", \"him\", \"himself\" for males, and \"she\", \"her\", \"herself\" for females). Never output slash-pronouns like \"he/she\" or \"his/her\" in the final text.\n8) SINGLE CONTIGUOUS PARAGRAPH: The clinical narrative written in the JSON fields \"summary_notes\" MUST be generated as one single, continuous paragraph without any double newlines, single newlines, or line breaks.\n9) MANDATORY DEFAULT STABILITY: If the input DOES NOT mention a specific mandatory clinical point (such as housing stability, safety risks, ADLs, IADLs, ventilation, utilities, etc.), you MUST describe the patient as safe, functional, clean, stable, and compliant by default. NEVER write \"not described\", \"not documented\", \"not reported\", or similar phrases in the narrative. Apply this stability assumption silently and seamlessly as if you observed it yourself, using standard positive/stable phrasing (e.g., that the home was clean and organized, utilities were functioning, ADLs/IADLs are supported/functional, no safety risks were present). If a non-mandatory detail like marital status, housing type, neighborhood characteristics, or chronic medical conditions is not available, completely OMIT it from the narrative rather than writing that it is not documented.\n\n------------------------------------------------\n\nSERVICE BLOCK 1 — CASE ASSIGNED (joint_services[0])\nBilling profile: Place of service 11 – Office · T1017 · ~30–33 min · 2 units.\nThe narrative for this block MUST be a detailed chronological account in real time. Do NOT reorganize the narrative. It MUST flow in this exact order:\n\n1. TCM received and reviewed a Case Manager's Referral for a newly assigned case for services.\n2. TCM reviewed the referral with the supervisor, signed the referral form, and began collecting all necessary information required for the admission process.\n3. TCM accepted [Client Full Name]'s case for Targeted Case Management services.\n4. TCM successfully contacted [Client First Name] by phone and introduced herself/himself as a Targeted Case Manager from [Agency Legal Name].\n5. Purpose of the call and receipt of the referral for Targeted Case Management services explained.\n6. TCM verified whether the client was currently receiving Targeted Case Management services from another agency, which the client denied.\n7. Client's reported symptoms, tied to their psychiatric diagnoses.\n8. Client's chronic medical conditions and how they interact with mood and functioning.\n9. Barriers the client describes (coordination, appointments, medications, transportation, finances).\n10. Client verbalized a need for services (list what they asked for).\n11. Statement of why uninterrupted access to care matters, given the client's profile.\n12. TCM requested [his/her] address in order to coordinate an in-person visit.\n13. Later that day, TCM conducted a face-to-face visit at [Client First Name]'s residence to assess [his/her] needs, strengths, and barriers and to initiate the admission and evaluation process.\n14. Client was cooperative, communicative, and receptive throughout the visit.\n\n*EXCLUSION RULE:* Do NOT name a referring provider in this block. The referral must be described generically as \"a Case Manager's Referral\". No provider name, address, or phone in this block.\n\nVERBATIM LANGUAGE (SERVICE BLOCK 1):\nYou MUST reproduce the following phrases near-verbatim in the narrative:\n- \"The Targeted Case Manager (TCM) received and reviewed a Case Manager's Referral for a newly assigned case for services.\"\n- \"After reviewing the referral with the supervisor, the TCM signed the referral form and began collecting all necessary information required for the admission process.\"\n- \"Following this review, the TCM accepted [Client Full Name]'s case for Targeted Case Management services.\"\n- \"The TCM successfully contacted [Client First Name] by phone and introduced [himself/herself] as a Targeted Case Manager from {{ $('Code in JavaScript4').item.json.body.agency_name }}.\" (Use \"himself\" if male, \"herself\" if female).\n- \"The purpose of the call and the receipt of a referral for Targeted Case Management services were explained.\"\n- \"The TCM verified whether [Client First Name] was currently receiving Targeted Case Management services from another agency, which [he/she] denied.\"\n- \"In response, the TCM requested [his/her] address in order to coordinate an in-person visit.\"\n- \"Later that day, the TCM conducted a face-to-face visit at [Client First Name]'s residence to assess [his/her] needs, strengths, and barriers and to initiate the admission and evaluation process.\"\n- \"[Client First Name] was cooperative, communicative, and receptive throughout the visit.\"\n\n------------------------------------------------\n\nSERVICE BLOCK 2 — FIRST HOME VISIT (joint_services[1])\nBilling profile: Place of service 12 – Home · T1017 · ~89–91 min · 6 units.\nThe narrative for this block MUST flow in this exact order:\n\n1. TCM conducted the first face-to-face contact and initial home visit at [Client Full Name]'s residence to initiate services.\n2. Living arrangement (marital status, who they live with, housing type) - Omit completely if not available.\n3. Presentation and mental status during the visit.\n4. Preferred language — State the client's preferred language as documented. Pattern: \"The TCM documented that his preferred language was Spanish.\" (or the actual preferred language).\n5. Symptoms endorsed, and how they interfere with daily functioning.\n6. Neighborhood description and accessibility to providers, pharmacies, and community resources - Omit completely if not available.\n7. Barriers to independently managing appointments, paperwork, and healthcare responsibilities.\n8. Home environment observations (must cover all dimensions of the rubric below - use Default Stability if no issues are reported).\n9. Risk screening (must cover all dimensions of the rubric below - use Default Stability to state that client denied risks/safety concerns if none are mentioned).\n10. Treatment and providers (psychiatric and medical). Specify full details: name, credentials, office address, and phone number for each - Omit completely if not available.\n11. Medications and adherence; medication storage inspection.\n12. Chronic medical conditions - Omit completely if not available.\n13. ADL / IADL assessment (must cover all dimensions of the rubric below - use Default Stability if no limitations are reported).\n14. TCM explained the role and scope of Targeted Case Management (TCM) services (assist and link clients with resources in the communities to meet client needs and make them more self-sufficient and autonomous).\n15. Client verbalized understanding of the information provided and agreed to participate in the program.\n16. Admission forms completed; initial consents signed to obtain medical and mental health information.\n\nVERBATIM LANGUAGE (SERVICE BLOCK 2):\nYou MUST reproduce the following phrases near-verbatim in the narrative:\n- \"The Targeted Case Manager (TCM) conducted the first face-to-face contact and initial home visit at [Client Full Name]'s residence to initiate services.\"\n- \"The TCM observed that the home was [finding].\" (Describe cleanliness/organization, e.g., \"clean and organized\" or \"disorganized\").\n- \"No structural damage, safety hazards, or environmental risks were observed inside or around the residence.\" (If none, reproduce verbatim. If any, describe them honestly).\n- \"The home had adequate ventilation and accessibility.\"\n- \"Essential appliances, including a stove and refrigerator, were present and functioning properly.\"\n- \"Electricity and hot and cold running water were available and functioning daily.\"\n- \"No signs of physical or emotional abuse, neglect, or substance use were observed.\" (If none, reproduce verbatim. If any, describe them honestly).\n- \"[Client First Name] denied current suicidal or homicidal ideation and denied any recent safety concerns.\"\n- \"The TCM visually inspected the medication storage area and did not observe expired medications.\"\n- \"[Client First Name] verbalized understanding of the information provided and agreed to participate in the Targeted Case Management program.\"\n- \"All required admission forms were completed during the visit, and initial consents were signed to obtain [Client First Name]'s medical and mental health information.\"\n\nHOME ENVIRONMENT RUBRIC (SERVICE BLOCK 2):\nFor each dimension, state a finding. Negatives and absent findings MUST be affirmatively documented (never stay silent, never skip).\n- Overall condition (clean / organized / adequately maintained - report honestly).\n- Structural damage, safety hazards, environmental risks (inside and around).\n- Ventilation and accessibility.\n- Essential appliances (stove, refrigerator) present and functioning.\n- Electricity and water.\n- Signs of physical or emotional abuse, neglect, or substance use.\n- Medication storage area (visually inspected for expired medications).\n\nRISK SCREENING RUBRIC (SERVICE BLOCK 2):\nState each explicitly whether present or denied. Never omit, never imply.\n- Suicidal ideation.\n- Homicidal ideation.\n- Current safety concerns.\n\nADL / IADL RUBRIC (SERVICE BLOCK 2):\nMust document both parts:\n- Basic ADLs: State the level of independence for dressing, bathing, toileting, and feeding. Note any support from family members.\n- IADLs: State the specific difficulties and attribute them to specific causes (depression, anxiety, cognitive impairment, chronic pain, fatigue, medical complexity, physical limitations). Draw IADLs from: coordinating appointments, understanding instructions, organizing paperwork, medication schedules, transportation, accessing resources/benefits, grocery shopping, phone calls, financial responsibilities, ambulating.\n\n------------------------------------------------\n\nVOICE & STYLE RULES (APPLIES TO BOTH BLOCKS)\n- Third person, past tense, declarative.\n- NO HEDGING: Do NOT use \"appears to\", \"seems\", \"may\", etc. Subjective content must be stated flatly (e.g., \"He described persistent anxiety\" - NOT \"he seems anxious\").\n- TCM Role only: Refer to the TCM only by role. NEVER use the TCM's name in the narrative.\n- Client Name only: Refer to the client ONLY by their first name throughout the narrative body, except at the opening of each block where the full name must be used.\n- Source Attribution: Every statement must be explicitly attributed (e.g., \"The TCM observed...\", \"[Client] reported...\", \"[Client] denied...\", \"He/She stated...\").\n- Full Identifying Detail: On first mention of any provider, facility, or clinic in Block 2, you MUST write their full details: name + credentials + physical address + phone number. If a provider is not present in the inputs, completely omit any mention of that provider or their paragraph from the narrative. Do NOT write \"not reported\" or \"not documented\" for missing providers.\n- Spell out acronyms at first use, then use the acronym: Targeted Case Manager (TCM), Activities of Daily Living (ADLs), Instrumental Activities of Daily Living (IADLs).\n- Placeholder substitution is mandatory. [Agency Legal Name] must render as the actual legal entity name (e.g. {{ $('Code in JavaScript4').item.json.body.agency_name }}). Never degrade a placeholder into generic filler such as \"the agency,\" \"the facility,\" or \"the provider.\" If a placeholder value is unavailable, flag it — do not paper over it.\n- No duplicated openings. Begin the Case Assigned narrative directly with the fixed opening sentence: \"The Targeted Case Manager (TCM) received and reviewed a Case Manager's Referral...\". Do not prepend a lead-in clause such as \"After the Targeted Case Manager received the case assignment,\".\n\n------------------------------------------------\n\nSERVICE DOMAIN SELECTION LOGIC (STRICT)\n- For BOTH service blocks, you MUST select ONLY \"1_mental_health_substance_abuse\" as true.\n- Set all other domains to false. (Even though the narrative discusses housing, transportation, ADLs, or basic needs, these are context on Day 1, not identified needs. Needs are formally identified in the Day 3 Assessment).\n\n------------------------------------------------\n\nDIAGNOSES LOGIC (COMMON)\n- Include ONLY the referral diagnosis (primary diagnosis name, ICD-10 code, description, and type).\n- The type MUST be exactly \"Rule-Out\".\n- Do NOT include any other diagnoses.\n\n------------------------------------------------\n\nOUTCOME / NEXT STEPS PATTERN (COMMON)\nYou must return exactly the following patterns for outcome and next steps in the root narrative object:\n- Narrative Outcome (`narrative.outcome_of_services`): \"The first contact and a first home visit for Client [First Name] was successfully conducted. [First Name] agreed to receive Case Management services.\"\n- Next Steps (`narrative.next_steps`): \"TCM will gather information about [Client First Name]'s physical and mental conditions at PCP and Psychiatrist offices.\"\n\n------------------------------------------------\n\nSTRICT EXCLUSIONS (MUST NOT INCLUDE)\n- No medication list or medication regimen details.\n- No breakdown of needs by domain.\n- No eligibility or certification language.\n- No service plan, goals, or objectives.\n- No content or details from collateral contacts (only the plan to contact them and consents obtained).\n- No referring provider details (name, phone, address) in Block 1 (referral must be described generically).\n- No diagnoses beyond the single Rule-Out referral diagnosis.\n- No second phone number for the client.\n- No client name other than this client's.\n- No facility or case manager names in the narrative body.\n\n------------------------------------------------\n\nOUTPUT JSON SCHEMA (exact keys)\n{\n\"template_id\": \"tcm_initial_home_visit_note\",\n\"patient\": { \"full_name\": \"\", \"dob\": \"\", \"sex\": \"\", \"emr\": \"\", \"case_no\": \"\", \"mobile\": \"\" },\n\"facility\": { \"name\": \"{{ $('Code in JavaScript4').item.json.body.facility_name }}\", \"address\": \"{{ $('Code in JavaScript4').item.json.body.facility_address }}\", \"phone\": \"{{ $('Code in JavaScript4').item.json.body.facility_phone }}\", \"fax\": \"{{ $('Code in JavaScript4').item.json.body.facility_fax }}\", \"email\": \"{{ $('Code in JavaScript4').item.json.body.facility_email }}\" },\n\"staff\": { \"case_manager_name\": \"\", \"case_manager_lic\": \"\", \"supervisor_name\": \"\", \"supervisor_lic\": \"\" },\n\"diagnosis\": { \"primary_diagnosis_name\": \"\", \"icd10_code\": \"\", \"icd10_description\": \"\", \"type\": \"Rule-Out\" },\n\"signatures\": { \"case_manager_signature_date\": \"\", \"supervisor_signature_date\": \"\" },\n\"narrative\": { \n  \"outcome_of_services\": \"\", \n  \"next_steps\": \"\" \n},\n\"evidence\": { \"key_facts_quotes\": [] },\n\"meta\": { \"confidence_overall\": \"\", \"missing_fields\": [], \"warnings\": [] },\n\"joint_services\": [\n  {\n    \"encounter\": { \n      \"dos_date\": \"\", \n      \"pos\": \"11 - Office\", \n      \"location_name\": \"11 - Office\", \n      \"place_of_service_name\": \"11 - Office\", \n      \"service_location\": \"Office\", \n      \"time_in\": \"\", \n      \"time_out\": \"\", \n      \"duration\": \"\", \n      \"billing_units\": \"\" \n    },\n    \"services\": {\n      \"service_focus_title\": \"TCM Case Assigned: Referral Review and Telephone Intake Screening\",\n      \"domains_selected\": {\n        \"1_mental_health_substance_abuse\": true,\n        \"2_physical_health_medical_dental\": false,\n        \"3_vocational_employment_job_training\": false,\n        \"4_school_education\": false,\n        \"5_recreational_social_support\": false,\n        \"6_activities_of_daily_living\": false,\n        \"7_housing_shelter\": false,\n        \"8_economic_financial\": false,\n        \"9_basic_needs\": false,\n        \"10_transportation\": false,\n        \"11_legal_immigration\": false,\n        \"12_other\": false\n      },\n      \"other_specify\": \"\"\n    },\n    \"narrative\": { \"summary_notes\": \"\" }\n  },\n  {\n    \"encounter\": { \n      \"dos_date\": \"\", \n      \"pos\": \"12 - Home\", \n      \"location_name\": \"12 - Home\", \n      \"place_of_service_name\": \"12 - Home\", \n      \"service_location\": \"Home\", \n      \"time_in\": \"\", \n      \"time_out\": \"\", \n      \"duration\": \"\", \n      \"billing_units\": \"\" \n    },\n    \"services\": {\n      \"service_focus_title\": \"TCM Initial Home Visit: Face-to-Face Assessment and Intake Completion\",\n      \"domains_selected\": {\n        \"1_mental_health_substance_abuse\": true,\n        \"2_physical_health_medical_dental\": false,\n        \"3_vocational_employment_job_training\": false,\n        \"4_school_education\": false,\n        \"5_recreational_social_support\": false,\n        \"6_activities_of_daily_living\": false,\n        \"7_housing_shelter\": false,\n        \"8_economic_financial\": false,\n        \"9_basic_needs\": false,\n        \"10_transportation\": false,\n        \"11_legal_immigration\": false,\n        \"12_other\": false\n      },\n      \"other_specify\": \"\"\n    },\n    \"narrative\": { \"summary_notes\": \"\" }\n  }\n]\n}\n\nReturn JSON only.\n"
+            },
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -416
+      ],
+      "id": "48704574-2e0c-4e2b-b467-47612f3f1555",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node - enforce correct metadata for webm recordings\nfor (const item of items) {\n  if (item.binary?.audio0) {\n    const b = item.binary.audio0;\n\n    // Force consistent filename\n    b.fileName = \"recording.webm\";\n\n    // Force correct mimetype for webm\n    b.mimeType = \"audio/webm\";\n  }\n}\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -416
+      ],
+      "id": "a616b10e-1df3-410d-b944-c099c977ad99",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node — Parse OpenAI \"Message a model\" output (new Responses shape)\n * Extracts: item.json.output[0].content[0].text\n * Returns: parsed note JSON at root, plus ok/meta helpers\n */\n\nfunction extractJsonString(raw) {\n  if (raw == null) return null;\n\n  let s = String(raw).trim();\n\n  // Remove ```json fences if present\n  s = s.replace(/^```(?:json)?\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\n  // Try direct object extraction\n  const firstBrace = s.indexOf(\"{\");\n  const lastBrace = s.lastIndexOf(\"}\");\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    return s.slice(firstBrace, lastBrace + 1).trim();\n  }\n\n  // Try array extraction\n  const firstBracket = s.indexOf(\"[\");\n  const lastBracket = s.lastIndexOf(\"]\");\n  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {\n    return s.slice(firstBracket, lastBracket + 1).trim();\n  }\n\n  return null;\n}\n\nfunction safeJsonParseFromText(text) {\n  const jsonStr = extractJsonString(text);\n  if (!jsonStr) throw new Error(\"Could not locate JSON in model output text.\");\n  return JSON.parse(jsonStr);\n}\n\nreturn items.map((item) => {\n  // ✅ This is the actual model text in your screenshot\n  const text =\n    item.json?.output?.[0]?.content?.[0]?.text ??\n    item.json?.output?.[0]?.content?.find?.((c) => c?.type === \"output_text\")?.text ??\n    item.json?.content ??\n    item.json?.message?.content ??\n    item.json?.text;\n\n  try {\n    const note = safeJsonParseFromText(text);\n\n    return {\n      json: {\n        ok: true,\n        ...note, // <-- IMPORTANT: put the note fields at the root for the UI\n        meta: {\n          ...(note.meta || {}),\n          confidence_overall: note.meta?.confidence_overall || \"\",\n        },\n      },\n    };\n  } catch (e) {\n    return {\n      json: {\n        ok: false,\n        error: e.message,\n        raw_preview: (text ? String(text).slice(0, 2000) : null),\n      },\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "47a060c5-6092-4e8c-9e61-8a747bfdbb61",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize webhook payload AND preserve binary (audio0)\n\nreturn items.map((item) => {\n  const j = item.json ?? {};\n  const outerBody = j.body ?? {};\n\n  let inner = null;\n\n  // If body.body is a JSON string, parse it\n  if (typeof outerBody.body === \"string\") {\n    try {\n      inner = JSON.parse(outerBody.body);\n    } catch (e) {\n      inner = null;\n    }\n  } else if (typeof outerBody.body === \"object\" && outerBody.body) {\n    inner = outerBody.body;\n  }\n\n  // Build normalized payload\n  const normalized = {\n    ...j,\n    body: {\n      ...outerBody,\n      ...(inner ?? {}),\n    },\n  };\n\n  // Ensure transcript field exists consistently\n  normalized.text =\n    j.text ??\n    normalized.body?.text ??\n    normalized.body?.transcript ??\n    normalized.body?.transcription ??\n    \"not_provided\";\n\n  // ✅ IMPORTANT: preserve binary (audio0, etc.)\n  return {\n    json: normalized,\n    binary: item.binary, // keeps audio0 for Transcribe a recording\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -416
+      ],
+      "id": "32cd2a18-d0c2-49ff-818c-8b4cbb4ade37",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Iteramos por cada elemento que llega (normalmente es 1, pero n8n maneja arrays de items)\nfor (const item of $input.all()) {\n  try {\n    // Obtenemos el texto original que viene en 'patient_clinical_context'\n    const contextString = item.json.body.patient_clinical_context;\n\n    if (contextString) {\n      // Parseamos el texto a un objeto JSON\n      const patientData = JSON.parse(contextString);\n\n      // Ahora asignamos TODOS los campos principales a nuevas variables en el item.json\n      // para que sean fácilmente accesibles en los siguientes nodos.\n      \n      // -- Datos Generales del Paciente --\n      item.json.patient_full_name = patientData.full_name;\n      item.json.patient_first_name = patientData.first_name;\n      item.json.patient_last_name = patientData.last_name;\n      item.json.patient_dob = patientData.dob;\n      item.json.patient_gender = patientData.gender;\n      item.json.patient_phone = patientData.phone;\n      item.json.patient_email = patientData.email;\n      item.json.patient_ssn = patientData.ssn;\n      item.json.patient_emr_id = patientData.emr_id;\n      item.json.patient_address = patientData.address;\n      item.json.patient_citizenship = patientData.citizenship;\n      \n      // -- Seguro y Coordinación --\n      item.json.patient_case_manager = patientData.case_manager;\n      item.json.patient_insurance_company = patientData.insurance_company;\n      item.json.patient_diagnoses = patientData.diagnoses;\n      item.json.patient_presenting_problems = patientData.presenting_problems;\n\n      // -- Datos del PCP (Primary Care Physician) --\n      item.json.patient_pcp_name = patientData.pcp_name;\n      item.json.patient_pcp_phone = patientData.pcp_phone;\n      item.json.patient_pcp_address = patientData.pcp_address;\n      item.json.patient_pcp_conditions = patientData.pcp_conditions;\n      item.json.patient_pcp_medications = patientData.pcp_medications;\n\n      // -- Datos Psiquiátricos --\n      item.json.patient_psych_name = patientData.psych_name;\n      item.json.patient_psych_phone = patientData.psych_phone;\n      item.json.patient_psych_address = patientData.psych_address;\n      item.json.patient_psych_conditions = patientData.psych_conditions;\n      item.json.patient_psych_medications = patientData.psych_medications;\n\n      // -- Datos de Farmacia --\n      item.json.patient_pharmacy_name = patientData.pharmacy_name;\n      item.json.patient_pharmacy_phone = patientData.pharmacy_phone;\n      item.json.patient_pharmacy_fax = patientData.pharmacy_fax;\n      item.json.patient_pharmacy_address = patientData.pharmacy_address;\n      \n      // Opcional: También puedes guardar todo el objeto parseado directamente si quieres\n      item.json.patient_full_object = patientData;\n    }\n    \n  } catch (error) {\n    // Si hay un error al parsear el JSON, imprimimos el error pero no rompemos el flujo\n    console.error(\"Error parseando patient_clinical_context:\", error.message);\n    item.json.parsing_error = error.message;\n  }\n}\n\n// Retornamos el item modificado a n8n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -416
+      ],
+      "id": "f53cced0-ab61-400d-9bd3-fe35363d1653",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.clinicflow.dev",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+            "content-length": "2106",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "es-419,es;q=0.9",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryBXqDi94h66wCe70e",
+            "origin": "http://localhost:5173",
+            "priority": "u=1, i",
+            "referer": "http://localhost:5173/",
+            "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "via": "2.0 Caddy",
+            "x-forwarded-for": "71.38.84.91",
+            "x-forwarded-host": "n8n.clinicflow.dev",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "text": "dsfsdf",
+            "custom_template_text": "sdfsdfsdfdsfsdfsdfsdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "patient_name": "as",
+            "patient_dob": "",
+            "patient_context": "Encounter Context:\r\ndsfsdf\r\n\r\nDate: 2026-04-15\r\nTime In: Not specified\r\nTime Out: Not specified",
+            "service_id": "manual-1776305617296",
+            "joint_note_index": "1",
+            "joint_note_total": "1",
+            "is_joint_note": "false",
+            "template_id": "tcm_progress_note",
+            "service_date": "2026-04-15",
+            "time_in": "",
+            "time_out": "",
+            "primary_service_provided": "Custom Template",
+            "user_id": "12022246-87fb-4d3b-ace0-1ed2836133a0"
+          },
+          "webhookUrl": "https://n8n.clinicflow.dev/webhook/tcm-note",
+          "executionMode": "production"
+        },
+        "binary": {
+          "audio0": {
+            "mimeType": "audio/webm",
+            "fileType": "audio",
+            "fileExtension": "weba",
+            "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+            "fileName": "encounter_audio.webm",
+            "fileSize": "100 B"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "c0b522f0-48d9-4500-910c-704dd2a65912",
+  "triggerCount": 1,
+  "tags": []
+}

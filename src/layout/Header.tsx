@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../notes-module/context/ThemeContext';
@@ -62,7 +62,15 @@ export function Header() {
             <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-100 shadow-sm print:hidden">
             <div className="h-16 flex items-center justify-between px-4 md:px-8 max-w-[1600px] mx-auto">
                 {/* 1. Logo Area */}
-                <div className="flex items-center gap-3 shrink-0">
+                <Link
+                    to="/notes/new"
+                    onClick={() => {
+                        if (pathname === '/notes/new') {
+                            window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
+                        }
+                    }}
+                    className="flex items-center gap-3 shrink-0 group cursor-pointer"
+                >
                     <div className="flex h-9 w-9 items-center justify-center">
                         <svg 
                             viewBox="0 0 24 24" 
@@ -107,7 +115,7 @@ export function Header() {
                         </svg>
                     </div>
                     <span className="text-base font-black tracking-[0.25em] bg-gradient-to-r from-slate-900 via-indigo-950 to-[#6366f1] bg-clip-text text-transparent hidden sm:block transition-all duration-300 hover:tracking-[0.3em]">CLIO NOTES</span>
-                </div>
+                </Link>
 
                 {/* 2. Desktop Navigation (Center) */}
                 <nav className="hidden md:flex items-center gap-2 justify-center flex-1 mx-8">
@@ -117,11 +125,16 @@ export function Header() {
                             <NavLink
                                 key={item.path}
                                 to={item.path}
+                                onClick={() => {
+                                    if (item.path === '/notes/new' && pathname === '/notes/new') {
+                                        window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
+                                    }
+                                }}
                                 className={cn(
                                     "flex items-center gap-2 px-4 h-9 rounded-full text-sm font-semibold transition-all duration-200 border border-transparent",
                                     isActive
                                         ? "bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/20 shadow-sm"
-                                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60"
+                                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800/60"
                                 )}
                             >
                                 <item.icon className={cn("size-4", isActive ? "opacity-100" : "opacity-75")} />
@@ -270,6 +283,9 @@ export function Header() {
                 {/* 2. Center FAB: New Encounter */}
                 <NavLink
                     to="/notes/new"
+                    onClick={() => {
+                        window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
+                    }}
                     className={({ isActive }) => cn(
                         "relative -top-4 flex items-center justify-center size-14 rounded-full bg-gradient-to-tr from-indigo-500 via-indigo-600 to-[#6366f1] text-white shadow-lg shadow-indigo-500/35 transition-all hover:scale-105 active:scale-95 z-50",
                         isActive && "ring-4 ring-indigo-500/25"

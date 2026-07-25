@@ -2,6 +2,9 @@ const PDF_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/medical-note';
 const TCM_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-note';
 const TCM_ASSESSMENT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-assessment-note';
 const TCM_SERVICE_PLAN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-service-plan-note';
+const TCM_INITIAL_HOME_VISIT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-initial-home-visit-note';
+const TCM_COLLATERAL_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-collateral-note';
+const TCM_SERVICE_PLAN_DISCUSSION_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-service-plan-discussion';
 const SYNTHESIS_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/nextSteps';
 
 // Minimal interface for the data we expect from/to the webhook
@@ -29,6 +32,12 @@ export const PDFService = {
             url = TCM_ASSESSMENT_WEBHOOK_URL;
         } else if (options?.template_id === 'tcm_service_plan_note') {
             url = TCM_SERVICE_PLAN_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_initial_home_visit_note') {
+            url = TCM_INITIAL_HOME_VISIT_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_collateral_note') {
+            url = TCM_COLLATERAL_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_service_plan_discussion') {
+            url = TCM_SERVICE_PLAN_DISCUSSION_WEBHOOK_URL;
         }
         return PDFService._sendRequest(formData, undefined, signal, url);
     },
