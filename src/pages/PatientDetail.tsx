@@ -334,8 +334,59 @@ export function PatientDetail() {
         if (!patient || !id) return;
         setIsSaving(true);
         try {
+            const socialNeeds = editData.tcm_social_needs || {};
+            const today = new Date();
+            const formatDate = (d: Date) => {
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${month}/${day}/${year}`;
+            };
+
+            const defaultPlanDate = socialNeeds.service_plan_date || formatDate(today);
+            const targetDateObj = new Date(today);
+            targetDateObj.setMonth(targetDateObj.getMonth() + 6);
+            const defaultTargetDate = socialNeeds.service_plan_target_date || formatDate(targetDateObj);
+
+            const intakeObj = new Date(today);
+            intakeObj.setDate(intakeObj.getDate() - 3);
+            const defaultIntakeDate = socialNeeds.service_plan_intake_date || formatDate(intakeObj);
+
+            const recordsObj = new Date(today);
+            recordsObj.setDate(recordsObj.getDate() - 2);
+            const defaultRecordsDate = socialNeeds.service_plan_records_date || formatDate(recordsObj);
+
+            const assessmentObj = new Date(today);
+            assessmentObj.setDate(assessmentObj.getDate() - 1);
+            const defaultAssessmentDate = socialNeeds.service_plan_assessment_date || formatDate(assessmentObj);
+
+            const certObj = new Date(today);
+            certObj.setDate(certObj.getDate() - 1);
+            const defaultCertDate = socialNeeds.service_plan_certification_date || formatDate(certObj);
+
+            const updatedSocialNeeds = {
+                ...socialNeeds,
+                service_plan_date: socialNeeds.service_plan_date || defaultPlanDate,
+                service_plan_target_date: socialNeeds.service_plan_target_date || defaultTargetDate,
+                service_plan_intake_date: socialNeeds.service_plan_intake_date || defaultIntakeDate,
+                service_plan_records_date: socialNeeds.service_plan_records_date || defaultRecordsDate,
+                service_plan_assessment_date: socialNeeds.service_plan_assessment_date || defaultAssessmentDate,
+                service_plan_certification_date: socialNeeds.service_plan_certification_date || defaultCertDate
+            };
+
+            // Populate the active domain goals & objectives if they are empty
+            Object.keys(DOMAIN_DEFAULTS).forEach(key => {
+                if (updatedSocialNeeds[key] === true) {
+                    updatedSocialNeeds[`service_plan_goal_${key}`] = updatedSocialNeeds[`service_plan_goal_${key}`] || DOMAIN_DEFAULTS[key].goal;
+                    updatedSocialNeeds[`service_plan_obj1_${key}`] = updatedSocialNeeds[`service_plan_obj1_${key}`] || DOMAIN_DEFAULTS[key].obj1;
+                    updatedSocialNeeds[`service_plan_obj2_${key}`] = updatedSocialNeeds[`service_plan_obj2_${key}`] || DOMAIN_DEFAULTS[key].obj2;
+                    updatedSocialNeeds[`service_plan_obj3_${key}`] = updatedSocialNeeds[`service_plan_obj3_${key}`] || DOMAIN_DEFAULTS[key].obj3;
+                }
+            });
+
             const finalData = {
                 ...editData,
+                tcm_social_needs: updatedSocialNeeds,
                 full_name: `${editData.first_name || ''} ${editData.last_name || ''}`.trim() || patient.full_name
             };
             await storage.upsertPatient({ ...finalData, id });
