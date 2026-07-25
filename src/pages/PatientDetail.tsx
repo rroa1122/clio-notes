@@ -57,6 +57,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { PatientNotePreview } from '../components/PatientNotePreview';
 import { searchDiagnoses, type DiagnosisCode } from '../notes-module/lib/diagnosisCatalog';
 import { cn } from '@/lib/utils';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../context/AuthContext';
 
 interface TimelineItem {
     id: string;
@@ -109,6 +111,7 @@ const getInitialsTheme = (name: string) => {
 
 export function PatientDetail() {
     const { t, language } = useLanguage();
+    const { user } = useAuth();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [patient, setPatient] = useState<StoragePatient | null>(null);
@@ -124,6 +127,7 @@ export function PatientDetail() {
     const [activeTab, setActiveTab] = useState("client");
     const [suggestions, setSuggestions] = useState<DiagnosisCode[]>([]);
     const [isExtracting, setIsExtracting] = useState(false);
+    const [isSyncingToAmexzone, setIsSyncingToAmexzone] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [showAutofillModeModal, setShowAutofillModeModal] = useState(false);
     const [selectedAutofillFile, setSelectedAutofillFile] = useState<File | null>(null);
@@ -317,6 +321,73 @@ export function PatientDetail() {
         if (!patient) return;
         toast.info(language === 'es' ? "Abriendo panel de impresión..." : "Opening print panel...", { icon: "🖨️" });
         window.open(`/patients/print-assessment/${patient.id}`, '_blank');
+    };
+
+    const handleSyncAssessmentToAmexzone = async () => {
+        if (!patient) return;
+        setIsSyncingToAmexzone(true);
+        try {
+            const { data: integration, error: integrationErr } = await supabase
+                .from('provider_integrations')
+                .select('*')
+                .eq('user_id', user?.id)
+                .maybeSingle();
+
+            if (integrationErr) throw integrationErr;
+            if (!integration || integration.mfa_status !== 'connected') {
+                toast.error(
+                    language === 'es' 
+                        ? 'Por favor, conecta tus credenciales de Amexzone en Configuración antes de sincronizar.' 
+                        : 'Please connect your Amexzone credentials in Settings before syncing.'
+                );
+                setIsSyncingToAmexzone(false);
+                return;
+            }
+
+            const socialNeeds = patient.tcm_social_needs || {};
+            const payload = {
+                type: 'TCM_ASSESSMENT',
+                patient_emr_id: patient.emr_id,
+                patient_name: patient.full_name,
+                patient_dob: patient.dob,
+                case_number: patient.case_number,
+                gender: patient.gender || (patient as any).sex || '',
+                ssn: patient.ssn || '',
+                phone: patient.phone || '',
+                email: patient.email || '',
+                address: patient.address || '',
+                race: patient.race || '',
+                ethnicity: patient.ethnicity || '',
+                preferred_language: patient.preferred_language || '',
+                assessment_data: socialNeeds
+            };
+
+            const { error: insertErr } = await supabase
+                .from('amexzone_note_tasks')
+                .insert({
+                    note_id: null,
+                    user_id: user?.id,
+                    clinic_id: user?.clinic_id || null,
+                    patient_name: patient.full_name,
+                    patient_dob: patient.dob,
+                    visit_date: new Date().toISOString().split('T')[0],
+                    note_text: '[TCM_ASSESSMENT]\n' + JSON.stringify(payload),
+                    status: 'pending'
+                });
+
+            if (insertErr) throw insertErr;
+
+            toast.success(
+                language === 'es' 
+                    ? 'Evaluación encolada para sincronizar. Por favor ejecuta el Bot en tu PC para procesarla.' 
+                    : 'Assessment queued for sync. Please run the Bot on your PC to process it.'
+            );
+        } catch (err: any) {
+            console.error('Error queueing assessment sync:', err);
+            toast.error(language === 'es' ? 'Error al encolar la sincronización.' : 'Error queueing sync.');
+        } finally {
+            setIsSyncingToAmexzone(false);
+        }
     };
 
     const handleAutofillAssessment = async () => {
@@ -1846,6 +1917,15 @@ export function PatientDetail() {
                                     >
                                         {isExtracting ? <Loader2 className="animate-spin" size={14} /> : <Brain size={14} />}
                                         {language === 'es' ? "Auto-llenar con IA (n8n)" : "Autofill with AI (n8n)"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={isSyncingToAmexzone}
+                                        onClick={handleSyncAssessmentToAmexzone}
+                                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-cyan-600/10 disabled:opacity-50"
+                                    >
+                                        {isSyncingToAmexzone ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
+                                        {language === 'es' ? "Sincronizar a Amexzone" : "Sync to Amexzone"}
                                     </button>
                                     <button
                                         type="button"
