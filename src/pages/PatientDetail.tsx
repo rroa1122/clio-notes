@@ -390,6 +390,111 @@ export function PatientDetail() {
         }
     };
 
+    const handleSyncServicePlanToAmexzone = async () => {
+        if (!patient) return;
+        setIsSyncingToAmexzone(true);
+        try {
+            const { data: integration, error: integrationErr } = await supabase
+                .from('provider_integrations')
+                .select('*')
+                .eq('user_id', user?.id)
+                .maybeSingle();
+
+            if (integrationErr) throw integrationErr;
+            if (!integration || integration.mfa_status !== 'connected') {
+                toast.error(
+                    language === 'es' 
+                        ? 'Por favor, conecta tus credenciales de Amexzone en Configuración antes de sincronizar.' 
+                        : 'Please connect your Amexzone credentials in Settings before syncing.'
+                );
+                setIsSyncingToAmexzone(false);
+                return;
+            }
+
+            const socialNeeds = patient.tcm_social_needs || {};
+
+            const today = new Date();
+            const formatDate = (d: Date) => {
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${month}/${day}/${year}`;
+            };
+
+            const defaultPlanDate = socialNeeds.service_plan_date || formatDate(today);
+            const targetDateObj = new Date(today);
+            targetDateObj.setMonth(targetDateObj.getMonth() + 6);
+            const defaultTargetDate = socialNeeds.service_plan_target_date || formatDate(targetDateObj);
+
+            const intakeObj = new Date(today);
+            intakeObj.setDate(intakeObj.getDate() - 3);
+            const defaultIntakeDate = socialNeeds.service_plan_intake_date || formatDate(intakeObj);
+
+            const recordsObj = new Date(today);
+            recordsObj.setDate(recordsObj.getDate() - 2);
+            const defaultRecordsDate = socialNeeds.service_plan_records_date || formatDate(recordsObj);
+
+            const assessmentObj = new Date(today);
+            assessmentObj.setDate(assessmentObj.getDate() - 1);
+            const defaultAssessmentDate = socialNeeds.service_plan_assessment_date || formatDate(assessmentObj);
+
+            const certObj = new Date(today);
+            certObj.setDate(certObj.getDate() - 1);
+            const defaultCertDate = socialNeeds.service_plan_certification_date || formatDate(certObj);
+
+            const payload = {
+                type: 'TCM_SERVICE_PLAN',
+                patient_emr_id: patient.emr_id,
+                patient_name: patient.full_name,
+                patient_dob: patient.dob,
+                case_number: patient.case_number,
+                gender: patient.gender || (patient as any).sex || '',
+                ssn: patient.ssn || '',
+                phone: patient.phone || '',
+                email: patient.email || '',
+                address: patient.address || '',
+                race: patient.race || '',
+                ethnicity: patient.ethnicity || '',
+                preferred_language: patient.preferred_language || '',
+                service_plan_data: {
+                    service_plan_date: defaultPlanDate,
+                    service_plan_target_date: defaultTargetDate,
+                    service_plan_discharge_criteria: socialNeeds.service_plan_discharge_criteria || '',
+                    service_plan_intake_date: defaultIntakeDate,
+                    service_plan_records_date: defaultRecordsDate,
+                    service_plan_assessment_date: defaultAssessmentDate,
+                    service_plan_certification_date: defaultCertDate
+                }
+            };
+
+            const { error: insertErr } = await supabase
+                .from('amexzone_note_tasks')
+                .insert({
+                    note_id: null,
+                    user_id: user?.id,
+                    clinic_id: user?.clinic_id || null,
+                    patient_name: patient.full_name,
+                    patient_dob: patient.dob,
+                    visit_date: new Date().toISOString().split('T')[0],
+                    note_text: '[TCM_SERVICE_PLAN]\n' + JSON.stringify(payload),
+                    status: 'pending'
+                });
+
+            if (insertErr) throw insertErr;
+
+            toast.success(
+                language === 'es' 
+                    ? 'Plan de Servicio encolado para sincronizar. Por favor ejecuta el Bot en tu PC para procesarlo.' 
+                    : 'Service Plan queued for sync. Please run the Bot on your PC to process it.'
+            );
+        } catch (err: any) {
+            console.error('Error queueing service plan sync:', err);
+            toast.error(language === 'es' ? 'Error al encolar la sincronización.' : 'Error queueing sync.');
+        } finally {
+            setIsSyncingToAmexzone(false);
+        }
+    };
+
     const handleAutofillAssessment = async () => {
         if (!patient) {
             console.error("Autofill clicked but patient is not defined.");
@@ -799,6 +904,7 @@ export function PatientDetail() {
                     <PremiumTrigger value="pharmacy" icon={Store} label={language === 'es' ? "Farmacia" : "Pharmacy"} theme="amber" />
                     <PremiumTrigger value="social" icon={ClipboardList} label={language === 'es' ? "Social (TCM)" : "Social (TCM)"} theme="blue" />
                     <PremiumTrigger value="assessment" icon={FileText} label={language === 'es' ? "Evaluación (TCM)" : "Assessment (TCM)"} theme="purple" />
+                    <PremiumTrigger value="service_plan" icon={CheckSquare} label={language === 'es' ? "Plan de Servicio (TCM)" : "Service Plan (TCM)"} theme="emerald" />
                     <PremiumTrigger value="history" icon={Clock} label={language === 'es' ? "Historial" : "History"} theme="slate" />
                 </TabsList>
 
@@ -3419,8 +3525,160 @@ export function PatientDetail() {
                         </div>
                         )}
                     </TabsContent>
+
+                    {/* [SERVICE PLAN TAB] */}
+                    <TabsContent value="service_plan" className="m-0 focus-visible:outline-none">
+                        {activeTab === "service_plan" && (
+                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-6">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/80 pb-6">
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">
+                                        {language === 'es' ? 'Plan de Servicio Case Management (24 Páginas)' : 'Case Management Service Plan (24 Pages)'}
+                                    </h3>
+                                    <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-1 leading-normal">
+                                        {language === 'es' 
+                                            ? 'Completa el plan de servicio del paciente, los objetivos por dominio y sincronízalo con Amexzone.'
+                                            : 'Complete the client\'s service plan, domain objectives, and sync it with Amexzone.'}
+                                    </p>
+                                </div>
+                                <div className="flex flex-row items-center gap-3.5 self-start md:self-auto shrink-0">
+                                    <button
+                                        type="button"
+                                        disabled={isSyncingToAmexzone}
+                                        onClick={handleSyncServicePlanToAmexzone}
+                                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md shadow-emerald-600/10 disabled:opacity-50"
+                                    >
+                                        {isSyncingToAmexzone ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
+                                        {language === 'es' ? "Sincronizar a Amexzone" : "Sync to Amexzone"}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {(() => {
+                                const socialNeeds = (isEditing ? editData.tcm_social_needs : patient?.tcm_social_needs) || {};
+
+                                const today = new Date();
+                                const formatDate = (d: Date) => {
+                                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                                    const day = String(d.getDate()).padStart(2, '0');
+                                    const year = d.getFullYear();
+                                    return `${month}/${day}/${year}`;
+                                };
+
+                                const defaultPlanDate = socialNeeds.service_plan_date || formatDate(today);
+                                const targetDateObj = new Date(today);
+                                targetDateObj.setMonth(targetDateObj.getMonth() + 6);
+                                const defaultTargetDate = socialNeeds.service_plan_target_date || formatDate(targetDateObj);
+
+                                const intakeObj = new Date(today);
+                                intakeObj.setDate(intakeObj.getDate() - 3);
+                                const defaultIntakeDate = socialNeeds.service_plan_intake_date || formatDate(intakeObj);
+
+                                const recordsObj = new Date(today);
+                                recordsObj.setDate(recordsObj.getDate() - 2);
+                                const defaultRecordsDate = socialNeeds.service_plan_records_date || formatDate(recordsObj);
+
+                                const assessmentObj = new Date(today);
+                                assessmentObj.setDate(assessmentObj.getDate() - 1);
+                                const defaultAssessmentDate = socialNeeds.service_plan_assessment_date || formatDate(assessmentObj);
+
+                                const certObj = new Date(today);
+                                certObj.setDate(certObj.getDate() - 1);
+                                const defaultCertDate = socialNeeds.service_plan_certification_date || formatDate(certObj);
+
+                                return (
+                                    <div className="space-y-6">
+                                        {/* Fechas del Plan */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <PremiumGlassField 
+                                                icon={Calendar} 
+                                                label="Date of Service Plan" 
+                                                name="service_plan_date" 
+                                                value={socialNeeds.service_plan_date || defaultPlanDate} 
+                                                isEditing={isEditing} 
+                                                onChange={handleSocialNeedsTextChange} 
+                                                theme="emerald" 
+                                            />
+                                            <PremiumGlassField 
+                                                icon={Calendar} 
+                                                label="Target Date" 
+                                                name="service_plan_target_date" 
+                                                value={socialNeeds.service_plan_target_date || defaultTargetDate} 
+                                                isEditing={isEditing} 
+                                                onChange={handleSocialNeedsTextChange} 
+                                                theme="emerald" 
+                                            />
+                                        </div>
+
+                                        {/* Servicios Previos */}
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md p-6 md:p-8 space-y-4">
+                                            <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+                                                {language === 'es' ? 'Servicios Previos al Plan de Servicio' : 'Services Provided Prior to Development of Service Plan'}
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                <PremiumGlassField 
+                                                    icon={Calendar} 
+                                                    label="Intake Date" 
+                                                    name="service_plan_intake_date" 
+                                                    value={socialNeeds.service_plan_intake_date || defaultIntakeDate} 
+                                                    isEditing={isEditing} 
+                                                    onChange={handleSocialNeedsTextChange} 
+                                                    theme="emerald" 
+                                                />
+                                                <PremiumGlassField 
+                                                    icon={Calendar} 
+                                                    label="Gather of Medical Records Date" 
+                                                    name="service_plan_records_date" 
+                                                    value={socialNeeds.service_plan_records_date || defaultRecordsDate} 
+                                                    isEditing={isEditing} 
+                                                    onChange={handleSocialNeedsTextChange} 
+                                                    theme="emerald" 
+                                                />
+                                                <PremiumGlassField 
+                                                    icon={Calendar} 
+                                                    label="CM Assessment Date" 
+                                                    name="service_plan_assessment_date" 
+                                                    value={socialNeeds.service_plan_assessment_date || defaultAssessmentDate} 
+                                                    isEditing={isEditing} 
+                                                    onChange={handleSocialNeedsTextChange} 
+                                                    theme="emerald" 
+                                                />
+                                                <PremiumGlassField 
+                                                    icon={Calendar} 
+                                                    label="CM Certification Date" 
+                                                    name="service_plan_certification_date" 
+                                                    value={socialNeeds.service_plan_certification_date || defaultCertDate} 
+                                                    isEditing={isEditing} 
+                                                    onChange={handleSocialNeedsTextChange} 
+                                                    theme="emerald" 
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Criterios de Alta */}
+                                        <div className="border border-slate-200/40 dark:border-slate-800/60 rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900/10 backdrop-blur-md p-6 md:p-8 space-y-4">
+                                            <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+                                                {language === 'es' ? 'Criterios de Transición / Alta' : 'Transition / Discharge Criteria'}
+                                            </h4>
+                                            <PremiumGlassField 
+                                                icon={FileText} 
+                                                label="Discharge Criteria Description" 
+                                                name="service_plan_discharge_criteria" 
+                                                value={socialNeeds.service_plan_discharge_criteria || ''} 
+                                                isEditing={isEditing} 
+                                                onChange={handleSocialNeedsTextChange} 
+                                                isTextarea 
+                                                theme="emerald" 
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                        )}
+                    </TabsContent>
+                    </Tabs>
                 </div>
-            </Tabs>
             </div>
 
             {showAutofillModeModal && (
