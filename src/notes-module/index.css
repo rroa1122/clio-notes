@@ -3834,11 +3834,24 @@ input.medical-input {
 
 /* PREMIUM TACTILE ANIMATIONS & UTILITIES */
 @keyframes shimmer-sweep {
-  0% { transform: translateX(-100%) skewX(-20deg); opacity: 0; }
-  10% { opacity: 0.5; }
-  20% { opacity: 0.8; }
-  30% { transform: translateX(100%) skewX(-20deg); opacity: 0; }
-  100% { transform: translateX(100%) skewX(-20deg); opacity: 0; }
+  0% {
+    transform: translateX(-160%) skewX(-25deg);
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 1;
+  }
+  20% {
+    transform: translateX(160%) skewX(-25deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(160%) skewX(-25deg);
+    opacity: 0;
+  }
 }
 
 @keyframes tactile-pulse {
@@ -3906,4 +3919,178 @@ input.medical-input {
     inset 0 -1px 2px rgba(255, 255, 255, 0.05),
     inset 0 1px 2px rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Voice wave radar animations */
+@keyframes voice-wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes voice-wave-slow {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+.animate-voice-wave {
+  animation: voice-wave 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.animate-voice-wave-delayed {
+  animation: voice-wave 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  animation-delay: 0.7s;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.animate-voice-wave-delayed-2 {
+  animation: voice-wave 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  animation-delay: 1.4s;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.animate-voice-wave-slow {
+  animation: voice-wave-slow 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.animate-voice-wave-slow-delayed {
+  animation: voice-wave-slow 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  animation-delay: 2s;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Sound Wave Frequency Bars Animation */
+@keyframes sound-bar-1 {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1.2); }
+}
+@keyframes sound-bar-2 {
+  0%, 100% { transform: scaleY(0.6); }
+  50% { transform: scaleY(1.4); }
+}
+@keyframes sound-bar-3 {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1.1); }
+}
+@keyframes sound-bar-4 {
+  0%, 100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1.5); }
+}
+
+.animate-sound-bar-1 {
+  animation: sound-bar-1 0.8s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+.animate-sound-bar-2 {
+  animation: sound-bar-2 1s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+.animate-sound-bar-3 {
+  animation: sound-bar-3 0.7s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+.animate-sound-bar-4 {
+  animation: sound-bar-4 1.2s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+/* Red Ring Pulse Animation */
+@keyframes red-ring-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.55), 0 12px 28px -4px rgba(244, 63, 94, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(244, 63, 94, 0), 0 12px 28px -4px rgba(244, 63, 94, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0), 0 12px 28px -4px rgba(244, 63, 94, 0.2);
+  }
+}
+
+.animate-red-ring-pulse {
+  animation: red-ring-pulse 2s cubic-bezier(0.25, 0, 0, 1) infinite;
+}
+
+/* Premium Metallic Button Style */
+.metallic-btn {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 45%, #cbd5e1 100%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 8px 16px -4px rgba(0, 0, 0, 0.06),
+    0 4px 6px -2px rgba(0, 0, 0, 0.03),
+    inset 0 2px 4px rgba(255, 255, 255, 0.95),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.04);
+}
+
+.dark .metallic-btn {
+  background: linear-gradient(145deg, #334155 0%, #1e293b 50%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 16px -4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Premium Metallic Emerald Button Style */
+.metallic-btn-emerald {
+  background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 45%, #bbf7d0 100%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 8px 16px -4px rgba(16, 185, 129, 0.08),
+    0 4px 6px -2px rgba(16, 185, 129, 0.04),
+    inset 0 2px 4px rgba(255, 255, 255, 0.95),
+    inset 0 -2px 5px rgba(16, 185, 129, 0.05);
+}
+
+.dark .metallic-btn-emerald {
+  background: linear-gradient(145deg, #064e3b 0%, #022c22 50%, #011c15 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 16px -4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Premium Aura Breathing Animation (Filter-free to avoid pixelation) */
+@keyframes metallic-aura-breathing {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.75;
+  }
+}
+
+.animate-aura-breathing {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(99, 102, 241, 0.06) 50%, rgba(99, 102, 241, 0) 70%);
+  animation: metallic-aura-breathing 4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.dark .animate-aura-breathing {
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.22) 0%, rgba(129, 140, 248, 0.04) 50%, rgba(129, 140, 248, 0) 70%);
 }

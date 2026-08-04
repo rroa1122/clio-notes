@@ -288,7 +288,7 @@ const Templates = () => {
                         >
                           {template.is_public ? <Globe size={12} className="text-emerald-500" /> : <Lock size={12} />}
                         </Button>
-                        {!['psych-eval', 'tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion'].includes(template.id) && (
+                        {!['psych-eval', 'tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_mhv_provide_donation_note', 'tcm_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note'].includes(template.id) && (
                           <Button
                             size={confirmDeleteId === template.id ? "default" : "icon"}
                             variant={confirmDeleteId === template.id ? "destructive" : "ghost"}

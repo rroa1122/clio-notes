@@ -365,7 +365,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const handleInactivityTimeout = async () => {
             const userPasscode = userRef.current?.screen_lock_passcode;
-            if (userPasscode && userPasscode.trim().length === 4) {
+            if (userPasscode && String(userPasscode).trim().length === 4) {
                 console.log('[Auth] Inactivity reached. Locking screen...');
                 setIsLocked(true);
                 sessionStorage.setItem('clio_screen_locked', 'true');

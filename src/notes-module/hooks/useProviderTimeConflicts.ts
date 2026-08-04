@@ -22,68 +22,78 @@ export const useProviderTimeConflicts = (note: ClioNote | null) => {
     const checkConflicts = useCallback(async () => {
         if (!note || !user) return;
 
-        const currentRange = extractNormalizedTimeRange(note);
-        setConfidence(currentRange.confidence);
-
-        // If confidence is low, we don't flag conflicts (avoid false positives)
-        if (currentRange.confidence === 'low' || !currentRange.startAtISO || !currentRange.endAtISO) {
-            setConflicts([]);
-            return;
-        }
+        const blocksToCheck = (note.joint_services && note.joint_services.length > 0)
+            ? note.joint_services
+            : [note];
 
         setIsLoading(true);
         try {
             const clinicId = await storage.getClinicId();
             if (!clinicId) return;
 
-            // Strict Window: Query notes created/updated around the service date (±2 days)
-            // This is a safety measure to avoid fetching the entire clinic history.
-            const serviceDate = new Date(currentRange.startAtISO);
-            const windowStart = new Date(serviceDate);
-            windowStart.setDate(serviceDate.getDate() - 2);
-            const windowEnd = new Date(serviceDate);
-            windowEnd.setDate(serviceDate.getDate() + 2);
+            const allFoundConflicts: ConflictNote[] = [];
+            let lowestConfidence: 'high' | 'low' = 'high';
+            const fallbackProvider = user ? (user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : user.name || '') : '';
 
-            const { data, error } = await supabase
-                .from('notes')
-                .select('id, content, patient_id')
-                .eq('clinic_id', clinicId)
-                .neq('id', (note as any).id || 'new-note')
-                .gte('created_at', windowStart.toISOString())
-                .lte('created_at', windowEnd.toISOString());
-
-            if (error) throw error;
-
-            const foundConflicts: ConflictNote[] = [];
-
-            data?.forEach((row: any) => {
-                const otherNote = { ...row.content, id: row.id, patient_id: row.patient_id } as ClioNote;
-                const otherRange = extractNormalizedTimeRange(otherNote);
-
-                if (
-                    otherRange.confidence === 'high' &&
-                    otherRange.provider === currentRange.provider &&
-                    otherRange.startAtISO &&
-                    otherRange.endAtISO &&
-                    areOverlapping(
-                        currentRange.startAtISO!,
-                        currentRange.endAtISO!,
-                        otherRange.startAtISO,
-                        otherRange.endAtISO
-                    )
-                ) {
-                    const otherNoteAny = otherNote as any;
-                    foundConflicts.push({
-                        id: row.id,
-                        patientName: otherNoteAny.patient?.full_name || otherNoteAny.meta?.patientName || otherNoteAny.patient_name || 'Unknown Patient',
-                        startTime: otherNoteAny.appointment?.start_time || otherNoteAny.encounter?.time_in || '—',
-                        endTime: otherNoteAny.appointment?.end_time || otherNoteAny.encounter?.time_out || '—',
-                        date: new Date(otherRange.startAtISO).toLocaleDateString()
-                    });
+            for (const block of blocksToCheck) {
+                const currentRange = extractNormalizedTimeRange(block as ClioNote, fallbackProvider);
+                if (currentRange.confidence === 'low') {
+                    lowestConfidence = 'low';
+                    continue;
                 }
-            });
+                if (!currentRange.startAtISO || !currentRange.endAtISO) continue;
 
-            setConflicts(foundConflicts);
+                // Strict Window: Query notes around the block service date (±2 days)
+                const serviceDate = new Date(currentRange.startAtISO);
+                const windowStart = new Date(serviceDate);
+                windowStart.setDate(serviceDate.getDate() - 2);
+                const windowEnd = new Date(serviceDate);
+                windowEnd.setDate(serviceDate.getDate() + 2);
+
+                const { data, error } = await supabase
+                    .from('notes')
+                    .select('id, content, patient_id')
+                    .eq('clinic_id', clinicId)
+                    .neq('id', (note as any).id || 'new-note')
+                    .gte('created_at', windowStart.toISOString())
+                    .lte('created_at', windowEnd.toISOString());
+
+                if (error) throw error;
+
+                data?.forEach((row: any) => {
+                    const otherNote = { ...row.content, id: row.id, patient_id: row.patient_id } as ClioNote;
+                    const otherBlocks = (otherNote.joint_services && otherNote.joint_services.length > 0)
+                        ? otherNote.joint_services
+                        : [otherNote];
+
+                    otherBlocks.forEach((otherBlock: any) => {
+                        const otherRange = extractNormalizedTimeRange(otherBlock, fallbackProvider);
+                        if (
+                            otherRange.confidence === 'high' &&
+                            otherRange.provider === currentRange.provider &&
+                            otherRange.startAtISO &&
+                            otherRange.endAtISO &&
+                            areOverlapping(
+                                currentRange.startAtISO!,
+                                currentRange.endAtISO!,
+                                otherRange.startAtISO,
+                                otherRange.endAtISO
+                            )
+                        ) {
+                            allFoundConflicts.push({
+                                id: row.id,
+                                patientName: otherNote.patient?.full_name || (otherNote as any).meta?.patientName || (otherNote as any).patient_name || 'Unknown Patient',
+                                startTime: otherBlock.encounter?.time_in || otherBlock.appointment?.start_time || '—',
+                                endTime: otherBlock.encounter?.time_out || otherBlock.appointment?.end_time || '—',
+                                date: new Date(otherRange.startAtISO).toLocaleDateString()
+                            });
+                        }
+                    });
+                });
+            }
+
+            setConfidence(lowestConfidence);
+            setConflicts(allFoundConflicts);
         } catch (err) {
             console.error('Error checking conflicts:', err);
         } finally {

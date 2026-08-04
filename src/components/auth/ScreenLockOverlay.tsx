@@ -54,7 +54,7 @@ export const ScreenLockOverlay: React.FC = () => {
     const handleVerify = async (enteredPin: string) => {
         const userPasscode = user?.screen_lock_passcode || localStorage.getItem(`clio_screen_lock_passcode_${user?.id}`);
         
-        if (userPasscode && enteredPin === userPasscode) {
+        if (userPasscode && String(enteredPin).trim() === String(userPasscode).trim()) {
             setIsLocked(false);
             sessionStorage.removeItem('clio_screen_locked');
             setPin('');

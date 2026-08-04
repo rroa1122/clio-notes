@@ -187,6 +187,8 @@ export function PatientDetail() {
     const [suggestions, setSuggestions] = useState<DiagnosisCode[]>([]);
     const [isExtracting, setIsExtracting] = useState(false);
     const [isSyncingToAmexzone, setIsSyncingToAmexzone] = useState(false);
+    const [assessmentSyncTask, setAssessmentSyncTask] = useState<{status: string, error_message: string | null} | null>(null);
+    const [servicePlanSyncTask, setServicePlanSyncTask] = useState<{status: string, error_message: string | null} | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [showAutofillModeModal, setShowAutofillModeModal] = useState(false);
     const [selectedAutofillFile, setSelectedAutofillFile] = useState<File | null>(null);
@@ -286,6 +288,77 @@ export function PatientDetail() {
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    const loadSyncStatus = useCallback(async () => {
+        if (!patient) return;
+        try {
+            const { data, error } = await supabase
+                .from('amexzone_note_tasks')
+                .select('status, error_message, note_text')
+                .eq('patient_name', patient.full_name)
+                .eq('patient_dob', patient.dob)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (data) {
+                const latestAssessment = data.find(t => t.note_text && t.note_text.startsWith('[TCM_ASSESSMENT]'));
+                const latestServicePlan = data.find(t => t.note_text && t.note_text.startsWith('[TCM_SERVICE_PLAN]'));
+
+                setAssessmentSyncTask(latestAssessment ? { status: latestAssessment.status, error_message: latestAssessment.error_message } : null);
+                setServicePlanSyncTask(latestServicePlan ? { status: latestServicePlan.status, error_message: latestServicePlan.error_message } : null);
+            }
+        } catch (err) {
+            console.error('Error loading note sync status:', err);
+        }
+    }, [patient]);
+
+    useEffect(() => {
+        if (patient) {
+            loadSyncStatus();
+            const interval = setInterval(loadSyncStatus, 5000);
+            return () => clearInterval(interval);
+        }
+    }, [patient, loadSyncStatus]);
+
+    const renderSyncStatusBadge = (task: {status: string, error_message: string | null} | null) => {
+        if (!task) return null;
+        switch (task.status) {
+            case 'pending':
+                return (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-200/30 animate-pulse">
+                        <Clock size={12} />
+                        <span>{language === 'es' ? 'Cola de Sincronización' : 'Sync Queued'}</span>
+                    </div>
+                );
+            case 'processing':
+                return (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border border-blue-200/30 animate-pulse">
+                        <Loader2 className="animate-spin" size={12} />
+                        <span>{language === 'es' ? 'Sincronizando...' : 'Syncing...'}</span>
+                    </div>
+                );
+            case 'completed':
+                return (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200/30">
+                        <CheckCircle2 size={12} />
+                        <span>{language === 'es' ? 'Sincronizado' : 'Synced'}</span>
+                    </div>
+                );
+            case 'failed':
+                return (
+                    <div 
+                        title={task.error_message || ''}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-200/30 cursor-help"
+                    >
+                        <AlertTriangle size={12} />
+                        <span>{language === 'es' ? 'Fallo' : 'Failed'}</span>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
 
     const handleFieldChange = (name: string, value: string) => {
         setEditData(prev => ({ ...prev, [name]: value }));
@@ -445,11 +518,19 @@ export function PatientDetail() {
 
             if (integrationErr) throw integrationErr;
             if (!integration || integration.mfa_status !== 'connected') {
-                toast.error(
-                    language === 'es' 
-                        ? 'Por favor, conecta tus credenciales de Amexzone en Configuración antes de sincronizar.' 
-                        : 'Please connect your Amexzone credentials in Settings before syncing.'
-                );
+                if (integration && integration.mfa_status === 'expired') {
+                    toast.error(
+                        language === 'es'
+                            ? 'Tu sesión de Amexzone ha expirado. Abre la extensión "Clio Sync" y presiona "Sincronizar Sesión Activa".'
+                            : 'Your Amexzone session has expired. Please open the "Clio Sync" extension and click "Sync Active Session".'
+                    );
+                } else {
+                    toast.error(
+                        language === 'es' 
+                            ? 'Por favor, conecta tus credenciales de Amexzone en Configuración antes de sincronizar.' 
+                            : 'Please connect your Amexzone credentials in Settings before syncing.'
+                    );
+                }
                 setIsSyncingToAmexzone(false);
                 return;
             }
@@ -492,6 +573,7 @@ export function PatientDetail() {
                     ? 'Evaluación encolada para sincronizar. Por favor ejecuta el Bot en tu PC para procesarla.' 
                     : 'Assessment queued for sync. Please run the Bot on your PC to process it.'
             );
+            loadSyncStatus();
         } catch (err: any) {
             console.error('Error queueing assessment sync:', err);
             toast.error(language === 'es' ? 'Error al encolar la sincronización.' : 'Error queueing sync.');
@@ -512,11 +594,19 @@ export function PatientDetail() {
 
             if (integrationErr) throw integrationErr;
             if (!integration || integration.mfa_status !== 'connected') {
-                toast.error(
-                    language === 'es' 
-                        ? 'Por favor, conecta tus credenciales de Amexzone en Configuración antes de sincronizar.' 
-                        : 'Please connect your Amexzone credentials in Settings before syncing.'
-                );
+                if (integration && integration.mfa_status === 'expired') {
+                    toast.error(
+                        language === 'es'
+                            ? 'Tu sesión de Amexzone ha expirado. Abre la extensión "Clio Sync" y presiona "Sincronizar Sesión Activa".'
+                            : 'Your Amexzone session has expired. Please open the "Clio Sync" extension and click "Sync Active Session".'
+                    );
+                } else {
+                    toast.error(
+                        language === 'es' 
+                            ? 'Por favor, conecta tus credenciales de Amexzone en Configuración antes de sincronizar.' 
+                            : 'Please connect your Amexzone credentials in Settings before syncing.'
+                    );
+                }
                 setIsSyncingToAmexzone(false);
                 return;
             }
@@ -610,6 +700,7 @@ export function PatientDetail() {
                     ? 'Plan de Servicio encolado para sincronizar. Por favor ejecuta el Bot en tu PC para procesarlo.' 
                     : 'Service Plan queued for sync. Please run the Bot on your PC to process it.'
             );
+            loadSyncStatus();
         } catch (err: any) {
             console.error('Error queueing service plan sync:', err);
             toast.error(language === 'es' ? 'Error al encolar la sincronización.' : 'Error queueing sync.');
@@ -893,9 +984,21 @@ export function PatientDetail() {
 
     return (
         <div className="max-w-[1440px] mx-auto p-4 lg:p-8 space-y-12 animate-in fade-in duration-1000">
-            {/* Sophisticated Context Header */}
-            <header className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100/70 dark:border-slate-800 rounded-[32px] p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative shadow-[0_2px_12px_rgba(0,0,0,0.01)] transition-all">
-                <div className="flex items-center gap-6 min-w-0">
+            <div className="space-y-4">
+                {/* Back Button */}
+                <div className="flex items-center">
+                    <button
+                        onClick={() => navigate('/patients')}
+                        className="group flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-indigo-500 transition-all cursor-pointer bg-transparent border-none p-0 outline-none"
+                    >
+                        <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                        Back to Clients
+                    </button>
+                </div>
+
+                {/* Sophisticated Context Header */}
+                <header className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100/70 dark:border-slate-800 rounded-[32px] p-6 md:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative shadow-[0_2px_12px_rgba(0,0,0,0.01)] transition-all">
+                    <div className="flex items-center gap-6 min-w-0">
                     <div className="relative group shrink-0">
                         <div className={cn(
                             "absolute -inset-2 bg-gradient-to-tr rounded-[32px] blur-xl opacity-40 transform scale-90 group-hover:scale-110 transition-transform duration-700",
@@ -1016,6 +1119,7 @@ export function PatientDetail() {
                     )}
                 </div>
             </header>
+        </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-12 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-slate-800 relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
             {/* Premium Unified Tabbed Interface */}
@@ -1024,10 +1128,9 @@ export function PatientDetail() {
                     <PremiumTrigger value="client" icon={User} label={language === 'es' ? "Cliente" : "Client"} theme="indigo" />
                     <PremiumTrigger value="medical" icon={Stethoscope} label={language === 'es' ? "Médico" : "Medical"} theme="emerald" />
                     <PremiumTrigger value="psychiatric" icon={Brain} label={language === 'es' ? "Psiquiátrico" : "Psychiatric"} theme="purple" />
-                    <PremiumTrigger value="pharmacy" icon={Store} label={language === 'es' ? "Farmacia" : "Pharmacy"} theme="amber" />
-                    <PremiumTrigger value="social" icon={ClipboardList} label={language === 'es' ? "Social (TCM)" : "Social (TCM)"} theme="blue" />
-                    <PremiumTrigger value="assessment" icon={FileText} label={language === 'es' ? "Evaluación (TCM)" : "Assessment (TCM)"} theme="purple" />
-                    <PremiumTrigger value="service_plan" icon={CheckSquare} label={language === 'es' ? "Plan de Servicio (TCM)" : "Service Plan (TCM)"} theme="emerald" />
+                    <PremiumTrigger value="social" icon={ClipboardList} label={language === 'es' ? "Social" : "Social"} theme="blue" />
+                    <PremiumTrigger value="assessment" icon={FileText} label={language === 'es' ? "Evaluación" : "Assessment"} theme="purple" />
+                    <PremiumTrigger value="service_plan" icon={CheckSquare} label={language === 'es' ? "Plan de Servicio" : "Service Plan"} theme="emerald" />
                     <PremiumTrigger value="history" icon={Clock} label={language === 'es' ? "Historial" : "History"} theme="slate" />
                 </TabsList>
 
@@ -1379,6 +1482,50 @@ export function PatientDetail() {
                                 isTextarea
                                 theme="emerald"
                             />
+                            <div className="col-span-2 mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/30">
+                                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
+                                    <Store size={12} className="text-amber-400" />
+                                    {language === 'es' ? 'Farmacia Preferida' : 'Preferred Pharmacy'}
+                                </p>
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                                    <PremiumGlassField
+                                        icon={Store}
+                                        label="Pharmacy Name"
+                                        name="pharmacy_name"
+                                        value={isEditing ? editData.pharmacy_name : patient.pharmacy_name}
+                                        isEditing={isEditing}
+                                        onChange={handleFieldChange}
+                                        theme="amber"
+                                    />
+                                    <PremiumGlassField
+                                        icon={Phone}
+                                        label="Phone Number"
+                                        name="pharmacy_phone"
+                                        value={isEditing ? editData.pharmacy_phone : patient.pharmacy_phone}
+                                        isEditing={isEditing}
+                                        onChange={handleFieldChange}
+                                        theme="amber"
+                                    />
+                                    <PremiumGlassField
+                                        icon={MapPin}
+                                        label="Pharmacy Address"
+                                        name="pharmacy_address"
+                                        value={isEditing ? editData.pharmacy_address : patient.pharmacy_address}
+                                        isEditing={isEditing}
+                                        onChange={handleFieldChange}
+                                        theme="amber"
+                                    />
+                                    <PremiumGlassField
+                                        icon={FileText}
+                                        label="Fax Number"
+                                        name="pharmacy_fax"
+                                        value={isEditing ? editData.pharmacy_fax : patient.pharmacy_fax}
+                                        isEditing={isEditing}
+                                        onChange={handleFieldChange}
+                                        theme="amber"
+                                    />
+                                </div>
+                            </div>
                         </div>
                         </div>
                         )}
@@ -1442,51 +1589,6 @@ export function PatientDetail() {
                         )}
                     </TabsContent>
 
-                    {/* [PHARMACY TAB] */}
-                    <TabsContent value="pharmacy" className="m-0 focus-visible:outline-none">
-                        {activeTab === "pharmacy" && (
-                            <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8">
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                            <PremiumGlassField
-                                icon={Store}
-                                label="Pharmacy Name"
-                                name="pharmacy_name"
-                                value={isEditing ? editData.pharmacy_name : patient.pharmacy_name}
-                                isEditing={isEditing}
-                                onChange={handleFieldChange}
-                                theme="amber"
-                            />
-                            <PremiumGlassField
-                                icon={Phone}
-                                label="Phone Number"
-                                name="pharmacy_phone"
-                                value={isEditing ? editData.pharmacy_phone : patient.pharmacy_phone}
-                                isEditing={isEditing}
-                                onChange={handleFieldChange}
-                                theme="amber"
-                            />
-                            <PremiumGlassField
-                                icon={MapPin}
-                                label="Pharmacy Address"
-                                name="pharmacy_address"
-                                value={isEditing ? editData.pharmacy_address : patient.pharmacy_address}
-                                isEditing={isEditing}
-                                onChange={handleFieldChange}
-                                theme="amber"
-                            />
-                            <PremiumGlassField
-                                icon={FileText}
-                                label="Fax Number"
-                                name="pharmacy_fax"
-                                value={isEditing ? editData.pharmacy_fax : patient.pharmacy_fax}
-                                isEditing={isEditing}
-                                onChange={handleFieldChange}
-                                theme="amber"
-                            />
-                        </div>
-                        </div>
-                        )}
-                    </TabsContent>
 
                     {/* [HISTORY TAB] */}
                     <TabsContent value="history" className="m-0 focus-visible:outline-none">
@@ -2156,6 +2258,7 @@ export function PatientDetail() {
                                         {isSyncingToAmexzone ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
                                         {language === 'es' ? "Sincronizar a Amexzone" : "Sync to Amexzone"}
                                     </button>
+                                    {renderSyncStatusBadge(assessmentSyncTask)}
                                     <button
                                         type="button"
                                         onClick={handleDownloadAssessmentPDF}
@@ -3674,6 +3777,7 @@ export function PatientDetail() {
                                         {isSyncingToAmexzone ? <Loader2 className="animate-spin" size={14} /> : <UploadCloud size={14} />}
                                         {language === 'es' ? "Sincronizar a Amexzone" : "Sync to Amexzone"}
                                     </button>
+                                    {renderSyncStatusBadge(servicePlanSyncTask)}
                                 </div>
                             </div>
 

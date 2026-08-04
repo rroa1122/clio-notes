@@ -23,7 +23,18 @@ import {
     Store,
     Plus,
     UploadCloud,
-    Hash
+    Hash,
+    Coins,
+    DollarSign,
+    Heart,
+    ShieldAlert,
+    Users,
+    GraduationCap,
+    Globe,
+    UserCheck,
+    CheckSquare,
+    MoreHorizontal,
+    AlertTriangle
 } from 'lucide-react';
 import { extractPatientData } from '../../lib/services/patientIntakeService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -36,6 +47,22 @@ import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
 import { searchDiagnoses, type DiagnosisCode } from '../lib/diagnosisCatalog';
 import { cn } from "@/lib/utils";
+import { supabase } from '../../lib/supabaseClient';
+
+const SOCIAL_DOMAINS = [
+    { id: "domain_mental_health", label: "Salud Mental / Mental Health" },
+    { id: "domain_physical_health", label: "Salud Física / Physical Health" },
+    { id: "domain_vocational", label: "Vocacional / Employment" },
+    { id: "domain_education", label: "Educación / Education" },
+    { id: "domain_recreational", label: "Apoyo Social / Social Support" },
+    { id: "domain_daily_living", label: "Actividades de la Vida Diaria / ADLs" },
+    { id: "domain_housing", label: "Vivienda / Housing & Shelter" },
+    { id: "domain_financial", label: "Financiero / Financial & Economic" },
+    { id: "domain_basic_needs", label: "Necesidades Básicas / Basic Needs" },
+    { id: "domain_transportation", label: "Transporte / Transportation" },
+    { id: "domain_legal", label: "Legal / Immigration" },
+    { id: "domain_other", label: "Otros / Other" }
+];
 
 interface PatientCreateModalProps {
     isOpen: boolean;
@@ -88,6 +115,155 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
     const [isSaving, setIsSaving] = useState(false);
     const [isExtracting, setIsExtracting] = useState(false);
     const [activeTab, setActiveTab] = useState('client');
+
+    // Amexzone Search States
+    const [amexSearchName, setAmexSearchName] = useState('');
+    const [amexSearchDob, setAmexSearchDob] = useState('');
+    const handleAmexSearchDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let val = e.target.value;
+        const isDeleting = val.length < amexSearchDob.length;
+        
+        if (!isDeleting) {
+            const clean = val.replace(/\D/g, '').slice(0, 8);
+            if (clean.length > 4) {
+                val = `${clean.slice(0, 2)}/${clean.slice(2, 4)}/${clean.slice(4)}`;
+            } else if (clean.length > 2) {
+                val = `${clean.slice(0, 2)}/${clean.slice(2)}`;
+            } else {
+                val = clean;
+            }
+        }
+        setAmexSearchDob(val);
+    };
+    const isMobile = false; // dummy or check existing variables if any
+    const [isAmexSearching, setIsAmexSearching] = useState(false);
+
+    const handleAmexzoneLookup = async () => {
+        if (!amexSearchName.trim()) {
+            toast.error("Please enter a patient name to search.");
+            return;
+        }
+
+        setIsAmexSearching(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                toast.error("You must be logged in to search Amexzone.");
+                setIsAmexSearching(false);
+                return;
+            }
+
+            const clinicId = await storage.getClinicId();
+
+            // Insert pending task into database
+            const { data: task, error } = await supabase
+                .from('amexzone_note_tasks')
+                .insert({
+                    user_id: user.id,
+                    clinic_id: clinicId,
+                    patient_name: amexSearchName.trim(),
+                    patient_dob: amexSearchDob || null,
+                    note_text: '[IMPORT_PATIENT]',
+                    status: 'pending'
+                })
+                .select()
+                .single();
+
+            if (error || !task) {
+                toast.error("Failed to start search task: " + (error?.message || "unknown error"));
+                setIsAmexSearching(false);
+                return;
+            }
+
+            toast.info("Search task queued. Waiting for local bot to execute...", { duration: 5000 });
+
+            // Poll for task status
+            let attempts = 0;
+            const maxAttempts = 30; // 60 seconds total (30 * 2s)
+            const interval = setInterval(async () => {
+                attempts++;
+                const { data: updatedTask, error: pollError } = await supabase
+                    .from('amexzone_note_tasks')
+                    .select('*')
+                    .eq('id', task.id)
+                    .single();
+
+                if (pollError || !updatedTask) {
+                    console.error("Polling error:", pollError);
+                    return;
+                }
+
+                if (updatedTask.status === 'completed') {
+                    clearInterval(interval);
+                    setIsAmexSearching(false);
+                    toast.success("Patient demographics imported successfully!", { icon: "✨" });
+                    
+                    const data = updatedTask.result_summary;
+                    if (data) {
+                        console.log("🤖 CLIO NOTES - IMPORT DATA RECEIVED FROM BOT:", data);
+                        setFormData(prev => {
+                            const newState = {
+                                ...prev,
+                                first_name: data.first_name || prev.first_name || '',
+                                last_name: data.last_name || prev.last_name || '',
+                                full_name: data.full_name || `${data.first_name} ${data.last_name}`.trim(),
+                                dob: data.dob || prev.dob || '',
+                                phone: data.phone || prev.phone || '',
+                                address: data.address || prev.address || '',
+                                gender: data.gender || prev.gender || '',
+                                insurance_company: data.insurance_company || prev.insurance_company || '',
+                                insurance_id: data.insurance_id || prev.insurance_id || '',
+                                emr_id: data.emr_id || prev.emr_id || '',
+                                ssn: data.ssn || prev.ssn || '',
+                                preferred_language: data.preferred_language || prev.preferred_language || 'English',
+                                case_manager: data.case_manager || prev.case_manager || '',
+                                emergency_contact_name: data.emergency_contact_name || prev.emergency_contact_name || '',
+                                emergency_contact_phone: data.emergency_contact_phone || prev.emergency_contact_phone || '',
+                                diagnoses: data.diagnoses || prev.diagnoses || '',
+                                pcp_name: data.pcp_name || prev.pcp_name || '',
+                                pharmacy_name: data.pharmacy_name || prev.pharmacy_name || '',
+                                pharmacy_phone: data.pharmacy_phone || prev.pharmacy_phone || '',
+                                pharmacy_fax: data.pharmacy_fax || prev.pharmacy_fax || '',
+                                pharmacy_address: data.pharmacy_address || prev.pharmacy_address || '',
+                                psych_name: data.psych_name || prev.psych_name || '',
+                                psych_phone: data.psych_phone || prev.psych_phone || '',
+                                psych_address: data.psych_address || prev.psych_address || '',
+                                psych_conditions: data.mental_conditions || prev.psych_conditions || '',
+                                psych_medications: data.psych_medications || prev.psych_medications || '',
+                                pcp_phone: data.pcp_phone || prev.pcp_phone || '',
+                                pcp_address: data.pcp_address || prev.pcp_address || '',
+                                pcp_conditions: data.physical_conditions || prev.pcp_conditions || '',
+                                pcp_medications: data.pcp_medications || prev.pcp_medications || '',
+                                tcm_social_needs: {
+                                    ...(prev.tcm_social_needs || {}),
+                                    marital_status: data.marital_status || (prev.tcm_social_needs && prev.tcm_social_needs.marital_status) || '',
+                                    education_level: data.education_level || (prev.tcm_social_needs && prev.tcm_social_needs.education_level) || '',
+                                    ssi_details: data.ssi_details || (prev.tcm_social_needs && prev.tcm_social_needs.ssi_details) || '',
+                                    medicaid_details: data.medicaid_status || (prev.tcm_social_needs && prev.tcm_social_needs.medicaid_details) || '',
+                                    medicare_details: data.medicare_status || (prev.tcm_social_needs && prev.tcm_social_needs.medicare_details) || ''
+                                }
+                            };
+                            console.log("🤖 CLIO NOTES - NEW FORM STATE UPDATED:", newState);
+                            return newState;
+                        });
+                    }
+                } else if (updatedTask.status === 'failed') {
+                    clearInterval(interval);
+                    setIsAmexSearching(false);
+                    toast.error(`Search failed: ${updatedTask.error_message || "unknown error"}`);
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    setIsAmexSearching(false);
+                    toast.error("Search timed out. Make sure your local bot is running.");
+                }
+            }, 2000);
+
+        } catch (err) {
+            console.error("Amexzone lookup error:", err);
+            toast.error("An error occurred starting the search.");
+            setIsAmexSearching(false);
+        }
+    };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>) => {
         let file: File | null = null;
@@ -213,6 +389,16 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
         }));
     };
 
+    const handleSocialNeedsTextChange = (field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            tcm_social_needs: {
+                ...(prev.tcm_social_needs || {}),
+                [field]: value
+            }
+        }));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const firstName = formData.first_name?.trim() || '';
@@ -310,14 +496,14 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                             Clinical Intake
                                         </Badge>
                                     </div>
-                                    <DialogDescription className="text-[11px] font-black text-slate-400 dark:text-slate-500 mt-2.5 tracking-[0.05em] uppercase opacity-70">
-                                        Establish a new medical record with comprehensive clinical coordination.
+                                    <DialogDescription className="sr-only">
+                                        Register a new patient record in Clio Suite.
                                     </DialogDescription>
                                 </div>
                             </div>
                         </div>
                     </div>
-
+ 
                     <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
                         {/* Tabs Navigation */}
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
@@ -326,52 +512,135 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     <PremiumTrigger value="client" label="Client" icon={User} theme="indigo" />
                                     <PremiumTrigger value="medical" label="Medical" icon={DoctorIcon} theme="emerald" />
                                     <PremiumTrigger value="psychiatric" label="Psychiatric" icon={PsychIcon} theme="purple" />
-                                    <PremiumTrigger value="pharmacy" label="Pharmacy" icon={Store} theme="amber" />
+                                    <PremiumTrigger value="social" label="Social" icon={ClipboardList} theme="blue" />
                                 </TabsList>
                             </div>
-
+ 
                             <div className="flex-1 overflow-y-auto px-10 py-6 custom-scrollbar bg-slate-50/20 dark:bg-slate-950/10">
                                 {/* [CLIENT TAB] */}
                                 <TabsContent value="client" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
-                                    {/* AI Extraction Dropzone */}
-                                    <div 
-                                        className={cn(
-                                            "mb-6 relative rounded-[2rem] border border-dashed border-indigo-200 dark:border-indigo-900 bg-indigo-50/20 dark:bg-indigo-950/10 overflow-hidden transition-all duration-500 group",
-                                            isExtracting ? "border-indigo-400 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-inner" : "hover:border-indigo-300 dark:hover:border-indigo-800 hover:bg-white dark:hover:bg-slate-950 hover:shadow-[0_20px_50px_-20px_rgba(79,70,229,0.1)] dark:hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.4)] focus-within:border-indigo-400 focus-within:bg-white dark:focus-within:bg-slate-950"
-                                        )}
-                                        onDragOver={(e) => e.preventDefault()}
-                                        onDrop={handleFileUpload}
-                                    >
-                                        <input 
-                                            type="file" 
-                                            id="intake-upload" 
-                                            accept=".pdf,image/*"
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-                                            onChange={handleFileUpload}
-                                            disabled={isExtracting}
-                                        />
-                                        <div className="flex flex-col items-center justify-center py-6 px-6 text-center relative z-0">
-                                            {isExtracting ? (
-                                                <div className="animate-in fade-in duration-500 flex flex-col items-center">
-                                                    <div className="size-16 rounded-3xl bg-indigo-100/50 dark:bg-indigo-950/50 text-indigo-500 flex items-center justify-center mb-5 relative group-hover:scale-110 transition-transform">
-                                                        <Loader2 className="absolute h-7 w-7 animate-spin text-indigo-600 dark:text-indigo-400" />
-                                                        <FileText className="h-7 w-7 opacity-20" />
-                                                    </div>
-                                                    <h3 className="text-[15px] font-black text-indigo-950 dark:text-indigo-200 uppercase tracking-[0.2em] mb-1">Analyzing...</h3>
-                                                    <p className="text-[11px] font-bold text-indigo-500/70 dark:text-indigo-400 tracking-tight">Extracting patient demographics and clinical data.</p>
-                                                </div>
-                                            ) : (
-                                                <div className="animate-in fade-in duration-500 flex flex-col items-center transition-transform group-hover:-translate-y-1">
-                                                    <div className="size-16 rounded-[22px] bg-white dark:bg-slate-900 text-indigo-500 flex items-center justify-center shadow-md mb-5 border border-indigo-50 dark:border-indigo-950 ring-8 ring-indigo-50/30 dark:ring-indigo-950/40 group-hover:scale-110 transition-all duration-500">
-                                                        <UploadCloud size={28} />
-                                                    </div>
-                                                    <h3 className="text-[15px] font-black text-slate-900 dark:text-slate-100 uppercase tracking-[0.25em] mb-3">Upload Clinical Intake</h3>
-                                                    <p className="text-[11px] font-bold text-slate-400 dark:text-slate-400 max-w-sm mb-5 leading-relaxed tracking-wide opacity-80">Drag and drop forms to <span className="text-indigo-500 font-black">auto-fill</span> the profile using Health AI.</p>
-                                                    <Badge variant="outline" className="bg-white dark:bg-slate-950 border-slate-200/55 dark:border-slate-800 text-slate-400 dark:text-slate-400 font-black px-4 py-1.5 text-[9px] uppercase tracking-widest rounded-full shadow-sm">
-                                                        PDF • JPG • PNG
-                                                    </Badge>
-                                                </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                        {/* AI Extraction Dropzone */}
+                                        <div 
+                                            className={cn(
+                                                "relative rounded-[2rem] border border-dashed overflow-hidden transition-all duration-500 group flex flex-col justify-center min-h-[300px]",
+                                                isExtracting 
+                                                    ? "border-indigo-500 bg-indigo-500/10 dark:bg-indigo-950/20 shadow-[inset_0_2px_20px_rgba(99,102,241,0.15)]" 
+                                                    : "border-slate-200/80 dark:border-slate-800/80 bg-slate-50/30 dark:bg-slate-950/20 hover:border-indigo-400/80 hover:bg-gradient-to-b hover:from-white hover:to-indigo-50/10 dark:hover:from-slate-950 dark:hover:to-indigo-950/5 hover:shadow-[0_20px_40px_-20px_rgba(79,70,229,0.12)]"
                                             )}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDrop={handleFileUpload}
+                                        >
+                                            <input 
+                                                type="file" 
+                                                id="intake-upload" 
+                                                accept=".pdf,image/*"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                                                onChange={handleFileUpload}
+                                                disabled={isExtracting || isAmexSearching}
+                                            />
+                                            <div className="flex flex-col items-center justify-center p-8 text-center relative z-0">
+                                                {isExtracting ? (
+                                                    <div className="animate-in fade-in duration-500 flex flex-col items-center">
+                                                        <div className="size-16 rounded-[22px] bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-5 relative group-hover:scale-105 transition-transform duration-300">
+                                                            <Loader2 className="absolute h-7 w-7 animate-spin text-indigo-600 dark:text-indigo-400" />
+                                                            <FileText className="h-6 w-6 opacity-30" />
+                                                        </div>
+                                                        <h3 className="text-sm font-black text-indigo-950 dark:text-indigo-200 uppercase tracking-[0.2em] mb-1.5">Analyzing Intake...</h3>
+                                                        <p className="text-[11px] font-bold text-indigo-500/70 dark:text-indigo-450 tracking-tight leading-relaxed max-w-[200px]">Extracting demographics & clinical details via Health AI</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="animate-in fade-in duration-500 flex flex-col items-center transition-all duration-500 group-hover:-translate-y-1">
+                                                        <div className="size-16 rounded-[22px] bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-md border border-slate-100 dark:border-slate-800 mb-5 group-hover:scale-110 group-hover:border-indigo-200/50 group-hover:shadow-[0_8px_30px_rgb(99,102,241,0.12)] dark:group-hover:shadow-none transition-all duration-500 relative">
+                                                            <div className="absolute inset-0 bg-indigo-500/5 rounded-[22px] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            <UploadCloud size={28} className="relative z-10" />
+                                                        </div>
+                                                        <h3 className="text-[14px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-[0.2em] mb-2.5">Upload Clinical Intake</h3>
+                                                        <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 max-w-[240px] mb-6 leading-relaxed">
+                                                            Drag and drop patient forms to <span className="text-indigo-500 font-black">auto-fill</span> this entire profile automatically.
+                                                        </p>
+                                                        <Badge variant="outline" className="bg-white/80 dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-800/80 text-slate-450 dark:text-slate-400 font-bold px-4 py-1.5 text-[9px] uppercase tracking-widest rounded-full shadow-sm">
+                                                            PDF • JPG • PNG
+                                                        </Badge>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+ 
+                                        {/* Amexzone Lookup */}
+                                        <div className="relative rounded-[2rem] border border-slate-200/75 dark:border-slate-800/80 bg-white/60 dark:bg-slate-950/40 p-8 flex flex-col justify-between shadow-sm overflow-hidden group min-h-[300px] hover:border-indigo-400/30 hover:shadow-[0_20px_40px_-20px_rgba(99,102,241,0.05)] transition-all duration-500">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/20 dark:bg-indigo-950/5 rounded-full blur-3xl -mr-16 -mt-16 -z-10" />
+                                            
+                                            <div className="flex flex-col h-full justify-between gap-5">
+                                                <div>
+                                                    <div className="flex items-center gap-3.5 mb-2.5">
+                                                        <div className="size-8 rounded-[12px] bg-indigo-500/10 text-indigo-500 flex items-center justify-center border border-indigo-500/5 shadow-sm relative overflow-hidden">
+                                                            {isAmexSearching && <span className="absolute inset-0 bg-indigo-500/10 animate-pulse" />}
+                                                            <Activity size={16} className="relative z-10 animate-pulse" />
+                                                        </div>
+                                                        <h3 className="text-[14px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-[0.2em] leading-none">
+                                                            Amexzone Lookup
+                                                        </h3>
+                                                    </div>
+                                                    <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 leading-relaxed mb-5">
+                                                        Retrieve demographic, social and provider coordination details in real-time.
+                                                    </p>
+ 
+                                                    {/* Input Fields */}
+                                                    <div className="space-y-4">
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[9px] font-black text-slate-450 dark:text-slate-550 uppercase tracking-widest block ml-2">Patient Name</label>
+                                                            <div className="rounded-[28px] border border-slate-200/60 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/60 h-10 relative overflow-hidden focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-500/5 transition-all">
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="E.g. Olga Aguila"
+                                                                    value={amexSearchName}
+                                                                    onChange={(e) => setAmexSearchName(e.target.value)}
+                                                                    disabled={isAmexSearching || isExtracting}
+                                                                    className="absolute inset-0 w-full h-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none px-5 text-xs font-bold text-slate-850 dark:text-slate-100 placeholder:text-slate-350 dark:placeholder:text-slate-650"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <label className="text-[9px] font-black text-slate-455 dark:text-slate-555 uppercase tracking-widest block ml-2">Date of Birth (Optional)</label>
+                                                            <div className="rounded-[28px] border border-slate-200/60 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/60 h-10 relative overflow-hidden focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50/5 transition-all">
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="MM/DD/YYYY"
+                                                                    value={amexSearchDob}
+                                                                    onChange={handleAmexSearchDobChange}
+                                                                    disabled={isAmexSearching || isExtracting}
+                                                                    className="absolute inset-0 w-full h-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-none px-5 text-xs font-bold text-slate-850 dark:text-slate-100 text-left cursor-text"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+ 
+                                                <Button
+                                                    type="button"
+                                                    onClick={handleAmexzoneLookup}
+                                                    disabled={isAmexSearching || isExtracting || !amexSearchName.trim()}
+                                                    className={cn(
+                                                        "w-full h-10 rounded-[28px] text-white font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-md transition-all duration-300",
+                                                        isAmexSearching || isExtracting || !amexSearchName.trim()
+                                                            ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 border-slate-200/50 dark:border-slate-800"
+                                                            : "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 shadow-indigo-100 dark:shadow-none hover:shadow-indigo-200/30"
+                                                    )}
+                                                >
+                                                    {isAmexSearching ? (
+                                                        <>
+                                                            <Loader2 size={13} className="animate-spin" />
+                                                            <span>Searching Amexzone...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <UserCheck size={13} />
+                                                            <span>Search & Import</span>
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -495,6 +764,18 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                             <PremiumGlassField icon={MapPin} label="PCP Practice Address" name="pcp_address" value={formData.pcp_address} onChange={handleFieldChange} theme="emerald" />
                                             <PremiumGlassField icon={Activity} label="Physical Conditions" name="pcp_conditions" value={formData.pcp_conditions} onChange={handleFieldChange} theme="emerald" isTextarea />
                                             <PremiumGlassField icon={HeartPulse} label="Current Medications" name="pcp_medications" value={formData.pcp_medications} onChange={handleFieldChange} theme="emerald" isTextarea />
+                                            <div className="col-span-2 mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/30">
+                                                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 flex items-center gap-2">
+                                                    <Store size={12} className="text-amber-400" />
+                                                    Preferred Pharmacy
+                                                </p>
+                                                <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                                                    <PremiumGlassField icon={Store} label="Pharmacy Name" name="pharmacy_name" value={formData.pharmacy_name} onChange={handleFieldChange} theme="amber" />
+                                                    <PremiumGlassField icon={Phone} label="Pharmacy Phone" name="pharmacy_phone" value={formData.pharmacy_phone} onChange={handleFieldChange} theme="amber" />
+                                                    <PremiumGlassField icon={MapPin} label="Pharmacy Address" name="pharmacy_address" value={formData.pharmacy_address} onChange={handleFieldChange} theme="amber" className="col-span-2" />
+                                                    <PremiumGlassField icon={FileText} label="Pharmacy Fax" name="pharmacy_fax" value={formData.pharmacy_fax} onChange={handleFieldChange} theme="amber" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </TabsContent>
@@ -512,14 +793,119 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     </div>
                                 </TabsContent>
 
-                                {/* [PHARMACY TAB] */}
-                                <TabsContent value="pharmacy" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
-                                    <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
-                                        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                                            <PremiumGlassField icon={Store} label="Pharmacy Name" name="pharmacy_name" value={formData.pharmacy_name} onChange={handleFieldChange} theme="amber" />
-                                            <PremiumGlassField icon={Phone} label="Pharmacy Phone" name="pharmacy_phone" value={formData.pharmacy_phone} onChange={handleFieldChange} theme="amber" />
-                                            <PremiumGlassField icon={MapPin} label="Pharmacy Address" name="pharmacy_address" value={formData.pharmacy_address} onChange={handleFieldChange} theme="amber" className="col-span-2" />
-                                            <PremiumGlassField icon={FileText} label="Pharmacy Fax" name="pharmacy_fax" value={formData.pharmacy_fax} onChange={handleFieldChange} theme="amber" />
+                                {/* [SOCIAL TAB] */}
+                                <TabsContent value="social" className="m-0 focus-visible:outline-none animate-in fade-in duration-300">
+                                    <div className="space-y-6">
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
+                                            <div className="mb-6 border-b border-slate-100 dark:border-slate-800/20 pb-3 flex items-center gap-2">
+                                                <Coins size={14} className="text-indigo-500" />
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                                    1. Government Assistance
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                                                <PremiumGlassField icon={DollarSign} label="Food Stamps Amount" name="food_stamps_amount" value={formData.tcm_social_needs?.food_stamps_amount || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                                <PremiumGlassField icon={Calendar} label="Food Stamps Since" name="food_stamps_since" value={formData.tcm_social_needs?.food_stamps_since || ''} onChange={handleSocialNeedsTextChange} theme="indigo" type="date" />
+                                                <PremiumGlassField icon={FileText} label="Medicaid Status/No." name="medicaid_details" value={formData.tcm_social_needs?.medicaid_details || ''} onChange={handleSocialNeedsTextChange} theme="indigo" className="col-span-2" />
+                                                <PremiumGlassField icon={FileText} label="Medicare Status/No." name="medicare_details" value={formData.tcm_social_needs?.medicare_details || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                                <PremiumGlassField icon={FileText} label="SSI Details" name="ssi_details" value={formData.tcm_social_needs?.ssi_details || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
+                                            <div className="mb-6 border-b border-slate-100 dark:border-slate-800/20 pb-3 flex items-center gap-2">
+                                                <Users size={14} className="text-indigo-500" />
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                                    2. Family & Cohabitation
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                                                <PremiumGlassField icon={GraduationCap} label="Education Level" name="education_level" value={formData.tcm_social_needs?.education_level || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                                <PremiumGlassField icon={Heart} label="Marital Status" name="marital_status" value={formData.tcm_social_needs?.marital_status || ''} onChange={handleSocialNeedsTextChange} theme="indigo" options={['Single', 'Married', 'Divorced', 'Widowed', 'Separated']} />
+                                                <PremiumGlassField icon={Users} label="Who they live with (Name, relationship, age)" name="co_habitants" value={formData.tcm_social_needs?.co_habitants || ''} onChange={handleSocialNeedsTextChange} theme="indigo" className="col-span-2" isTextarea />
+                                                <PremiumGlassField icon={Users} label="Number of Children" name="children_count" value={formData.tcm_social_needs?.children_count || ''} onChange={handleSocialNeedsTextChange} theme="indigo" type="number" />
+                                                <PremiumGlassField icon={MapPin} label="Where children live" name="children_location" value={formData.tcm_social_needs?.children_location || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
+                                            <div className="mb-6 border-b border-slate-100 dark:border-slate-800/20 pb-3 flex items-center gap-2">
+                                                <Briefcase size={14} className="text-indigo-500" />
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                                    3. Employment & Financials
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                                                <PremiumGlassField icon={Briefcase} label="Occupation" name="occupation" value={formData.tcm_social_needs?.occupation || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                                <PremiumGlassField icon={Calendar} label="Retirement / Disability Date" name="retirement_date" value={formData.tcm_social_needs?.retirement_date || ''} onChange={handleSocialNeedsTextChange} theme="indigo" type="date" />
+                                                <PremiumGlassField icon={DollarSign} label="Supplemental SSI Amount" name="ssi_amount" value={formData.tcm_social_needs?.ssi_amount || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                                <PremiumGlassField icon={DollarSign} label="SSA Amount" name="ssa_amount" value={formData.tcm_social_needs?.ssa_amount || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
+                                            <div className="mb-6 border-b border-slate-100 dark:border-slate-800/20 pb-3 flex items-center gap-2">
+                                                <Globe size={14} className="text-indigo-500" />
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                                    4. Origin & Immigration
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                                                <PremiumGlassField icon={Globe} label="Country of Origin" name="origin_country" value={formData.tcm_social_needs?.origin_country || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                                <PremiumGlassField icon={Calendar} label="US Entry Date" name="us_entry_date" value={formData.tcm_social_needs?.us_entry_date || ''} onChange={handleSocialNeedsTextChange} theme="indigo" type="date" />
+                                                <PremiumGlassField icon={UserCheck} label="Citizen? (Include Year)" name="citizenship_status" value={formData.tcm_social_needs?.citizenship_status || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                                <PremiumGlassField icon={UserCheck} label="Resident?" name="residence_status" value={formData.tcm_social_needs?.residence_status || ''} onChange={handleSocialNeedsTextChange} theme="indigo" />
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
+                                            <div className="mb-6 border-b border-slate-100 dark:border-slate-800/20 pb-3 flex items-center gap-2">
+                                                <Coins size={14} className="text-indigo-500" />
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                                    5. Financial Support Services
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <TcmModalCheckbox label="Regular Income / Renta Regular" field="regular_income" value={formData.tcm_social_needs?.regular_income} onChange={handleSocialNeedsChange} />
+                                                <TcmModalCheckbox label="Regular Rent / Pago Regular de Renta" field="regular_rent" value={formData.tcm_social_needs?.regular_rent} onChange={handleSocialNeedsChange} />
+                                                <TcmModalCheckbox label="Plan 8 / Section 8" field="plan_8" value={formData.tcm_social_needs?.plan_8} onChange={handleSocialNeedsChange} />
+                                                <TcmModalCheckbox label="Low Income Housing (Current) / Bajo Recurso" field="low_income" value={formData.tcm_social_needs?.low_income} onChange={handleSocialNeedsChange} />
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
+                                            <div className="mb-6 border-b border-slate-100 dark:border-slate-800/20 pb-3 flex items-center gap-2">
+                                                <CheckSquare size={14} className="text-indigo-500" />
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                                    6. Services Needed (12 Domains)
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {SOCIAL_DOMAINS.map((domain) => (
+                                                    <TcmModalCheckbox
+                                                        key={domain.id}
+                                                        label={domain.label}
+                                                        field={domain.id}
+                                                        value={formData.tcm_social_needs?.[domain.id]}
+                                                        onChange={handleSocialNeedsChange}
+                                                        onTextChange={handleSocialNeedsTextChange}
+                                                        noteValue={formData.tcm_social_needs?.[`${domain.id}_note`]}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 rounded-[1.5rem] p-8 shadow-sm">
+                                            <div className="mb-6 border-b border-slate-100 dark:border-slate-800/20 pb-3 flex items-center gap-2">
+                                                <MoreHorizontal size={14} className="text-indigo-500" />
+                                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                                    7. Other Details & Surgeries
+                                                </h4>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-x-6 gap-y-5 col-span-2">
+                                                <PremiumGlassField icon={FileText} label="Other Details" name="other_details" value={formData.tcm_social_needs?.other_details || ''} onChange={handleSocialNeedsTextChange} theme="indigo" isTextarea />
+                                                <PremiumGlassField icon={FileText} label="Surgeries" name="surgeries" value={formData.tcm_social_needs?.surgeries || ''} onChange={handleSocialNeedsTextChange} theme="indigo" isTextarea />
+                                            </div>
                                         </div>
                                     </div>
                                 </TabsContent>
@@ -538,24 +924,29 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     type="button"
                                     variant="ghost"
                                     onClick={onClose}
-                                    className="flex-1 md:w-32 h-12 rounded-full font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors"
+                                    className="flex-1 md:w-32 h-11 rounded-[28px] font-black text-[10px] uppercase tracking-widest text-slate-400 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-450 hover:bg-rose-500/5 dark:hover:bg-rose-500/10 border border-transparent hover:border-rose-500/10 transition-all duration-300 animate-none hover:shadow-none shadow-none"
                                 >
                                     Discard
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={isSaving || !formData.first_name || !formData.last_name}
-                                    className="flex-1 md:px-12 h-12 rounded-full font-black text-[10px] uppercase tracking-[0.15em] bg-indigo-950 hover:bg-indigo-900 text-white border border-indigo-800/20 shadow-xl shadow-indigo-200/50 gap-3 transition-all active:scale-[0.97] group/btn relative overflow-hidden"
+                                    className={cn(
+                                        "flex-1 md:px-12 h-11 rounded-[28px] font-black text-[10px] uppercase tracking-[0.2em] text-white border gap-3 transition-all duration-350 active:scale-[0.97] group/btn relative overflow-hidden",
+                                        isSaving || !formData.first_name || !formData.last_name
+                                            ? "bg-slate-100 dark:bg-slate-800/80 text-slate-400 dark:text-slate-650 border-slate-200/50 dark:border-slate-800 shadow-none cursor-not-allowed"
+                                            : "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 border-indigo-500/10 shadow-lg shadow-indigo-500/15 dark:shadow-none hover:shadow-indigo-550/25 hover:scale-[1.02] cursor-pointer"
+                                    )}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/btn:animate-[shimmer_1.5s_infinite] pointer-events-none" />
                                     {isSaving ? (
                                         <>
-                                            <Loader2 className="animate-spin" size={16} />
+                                            <Loader2 className="animate-spin" size={15} />
                                             Establishing...
                                         </>
                                     ) : (
                                         <>
-                                            <Save size={15} className="text-indigo-300 group-hover/btn:scale-110 transition-transform" />
+                                            <Save size={14} className="text-white opacity-80 group-hover/btn:scale-110 transition-transform duration-300" />
                                             Register Patient
                                         </>
                                     )}
@@ -698,22 +1089,45 @@ function TcmModalCheckbox({
     label, 
     field, 
     value, 
-    onChange 
+    onChange,
+    onTextChange,
+    noteValue
 }: { 
     label: string, 
     field: string, 
     value: boolean | undefined, 
-    onChange: (field: string, checked: boolean) => void 
+    onChange: (field: string, checked: boolean) => void,
+    onTextChange?: (field: string, value: string) => void,
+    noteValue?: string
 }) {
+    const isChecked = !!value;
+    const noteField = `${field}_note`;
+
     return (
-        <label className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer transition-all active:scale-[0.98]">
-            <input 
-                type="checkbox" 
-                checked={!!value} 
-                onChange={(e) => onChange(field, e.target.checked)} 
-                className="size-4 rounded border-slate-300 dark:border-slate-700 text-indigo-650 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-0 dark:bg-slate-950" 
-            />
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 select-none">{label}</span>
-        </label>
+        <div className={cn(
+            "flex flex-col gap-2 px-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl transition-all w-full",
+            isChecked && "border-indigo-500/30 dark:border-indigo-500/20 bg-indigo-50/5 dark:bg-indigo-950/10"
+        )}>
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input 
+                    type="checkbox" 
+                    checked={isChecked} 
+                    onChange={(e) => onChange(field, e.target.checked)} 
+                    className="size-4 rounded border-slate-300 dark:border-slate-700 text-indigo-650 focus:ring-indigo-500 focus:ring-offset-0 focus:ring-0 dark:bg-slate-950" 
+                />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{label}</span>
+            </label>
+            {isChecked && onTextChange && (
+                <div className="ml-7 animate-in slide-in-from-top-1 duration-200">
+                    <textarea
+                        rows={2}
+                        placeholder="Write details or notes here..."
+                        value={noteValue || ''}
+                        onChange={(e) => onTextChange(noteField, e.target.value)}
+                        className="w-full text-xs px-3 py-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none min-h-[50px]"
+                    />
+                </div>
+            )}
+        </div>
     );
 }

@@ -87,7 +87,7 @@ export const toISO = (dateStr: string | null, timeStr: string | null): string | 
  * Extracts provider and normalized time range from a ClioNote.
  * Handles both Standard and TCM structures.
  */
-export const extractNormalizedTimeRange = (note: ClioNote): NormalizedTimeRange => {
+export const extractNormalizedTimeRange = (note: ClioNote, fallbackProvider?: string): NormalizedTimeRange => {
     const getValidStr = (...args: (string | null | undefined)[]): string | null => {
         for (const arg of args) {
             if (arg && typeof arg === 'string' && arg.trim() !== '' && arg.trim() !== '—') {
@@ -97,24 +97,32 @@ export const extractNormalizedTimeRange = (note: ClioNote): NormalizedTimeRange 
         return null;
     };
 
-    let provider = '';
-    let dateStr: string | null = null;
-    let startTimeStr: string | null = null;
-    let endTimeStr: string | null = null;
+    // Extract provider with fallback hierarchy
+    const provider = getValidStr(
+        note.staff?.case_manager_name,
+        note.provider?.provider_name,
+        note.meta?.provider
+    ) || fallbackProvider || 'Clinician';
 
-    // 1. Try Standard Note Paths
-    provider = getValidStr(note.provider?.provider_name, note.meta?.provider) || '';
-    dateStr = getValidStr(note.appointment?.date_of_service, note.meta?.visitDate, note.meta?.visit_date);
-    startTimeStr = getValidStr(note.appointment?.start_time);
-    endTimeStr = getValidStr(note.appointment?.end_time);
+    // Extract date with fallback hierarchy
+    const dateStr = getValidStr(
+        note.encounter?.dos_date,
+        note.appointment?.date_of_service,
+        note.meta?.visitDate,
+        note.meta?.visit_date
+    );
 
-    // 2. Try TCM Note Paths (if standard failed or for TCM specific fields)
-    if (note.meta?.template_id?.startsWith('tcm_')) {
-        provider = getValidStr(provider, note.staff?.case_manager_name) || '';
-        dateStr = getValidStr(dateStr, note.encounter?.dos_date);
-        startTimeStr = getValidStr(startTimeStr, note.encounter?.time_in);
-        endTimeStr = getValidStr(endTimeStr, note.encounter?.time_out);
-    }
+    // Extract start time with fallback hierarchy
+    const startTimeStr = getValidStr(
+        note.encounter?.time_in,
+        note.appointment?.start_time
+    );
+
+    // Extract end time with fallback hierarchy
+    const endTimeStr = getValidStr(
+        note.encounter?.time_out,
+        note.appointment?.end_time
+    );
 
     const startAtISO = toISO(dateStr, startTimeStr);
     const endAtISO = toISO(dateStr, endTimeStr);

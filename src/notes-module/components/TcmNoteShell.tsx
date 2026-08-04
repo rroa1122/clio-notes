@@ -8,8 +8,9 @@ import { toast } from 'sonner';
 import { 
     Save, CheckCircle2, CheckCircle, X, PenTool, Plus, Trash2, Copy, Check, AlertCircle, Lock,
     Calendar, Printer, Edit3, FileText, User, Activity, ClipboardList, MapPin, Clock, 
-    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw
+    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw, ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { DatePicker } from '../../components/ui/date-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { TimeSpinner } from '../../components/ui/time-spinner';
@@ -174,17 +175,144 @@ const SectionHeader = ({ title, onCopy, isCopied, icon: Icon }: { title: string,
     </div>
 );
 
-const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField }: any) => {
+const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField, parentTemplateId }: any) => {
     const isOtcNote = (
         (mergedNote.subTemplate || "").toLowerCase().includes("otc") ||
         (mergedNote._frontend_service_title || "").toLowerCase().includes("otc") ||
         (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")
     );
 
-    // Exactly one domain checked: OTC -> #2, otherwise -> #1
+    const templateId = parentTemplateId || mergedNote.template_id || mergedNote.templateId || mergedNote.meta?.template_id;
+    const isHurricaneNote = (
+        templateId === 'tcm_hurricane_addendum_note' ||
+        templateId === 'tcm_hurricane_update_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("hurricane") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("hurricane") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("hurricane") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("hurricane")
+    );
+
+    const isStsNote = (
+        templateId === 'tcm_sts_complete_note' ||
+        templateId === 'tcm_sts_collect_note' ||
+        templateId === 'tcm_sts_submit_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("sts") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("sts") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("sts") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("sts")
+    );
+
+    const isDppNote = (
+        templateId === 'tcm_dpp_obtain_note' ||
+        templateId === 'tcm_dpp_complete_note' ||
+        templateId === 'tcm_dpp_submit_pcp_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("dpp") ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("handicap") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("dpp") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("dpp") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("dpp") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("handicap")
+    );
+
+    const isMhvDonationNote = (
+        templateId === 'tcm_mhv_provide_donation_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("mhv + prov") ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("provide clothing") ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("provide food") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("mhv + prov") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("mhv + prov") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("mhv + prov")
+    );
+
+    const isDonationObtainNote = (
+        templateId === 'tcm_donation_obtain_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("obtain supply") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("obtain supply") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("obtain supply") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("upd food donat") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("obt food donat") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("upd cloth donat") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("obt cloth donat")
+    );
+
+    const isVaccinationAssistanceNote = (
+        templateId === 'tcm_vaccination_assistance_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("vaccination") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("vaccination") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("vaccination") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("update hepatitis") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("coordinate hepatitis") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("assisted hepatitis")
+    );
+
+    const isApptCoordNote = (
+        templateId === 'tcm_provider_appt_coord_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("appt coord") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("appt coord") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("appt coord") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("appointment coordination")
+    );
+
+    const isUscisAssistanceNote = (
+        templateId === 'tcm_uscis_assistance_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("uscis") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("uscis") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("uscis") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("uscis")
+    );
+
+    const isHousingAssistanceNote = (
+        templateId === 'tcm_housing_assistance_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("housing") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("housing") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("housing") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("housing")
+    );
+
+    // Exactly one domain checked: Hurricane -> #12, OTC -> #2, STS -> #10, otherwise -> #1
     let isChecked = false;
-    if (isOtcNote) {
+    if (isHurricaneNote) {
+        isChecked = domain.path === 'services.domains_selected.12_other';
+    } else if (isOtcNote || isVaccinationAssistanceNote) {
         isChecked = domain.path === 'services.domains_selected.2_physical_health_medical_dental';
+    } else if (isStsNote || isDppNote) {
+        isChecked = domain.path === 'services.domains_selected.10_transportation';
+    } else if (isMhvDonationNote) {
+        isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse' || domain.path === 'services.domains_selected.9_basic_needs';
+    } else if (isDonationObtainNote) {
+        isChecked = domain.path === 'services.domains_selected.9_basic_needs';
+    } else if (isApptCoordNote) {
+        const titleLower = (mergedNote.services?.service_focus_title || "").toLowerCase();
+        const narrLower = (mergedNote.narrative?.summary_notes || "").toLowerCase();
+        const wantsPsych = titleLower.includes("psych") || titleLower.includes("mental");
+        const wantsPcp = titleLower.includes("pcp") || titleLower.includes("primary care") || titleLower.includes("medical") || titleLower.includes("specialist");
+        const wantsTrans = titleLower.includes("transport") || titleLower.includes("nemt") || narrLower.includes("transportation") || narrLower.includes("nemt") || narrLower.includes("saferide");
+        
+        if (domain.path === 'services.domains_selected.1_mental_health_substance_abuse') {
+            isChecked = wantsPsych || (!wantsPsych && !wantsPcp && !wantsTrans);
+        } else if (domain.path === 'services.domains_selected.2_physical_health_medical_dental') {
+            isChecked = wantsPcp;
+        } else if (domain.path === 'services.domains_selected.10_transportation') {
+            isChecked = wantsTrans;
+        } else {
+            isChecked = false;
+        }
+    } else if (isUscisAssistanceNote) {
+        const narrLower = (mergedNote.narrative?.summary_notes || "").toLowerCase();
+        const wantsAdl = narrLower.includes("form") || narrLower.includes("paperwork") || narrLower.includes("document") || narrLower.includes("organize") || narrLower.includes("residency");
+        const wantsPsych = narrLower.includes("anxiety") || narrLower.includes("anxious") || narrLower.includes("emotional support") || narrLower.includes("reassurance");
+        
+        if (domain.path === 'services.domains_selected.11_legal_immigration') {
+            isChecked = true;
+        } else if (domain.path === 'services.domains_selected.6_activities_of_daily_living') {
+            isChecked = wantsAdl;
+        } else if (domain.path === 'services.domains_selected.1_mental_health_substance_abuse') {
+            isChecked = wantsPsych;
+        } else {
+            isChecked = false;
+        }
+    } else if (isHousingAssistanceNote) {
+        isChecked = domain.path === 'services.domains_selected.7_housing_shelter';
     } else {
         isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse';
     }
@@ -208,6 +336,26 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField }: any) 
                     </div>
                     <span className="text-[9px] font-bold text-indigo-900 dark:text-indigo-250">
                         Over the counter (OTC) medications.
+                    </span>
+                </div>
+            )}
+            {isChecked && domain.path === 'services.domains_selected.10_transportation' && isStsNote && (
+                <div className="pl-6 flex items-center gap-2 py-0.5 select-none">
+                    <div className="size-3.5 flex items-center justify-center rounded border-2 border-indigo-600 bg-indigo-600 text-white">
+                        <Check size={8} className="stroke-[4]" />
+                    </div>
+                    <span className="text-[9px] font-bold text-indigo-900 dark:text-indigo-250">
+                        Special Transportation Services (STS).
+                    </span>
+                </div>
+            )}
+            {isChecked && domain.path === 'services.domains_selected.10_transportation' && isDppNote && (
+                <div className="pl-6 flex items-center gap-2 py-0.5 select-none">
+                    <div className="size-3.5 flex items-center justify-center rounded border-2 border-indigo-600 bg-indigo-600 text-white">
+                        <Check size={8} className="stroke-[4]" />
+                    </div>
+                    <span className="text-[9px] font-bold text-indigo-900 dark:text-indigo-250">
+                        Disabled Parking Permit (DPP).
                     </span>
                 </div>
             )}
@@ -540,6 +688,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     onPrint
 }) => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [templates, setTemplates] = useState<Template[]>([]);
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
     const [noteOverrides, setNoteOverrides] = useState<any>({});
@@ -563,6 +712,32 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     const [hasInternalTimeConflict, setHasInternalTimeConflict] = useState(false);
     const [focusedTimeKey, setFocusedTimeKey] = useState<string | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [syncTask, setSyncTask] = useState<{ status: string; error_message: string | null } | null>(null);
+
+    const loadSyncStatus = React.useCallback(async () => {
+        const noteIdToSync = note?.id || lastSavedId;
+        if (!noteIdToSync) return;
+        try {
+            const { data, error } = await supabase
+                .from('amexzone_note_tasks')
+                .select('status, error_message')
+                .eq('note_id', noteIdToSync)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (error) throw error;
+            setSyncTask(data || null);
+        } catch (err) {
+            console.error('Error loading note sync status:', err);
+        }
+    }, [note?.id, lastSavedId]);
+
+    useEffect(() => {
+        loadSyncStatus();
+        const interval = setInterval(loadSyncStatus, 5000);
+        return () => clearInterval(interval);
+    }, [loadSyncStatus]);
 
     const handleRequestSignature = async () => {
         if (!supervisorEmailInput || !supervisorEmailInput.includes('@')) {
@@ -973,89 +1148,192 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
             // Verify integration exists and is connected
             const { data: integration, error: intError } = await supabase
                 .from('provider_integrations')
-                .select('mfa_status')
+                .select('*')
                 .eq('user_id', user?.id)
                 .maybeSingle();
 
             if (intError) throw intError;
 
-            if (!integration) {
-                toast.error("Please connect your EHR integration in settings first.");
+            if (!integration || integration.mfa_status !== 'connected') {
+                if (integration && integration.mfa_status === 'expired') {
+                    toast.error("Your Amexzone session has expired. Please open the 'Clio Sync' extension and click 'Sync Active Session'.");
+                } else {
+                    toast.error("Please connect your EHR integration in settings first.");
+                }
                 return;
             }
 
-            // Helper to format values
-            const formatValue = (value: any): string => {
-                if (value == null) return '';
-                if (Array.isArray(value)) return value.join(', ');
-                return String(value);
-            };
+            // Build active domains list matching visual DomainItem rules
+            const activeDomains: string[] = [];
+            const isOtcNote = (
+                (note.subTemplate || "").toLowerCase().includes("otc") ||
+                (note._frontend_service_title || "").toLowerCase().includes("otc") ||
+                (note.encounter?.primary_service_provided || "").toLowerCase().includes("otc")
+            );
+            const templateId = note.template_id || note.templateId || note.meta?.template_id;
+            const isHurricaneNote = (
+                templateId === 'tcm_hurricane_addendum_note' ||
+                templateId === 'tcm_hurricane_update_note' ||
+                (note.subTemplate || "").toLowerCase().includes("hurricane") ||
+                (note._frontend_service_title || "").toLowerCase().includes("hurricane") ||
+                (note.encounter?.primary_service_provided || "").toLowerCase().includes("hurricane") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("hurricane")
+            );
+            const isStsNote = (
+                templateId === 'tcm_sts_complete_note' ||
+                templateId === 'tcm_sts_collect_note' ||
+                templateId === 'tcm_sts_submit_note' ||
+                (note.subTemplate || "").toLowerCase().includes("sts") ||
+                (note._frontend_service_title || "").toLowerCase().includes("sts") ||
+                (note.encounter?.primary_service_provided || "").toLowerCase().includes("sts") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("sts")
+            );
+            const isDppNote = (
+                templateId === 'tcm_dpp_obtain_note' ||
+                templateId === 'tcm_dpp_complete_note' ||
+                templateId === 'tcm_dpp_submit_pcp_note' ||
+                (note.subTemplate || "").toLowerCase().includes("dpp") ||
+                (note.subTemplate || "").toLowerCase().includes("handicap") ||
+                (note._frontend_service_title || "").toLowerCase().includes("dpp") ||
+                (note.encounter?.primary_service_provided || "").toLowerCase().includes("dpp") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("dpp") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("handicap")
+            );
+            const isMhvDonationNote = (
+                templateId === 'tcm_mhv_provide_donation_note' ||
+                (note.subTemplate || "").toLowerCase().includes("mhv + prov") ||
+                (note.subTemplate || "").toLowerCase().includes("provide clothing") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("provide donation") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("mhv + prov")
+            );
+            const isDonationObtainNote = (
+                templateId === 'tcm_mhv_obtain_donation_note' ||
+                (note.subTemplate || "").toLowerCase().includes("mhv + obt") ||
+                (note.subTemplate || "").toLowerCase().includes("obtain clothing") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("obtain donation") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("mhv + obt")
+            );
+            const isApptCoordNote = (
+                templateId === 'tcm_provider_appt_coord_note' ||
+                (note.subTemplate || "").toLowerCase().includes("appt") ||
+                (note.subTemplate || "").toLowerCase().includes("appointment") ||
+                (note._frontend_service_title || "").toLowerCase().includes("appt") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("appointment")
+            );
+            const isUscisAssistanceNote = (
+                templateId === 'tcm_uscis_assistance_note' ||
+                (note.subTemplate || "").toLowerCase().includes("uscis") ||
+                (note.subTemplate || "").toLowerCase().includes("immigration") ||
+                (note._frontend_service_title || "").toLowerCase().includes("uscis") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("uscis")
+            );
+            const isHousingAssistanceNote = (
+                templateId === 'tcm_housing_assistance_note' ||
+                (note.subTemplate || "").toLowerCase().includes("housing") ||
+                (note.subTemplate || "").toLowerCase().includes("shelter") ||
+                (note._frontend_service_title || "").toLowerCase().includes("housing") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("housing")
+            );
+            const isVaccinationAssistanceNote = (
+                templateId === 'tcm_vaccination_assistance_note' ||
+                (note.subTemplate || "").toLowerCase().includes("vaccin") ||
+                (note._frontend_service_title || "").toLowerCase().includes("vaccin")
+            );
 
-            // Construct full clinical text note for EHR
-            let fullNoteText = ``;
-
-            // Enforce default header
-            fullNoteText += `TCM TARGETED CASE MANAGEMENT VISIT NOTE\n`;
-            fullNoteText += `Date of Service: ${note.encounter?.dos_date || 'N/A'}\n`;
-            fullNoteText += `Patient: ${note.patient?.full_name || 'N/A'} (DOB: ${note.patient?.dob || 'N/A'})\n\n`;
-
-            if (note.meta?.extractedDetails) {
-                fullNoteText += `[VISIT SUMMARY DETAILS]\n`;
-                Object.entries(note.meta.extractedDetails).forEach(([key, val]) => {
-                    const strVal = formatValue(val);
-                    if (strVal && strVal !== "Not reported") {
-                        fullNoteText += `${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}: ${strVal}\n`;
+            TCM_DOMAINS.forEach((domain) => {
+                let isChecked = false;
+                if (isHurricaneNote) {
+                    isChecked = domain.path === 'services.domains_selected.12_other';
+                } else if (isOtcNote || isVaccinationAssistanceNote) {
+                    isChecked = domain.path === 'services.domains_selected.2_physical_health_medical_dental';
+                } else if (isStsNote || isDppNote) {
+                    isChecked = domain.path === 'services.domains_selected.10_transportation';
+                } else if (isMhvDonationNote) {
+                    isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse' || domain.path === 'services.domains_selected.9_basic_needs';
+                } else if (isDonationObtainNote) {
+                    isChecked = domain.path === 'services.domains_selected.9_basic_needs';
+                } else if (isApptCoordNote) {
+                    const titleLower = (note.services?.service_focus_title || "").toLowerCase();
+                    const narrLower = (note.narrative?.summary_notes || "").toLowerCase();
+                    const wantsPsych = titleLower.includes("psych") || titleLower.includes("mental");
+                    const wantsPcp = titleLower.includes("pcp") || titleLower.includes("primary care") || titleLower.includes("medical") || titleLower.includes("specialist");
+                    const wantsTrans = titleLower.includes("transport") || titleLower.includes("nemt") || narrLower.includes("transportation") || narrLower.includes("nemt") || narrLower.includes("saferide");
+                    
+                    if (domain.path === 'services.domains_selected.1_mental_health_substance_abuse') {
+                        isChecked = wantsPsych || (!wantsPsych && !wantsPcp && !wantsTrans);
+                    } else if (domain.path === 'services.domains_selected.2_physical_health_medical_dental') {
+                        isChecked = wantsPcp;
+                    } else if (domain.path === 'services.domains_selected.10_transportation') {
+                        isChecked = wantsTrans;
                     }
-                });
-                fullNoteText += `\n`;
+                } else if (isUscisAssistanceNote) {
+                    const narrLower = (note.narrative?.summary_notes || "").toLowerCase();
+                    const wantsAdl = narrLower.includes("form") || narrLower.includes("paperwork") || narrLower.includes("document") || narrLower.includes("organize") || narrLower.includes("residency");
+                    const wantsPsych = narrLower.includes("anxiety") || narrLower.includes("anxious") || narrLower.includes("emotional support") || narrLower.includes("reassurance");
+                    
+                    if (domain.path === 'services.domains_selected.11_legal_immigration') {
+                        isChecked = true;
+                    } else if (domain.path === 'services.domains_selected.6_activities_of_daily_living') {
+                        isChecked = wantsAdl;
+                    } else if (domain.path === 'services.domains_selected.1_mental_health_substance_abuse') {
+                        isChecked = wantsPsych;
+                    }
+                } else if (isHousingAssistanceNote) {
+                    isChecked = domain.path === 'services.domains_selected.7_housing_shelter';
+                } else {
+                    isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse';
+                }
+
+                if (isChecked) {
+                    activeDomains.push(domain.path.split('.').pop()!);
+                }
+            });
+
+            const isJoint = !!(note.joint_services && note.joint_services.length > 0);
+            const servicesToSync = isJoint ? note.joint_services : [note];
+
+            for (const svc of servicesToSync) {
+                // Construct JSON payload for this specific service block
+                const payload = {
+                    patient_emr_id: note.patient?.emr_id || note.patient?.id || note.patient?.account_number || (note.patient?.emr ? note.patient.emr.replace(/\D/g, '') : '') || "",
+                    patient_name: note.patient?.full_name || "",
+                    patient_dob: note.patient?.dob || "",
+                    visit_date: svc.encounter?.dos_date || note.encounter?.dos_date || note.meta?.visitDate || "",
+                    encounter: {
+                        dos_date: svc.encounter?.dos_date || note.encounter?.dos_date || note.meta?.visitDate || "",
+                        time_in: svc.encounter?.time_in || "",
+                        time_out: svc.encounter?.time_out || "",
+                        duration: svc.encounter?.duration_minutes || svc.encounter?.duration || "",
+                        units: svc.encounter?.units || "",
+                        pos: svc.encounter?.pos || ""
+                    },
+                    narrative: {
+                        summary_notes: svc.narrative?.summary_notes || "",
+                        outcome_of_services: svc.narrative?.outcome_of_services || note.narrative?.outcome_of_services || "",
+                        next_steps: svc.narrative?.next_steps || note.narrative?.next_steps || ""
+                    },
+                    domains: activeDomains,
+                    service_type: svc.subTemplate || svc.services?.service_focus_title || note.subTemplate || note.services?.service_focus_title || ""
+                };
+
+                const { error: insertError } = await supabase
+                    .from('amexzone_note_tasks')
+                    .insert({
+                        note_id: noteIdToSync,
+                        user_id: user?.id,
+                        clinic_id: user?.clinic_id || clinicSettings?.id || null,
+                        patient_name: note.patient?.full_name || 'Desconocido',
+                        patient_dob: note.patient?.dob || null,
+                        visit_date: svc.encounter?.dos_date || note.encounter?.dos_date || note.meta?.visitDate || null,
+                        note_text: '[TCM_PROGRESS_NOTE]\n' + JSON.stringify(payload),
+                        status: 'pending'
+                    });
+
+                if (insertError) throw insertError;
             }
 
-            if (note.assessments && note.assessments.length > 0) {
-                fullNoteText += `[DIAGNOSES / DSM-5]\n`;
-                note.assessments.forEach((diag: any) => {
-                    fullNoteText += `- ${diag.diagnosis}${diag.icd10 ? ` (${diag.icd10})` : ''}${diag.primary ? ' (Primary)' : ''}\n`;
-                });
-                fullNoteText += `\n`;
-            }
-
-            if (note.plan?.plan_recommendations_instructions) {
-                fullNoteText += `[PLAN / RECOMMENDATIONS]\n${note.plan.plan_recommendations_instructions}\n\n`;
-            }
-
-            if (note.plan?.pharmacological) {
-                fullNoteText += `[PHARMACOLOGICAL PLAN]\n`;
-                const pharm = note.plan.pharmacological;
-                if (pharm.start?.length > 0) fullNoteText += `Start: ${formatValue(pharm.start)}\n`;
-                if (pharm.continue?.length > 0) fullNoteText += `Continue: ${formatValue(pharm.continue)}\n`;
-                if (pharm.switch?.length > 0) fullNoteText += `Switch: ${formatValue(pharm.switch)}\n`;
-                if (pharm.discontinue?.length > 0) fullNoteText += `Discontinue: ${formatValue(pharm.discontinue)}\n`;
-                fullNoteText += `\n`;
-            }
-
-            if (note.follow_up?.instructions || note.follow_up?.interval) {
-                fullNoteText += `[FOLLOW UP]\n`;
-                if (note.follow_up.interval) fullNoteText += `Interval: ${note.follow_up.interval}\n`;
-                if (note.follow_up.instructions) fullNoteText += `Instructions: ${note.follow_up.instructions}\n`;
-                fullNoteText += `\n`;
-            }
-
-            // Insert into Supabase note tasks
-            const { error: insertError } = await supabase
-                .from('amexzone_note_tasks')
-                .insert({
-                    note_id: noteIdToSync,
-                    user_id: user?.id,
-                    clinic_id: user?.clinic_id || clinicSettings?.id || null,
-                    patient_name: note.patient?.full_name || 'Desconocido',
-                    patient_dob: note.patient?.dob || null,
-                    visit_date: note.encounter?.dos_date || note.meta?.visitDate || null,
-                    note_text: fullNoteText.trim(),
-                    status: 'pending'
-                });
-
-            if (insertError) throw insertError;
-
-            toast.success("Note successfully queued for EHR synchronization!");
+            toast.success("Progress Note queued for synchronization!");
+            loadSyncStatus();
         } catch (err: any) {
             console.error("Error queueing EHR task:", err);
             toast.error(err.message || "Failed to queue EHR sync task");
@@ -1117,18 +1395,58 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                         <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
 
-                        <button
-                            disabled={isSyncing}
-                            onClick={handleSyncWithEhr}
-                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-cyan-650 dark:hover:text-cyan-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 group disabled:opacity-50"
-                        >
-                            {isSyncing ? (
-                                <RefreshCw size={16} className="animate-spin text-cyan-500" />
-                            ) : (
-                                <Cpu size={16} className="group-hover:scale-110 transition-transform text-cyan-500 group-hover:text-white" />
-                            )}
-                            {isSyncing ? 'Syncing' : 'Sync'}
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                disabled={isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing'}
+                                onClick={handleSyncWithEhr}
+                                className="flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-cyan-650 dark:hover:text-cyan-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 group disabled:opacity-50"
+                            >
+                                {isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing' ? (
+                                    <RefreshCw size={16} className="animate-spin text-cyan-500" />
+                                ) : (
+                                    <Cpu size={16} className="group-hover:scale-110 transition-transform text-cyan-500 group-hover:text-white" />
+                                )}
+                                {isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing' ? 'Syncing' : 'Sync'}
+                            </button>
+                            {(() => {
+                                if (!syncTask) return null;
+                                switch (syncTask.status) {
+                                    case 'pending':
+                                        return (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse">
+                                                <span className="size-1.5 rounded-full bg-amber-500" />
+                                                Queued
+                                            </span>
+                                        );
+                                    case 'processing':
+                                        return (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 animate-pulse">
+                                                <span className="size-1.5 rounded-full bg-cyan-500" />
+                                                Syncing...
+                                            </span>
+                                        );
+                                    case 'completed':
+                                        return (
+                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                                <span className="size-1.5 rounded-full bg-emerald-500" />
+                                                Synced
+                                            </span>
+                                        );
+                                    case 'failed':
+                                        return (
+                                            <span 
+                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 cursor-help"
+                                                title={syncTask.error_message || 'Sync failed'}
+                                            >
+                                                <span className="size-1.5 rounded-full bg-rose-500" />
+                                                Failed
+                                            </span>
+                                        );
+                                    default:
+                                        return null;
+                                }
+                            })()}
+                        </div>
  
                         {!isSigned && (
                             <>
@@ -1549,9 +1867,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 }
             `}</style>
 
+
+
             {/* Time Conflict Warning Banner outside the canvas, on the white background above the grey */}
             {!isConflictLoading && (confidence === 'low' || conflicts.length > 0) && (
-                <div className="no-print w-full px-8 pt-0 pb-2.5 bg-white dark:bg-slate-950 flex items-center justify-center -mt-4 md:-mt-8">
+                <div className="no-print w-full px-8 pt-0 pb-2.5 bg-white dark:bg-slate-950 flex items-center justify-center -mt-2 md:-mt-4">
                     <div className="w-full max-w-[950px]">
                         <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
                     </div>
@@ -1717,18 +2037,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                         <div className="gradient-divider" />
 
-                        {/* Time Conflict Validation Banner */}
-                        {hasInternalTimeConflict && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start gap-3 mb-6 no-print animate-in fade-in duration-300">
-                                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
-                                <div>
-                                    <h4 className="font-bold text-sm tracking-tight mb-0.5">Time Conflict / Overlap Detected</h4>
-                                    <p className="text-xs font-medium opacity-90">
-                                        Multiple services occur at the same time or have invalid times (e.g., end time before start time). Please adjust the Time Range fields below to correct this before saving.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
+
 
                         {/* Title Sections & Summaries - Dynamic Mapping for Joint Notes */}
                         {(() => {
@@ -1898,6 +2207,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                         key={domain.path}
                                                                         domain={domain}
                                                                         mergedNote={svc}
+                                                                        parentTemplateId={mergedNote.template_id || mergedNote.templateId || mergedNote.meta?.template_id}
                                                                         isEditMode={isEditMode}
                                                                         handleUpdateField={(path, val) => handleUpdateField(`${pathPrefix}${path}`, val)}
                                                                     />
@@ -1943,7 +2253,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             if (!showOutcome && !showPlan) return null;
 
                             return (
-                                <section className="print-section mb-0">
+                                <section className="print-section mb-0 print-avoid">
                                     <div className="grid grid-cols-2 gap-2 items-start">
                                         {showOutcome && (
                                             <div className="group/section relative">

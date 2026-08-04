@@ -15,7 +15,8 @@ import {
     Globe,
     Sun,
     Moon,
-    Terminal
+    Terminal,
+    RefreshCw
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -38,11 +39,12 @@ export function Header() {
 
     const isAuthorized = user?.role === 'admin' || user?.email === 'reinier.roa2.0@gmail.com';
 
-    // Desktop center navigation items (Only Encounters, History, Clients)
+    // Desktop center navigation items (Only Encounters, History, Clients, Sync)
     const navItems = [
-        { icon: Mic, label: 'New encounter', path: '/notes/new' },
-        { icon: FileText, label: 'Clinical history', path: '/notes/history' },
-        { icon: Users, label: 'Clients', path: '/patients' },
+        { icon: Mic, label: language === 'es' ? 'Nuevo encuentro' : 'New encounter', path: '/notes/new' },
+        { icon: FileText, label: language === 'es' ? 'Historial clínico' : 'Clinical history', path: '/notes/history' },
+        { icon: Users, label: language === 'es' ? 'Clientes' : 'Clients', path: '/patients' },
+        { icon: RefreshCw, label: language === 'es' ? 'Sincronización' : 'Amexzone Sync', path: '/sync' },
     ];
 
     useEffect(() => {

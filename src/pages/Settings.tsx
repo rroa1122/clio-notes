@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 import SignatureModal from '../notes-module/components/SignatureModal';
-import { AmexzoneSyncTab } from '../components/AmexzoneSyncTab';
+
 
 export function Settings() {
     const { user, refreshUser, setIsLocked } = useAuth();
@@ -15,10 +15,10 @@ export function Settings() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'profile' | 'clinic' | 'supervision' | 'signatures' | 'billing' | 'amexzone'>(() => {
+    const [activeTab, setActiveTab] = useState<'profile' | 'clinic' | 'supervision' | 'signatures' | 'billing'>(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
-        if (tab === 'billing' || tab === 'profile' || tab === 'clinic' || tab === 'supervision' || tab === 'signatures' || tab === 'amexzone') {
+        if (tab === 'billing' || tab === 'profile' || tab === 'clinic' || tab === 'supervision' || tab === 'signatures') {
             return tab;
         }
         return 'profile';
@@ -286,10 +286,12 @@ export function Settings() {
     };
 
     if (loading) return (
-        <div className="h-screen flex items-center justify-center bg-slate-50/50">
+        <div className="flex-1 flex items-center justify-center min-h-[500px]">
             <div className="flex flex-col items-center gap-4">
-                <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-                <p className="text-slate-500 font-medium text-sm">{language === 'es' ? "Cargando configuraciones..." : "Loading configurations..."}</p>
+                <div className="size-10 rounded-full border-4 border-indigo-650/20 border-t-indigo-600 dark:border-indigo-500/20 dark:border-t-indigo-500 animate-spin" />
+                <p className="text-slate-500 font-bold text-xs uppercase tracking-wider animate-pulse">
+                    {language === 'es' ? "Cargando configuraciones..." : "Loading configurations..."}
+                </p>
             </div>
         </div>
     );
@@ -300,23 +302,22 @@ export function Settings() {
         { id: 'supervision', label: language === 'es' ? 'Supervisión Clínica' : 'Clinical Supervision', icon: ShieldCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20 font-black' },
         { id: 'signatures', label: language === 'es' ? 'Firmas Digitales' : 'Digital Signatures', icon: PenTool, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20 font-black' },
         { id: 'billing', label: language === 'es' ? 'Plan y Facturación' : 'Plan & Billing', icon: CreditCard, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/20 font-black' },
-        { id: 'amexzone', label: language === 'es' ? 'Sincronización Amexzone' : 'Amexzone Sync', icon: SettingsIcon, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-950/20 font-black' },
     ];
     return (
         <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)] mb-4">
-            <div className="grid grid-cols-12 gap-10 flex-1 h-full min-h-0">
+            <div className="grid grid-cols-12 gap-8 flex-1 h-full min-h-0">
                 {/* Sidebar Navigation */}
-                <div className="col-span-12 lg:col-span-3 flex flex-col h-full">
-                    <div className="bg-card rounded-[2rem] border border-border/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] p-6 space-y-1.5 flex flex-col h-full bg-surface dark:bg-slate-900">
-                        <div className="px-3 mb-4 space-y-1.5">
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest pl-0.5">
+                <div className="col-span-12 lg:col-span-3 xl:col-span-2 flex flex-col h-full">
+                    <div className="bg-card rounded-3xl border border-border/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] p-4 space-y-1 flex flex-col h-full bg-surface dark:bg-slate-900">
+                        <div className="px-2 mb-4 space-y-1">
+                            <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest pl-0.5">
                                 {language === 'es' ? "Configuración" : "System Config"}
                             </span>
-                            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 pl-0.5 leading-tight">
+                            <h2 className="text-base font-black tracking-tight text-slate-800 dark:text-slate-200 pl-0.5 leading-none">
                                 {t('nav.settings', 'Settings')}
                             </h2>
                         </div>
-                        <div className="flex-1 space-y-1.5">
+                        <div className="flex-1 space-y-1">
                             {tabs.map((tab) => {
                                 const Icon = tab.icon;
                                 const isActive = activeTab === tab.id;
@@ -324,13 +325,13 @@ export function Settings() {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as any)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-200 ${isActive
-                                            ? `${tab.bg} ${tab.color} shadow-sm ring-1 ring-slate-100 dark:ring-white/5`
-                                            : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
+                                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-left whitespace-nowrap transition-all duration-200 ${isActive
+                                            ? 'bg-slate-100 dark:bg-slate-800/80 text-indigo-650 dark:text-indigo-400 shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-700/30'
+                                            : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-200'
                                             }`}
                                     >
-                                        <Icon size={18} />
-                                        {tab.label}
+                                        <Icon size={15} className={`shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                                        <span className="truncate">{tab.label}</span>
                                     </button>
                                 );
                             })}
@@ -339,7 +340,7 @@ export function Settings() {
                 </div>
 
                 {/* Content Area */}
-                <div className="col-span-12 lg:col-span-9 flex flex-col h-full min-h-0">
+                <div className="col-span-12 lg:col-span-9 xl:col-span-10 flex flex-col h-full min-h-0">
                     <div className="bg-card rounded-[2rem] border border-border/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col h-full bg-surface dark:bg-slate-900">
                         <div className="flex-1 overflow-y-auto">
                             {activeTab === 'profile' && profile && (
@@ -357,9 +358,9 @@ export function Settings() {
                                         <button
                                             onClick={handleSave}
                                             disabled={saved}
-                                            className={`group flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm active:scale-95 shrink-0 ${saved
-                                                ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900'
-                                                : 'bg-[#6366f1] text-white hover:bg-[#6366f1]/90 hover:shadow-lg hover:shadow-indigo-500/15'
+                                            className={`group flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 shrink-0 ${saved
+                                                ? 'metallic-btn-emerald text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 shadow-sm'
+                                                : 'bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white border border-indigo-500 hover:from-indigo-700 hover:to-indigo-650 hover:shadow-lg hover:shadow-indigo-500/20 shadow-sm'
                                                 }`}
                                         >
                                             <Save size={16} className={saved ? 'animate-bounce' : 'group-hover:rotate-12 transition-transform'} />
@@ -373,7 +374,7 @@ export function Settings() {
                                             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
                                                 <User size={12} className="text-slate-400" /> {language === 'es' ? "Detalles Personales" : "Personal Details"}
                                             </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)]">
                                                 <InputField
                                                     label={language === 'es' ? "Primer Nombre" : "First Name"}
                                                     value={profile.first_name}
@@ -394,7 +395,7 @@ export function Settings() {
                                             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
                                                 <Activity size={12} className="text-slate-400" /> {language === 'es' ? "Credenciales Profesionales" : "Professional Credentials"}
                                             </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)]">
                                                 <InputField
                                                     label={language === 'es' ? "Título Profesional" : "Professional Title"}
                                                     value={profile.professional_title}
@@ -417,7 +418,7 @@ export function Settings() {
                                             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
                                                 <Lock size={12} className="text-slate-400" /> {language === 'es' ? "Código de Seguridad (Bloqueo HIPAA)" : "Security Passcode (HIPAA Screen Lock)"}
                                             </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)]">
                                                 <InputField
                                                     label={language === 'es' ? "Código de Acceso de 4 Dígitos" : "4-Digit Access Code"}
                                                     value={profile.screen_lock_passcode || ''}
@@ -490,7 +491,7 @@ export function Settings() {
                                             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
                                                 <UserCheck size={12} className="text-slate-400" /> {language === 'es' ? "Perfil del Supervisor" : "Supervisor Profile"}
                                             </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)]">
                                                 <InputField
                                                     label={language === 'es' ? "Nombre del Supervisor" : "Supervisor Name"}
                                                     value={settings.supervisorName || ''}
@@ -549,7 +550,7 @@ export function Settings() {
                                             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
                                                 <Building size={12} className="text-slate-400" /> {language === 'es' ? "Perfil de la Clínica" : "Clinic Profile"}
                                             </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)]">
                                                 <div className="md:col-span-2">
                                                     <InputField
                                                         label={language === 'es' ? "Nombre de la Clínica" : "Clinic Name"}
@@ -615,7 +616,7 @@ export function Settings() {
                                             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
                                                 <MapPin size={12} className="text-slate-400" /> {language === 'es' ? "Contacto y Ubicación" : "Contact & Location"}
                                             </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)]">
                                                 <InputField
                                                     label={language === 'es' ? "Teléfono Principal" : "Main Phone"}
                                                     value={settings.phone}
@@ -688,7 +689,7 @@ export function Settings() {
                                             <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1 flex items-center gap-2">
                                                 <PenTool size={12} className="text-slate-400" /> {language === 'es' ? "Registro de Firmas" : "Signature Registry"}
                                             </h3>
-                                            <div className="bg-slate-50/30 dark:bg-slate-900/30 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-6">
+                                            <div className="bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)] space-y-6">
                                                 {/* Case Manager Signature */}
                                                 <section className="space-y-4">
                                                     <div className="flex items-center justify-between px-1">
@@ -958,9 +959,7 @@ export function Settings() {
                                     </div>
                                 </div>
                             )}
-                            {activeTab === 'amexzone' && (
-                                <AmexzoneSyncTab />
-                            )}
+
                         </div>
 
                         {/* Security Note Footer inside the card at the bottom */}
@@ -997,7 +996,7 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                 type={type}
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full h-12 px-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-sm font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-[#6366f1]/60 transition-all shadow-sm"
+                className="w-full h-12 px-5 rounded-2xl border border-slate-200/85 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-900/40 text-sm font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400/85 dark:placeholder:text-slate-500/85 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-[#6366f1]/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.025),0_1px_2px_rgba(0,0,0,0.01)]"
                 placeholder={placeholder}
                 {...props}
             />

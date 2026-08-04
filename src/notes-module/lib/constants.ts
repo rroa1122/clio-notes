@@ -385,6 +385,566 @@ export const DEFAULT_TEMPLATES: Template[] = [
         ], null, 2)
     },
     {
+        id: 'tcm_hurricane_addendum_note',
+        version: '1.0',
+        name: 'TCM Hurricane Season: Addendum (Two-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM HURRICANE SEASON ADDENDUM:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_hurricane_update_note',
+        version: '1.0',
+        name: 'TCM Hurricane Season: Update (One-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM HURRICANE SEASON UPDATE:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_sts_complete_note',
+        version: '1.0',
+        name: 'TCM Complete STS Application (One-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM SPECIAL TRANSPORTATION SERVICE (STS) COMPLETE:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_sts_collect_note',
+        version: '1.0',
+        name: 'TCM Collect STS from PCP (One-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM SPECIAL TRANSPORTATION SERVICE (STS) COLLECT:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_sts_submit_note',
+        version: '1.0',
+        name: 'TCM Submit STS (One-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM SPECIAL TRANSPORTATION SERVICE (STS) SUBMIT:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_dpp_obtain_note',
+        version: '1.0',
+        name: 'TCM Obtain Disabled Parking Permit (One-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM DISABLED PARKING PERMIT (DPP) OBTAIN:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_dpp_complete_note',
+        version: '1.0',
+        name: 'TCM Complete Disabled Parking Permit (One-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM DISABLED PARKING PERMIT (DPP) COMPLETE:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_dpp_submit_pcp_note',
+        version: '1.0',
+        name: 'TCM Submit DPP to PCP (One-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM DISABLED PARKING PERMIT (DPP) SUBMIT TO PCP:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_mhv_provide_donation_note',
+        version: '1.0',
+        name: 'TCM MHV + Provide Donation (One-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM MHV + PROVIDE DONATION:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_donation_obtain_note',
+        version: '1.0',
+        name: 'TCM Obtain Supply Donation (Two-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM OBTAIN SUPPLY DONATION:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_vaccination_assistance_note',
+        version: '1.0',
+        name: 'TCM Vaccination Assistance (Three-Service)',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM VACCINATION ASSISTANCE:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_provider_appt_coord_note',
+        version: '1.0',
+        name: 'TCM Provider Appointment Coordination',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM PROVIDER APPOINTMENT COORDINATION:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_uscis_assistance_note',
+        version: '1.0',
+        name: 'TCM USCIS Process Assistance',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM USCIS PROCESS ASSISTANCE:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
+        id: 'tcm_housing_assistance_note',
+        version: '1.0',
+        name: 'TCM Housing Application Assistance',
+        category: 'CASE MANAGEMENT',
+        content: 'TCM HOUSING APPLICATION ASSISTANCE:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
         id: 'psych-eval',
         version: '1.0',
         name: 'Initial Psychiatry Evaluation',

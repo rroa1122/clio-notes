@@ -11,6 +11,7 @@ import { Signup } from './pages/Signup';
 import { MainLayout } from './layout/MainLayout';
 import { SetupLayout } from './layout/SetupLayout';
 import { Settings } from './pages/Settings';
+import { SyncPortal } from './pages/SyncPortal';
 import { Patients } from './pages/Patients';
 import { PatientDetail } from './pages/PatientDetail';
 import { Invite } from './pages/auth/Invite';
@@ -106,6 +107,7 @@ const Root = () => {
             <Route path="patients" element={<Patients />} />
             <Route path="patients/:id" element={<PatientDetail />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="sync" element={<SyncPortal />} />
             <Route path="audit-logs" element={<AuditLogs />} />
 
             {/* Platform Admin Route */}

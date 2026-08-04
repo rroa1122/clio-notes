@@ -5,6 +5,20 @@ const TCM_SERVICE_PLAN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-ser
 const TCM_INITIAL_HOME_VISIT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-initial-home-visit-note';
 const TCM_COLLATERAL_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-collateral-note';
 const TCM_SERVICE_PLAN_DISCUSSION_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-service-plan-discussion';
+const TCM_HURRICANE_ADDENDUM_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-hurricane-addendum-note';
+const TCM_HURRICANE_UPDATE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-hurricane-update-note';
+const TCM_STS_COMPLETE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-sts-complete-note';
+const TCM_STS_COLLECT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-sts-collect-note';
+const TCM_STS_SUBMIT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-sts-submit-note';
+const TCM_DPP_OBTAIN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-dpp-obtain-note';
+const TCM_DPP_COMPLETE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-dpp-complete-note';
+const TCM_DPP_SUBMIT_PCP_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-dpp-submit-pcp-note';
+const TCM_MHV_PROVIDE_DONATION_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-mhv-provide-donation-note';
+const TCM_DONATION_OBTAIN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-donation-obtain-note';
+const TCM_VACCINATION_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-vaccination-assistance-note';
+const TCM_PROVIDER_APPT_COORD_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-provider-appt-coord-note';
+const TCM_USCIS_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-uscis-assistance-note';
+const TCM_HOUSING_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-housing-assistance-note';
 const SYNTHESIS_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/nextSteps';
 
 // Minimal interface for the data we expect from/to the webhook
@@ -38,6 +52,34 @@ export const PDFService = {
             url = TCM_COLLATERAL_WEBHOOK_URL;
         } else if (options?.template_id === 'tcm_service_plan_discussion') {
             url = TCM_SERVICE_PLAN_DISCUSSION_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_hurricane_addendum_note') {
+            url = TCM_HURRICANE_ADDENDUM_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_hurricane_update_note') {
+            url = TCM_HURRICANE_UPDATE_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_sts_complete_note') {
+            url = TCM_STS_COMPLETE_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_sts_collect_note') {
+            url = TCM_STS_COLLECT_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_sts_submit_note') {
+            url = TCM_STS_SUBMIT_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_dpp_obtain_note') {
+            url = TCM_DPP_OBTAIN_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_dpp_complete_note') {
+            url = TCM_DPP_COMPLETE_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_dpp_submit_pcp_note') {
+            url = TCM_DPP_SUBMIT_PCP_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_mhv_provide_donation_note') {
+            url = TCM_MHV_PROVIDE_DONATION_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_donation_obtain_note') {
+            url = TCM_DONATION_OBTAIN_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_vaccination_assistance_note') {
+            url = TCM_VACCINATION_ASSISTANCE_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_provider_appt_coord_note') {
+            url = TCM_PROVIDER_APPT_COORD_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_uscis_assistance_note') {
+            url = TCM_USCIS_ASSISTANCE_WEBHOOK_URL;
+        } else if (options?.template_id === 'tcm_housing_assistance_note') {
+            url = TCM_HOUSING_ASSISTANCE_WEBHOOK_URL;
         }
         return PDFService._sendRequest(formData, undefined, signal, url);
     },

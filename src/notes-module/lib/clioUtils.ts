@@ -298,7 +298,7 @@ export const normalizeClioNote = (rawResponse: any): ClioNote | null => {
 
         // Handle Specialized Templates
         const templateId = clioData.template_id || clioData.templateId || clioData.meta?.template_id || clioData.meta?.templateId;
-        if (['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion'].includes(templateId)) {
+        if (['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_mhv_provide_donation_note', 'tcm_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note'].includes(templateId)) {
             return normalizeTcmNote(clioData);
         }
 
@@ -464,8 +464,19 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     // Strip repetitions of POS, Time, and Location from clinical narratives
     const factsToStrip: string[] = [];
     if (encounter.pos && encounter.pos !== "—") factsToStrip.push(encounter.pos);
-    if (encounter.pos_description && encounter.pos_description !== "—") factsToStrip.push(encounter.pos_description);
-    if (encounter.service_location && encounter.service_location !== "—") factsToStrip.push(encounter.service_location);
+
+    // Do not strip generic/short words like "Office" or "Home" to prevent mangling normal sentences (like "arrived at the office" or "Certification Office")
+    const isGenericLocation = (val: string) => {
+        const lower = val.toLowerCase();
+        return lower === 'office' || lower === 'home' || lower === 'clinic' || lower === 'community';
+    };
+
+    if (encounter.pos_description && encounter.pos_description !== "—" && !isGenericLocation(encounter.pos_description)) {
+        factsToStrip.push(encounter.pos_description);
+    }
+    if (encounter.service_location && encounter.service_location !== "—" && !isGenericLocation(encounter.service_location)) {
+        factsToStrip.push(encounter.service_location);
+    }
     if (encounter.time_in && encounter.time_in !== "—") factsToStrip.push(encounter.time_in);
     if (encounter.time_out && encounter.time_out !== "—") factsToStrip.push(encounter.time_out);
     if (encounter.dos_date && encounter.dos_date !== "—") factsToStrip.push(encounter.dos_date);
@@ -473,9 +484,9 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     const factPatterns = factsToStrip.flatMap(fact => {
         const escaped = fact.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return [
-            // Look for "at [location]", "on [date]", "at [time]" or variants
-            new RegExp(`\\s*(at|on|in|during|the|location:?|pos:?)\\s*${escaped}[\\.,]?\\s*`, 'gi'),
-            new RegExp(`^${escaped}[\\.,]?\\s*`, 'gi')
+            // Look for "at [location]", "on [date]", "at [time]" or variants as whole words/phrases
+            new RegExp(`\\b(at|on|in|during|the|location:?|pos:?)\\s+\\b${escaped}\\b[\\.,]?\\s*`, 'gi'),
+            new RegExp(`^\\b${escaped}\\b[\\.,]?\\s*`, 'gi')
         ];
     });
 
@@ -521,13 +532,52 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         services.domains_selected[d] = false;
     });
 
-    if (isOtc) {
+    const activeTemplateId = raw.template_id || raw.templateId || raw.meta?.template_id || 'tcm_progress_note';
+    const isHurricane = activeTemplateId === 'tcm_hurricane_addendum_note' || activeTemplateId === 'tcm_hurricane_update_note';
+    const isSts = activeTemplateId === 'tcm_sts_complete_note' || activeTemplateId === 'tcm_sts_collect_note' || activeTemplateId === 'tcm_sts_submit_note';
+    const isDpp = activeTemplateId === 'tcm_dpp_obtain_note' || activeTemplateId === 'tcm_dpp_complete_note' || activeTemplateId === 'tcm_dpp_submit_pcp_note';
+
+    const isMhvDonation = activeTemplateId === 'tcm_mhv_provide_donation_note';
+    const isDonationObtain = activeTemplateId === 'tcm_donation_obtain_note';
+    const isVaccinationAssistance = activeTemplateId === 'tcm_vaccination_assistance_note';
+    const isApptCoord = activeTemplateId === 'tcm_provider_appt_coord_note';
+    const isUscisAssistance = activeTemplateId === 'tcm_uscis_assistance_note';
+    const isHousingAssistance = activeTemplateId === 'tcm_housing_assistance_note';
+ 
+    if (isHurricane) {
+        services.domains_selected["12_other"] = true;
+    } else if (isOtc || isVaccinationAssistance) {
         services.domains_selected["2_physical_health_medical_dental"] = true;
+    } else if (isSts || isDpp) {
+        services.domains_selected["10_transportation"] = true;
+    } else if (isMhvDonation) {
+        services.domains_selected["1_mental_health_substance_abuse"] = true;
+        services.domains_selected["9_basic_needs"] = true;
+    } else if (isDonationObtain) {
+        services.domains_selected["9_basic_needs"] = true;
+    } else if (isApptCoord) {
+        const titleLower = (services.service_focus_title || "").toLowerCase();
+        const narrLower = (narrative.summary_notes || "").toLowerCase();
+        const wantsPsych = titleLower.includes("psych") || titleLower.includes("mental");
+        const wantsPcp = titleLower.includes("pcp") || titleLower.includes("primary care") || titleLower.includes("medical") || titleLower.includes("specialist");
+        const wantsTrans = titleLower.includes("transport") || titleLower.includes("nemt") || narrLower.includes("transportation") || narrLower.includes("nemt") || narrLower.includes("saferide");
+        
+        services.domains_selected["1_mental_health_substance_abuse"] = wantsPsych || (!wantsPsych && !wantsPcp && !wantsTrans);
+        services.domains_selected["2_physical_health_medical_dental"] = wantsPcp;
+        services.domains_selected["10_transportation"] = wantsTrans;
+    } else if (isUscisAssistance) {
+        const narrLower = (narrative.summary_notes || "").toLowerCase();
+        const wantsAdl = narrLower.includes("form") || narrLower.includes("paperwork") || narrLower.includes("document") || narrLower.includes("organize") || narrLower.includes("residency");
+        const wantsPsych = narrLower.includes("anxiety") || narrLower.includes("anxious") || narrLower.includes("emotional support") || narrLower.includes("reassurance");
+        
+        services.domains_selected["11_legal_immigration"] = true;
+        services.domains_selected["6_activities_of_daily_living"] = wantsAdl;
+        services.domains_selected["1_mental_health_substance_abuse"] = wantsPsych;
+    } else if (isHousingAssistance) {
+        services.domains_selected["7_housing_shelter"] = true;
     } else {
         services.domains_selected["1_mental_health_substance_abuse"] = true;
     }
-
-    const activeTemplateId = raw.template_id || raw.templateId || raw.meta?.template_id || 'tcm_progress_note';
     return applyBaseNormalization({
         ...raw,
         template_id: activeTemplateId,

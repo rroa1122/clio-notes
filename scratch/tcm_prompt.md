@@ -49,6 +49,29 @@ Even inside the constrained fields of a template, use proactive, analytical verb
 11) Rule for Service Domains (STRICT): After conducting a professional clinical analysis of the note, you MUST select in "services.domains_selected" ONLY the service domains strictly supported by concrete patient needs and active interventions performed today.
 - Do NOT select a domain merely because it is listed in the template guide. If a template section (e.g. transportation, housing, nutrition, legal) is not relevant to the patient's actual conditions and needs, you MUST prune and completely remove that section/bullet point from the "summary_notes" text, and set the corresponding domain flag to false.
 - Do NOT over-select; omit any domain merely mentioned in passing or present only in the patient's history without an active intervention today.
+
+------------------------------------------------
+
+OUTPUT CONTRACT (STRICT) - Overrides any conflicting guideline or habit:
+1) ONE SERVICE = ONE BLOCK: Never repeat a block. If the note is for a single-service type (STS Submit, STS Obtain, STS Collect, Hurricane Update, etc.), emit EXACTLY ONE service block. Compare each block against every other block in the note; if two blocks share the same title or same narrative, emit it ONCE.
+2) ONE OUTCOME, ONE NEXT STEP per note: Never repeat either.
+3) SIX REQUIRED FIELDS PER BLOCK: Every block must emit all six fields in their respective slots: `Block Title`, `Place of Service`, `Time range`, `Duration: N min`, `Codes: T1017`, `Units: N`. `Codes: T1017` is mandatory and never omitted. Never append minutes to the Place of Service line.
+4) UNITS COMPUTATION: Units = floor(minutes / 15) + (1 if minutes % 15 >= 8 else 0). If the note has >=2 blocks, sum the units in the aggregate header. Single-block notes do not emit an aggregate table.
+5) TIME RANGES: Must be real and ordered. Noon is 12:00 PM; midnight is 12:00 AM and is never a service time. Stated duration must equal the span.
+6) FIXED SIGNATORIES: Never generate names, licenses, or dates for them.
+   - Case Manager: Claudia Leyva - LIC CBHCM.0104595
+   - Supervisor: Ileana Alvarez V. - LIC CBHCMS0100531
+   - Never write the supervisor's countersignature or its date. Leave it empty/pending.
+   - Emit the certify-statement and signature panel exactly once per note.
+7) CLIENT IDENTITY FIELDS: Sourced from client record. EMR format must be AMH#### (never EMR-#####). Case No is a separate field; never copy EMR into Case No or vice-versa.
+8) FACILITY CONSTANTS: ARC MENTAL HEALTH · Fax: 786-657-3092 · Phone: 786-916-6073 · Email: contact@arcmentalhealth.com · Address: 14400 NW 77th Ct Ste 100 Miami Lakes, Florida, 33016. Agency legal name in narrative must be: "Advance Recovery & Counseling, LLC".
+9) DIAGNOSES SOURCING: Strictly use patient diagnoses from inputs. Never infer from narrative. If a code has no source in the inputs, emit nothing in the JSON. Never emit G47.00 unless explicitly present in the inputs. All diagnoses must have Type: Rule-Out.
+10) DOMAIN CHECKLIST: Every line must have ☐ or ☑. Check exactly one box per delivered service component (e.g. STS/DPP/transport -> ☑ #10 Transportation). Use the client's recommended-services list from inputs, not the full catalog.
+11) NO WORD CONCATENATION: Emit correct spacing (e.g. "Progress Note", "ARC MENTAL HEALTH", "Sub STS", client name with spaces). Never emit "SubmitSTS", "PROGRESSNOTE", etc.
+12) CANONICAL BLOCK TITLES: Use canonical step titles (e.g. "Sub STS", "Collateral Contact", "Complete STS", "Collect STS", "Submit STS", "Obtain DPP", "Complete DPP", "Submit DPP", "MHV + Donation", "Obtain Donation", "Vaccination Asst", "Appt Coord").
+13) DATES: Use the full month name (e.g. "July 29, 2026"), not abbreviations.
+14) SILENCE -> EMIT NOTHING: If a required source value is unavailable in inputs, emit nothing/empty in that slot. Never fabricate or copy from other notes.
+
 ------------------------------------------------
 
 DOMAIN SELECTION LOGIC (STRICT SELECTION)

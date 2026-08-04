@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mic, FileCheck, Loader2, AlertCircle, RefreshCw, Pause, Play, ChevronsUpDown, ChevronDown, User, Upload, CheckCircle2, Sparkles, FileText, ClipboardList, Check, Lock, Layers, Trash2, Plus, Calendar, Clock, Target, Compass, Edit2 } from 'lucide-react';
+import { ArrowLeft, Mic, FileCheck, Loader2, AlertCircle, RefreshCw, Pause, Play, ChevronsUpDown, ChevronDown, User, Upload, CheckCircle2, Sparkles, FileText, ClipboardList, Check, Lock, Layers, Trash2, Plus, Calendar, Clock, Target, Compass, Edit2, Search, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { format, parseISO, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -67,21 +67,88 @@ const parseTimeToMinutes = (timeStr: string): number | null => {
     return hours * 60 + minutes;
 };
 
-const TCM_SUB_TEMPLATES = [
-    'TCM Initial Home Visit',
-    'TCM Collateral & Contact Note',
-    'TCM Initial Assessment & Certification',
-    'TCM Service Plan Development',
-    'TCM Service Plan Discussion',
-    'Monthly Home Visit (MHV)',
-    'Update Information in the Community',
-    'Obtain Supply Donation',
-    'PCP Coordination / Staffing (In-Person)',
-    'Coordinate Transportation',
-    'OTC Benefit Assistance (3 Services)',
-    'Custom Template',
-    'Other'
+const formatMinutesToTime = (minutes: number): string => {
+    let m = minutes % (24 * 60);
+    if (m < 0) m += 24 * 60;
+    let hours = Math.floor(m / 60);
+    const mins = m % 60;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    if (hours > 12) hours -= 12;
+    if (hours === 0) hours = 12;
+    const padHours = hours.toString().padStart(2, '0');
+    const padMins = mins.toString().padStart(2, '0');
+    return `${padHours}:${padMins} ${period}`;
+};
+
+const TCM_SUB_TEMPLATES_BY_GROUP = [
+    {
+        category: "Core Case Management",
+        items: [
+            'TCM Initial Home Visit',
+            'TCM Collateral & Contact Note',
+            'TCM Initial Assessment & Certification',
+            'TCM Service Plan Development',
+            'TCM Service Plan Discussion',
+            'TCM Hurricane Season: Addendum',
+            'TCM Hurricane Season: Update'
+        ]
+    },
+    {
+        category: "Physical & Preventive Health",
+        items: [
+            'TCM Vaccination Assistance',
+            'OTC Benefit Assistance'
+        ]
+    },
+    {
+        category: "Basic Needs & Supplies",
+        items: [
+            'Obtain Supply Donation',
+            'TCM MHV + Provide Donation'
+        ]
+    },
+    {
+        category: "Transportation & Mobility",
+        items: [
+            'TCM Complete STS Application',
+            'TCM Collect STS from PCP',
+            'TCM Submit STS',
+            'TCM Obtain Disabled Parking Permit',
+            'TCM Complete Disabled Parking Permit',
+            'TCM Submit DPP to PCP',
+            'Coordinate Transportation'
+        ]
+    },
+    {
+        category: "Housing & Shelter",
+        items: [
+            'TCM Housing Application Assistance'
+        ]
+    },
+    {
+        category: "Legal & Immigration",
+        items: [
+            'USCIS / Immigration Process Assistance'
+        ]
+    },
+    {
+        category: "Supportive Coordination",
+        items: [
+            'Provider Appointment Coordination',
+            'PCP Coordination / Staffing (In-Person)',
+            'Update Information in the Community'
+        ]
+    },
+    {
+        category: "Other",
+        items: [
+            'Custom Template',
+            'Other'
+        ]
+    }
 ];
+
+const TCM_SUB_TEMPLATES = TCM_SUB_TEMPLATES_BY_GROUP.flatMap(g => g.items);
 
 const formatTimeInput = (val: string): string => {
     let v = val.trim().toLowerCase();
@@ -182,6 +249,7 @@ const Record: React.FC = () => {
     const [timeIn, setTimeIn] = useState('');
     const [timeOut, setTimeOut] = useState('');
     const [units, setUnits] = useState('');
+    const [durationMin, setDurationMin] = useState('');
     const [activeTab, setActiveTab] = useState<'info' | 'capture' | 'services'>('info');
     const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
     const [showGuide, setShowGuide] = useState(() => localStorage.getItem('clio_hide_guide') !== 'true');
@@ -192,12 +260,55 @@ const Record: React.FC = () => {
     const [isMobileTimeOpen, setIsMobileTimeOpen] = useState(false);
     const [isMobileTimeOutOpen, setIsMobileTimeOutOpen] = useState(false);
 
+    const [subTemplateSearchQuery, setSubTemplateSearchQuery] = useState('');
+
+    const filteredSubTemplatesByGroup = useMemo(() => {
+        if (!subTemplateSearchQuery.trim()) return TCM_SUB_TEMPLATES_BY_GROUP;
+        const query = subTemplateSearchQuery.toLowerCase();
+        return TCM_SUB_TEMPLATES_BY_GROUP.map(group => {
+            const filteredItems = group.items.filter(item => 
+                item.toLowerCase().includes(query) || 
+                group.category.toLowerCase().includes(query)
+            );
+            return {
+                ...group,
+                items: filteredItems
+            };
+        }).filter(group => group.items.length > 0);
+    }, [subTemplateSearchQuery]);
+
+    useEffect(() => {
+        if (!isDropdownOpen) {
+            setSubTemplateSearchQuery('');
+        }
+    }, [isDropdownOpen]);
+
     // Bootstrap Data State
     const [userProfile, setUserProfile] = useState<any>(null);
     const [userClinic, setUserClinic] = useState<any>(null);
     const [noteCount, setNoteCount] = useState<number>(0);
 
     const isRestoredRef = useRef(false);
+    const subTemplateDropdownRef = useRef<HTMLDivElement>(null);
+    const mobileSubTemplateDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                (subTemplateDropdownRef.current && !subTemplateDropdownRef.current.contains(event.target as Node)) &&
+                (mobileSubTemplateDropdownRef.current && !mobileSubTemplateDropdownRef.current.contains(event.target as Node))
+            ) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        if (isDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDropdownOpen]);
 
     // Persistence: Save state to sessionStorage
     useEffect(() => {
@@ -209,6 +320,7 @@ const Record: React.FC = () => {
                            timeIn || 
                            timeOut || 
                            units || 
+                           durationMin || 
                            patientInfo.name || 
                            patientInfo.dob;
 
@@ -225,6 +337,7 @@ const Record: React.FC = () => {
                 timeIn,
                 timeOut,
                 units,
+                durationMin,
                 patientInfo,
                 activeTab
             };
@@ -232,7 +345,7 @@ const Record: React.FC = () => {
         } else {
             sessionStorage.removeItem('clio_encounter_draft');
         }
-    }, [status, pdfResponse, clioNote, selectedPatient, recordedServices, selectedTemplateId, selectedSubTemplate, serviceDate, timeIn, timeOut, units, patientInfo, activeTab]);
+    }, [status, pdfResponse, clioNote, selectedPatient, recordedServices, selectedTemplateId, selectedSubTemplate, serviceDate, timeIn, timeOut, units, durationMin, patientInfo, activeTab]);
 
     // Persistence: Restore state from sessionStorage on mount
     useEffect(() => {
@@ -247,14 +360,21 @@ const Record: React.FC = () => {
                 const draftId = parsed.clioNote?.id || parsed.pdfResponse?.data?.id;
                 const draftPatientId = parsed.selectedPatient?.id;
                 
+                if (!urlId && draftId) {
+                    sessionStorage.removeItem('clio_encounter_draft');
+                    return;
+                }
+                
                 if (urlId && urlId !== draftId) {
                     return;
                 }
                 if (urlPatientId && urlPatientId !== draftPatientId) {
                     return;
                 }
-                
-                if (parsed.status !== undefined) setStatus(parsed.status);
+                if (parsed.status !== undefined) {
+                    const restoredStatus = (parsed.status === 'processing' || parsed.status === 'uploading') ? 'idle' : parsed.status;
+                    setStatus(restoredStatus);
+                }
                 if (parsed.pdfResponse !== undefined) setPdfResponse(parsed.pdfResponse);
                 if (parsed.clioNote !== undefined) setClioNote(parsed.clioNote);
                 if (parsed.selectedPatient !== undefined) setSelectedPatient(parsed.selectedPatient);
@@ -270,6 +390,11 @@ const Record: React.FC = () => {
                 if (parsed.timeIn !== undefined) setTimeIn(parsed.timeIn);
                 if (parsed.timeOut !== undefined) setTimeOut(parsed.timeOut);
                 if (parsed.units !== undefined) setUnits(parsed.units);
+                if (parsed.durationMin !== undefined) {
+                    setDurationMin(parsed.durationMin);
+                } else {
+                    setDurationMin(calculateDurationMin(parsed.timeIn || '', parsed.timeOut || '', parsed.units || ''));
+                }
                 if (parsed.patientInfo !== undefined) setPatientInfo(parsed.patientInfo);
                 if (parsed.activeTab !== undefined) setActiveTab(parsed.activeTab);
             }
@@ -294,6 +419,34 @@ const Record: React.FC = () => {
             setSelectedTemplateId('tcm_initial_home_visit_note');
         } else if (selectedSubTemplate === 'TCM Collateral & Contact Note') {
             setSelectedTemplateId('tcm_collateral_note');
+        } else if (selectedSubTemplate === 'TCM Hurricane Season: Addendum') {
+            setSelectedTemplateId('tcm_hurricane_addendum_note');
+        } else if (selectedSubTemplate === 'TCM Hurricane Season: Update') {
+            setSelectedTemplateId('tcm_hurricane_update_note');
+        } else if (selectedSubTemplate === 'TCM Complete STS Application') {
+            setSelectedTemplateId('tcm_sts_complete_note');
+        } else if (selectedSubTemplate === 'TCM Collect STS from PCP') {
+            setSelectedTemplateId('tcm_sts_collect_note');
+        } else if (selectedSubTemplate === 'TCM Submit STS') {
+            setSelectedTemplateId('tcm_sts_submit_note');
+        } else if (selectedSubTemplate === 'TCM Obtain Disabled Parking Permit') {
+            setSelectedTemplateId('tcm_dpp_obtain_note');
+        } else if (selectedSubTemplate === 'TCM Complete Disabled Parking Permit') {
+            setSelectedTemplateId('tcm_dpp_complete_note');
+        } else if (selectedSubTemplate === 'TCM Submit DPP to PCP') {
+            setSelectedTemplateId('tcm_dpp_submit_pcp_note');
+        } else if (selectedSubTemplate === 'TCM MHV + Provide Donation') {
+            setSelectedTemplateId('tcm_mhv_provide_donation_note');
+        } else if (selectedSubTemplate === 'Obtain Supply Donation') {
+            setSelectedTemplateId('tcm_donation_obtain_note');
+        } else if (selectedSubTemplate === 'TCM Vaccination Assistance') {
+            setSelectedTemplateId('tcm_vaccination_assistance_note');
+        } else if (selectedSubTemplate === 'Provider Appointment Coordination') {
+            setSelectedTemplateId('tcm_provider_appt_coord_note');
+        } else if (selectedSubTemplate === 'USCIS / Immigration Process Assistance') {
+            setSelectedTemplateId('tcm_uscis_assistance_note');
+        } else if (selectedSubTemplate === 'TCM Housing Application Assistance') {
+            setSelectedTemplateId('tcm_housing_assistance_note');
         } else if (selectedSubTemplate) {
             setSelectedTemplateId('tcm_progress_note');
         }
@@ -322,19 +475,108 @@ const Record: React.FC = () => {
         }
     }, [user]);
 
-    // Auto-calculate units from timeIn and timeOut using Medicaid 8-minute rule
-    useEffect(() => {
-        const startMins = parseTimeToMinutes(timeIn);
+    const calculateDurationMin = (tIn: string, tOut: string, u: string) => {
+        const startMins = parseTimeToMinutes(tIn);
+        const endMins = parseTimeToMinutes(tOut);
+        if (startMins !== null && endMins !== null) {
+            let diff = endMins - startMins;
+            if (diff < 0) diff += 24 * 60;
+            return diff.toString();
+        } else if (u) {
+            const parsedU = parseInt(u);
+            if (!isNaN(parsedU)) {
+                return (parsedU * 15).toString();
+            }
+        }
+        return '';
+    };
+
+    const handleTimeInChange = (newTimeIn: string) => {
+        setTimeIn(newTimeIn);
+        const startMins = parseTimeToMinutes(newTimeIn);
         const endMins = parseTimeToMinutes(timeOut);
+        
+        if (startMins !== null) {
+            if (endMins !== null) {
+                // Calculate duration in minutes and units
+                let duration = endMins - startMins;
+                if (duration < 0) duration += 24 * 60;
+                setDurationMin(duration.toString());
+                const calculatedUnits = Math.floor(duration / 15) + (duration % 15 >= 8 ? 1 : 0);
+                setUnits(calculatedUnits.toString());
+            } else if (durationMin) {
+                // Calculate timeOut from timeIn and durationMin
+                const mins = parseInt(durationMin);
+                if (!isNaN(mins) && mins >= 0) {
+                    const calculatedEndMins = startMins + mins;
+                    setTimeOut(formatMinutesToTime(calculatedEndMins));
+                }
+            } else if (units) {
+                // Calculate timeOut from timeIn and units
+                const u = parseInt(units);
+                if (!isNaN(u) && u >= 0) {
+                    const calculatedEndMins = startMins + (u * 15);
+                    setTimeOut(formatMinutesToTime(calculatedEndMins));
+                }
+            }
+        }
+    };
+
+    const handleTimeOutChange = (newTimeOut: string) => {
+        setTimeOut(newTimeOut);
+        const startMins = parseTimeToMinutes(timeIn);
+        const endMins = parseTimeToMinutes(newTimeOut);
+        
         if (startMins !== null && endMins !== null) {
             let duration = endMins - startMins;
             if (duration < 0) duration += 24 * 60;
+            setDurationMin(duration.toString());
             const calculatedUnits = Math.floor(duration / 15) + (duration % 15 >= 8 ? 1 : 0);
             setUnits(calculatedUnits.toString());
-        } else {
-            setUnits('');
         }
-    }, [timeIn, timeOut]);
+    };
+
+    const handleDurationMinChange = (newDurationMin: string) => {
+        const trimmed = newDurationMin.trim();
+        setDurationMin(trimmed);
+        if (trimmed === '') {
+            setUnits('');
+            setTimeOut('');
+        } else {
+            const mins = parseInt(trimmed);
+            if (!isNaN(mins) && mins >= 0) {
+                // Calculate units based on minutes (8-minute rule)
+                const calculatedUnits = Math.floor(mins / 15) + (mins % 15 >= 8 ? 1 : 0);
+                setUnits(calculatedUnits.toString());
+                
+                // Calculate timeOut from timeIn and minutes duration
+                const startMins = parseTimeToMinutes(timeIn);
+                if (startMins !== null) {
+                    const calculatedEndMins = startMins + mins;
+                    setTimeOut(formatMinutesToTime(calculatedEndMins));
+                }
+            }
+        }
+    };
+
+    const handleUnitsChange = (newUnits: string) => {
+        const trimmed = newUnits.trim();
+        setUnits(trimmed);
+        if (trimmed === '') {
+            setDurationMin('');
+            setTimeOut('');
+        } else {
+            const u = parseInt(trimmed);
+            if (!isNaN(u) && u >= 0) {
+                setDurationMin((u * 15).toString());
+                const startMins = parseTimeToMinutes(timeIn);
+                if (startMins !== null) {
+                    const calculatedEndMins = startMins + (u * 15);
+                    setTimeOut(formatMinutesToTime(calculatedEndMins));
+                }
+            }
+        }
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -534,6 +776,7 @@ const Record: React.FC = () => {
                 setAudioBlob(blob);
                 const url = URL.createObjectURL(blob);
                 setAudioUrl(url);
+                setStatus('idle');
             };
 
             mediaRecorder.start();
@@ -560,7 +803,6 @@ const Record: React.FC = () => {
             mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
             setIsRecording(false);
             setIsPaused(false);
-            setStatus('idle');
             if (timerRef.current) clearInterval(timerRef.current);
         }
     };
@@ -625,6 +867,7 @@ const Record: React.FC = () => {
         setTimeIn(svc.timeIn || '');
         setTimeOut(svc.timeOut || '');
         setUnits(svc.units || '');
+        setDurationMin(calculateDurationMin(svc.timeIn || '', svc.timeOut || '', svc.units || ''));
         setPatientInfo(prev => ({
             ...prev,
             context: svc.manualText || '',
@@ -653,6 +896,7 @@ const Record: React.FC = () => {
         setTimeIn('');
         setTimeOut('');
         setUnits('');
+        setDurationMin('');
         setPatientInfo(prev => ({
             ...prev,
             context: '',
@@ -676,7 +920,7 @@ const Record: React.FC = () => {
             return;
         }
 
-        if (selectedSubTemplate === 'OTC Benefit Assistance (3 Services)') {
+        if (selectedSubTemplate === 'OTC Benefit Assistance') {
             // Add three independent services: OTC Obt, OTC Comp, OTC Sub
             setRecordedServices(prev => [
                 ...prev,
@@ -770,6 +1014,7 @@ const Record: React.FC = () => {
         setTimeIn('');
         setTimeOut('');
         setUnits('');
+        setDurationMin('');
         setActiveTab('services');
     };
 
@@ -802,7 +1047,7 @@ const Record: React.FC = () => {
         }
 
         const currentTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
-        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion'].includes(selectedTemplateId);
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_mhv_provide_donation_note', 'tcm_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note'].includes(selectedTemplateId);
 
         setStatus('uploading');
         setError(null);
@@ -1138,6 +1383,7 @@ const Record: React.FC = () => {
         setTimeIn('');
         setTimeOut('');
         setUnits('');
+        setDurationMin('');
         setActiveTab('info');
     };
 
@@ -1199,30 +1445,43 @@ const Record: React.FC = () => {
     return (
         <div className="flex flex-col items-center w-full pt-6 lg:pt-8 px-4 pb-12 animate-in fade-in duration-500">
             {status === 'done' && pdfResponse ? (
-                <div id="review-workspace-root" className="clio-notes-new max-w-6xl w-full bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] rounded-[2.5rem] p-6 md:p-10 relative">
-                    {isTemplatesLoading && (
-                        <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-[2.5rem]">
-                            <Loader2 className="animate-spin text-primary" size={32} />
-                        </div>
-                    )}
-                    {clioNote ? (
-                        <div className="py-4 px-2 md:px-0">
-                            <ClioNoteViewer
-                                note={clioNote}
-                                onSaveComplete={(saved) => {
-                                    if (saved) {
-                                        toast.success("Saved successfully");
-                                    }
-                                }}
+                <div className="max-w-6xl w-full space-y-4 animate-in fade-in duration-500">
+                    {/* Back Button */}
+                    <div className="flex items-center no-print">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="group flex items-center gap-2 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors font-black text-[10px] uppercase tracking-widest active:scale-[0.98] bg-transparent border-none p-0 outline-none cursor-pointer"
+                        >
+                            <ArrowLeft size={13} className="text-indigo-400" />
+                            Back
+                        </button>
+                    </div>
+
+                    <div id="review-workspace-root" className="clio-notes-new w-full bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] rounded-[2.5rem] p-6 md:p-10 relative">
+                        {isTemplatesLoading && (
+                            <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-[2.5rem]">
+                                <Loader2 className="animate-spin text-primary" size={32} />
+                            </div>
+                        )}
+                        {clioNote ? (
+                            <div className="pt-0 pb-4 px-2 md:px-0">
+                                <ClioNoteViewer
+                                    note={clioNote}
+                                    onSaveComplete={(saved) => {
+                                        if (saved) {
+                                            toast.success("Saved successfully");
+                                        }
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <NotePrintPreview
+                                data={pdfResponse.data}
+                                pdfUrl={pdfResponse.url}
+                                onRegenerate={handleRegenerate}
                             />
-                        </div>
-                    ) : (
-                        <NotePrintPreview
-                            data={pdfResponse.data}
-                            pdfUrl={pdfResponse.url}
-                            onRegenerate={handleRegenerate}
-                        />
-                    )}
+                        )}
+                    </div>
                 </div>
             ) : (
                 <Card className="max-w-6xl w-full bg-transparent md:bg-surface border-0 md:border border-border/60 shadow-none md:shadow-soft rounded-none md:rounded-[2.5rem] overflow-visible md:overflow-hidden relative group">
@@ -1301,7 +1560,7 @@ const Record: React.FC = () => {
                                                     <div className="flex flex-col min-w-0">
                                                         <span className="text-[9px] font-black uppercase tracking-wider opacity-75">{t('record.step.times', 'Times')}</span>
                                                         <span className="text-[11px] leading-tight truncate">
-                                                            {isStep2Done ? `${timeIn} - ${timeOut || units + ' U'}` : t('record.step.times_desc', 'Set date & times')}
+                                                            {isStep2Done ? `${timeIn} - ${timeOut || (units ? parseInt(units) * 15 + ' min' : '')}` : t('record.step.times_desc', 'Set date & times')}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1309,8 +1568,8 @@ const Record: React.FC = () => {
                                                 <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-2.5 w-60 p-3 bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-sm text-white text-[11px] rounded-xl shadow-lg opacity-0 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:translate-y-0 -translate-y-1 transition-all duration-300 text-center font-medium leading-relaxed">
                                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900/95 dark:border-b-slate-950/95" />
                                                     {language === 'es' 
-                                                        ? "Selecciona la fecha y las horas del encuentro. Puedes ingresar la hora de inicio y fin, o simplemente la hora de inicio y las unidades de tiempo; el sistema calculará la hora final automáticamente."
-                                                        : "Select the encounter date and times. You can input the start and end times, or simply the start time and time units; the system will automatically calculate the end time."}
+                                                        ? "Selecciona la fecha y las horas del encuentro. Puedes ingresar la hora de inicio y fin, o simplemente la hora de inicio y la duración en minutos; el sistema calculará la hora final automáticamente."
+                                                        : "Select the encounter date and times. You can input the start and end times, or simply the start time and duration in minutes; the system will automatically calculate the end time."}
                                                 </div>
                                             </div>
                                         );
@@ -1467,7 +1726,7 @@ const Record: React.FC = () => {
                                         <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.encounter_info', 'Encounter Info')}</Label>
                                         {serviceDate && timeIn && <Check size={12} className="text-emerald-400" />}
                                     </div>
-                                    <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 overflow-hidden mt-1 h-11 items-center">
+                                    <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-indigo-500/40 focus-within:ring-4 focus-within:ring-indigo-500/5 overflow-hidden mt-1 h-11 items-center">
                                         {/* Date */}
                                         <div className="flex-[1.0] min-w-[105px] border-r border-slate-100 dark:border-slate-800">
                                             <DatePicker 
@@ -1495,7 +1754,7 @@ const Record: React.FC = () => {
                                                             <TimeSpinner 
                                                                 initialTimeStr={timeIn}
                                                                 onConfirm={(timeStr) => {
-                                                                    setTimeIn(timeStr);
+                                                                    handleTimeInChange(timeStr);
                                                                     setIsTimePopoverOpen(false);
                                                                 }} 
                                                             />
@@ -1523,7 +1782,7 @@ const Record: React.FC = () => {
                                                             <TimeSpinner 
                                                                 initialTimeStr={timeOut}
                                                                 onConfirm={(timeStr) => {
-                                                                    setTimeOut(timeStr);
+                                                                    handleTimeOutChange(timeStr);
                                                                     setIsTimeOutPopoverOpen(false);
                                                                 }} 
                                                             />
@@ -1532,16 +1791,17 @@ const Record: React.FC = () => {
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
-                                        {/* Units */}
-                                        <div className="w-[85px] h-full flex items-center px-2 shrink-0">
+                                        {/* Duration in Minutes */}
+                                        <div className="w-[90px] h-full flex items-center px-2 shrink-0">
                                             <input 
                                                 type="number"
                                                 min="0"
                                                 autoComplete="off"
-                                                placeholder={language === 'es' ? "Unid." : "Units"}
-                                                value={units}
-                                                readOnly={true}
-                                                className="h-full border-0 bg-transparent text-slate-400 dark:text-slate-400 font-semibold focus:ring-0 outline-none text-center text-[13px] w-full px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-not-allowed"
+                                                placeholder={language === 'es' ? "Min." : "Min"}
+                                                value={durationMin}
+                                                onChange={(e) => handleDurationMinChange(e.target.value)}
+                                                style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                                                className="h-full !border-0 focus:!border-0 focus:!border-transparent focus-visible:!border-0 focus-visible:!border-transparent bg-transparent text-slate-700 dark:text-slate-200 font-semibold focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none outline-none text-center text-[13px] w-full px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-pointer"
                                             />
                                         </div>
                                     </div>
@@ -1554,47 +1814,83 @@ const Record: React.FC = () => {
                                         <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.service_provided', 'Service Provided')}</Label>
                                         {selectedSubTemplate && <Check size={12} className="text-emerald-400" />}
                                     </div>
-                                    <div className="relative mt-1">
+                                    <div ref={subTemplateDropdownRef} className="relative mt-1">
                                         <div 
-                                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                            onClick={() => setIsDropdownOpen(true)}
                                             className={cn(
-                                                "w-full h-11 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800",
-                                                isDropdownOpen ? "border-primary/40 ring-4 ring-primary/10" : ""
+                                                "w-full h-11 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm cursor-text transition-all hover:border-slate-350 dark:hover:border-slate-700 hover:bg-indigo-50/5 dark:hover:bg-indigo-950/5",
+                                                isDropdownOpen ? "border-indigo-500/40 ring-4 ring-indigo-500/5" : ""
                                             )}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <span className={cn(
-                                                    "text-[13px] font-medium tracking-tight",
-                                                    selectedSubTemplate ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"
-                                                )}>
-                                                    {selectedSubTemplate || t('record.select_encounter_type', 'Select encounter type...')}
-                                                </span>
+                                            <div className="flex items-center gap-3 flex-1">
+                                                <input
+                                                    type="text"
+                                                    style={{ border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent' }}
+                                                    className="w-full h-full !border-0 focus:!border-0 focus:!border-transparent focus-visible:!border-0 focus-visible:!border-transparent bg-transparent focus:bg-transparent active:bg-transparent focus-visible:bg-transparent text-[13px] font-medium tracking-tight text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 p-0 focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none outline-none"
+                                                    placeholder="Select encounter type..."
+                                                    value={isDropdownOpen ? subTemplateSearchQuery : selectedSubTemplate}
+                                                    onChange={(e) => {
+                                                        setSubTemplateSearchQuery(e.target.value);
+                                                        setIsDropdownOpen(true);
+                                                    }}
+                                                    onFocus={() => setIsDropdownOpen(true)}
+                                                />
                                             </div>
-                                            <ChevronDown className={cn("size-4 text-slate-400 transition-transform duration-300", isDropdownOpen && "rotate-180")} />
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                {selectedSubTemplate && isDropdownOpen && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedSubTemplate('');
+                                                            setSubTemplateSearchQuery('');
+                                                        }}
+                                                        className="text-slate-450 hover:text-slate-650 dark:hover:text-slate-350 transition-colors"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                )}
+                                                <ChevronDown className={cn("size-4 text-slate-400 transition-transform duration-300", isDropdownOpen && "rotate-180")} />
+                                            </div>
                                         </div>
 
                                         {isDropdownOpen && (
                                             <div className="absolute top-full left-0 right-0 mt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800 rounded-[2.5rem] shadow-[0_15px_40px_-10px_rgba(0,0,0,0.08)] p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-500 ease-out">
-                                                <div className="flex flex-col gap-1">
-                                                    {TCM_SUB_TEMPLATES.map((t) => {
-                                                        const isActive = selectedSubTemplate === t;
-                                                        return (
-                                                            <button
-                                                                key={t}
-                                                                onClick={() => {
-                                                                    setSelectedSubTemplate(t);
-                                                                    setIsDropdownOpen(false);
-                                                                }}
-                                                                className={cn(
-                                                                    "w-full justify-between items-center h-10 px-5 text-xs font-medium rounded-full transition-colors flex group/item",
-                                                                    isActive ? 'bg-primary/5 text-primary hover:bg-primary/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
-                                                                )}
-                                                            >
-                                                                 <span className="tracking-tight">{t}</span>
-                                                                 {isActive && <Check size={14} strokeWidth={3} className="animate-in zoom-in" />}
-                                                            </button>
-                                                        );
-                                                    })}
+                                                <div className="flex flex-col gap-1.5 max-h-[450px] overflow-y-auto custom-scrollbar pr-1">
+                                                    {filteredSubTemplatesByGroup.length === 0 ? (
+                                                        <div className="text-center py-8 text-slate-400 text-xs font-medium">
+                                                            {language === 'es' ? 'No se encontraron servicios' : 'No services found'}
+                                                        </div>
+                                                    ) : (
+                                                        filteredSubTemplatesByGroup.map((group) => (
+                                                            <div key={group.category} className="mb-2.5 last:mb-0">
+                                                                <div className="text-[9px] font-extrabold text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-widest px-4 py-1.5 select-none mb-1 border-b border-slate-100/50 dark:border-slate-800/50 pb-0.5">
+                                                                    {group.category}
+                                                                </div>
+                                                                <div className="flex flex-col gap-1">
+                                                                    {group.items.map((t) => {
+                                                                        const isActive = selectedSubTemplate === t;
+                                                                        return (
+                                                                            <button
+                                                                                key={t}
+                                                                                onClick={() => {
+                                                                                    setSelectedSubTemplate(t);
+                                                                                    setIsDropdownOpen(false);
+                                                                                }}
+                                                                                className={cn(
+                                                                                    "w-full justify-between items-center h-10 px-5 text-xs font-semibold rounded-full transition-colors flex group/item",
+                                                                                    isActive ? 'bg-primary/5 text-primary hover:bg-primary/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
+                                                                                )}
+                                                                            >
+                                                                                <span className="tracking-tight">{t}</span>
+                                                                                {isActive && <Check size={14} strokeWidth={3} className="animate-in zoom-in" />}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -1606,7 +1902,7 @@ const Record: React.FC = () => {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Voice Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
-                                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-[2rem] p-6 flex flex-col gap-4 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900 hover:shadow-md h-full min-h-[260px]">
+                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[2rem] p-6 flex flex-col gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[260px]">
                                         <div className="flex items-center justify-between w-full px-2">
                                             <div className="flex items-center gap-2">
                                                 <Mic size={14} className="text-slate-400" />
@@ -1616,88 +1912,84 @@ const Record: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex flex-col items-center justify-center flex-1 gap-6 w-full py-2">
-                                            <div className="flex flex-col items-center gap-5 relative">
-                                                <div className="relative group w-fit flex items-center justify-center">
-                                                    {status === 'idle' && !audioBlob && (
-                                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-36 bg-primary/[0.04] rounded-full blur-3xl animate-[pulse_8s_ease-in-out_infinite] pointer-events-none" />
+                                            <div className="relative group w-fit flex items-center justify-center">
+                                                {/* Continuous vector-sharp breathing aura */}
+                                                {status === 'idle' && !audioBlob && (
+                                                    <div className="absolute size-36 animate-aura-breathing rounded-full pointer-events-none z-0" />
+                                                )}
+
+                                                <button
+                                                    onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
+                                                    disabled={!!audioBlob}
+                                                    className={cn(
+                                                        "relative size-28 rounded-full flex items-center justify-center transition-all duration-355 ease-out transform-gpu will-change-transform z-10 border shadow-sm group/mic-btn overflow-hidden",
+                                                        audioBlob 
+                                                            ? "metallic-btn-emerald text-emerald-600 cursor-default" 
+                                                            : status === 'recording'
+                                                                ? "bg-gradient-to-tr from-rose-600 to-red-500 border-rose-500 text-white cursor-pointer hover:from-rose-700 hover:to-red-600 active:scale-95 animate-red-ring-pulse"
+                                                                : "metallic-btn text-indigo-500/80 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:scale-105 cursor-pointer active:scale-95 hover:shadow-[0_12px_30px_-4px_rgba(99,102,241,0.22)] hover:border-indigo-400/50 dark:hover:border-indigo-400/30"
                                                     )}
+                                                >
+                                                    <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none animate-shimmer-sweep" />
 
-                                                    <button
-                                                        onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
-                                                        disabled={!!audioBlob}
-                                                        className={cn(
-                                                            "relative size-28 rounded-[2.8rem] flex items-center justify-center transition-all duration-700 z-10 overflow-hidden group/mic-btn",
-                                                            audioBlob 
-                                                                ? "bg-emerald-50/40 border-2 border-emerald-200 text-emerald-600 shadow-[0_4px_20px_rgba(16,185,129,0.1)] cursor-default" 
-                                                                : status === 'recording'
-                                                                    ? "animate-recording-pulse backdrop-blur-md border-2 border-rose-500/20 text-rose-500 cursor-pointer hover:scale-[0.98]"
-                                                                    : "glass-tactile dark:bg-slate-900 border-2 border-white/80 dark:border-slate-800 text-slate-400 dark:text-slate-500 animate-tactile-pulse hover:text-primary dark:hover:text-indigo-400 hover:border-primary/30 dark:hover:border-indigo-500/30 hover:scale-105 cursor-pointer active:scale-95 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]"
-                                                        )}
-                                                    >
-                                                        {status === 'idle' && !audioBlob && (
-                                                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent animate-shimmer-sweep pointer-events-none w-[200%]" />
-                                                        )}
-
-                                                        {status === 'recording' && (
-                                                            <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
-                                                        )}
-
-                                                        {status === 'recording' ? (
-                                                            <div className="size-10 rounded-2xl bg-rose-500 animate-in zoom-in-50 duration-500 shadow-[0_8px_20px_rgba(244,63,94,0.4)] relative z-10 flex items-center justify-center">
-                                                                <div className="size-4 bg-white/20 rounded-sm animate-pulse" />
-                                                            </div>
-                                                        ) : (
-                                                            <div className={cn(
-                                                                "relative z-10 transition-all duration-700",
-                                                                status === 'idle' && !audioBlob ? "group-hover/mic-btn:scale-110" : ""
-                                                            )}>
-                                                                <Mic size={42} strokeWidth={1} className={cn(
-                                                                    "transition-all duration-700",
-                                                                    status === 'idle' && !audioBlob ? "text-primary/40 drop-shadow-[0_4px_8px_rgba(79,70,229,0.08)] group-hover/mic-btn:text-primary group-hover/mic-btn:drop-shadow-[0_8px_16px_rgba(79,70,229,0.2)]" : "text-emerald-500"
-                                                                )} />
-                                                            </div>
-                                                        )}
-                                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none opacity-50" />
-                                                    </button>
-
-                                                    {audioBlob && (
-                                                        <div className="absolute -top-2 -right-2 size-10 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white shadow-xl animate-in zoom-in-50 duration-500 z-20">
-                                                            <Check size={20} strokeWidth={3} />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex flex-col items-center gap-2 min-h-[44px] justify-start mt-1">
                                                     {status === 'recording' ? (
-                                                        <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-700">
-                                                            <span className="text-2xl font-bold tabular-nums tracking-tighter text-rose-500 drop-shadow-sm">
-                                                                {formatTime(timer)}
-                                                            </span>
-                                                            <div className="flex items-center gap-2 opacity-40">
-                                                                <div className="size-1 rounded-full bg-rose-500 animate-pulse" />
-                                                                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400">
-                                                                    {t('record.recording', 'Recording...')}
-                                                                </p>
-                                                            </div>
+                                                        <div className="size-8 rounded-lg bg-white shadow-md flex items-center justify-center animate-[zoom-in-50_0.2s_ease-out]">
+                                                            <div className="size-3.5 bg-rose-600 rounded-sm" />
                                                         </div>
                                                     ) : (
-                                                        <div className="flex flex-col items-center gap-1 animate-in fade-in duration-700">
-                                                            <p className={cn(
-                                                                "text-[11px] font-bold uppercase tracking-[0.4em] transition-all duration-700",
-                                                                audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400/60 dark:text-slate-500"
-                                                            )}>
-                                                                {audioBlob ? t('record.session_finalized', 'Session Finalized') : t('record.system_standby', 'System Standby')}
-                                                            </p>
-                                                            {!audioBlob && (
-                                                                <div className="h-4 flex items-center">
-                                                                    <p className="text-[11px] font-semibold text-primary/50 dark:text-indigo-400/50 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
-                                                                        {t('record.ready_to_record', 'Ready to record')}
-                                                                    </p>
-                                                                </div>
-                                                            )}
+                                                        <div className="relative z-10 transition-all duration-300 ease-in-out flex items-center justify-center">
+                                                            <Mic size={38} strokeWidth={1.5} className={cn(
+                                                                "transition-colors duration-300 relative z-10",
+                                                                audioBlob ? "text-emerald-500" : "text-indigo-500/70 dark:text-slate-400 group-hover/mic-btn:text-indigo-600 group-hover/mic-btn:scale-105"
+                                                            )} />
                                                         </div>
                                                     )}
-                                                </div>
+                                                </button>
+
+                                                {audioBlob && (
+                                                    <div className="absolute -top-2 -right-2 size-10 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-xl animate-in zoom-in-50 duration-500 z-20">
+                                                        <Check size={20} strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-col items-center gap-2 min-h-[54px] justify-start mt-2">
+                                                {status === 'recording' ? (
+                                                    <div className="flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-500">
+                                                        <span className="text-2xl font-bold tabular-nums tracking-tighter text-rose-500 dark:text-rose-400">
+                                                            {formatTime(timer)}
+                                                        </span>
+                                                        <div className="flex items-center gap-1 h-5 my-0.5 justify-center w-24">
+                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-1" />
+                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-2" />
+                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-3" />
+                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-4" />
+                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-2" />
+                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-1" />
+                                                        </div>
+                                                        <div className="flex items-center gap-2 opacity-50">
+                                                            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400">
+                                                                {t('record.recording', 'Recording...')}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-1 animate-in fade-in duration-500">
+                                                        <p className={cn(
+                                                            "text-[11px] font-bold uppercase tracking-[0.4em] transition-all duration-300",
+                                                            audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400/60 dark:text-slate-500"
+                                                        )}>
+                                                            {audioBlob ? t('record.session_finalized', 'Session Finalized') : t('record.system_standby', 'System Standby')}
+                                                        </p>
+                                                        {!audioBlob && (
+                                                            <div className="h-4 flex items-center">
+                                                                <p className="text-[11px] font-semibold text-indigo-500/50 dark:text-indigo-400/50 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                                                                    {t('record.ready_to_record', 'Ready to record')}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="flex flex-col gap-3 w-full max-w-[240px] mt-2">
@@ -1724,7 +2016,7 @@ const Record: React.FC = () => {
 
                                 {/* Text Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
-                                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-[2rem] p-6 flex flex-col gap-4 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900 hover:shadow-md h-full min-h-[260px]">
+                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[2rem] p-6 flex flex-col gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[260px]">
                                         {selectedSubTemplate === 'Custom Template' ? (
                                             <div className="flex flex-col gap-6 h-full">
                                                 <div className="flex-1 flex flex-col gap-3 relative">
@@ -1740,7 +2032,7 @@ const Record: React.FC = () => {
                                                         value={patientInfo.context}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
                                                         placeholder={t('record.goals_placeholder', 'Symptoms or session objectives...')}
-                                                        className="w-full flex-1 min-h-[90px] bg-white/40 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-primary/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
+                                                        className="w-full flex-1 min-h-[90px] bg-white/40 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-indigo-500/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
                                                     />
                                                 </div>
                                                 <div className="flex-1 flex flex-col gap-3 relative">
@@ -1779,7 +2071,7 @@ const Record: React.FC = () => {
                                                     {!patientInfo.context.trim() && (
                                                         <div className="absolute inset-x-0 top-2 pointer-events-none px-2 flex group-focus-within/text:opacity-0 transition-opacity duration-300">
                                                             <div className="flex items-start gap-1">
-                                                                <div className="w-[2.5px] h-5 bg-primary/40 animate-cursor-blink rounded-full mt-0.5" />
+                                                                <div className="w-[2.5px] h-5 bg-indigo-500/40 animate-cursor-blink rounded-full mt-0.5" />
                                                                 <span className="text-[15px] font-medium text-slate-400/60 dark:text-slate-500/60 tracking-tight leading-relaxed animate-in fade-in">
                                                                     {t('record.goals_placeholder', 'Specify symptoms, history focus, or session objectives (optional)...')}
                                                                 </span>
@@ -1941,11 +2233,11 @@ const Record: React.FC = () => {
                                                                         <Clock size={10} className="shrink-0 opacity-70" />
                                                                         <span>
                                                                             {svc.timeIn && svc.timeOut ? (
-                                                                                `${svc.timeIn} - ${svc.timeOut}` 
+                                                                                `${svc.timeIn} - ${svc.timeOut} (${calculateDurationMin(svc.timeIn, svc.timeOut, svc.units || '')} min)` 
                                                                             ) : svc.timeIn ? (
-                                                                                `In: ${svc.timeIn}${svc.units ? ` (${svc.units} U)` : ''}` 
+                                                                                `In: ${svc.timeIn}${svc.units ? ` (${parseInt(svc.units) * 15} min)` : ''}` 
                                                                             ) : svc.units ? (
-                                                                                `${svc.units} ${language === 'es' ? 'U' : 'U'}` 
+                                                                                `${parseInt(svc.units) * 15} min` 
                                                                             ) : ''}
                                                                         </span>
                                                                     </span>
@@ -2031,16 +2323,17 @@ const Record: React.FC = () => {
                                                 />
                                             </div>
                                             
-                                            {/* Units Input Field */}
+                                            {/* Duration in Minutes Input Field */}
                                             <div className="col-span-4 bg-slate-50 dark:bg-slate-950 rounded-xl flex items-center px-3 border border-transparent focus-within:border-primary/20">
                                                 <input 
                                                     type="number"
                                                     min="0"
                                                     autoComplete="off"
-                                                    placeholder={language === 'es' ? 'Unid.' : 'Units'}
-                                                    value={units}
-                                                    readOnly={true}
-                                                    className="h-10 border-0 bg-transparent focus:ring-0 outline-none font-bold text-slate-400 dark:text-slate-400 w-full p-0 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-not-allowed"
+                                                    placeholder={language === 'es' ? 'Min.' : 'Min'}
+                                                    value={durationMin}
+                                                    onChange={(e) => handleDurationMinChange(e.target.value)}
+                                                    style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                                                    className="h-10 !border-0 focus:!border-0 focus:!border-transparent focus-visible:!border-0 focus-visible:!border-transparent bg-transparent focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none outline-none font-bold text-slate-700 dark:text-slate-200 w-full p-0 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-pointer"
                                                 />
                                             </div>
                                         </div>
@@ -2066,9 +2359,9 @@ const Record: React.FC = () => {
                                                             <TimeSpinner 
                                                                 initialTimeStr={timeIn}
                                                                 onConfirm={(timeStr) => {
-                                                                    setTimeIn(timeStr);
+                                                                    handleTimeInChange(timeStr);
                                                                     setIsMobileTimeOpen(false);
-                                                                }} 
+                                                                }}
                                                             />
                                                         </div>
                                                     </div>
@@ -2092,9 +2385,9 @@ const Record: React.FC = () => {
                                                             <TimeSpinner 
                                                                 initialTimeStr={timeOut}
                                                                 onConfirm={(timeStr) => {
-                                                                    setTimeOut(timeStr);
+                                                                    handleTimeOutChange(timeStr);
                                                                     setIsMobileTimeOutOpen(false);
-                                                                }} 
+                                                                }}
                                                             />
                                                         </div>
                                                     </div>
@@ -2105,49 +2398,83 @@ const Record: React.FC = () => {
                                         <div className="border-t border-slate-100 dark:border-slate-800/50 my-1" />
 
                                         {/* Row 4: Service Provided */}
-                                        <div className="pt-3.5 relative">
+                                        <div ref={mobileSubTemplateDropdownRef} className="pt-3.5 relative">
                                             <div 
-                                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                onClick={() => setIsDropdownOpen(true)}
                                                 className={cn(
-                                                    "w-full h-10 flex items-center justify-between px-4 bg-slate-50 dark:bg-slate-950 rounded-xl cursor-pointer transition-all hover:bg-slate-100 dark:hover:bg-slate-900",
+                                                    "w-full h-10 flex items-center justify-between px-4 bg-slate-50 dark:bg-slate-950 rounded-xl cursor-text transition-all hover:bg-slate-100 dark:hover:bg-slate-900",
                                                     isDropdownOpen ? "ring-2 ring-primary/20" : ""
                                                 )}
                                             >
-                                                <span className={cn(
-                                                    "text-xs font-semibold tracking-tight truncate",
-                                                    selectedSubTemplate ? "text-slate-700 dark:text-slate-200" : "text-slate-400 dark:text-slate-500"
-                                                )}>
-                                                    {selectedSubTemplate || t('record.select_encounter_type', 'Select encounter type...')}
-                                                </span>
-                                                <ChevronDown className={cn("size-3.5 text-slate-400 transition-transform duration-300 shrink-0", isDropdownOpen && "rotate-180")} />
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-xs font-semibold tracking-tight text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 p-0"
+                                                    placeholder={t('record.select_encounter_type', 'Select encounter type...')}
+                                                    value={isDropdownOpen ? subTemplateSearchQuery : selectedSubTemplate}
+                                                    onChange={(e) => {
+                                                        setSubTemplateSearchQuery(e.target.value);
+                                                        setIsDropdownOpen(true);
+                                                    }}
+                                                    onFocus={() => setIsDropdownOpen(true)}
+                                                />
+                                                <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                                                    {selectedSubTemplate && isDropdownOpen && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedSubTemplate('');
+                                                                setSubTemplateSearchQuery('');
+                                                            }}
+                                                            className="text-slate-450 hover:text-slate-650 dark:hover:text-slate-350 transition-colors"
+                                                        >
+                                                            <X size={12} />
+                                                        </button>
+                                                    )}
+                                                    <ChevronDown className={cn("size-3.5 text-slate-400 transition-transform duration-300 shrink-0", isDropdownOpen && "rotate-180")} />
+                                                </div>
                                             </div>
  
                                             {isDropdownOpen && (
                                                 <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                    <div className="flex flex-col gap-1 max-h-[180px] overflow-y-auto">
-                                                        {TCM_SUB_TEMPLATES.map((t) => {
-                                                            const isActive = selectedSubTemplate === t;
-                                                            return (
-                                                                <button
-                                                                    key={t}
-                                                                    onClick={() => {
-                                                                        setSelectedSubTemplate(t);
-                                                                        setIsDropdownOpen(false);
-                                                                    }}
-                                                                    className={cn(
-                                                                        "w-full justify-between items-center h-9 px-3 text-xs font-semibold rounded-lg transition-colors flex text-left",
-                                                                        isActive ? 'bg-primary/5 text-primary dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-750 dark:hover:text-slate-200'
-                                                                    )}
-                                                                >
-                                                                    <span className="truncate pr-2">{t}</span>
-                                                                    {isActive && <Check size={12} strokeWidth={3} className="shrink-0" />}
-                                                                </button>
-                                                            );
-                                                        })}
+                                                    <div className="flex flex-col gap-1 max-h-[180px] overflow-y-auto pr-1">
+                                                        {filteredSubTemplatesByGroup.length === 0 ? (
+                                                            <div className="text-center py-4 text-slate-400 text-[11px] font-medium">
+                                                                {language === 'es' ? 'No se encontraron servicios' : 'No services found'}
+                                                            </div>
+                                                        ) : (
+                                                            filteredSubTemplatesByGroup.map((group) => (
+                                                                <div key={group.category} className="mb-2 last:mb-0">
+                                                                    <div className="text-[9px] font-extrabold text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-widest px-3 py-1 select-none mb-0.5 border-b border-slate-100/50 dark:border-slate-800/50 pb-0.5">
+                                                                        {group.category}
+                                                                    </div>
+                                                                    <div className="flex flex-col gap-0.5">
+                                                                        {group.items.map((t) => {
+                                                                            const isActive = selectedSubTemplate === t;
+                                                                            return (
+                                                                                <button
+                                                                                    key={t}
+                                                                                    onClick={() => {
+                                                                                        setSelectedSubTemplate(t);
+                                                                                        setIsDropdownOpen(false);
+                                                                                    }}
+                                                                                    className={cn(
+                                                                                        "w-full justify-between items-center h-8 px-3 text-xs font-semibold rounded-lg transition-colors flex text-left",
+                                                                                        isActive ? 'bg-primary/5 text-primary dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-750 dark:hover:text-slate-200'
+                                                                                    )}
+                                                                                >
+                                                                                    <span className="truncate pr-2">{t}</span>
+                                                                                    {isActive && <Check size={12} strokeWidth={3} className="shrink-0" />}
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        )}
                                                     </div>
                                                 </div>
-                                            )}
-                                        </div>
+                                            )}                                        </div>
                                     </div>
                                     <div className="pt-4">
                                         <Button

@@ -10,7 +10,7 @@ import {
   isToday,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, Search, User, CalendarPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, Search, User, CalendarPlus, SlidersHorizontal } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
@@ -136,20 +136,29 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
              {/* Nav Left - Date Controls */}
              <div className="flex flex-col gap-2">
                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">{language === 'es' ? "Línea de Tiempo de Agenda" : "Agenda Timeline"}</span>
-                 <div className="flex items-center gap-4 border border-border/80 rounded-[1.5rem] p-2 h-[60px] bg-card shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
-                     <Button variant="outline" className="rounded-xl h-full px-5 font-bold bg-slate-50 dark:bg-slate-900 border-0 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all" onClick={goToToday}>
+                 <div className="flex items-center gap-3 border border-slate-200/50 dark:border-slate-800/50 rounded-[28px] p-1 h-12 bg-slate-50/30 dark:bg-slate-950/10 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.01)]">
+                     <button 
+                         onClick={goToToday}
+                         className="rounded-full h-10 px-5 font-black text-[10px] tracking-wider bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white hover:shadow-sm transition-all cursor-pointer"
+                     >
                          {language === 'es' ? "HOY" : "TODAY"}
-                     </Button>
-                     <div className="text-[15px] font-medium tracking-tight text-slate-800 dark:text-slate-200 px-2 lg:px-4">
+                     </button>
+                     <div className="text-xs font-bold tracking-tight text-slate-750 dark:text-slate-300 px-2">
                          {format(startDate, language === 'es' ? "d 'de' MMMM" : 'MMMM d', { locale: language === 'es' ? es : undefined })} - {format(endDate, language === 'es' ? "d 'de' MMMM, yyyy" : 'MMMM d, yyyy', { locale: language === 'es' ? es : undefined })}
                      </div>
-                     <div className="flex items-center gap-0.5 bg-slate-50/80 dark:bg-slate-900 p-1 rounded-xl h-full">
-                         <Button variant="ghost" size="icon" onClick={previousWeek} className="h-full w-10 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all bg-transparent">
+                     <div className="flex items-center gap-0.5 bg-white/60 dark:bg-slate-900/60 p-0.5 rounded-[20px] border border-slate-200/50 dark:border-slate-800/80 h-10 ml-auto">
+                         <button 
+                             onClick={previousWeek} 
+                             className="h-9 w-9 rounded-[18px] text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 transition-all bg-transparent border-0 cursor-pointer flex items-center justify-center"
+                         >
                              <ChevronLeft className="w-4 h-4" />
-                         </Button>
-                         <Button variant="ghost" size="icon" onClick={nextWeek} className="h-full w-10 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all bg-transparent">
+                         </button>
+                         <button 
+                             onClick={nextWeek} 
+                             className="h-9 w-9 rounded-[18px] text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 transition-all bg-transparent border-0 cursor-pointer flex items-center justify-center"
+                         >
                              <ChevronRight className="w-4 h-4" />
-                         </Button>
+                         </button>
                      </div>
                  </div>
             </div>
@@ -157,13 +166,13 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
             {/* Nav Right - Search */}
              <div className="flex flex-col gap-2 flex-1 max-w-[500px]" ref={searchContainerRef}>
                  <div className="flex items-center justify-between px-1">
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Search className="w-3 h-3"/> {language === 'es' ? "Filtrar Pacientes" : "Filter Patients"}</span>
-                     <Link to="/notes/new" className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-primary/80 flex items-center gap-1 transition-colors">
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><SlidersHorizontal className="w-3 h-3 text-slate-400" /> {language === 'es' ? "Filtrar Pacientes" : "Filter Patients"}</span>
+                     <Link to="/notes/new" className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:text-indigo-500 flex items-center gap-1.5 transition-colors">
                          <Plus className="w-3 h-3" />
                          {language === 'es' ? "Nuevo Registro" : "New Acquisition"}
                      </Link>
                  </div>
-                 <div className="flex items-center border border-border/80 rounded-2xl px-4 h-[52px] bg-card shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative group focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                 <div className="flex items-center border border-slate-200/80 dark:border-slate-800/80 rounded-[28px] px-5 h-12 bg-slate-50/50 dark:bg-slate-950/20 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.02)] relative group hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
                       <div className="text-slate-400 mr-3 pointer-events-none flex-shrink-0">
                           <Search className="w-4 h-4" />
                       </div>
@@ -175,7 +184,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                          }}
                          onFocus={() => setIsSearchOpen(true)}
                          placeholder={t('record.search_patient_placeholder', 'Search patient registry...')} 
-                         className="flex-1 h-full bg-transparent border-0 border-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent focus:border-transparent shadow-none text-[14px] font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                         className="flex-1 h-full bg-transparent border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-transparent focus:border-transparent shadow-none text-xs font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-350 dark:placeholder:text-slate-600"
                       />
                       
                      {isSearchOpen && uniquePatients.length > 0 && searchQuery && (
@@ -338,9 +347,9 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                         {language === 'es' ? 'Registra un encuentro clínico para esta fecha.' : 'Record a clinical encounter for this date.'}
                     </p>
                     
-                    <Popover open={openPopoverId === 'mobile-empty'} onOpenChange={(open) => setOpenPopoverId(open ? 'mobile-empty' : null)}>
+                        <Popover open={openPopoverId === 'mobile-empty'} onOpenChange={(open) => setOpenPopoverId(open ? 'mobile-empty' : null)}>
                         <PopoverTrigger asChild>
-                            <Button className="mt-4 px-5 h-9 rounded-full text-[10px] font-black uppercase tracking-widest bg-indigo-950 hover:bg-indigo-900 text-white border border-indigo-800/20 shadow-md">
+                            <Button className="mt-4 px-5 h-9 rounded-full text-[10px] font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-700/25 shadow-md cursor-pointer">
                                 <Plus className="w-3.5 h-3.5 mr-1" />
                                 {language === 'es' ? "Nueva Sesión" : "New Session"}
                             </Button>
@@ -440,7 +449,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                     <div className="pt-2 flex justify-center">
                         <Popover open={openPopoverId === 'mobile-list'} onOpenChange={(open) => setOpenPopoverId(open ? 'mobile-list' : null)}>
                             <PopoverTrigger asChild>
-                                <Button className="w-full h-11 rounded-2xl text-[11px] font-black uppercase tracking-widest bg-slate-100/80 dark:bg-slate-900/80 hover:bg-slate-200/80 text-slate-600 dark:text-slate-300 border border-slate-250/20 dark:border-slate-800/80 gap-1.5 transition-all">
+                                <Button className="w-full h-11 rounded-full text-[11px] font-black uppercase tracking-widest bg-indigo-600 hover:bg-indigo-500 text-white shadow-md border border-indigo-700/25 gap-1.5 transition-all cursor-pointer">
                                     <Plus className="w-4 h-4 stroke-[3]" />
                                     {language === 'es' ? "Nueva Sesión" : "New Session"}
                                 </Button>
@@ -479,32 +488,32 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
         </div>
 
         {/* Agenda Grid Compact View (Desktop only) */}
-        <div className="hidden lg:flex flex-1 overflow-x-auto custom-scrollbar relative px-6 pb-6 bg-surface border-t border-border/60">
+        <div className="hidden lg:flex flex-1 overflow-x-auto custom-scrollbar relative px-8 pb-6 bg-surface border-t border-border/60">
             <div className="min-w-[1100px] min-h-[500px] h-full flex gap-3 pt-6 w-full">
                 {days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
                     const dayNotes = notesByDate[dateStr] || [];
                     const isTodayDate = isToday(day);
-
+ 
                     // Sort notes chronologically within the day
                     dayNotes.sort((a, b) => {
                         const tA = (a as any).encounter?.time_in || (a as any).appointment?.start_time || '';
                         const tB = (b as any).encounter?.time_in || (b as any).appointment?.start_time || '';
                         return parseTimeMins(tA) - parseTimeMins(tB);
                     });
-
+ 
                     return (
-                        <div key={dateStr} className={cn("flex-1 flex flex-col min-h-full transition-colors relative group/col rounded-[1.5rem] border overflow-hidden", isTodayDate ? "bg-card border-primary/20 shadow-[0_4px_24px_-8px_rgba(var(--primary-rgb),0.15)] ring-1 ring-primary/10" : "bg-slate-50/80 dark:bg-slate-900/30 border-border/60 ")}>
+                        <div key={dateStr} className={cn("flex-1 flex flex-col min-h-full transition-all duration-300 relative group/col rounded-[1.5rem] border overflow-hidden", isTodayDate ? "bg-white dark:bg-slate-900 border-indigo-500/35 shadow-[0_4px_24px_-8px_rgba(99,102,241,0.18)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-6px_rgba(99,102,241,0.28)]" : "bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800/80 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-6px_rgba(99,102,241,0.1)] dark:hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/80 dark:hover:border-indigo-900/60")}>
                             {/* Day Header */}
-                            <div className={cn("py-4 px-4 text-center border-b flex flex-col items-center justify-center gap-1 transition-colors", isTodayDate ? "bg-primary/5 border-primary/10" : "bg-transparent border-border/50")}>
-                                <span className={cn("text-[10px] font-bold tracking-widest uppercase", isTodayDate ? "text-primary" : "text-slate-400 dark:text-slate-350")}>
+                            <div className={cn("py-4 px-4 text-center border-b flex flex-col items-center justify-center gap-1 transition-colors", isTodayDate ? "bg-indigo-50/20 dark:bg-indigo-950/15 border-indigo-100/50 dark:border-indigo-900/40" : "bg-transparent border-slate-100 dark:border-slate-800/50")}>
+                                <span className={cn("text-[10px] font-bold tracking-widest uppercase", isTodayDate ? "text-indigo-650 dark:text-indigo-400" : "text-slate-400 dark:text-slate-350")}>
                                     {format(day, 'EEEE', { locale: language === 'es' ? es : undefined })}
                                 </span>
                                 <div className="flex items-center gap-1.5 flex-col mt-0.5">
-                                    <span className={cn("text-[28px] font-medium tracking-tight leading-none relative z-10", isTodayDate ? "text-primary" : "text-slate-700 dark:text-slate-300 font-normal")}>
+                                    <span className={cn("text-[28px] font-medium tracking-tight leading-none relative z-10", isTodayDate ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-700 dark:text-slate-300 font-normal")}>
                                         {format(day, 'd')}
                                     </span>
-                                    {isTodayDate && <div className="w-1 h-1 bg-primary rounded-full mt-0.5 shadow-[0_0_8px_rgba(var(--primary-rgb),0.6)]" />}
+                                    {isTodayDate && <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1.5 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />}
                                 </div>
                             </div>
                             
@@ -533,7 +542,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                 className={cn(
                                                     "relative overflow-hidden rounded-2xl p-3 bg-card border border-border/70 transition-all duration-300 cursor-pointer group/card",
                                                     "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]",
-                                                    "hover:shadow-[0_12px_24px_-10px_rgba(var(--primary-rgb),0.15)] hover:-translate-y-[2px] hover:border-primary/30 hover:z-10",
+                                                    "hover:shadow-[0_12px_24px_-10px_rgba(99,102,241,0.22)] hover:-translate-y-[2px] hover:border-indigo-500/40 hover:z-10",
                                                     isPending && "bg-gradient-to-br from-card to-amber-500/5",
                                                     !isSigned && !isPending && "bg-gradient-to-br from-card to-slate-900/5"
                                                 )}
@@ -568,14 +577,14 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                     
                                                     <div className="min-w-0">
                                                         <h3 
-                                                            className="font-medium text-slate-700 dark:text-slate-200 text-[12px] tracking-tight leading-tight group-hover/card:text-primary dark:group-hover/card:text-indigo-400 transition-colors truncate"
+                                                            className="font-medium text-slate-700 dark:text-slate-200 text-[12px] tracking-tight leading-tight group-hover/card:text-indigo-600 dark:group-hover/card:text-indigo-400 transition-colors truncate"
                                                             title={pName}
                                                         >
                                                             {pName}
                                                         </h3>
                                                     </div>
                                                 </div>
-                                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-indigo-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none" />
                                             </div>
                                         </TiltCard>
                                     )
@@ -587,7 +596,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                         <PopoverTrigger asChild>
                                             <Button 
                                                 variant="ghost" 
-                                                className="w-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 gap-1.5 h-8 px-4 shadow-none font-semibold text-[10px] uppercase tracking-widest rounded-xl transition-all"
+                                                className="w-full text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 border border-transparent hover:border-indigo-100/50 dark:hover:border-indigo-900/40 gap-1.5 h-8 px-4 shadow-none font-black text-[10px] uppercase tracking-widest rounded-full transition-all cursor-pointer"
                                             >
                                                 <Plus className="w-3 h-3 stroke-[3]" />
                                                 {language === 'es' ? "Nueva Sesión" : "New Session"}
