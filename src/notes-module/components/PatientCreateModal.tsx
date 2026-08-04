@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
     UserPlus,
     X,
@@ -46,6 +46,7 @@ import { storage, type Patient } from '../lib/storage';
 import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
 import { searchDiagnoses, type DiagnosisCode } from '../lib/diagnosisCatalog';
+import { pollTaskUntilTerminal } from '../lib/taskPolling';
 import { cn } from "@/lib/utils";
 import { supabase } from '../../lib/supabaseClient';
 
@@ -137,13 +138,27 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
     };
     const isMobile = false; // dummy or check existing variables if any
     const [isAmexSearching, setIsAmexSearching] = useState(false);
+    const amexLookupAbortRef = useRef<AbortController | null>(null);
+    const isMountedRef = useRef(true);
+
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+            amexLookupAbortRef.current?.abort();
+        };
+    }, []);
 
     const handleAmexzoneLookup = async () => {
+        if (isAmexSearching) return;
         if (!amexSearchName.trim()) {
             toast.error("Please enter a patient name to search.");
             return;
         }
 
+        const controller = new AbortController();
+        amexLookupAbortRef.current?.abort();
+        amexLookupAbortRef.current = controller;
         setIsAmexSearching(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -170,37 +185,43 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                 .single();
 
             if (error || !task) {
-                toast.error("Failed to start search task: " + (error?.message || "unknown error"));
-                setIsAmexSearching(false);
-                return;
+                throw new Error('Unable to queue the Amexzone search task.');
             }
 
             toast.info("Search task queued. Waiting for local bot to execute...", { duration: 5000 });
 
-            // Poll for task status
-            let attempts = 0;
-            const maxAttempts = 30; // 60 seconds total (30 * 2s)
-            const interval = setInterval(async () => {
-                attempts++;
-                const { data: updatedTask, error: pollError } = await supabase
-                    .from('amexzone_note_tasks')
-                    .select('*')
-                    .eq('id', task.id)
-                    .single();
+            const pollingResult = await pollTaskUntilTerminal({
+                signal: controller.signal,
+                fetchTask: async () => {
+                    const { data, error: pollError } = await supabase
+                        .from('amexzone_note_tasks')
+                        .select('status, error_message, result_summary')
+                        .eq('id', task.id)
+                        .single();
 
-                if (pollError || !updatedTask) {
-                    console.error("Polling error:", pollError);
-                    return;
-                }
+                    if (pollError || !data) throw new Error('Task status is temporarily unavailable.');
+                    return data;
+                },
+                onPollError: () => console.warn('Amexzone task status is temporarily unavailable.'),
+            });
 
-                if (updatedTask.status === 'completed') {
-                    clearInterval(interval);
-                    setIsAmexSearching(false);
-                    toast.success("Patient demographics imported successfully!", { icon: "✨" });
-                    
-                    const data = updatedTask.result_summary;
-                    if (data) {
-                        console.log("🤖 CLIO NOTES - IMPORT DATA RECEIVED FROM BOT:", data);
+            if (!isMountedRef.current) return;
+            if (pollingResult.state === 'failed') {
+                toast.error('The Amexzone search failed. Check the bot status and try again.');
+                return;
+            }
+            if (pollingResult.state === 'timeout') {
+                toast.error('Search timed out. Make sure the Amexzone bot is running.');
+                return;
+            }
+
+            const data = pollingResult.task.result_summary;
+            if (!data || typeof data !== 'object') {
+                toast.error('The Amexzone task completed without patient data. Nothing was imported.');
+                return;
+            }
+
+            toast.success("Patient demographics imported successfully!", { icon: "✨" });
                         setFormData(prev => {
                             const newState = {
                                 ...prev,
@@ -243,25 +264,17 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                     medicare_details: data.medicare_status || (prev.tcm_social_needs && prev.tcm_social_needs.medicare_details) || ''
                                 }
                             };
-                            console.log("🤖 CLIO NOTES - NEW FORM STATE UPDATED:", newState);
                             return newState;
                         });
-                    }
-                } else if (updatedTask.status === 'failed') {
-                    clearInterval(interval);
-                    setIsAmexSearching(false);
-                    toast.error(`Search failed: ${updatedTask.error_message || "unknown error"}`);
-                } else if (attempts >= maxAttempts) {
-                    clearInterval(interval);
-                    setIsAmexSearching(false);
-                    toast.error("Search timed out. Make sure your local bot is running.");
-                }
-            }, 2000);
-
         } catch (err) {
-            console.error("Amexzone lookup error:", err);
+            if (err instanceof Error && err.name === 'AbortError') return;
+            console.error("Amexzone lookup failed.");
             toast.error("An error occurred starting the search.");
-            setIsAmexSearching(false);
+        } finally {
+            if (amexLookupAbortRef.current === controller) {
+                amexLookupAbortRef.current = null;
+            }
+            if (isMountedRef.current) setIsAmexSearching(false);
         }
     };
 

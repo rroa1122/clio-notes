@@ -91,11 +91,8 @@ const Templates = () => {
   };
 
   const handleDelete = async (template: Template) => {
-    console.log('handleDelete called for:', template.id, template.name);
-
     // If not already in confirmation state, set it
     if (confirmDeleteId !== template.id) {
-      console.log('Setting confirmation state for:', template.id);
       setConfirmDeleteId(template.id);
       // Optional: reset after 3 seconds
       setTimeout(() => setConfirmDeleteId(prev => prev === template.id ? null : prev), 3000);
@@ -103,12 +100,9 @@ const Templates = () => {
     }
 
     try {
-      console.log('Attempting to delete from storage...');
       await storage.deleteTemplate(template.id);
-      console.log('Delete successful in storage');
       setTemplates(prev => {
         const filtered = prev.filter(t => t.id !== template.id);
-        console.log('Templates state updated, remaining:', filtered.length);
         return filtered;
       });
       if (activeId === template.id) {

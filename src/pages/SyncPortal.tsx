@@ -131,8 +131,7 @@ export function SyncPortal() {
                     table: 'amexzone_note_tasks',
                     filter: `user_id=eq.${user.id}`
                 },
-                (payload) => {
-                    console.log('Realtime task update received:', payload);
+                () => {
                     fetchTasks();
                 }
             )
@@ -147,8 +146,12 @@ export function SyncPortal() {
     useEffect(() => {
         if (mfaStatus !== 'awaiting_2fa' && mfaStatus !== 'processing') return;
 
-        const interval = setInterval(async () => {
-            if (!user?.id) return;
+        let cancelled = false;
+        let nextPoll: ReturnType<typeof setTimeout> | undefined;
+
+        const pollMfaStatus = async () => {
+            if (!user?.id || cancelled) return;
+
             try {
                 const { data, error } = await supabase
                     .from('provider_integrations')
@@ -162,18 +165,23 @@ export function SyncPortal() {
                         toast.success(language === 'es' ? "¡Conexión establecida con éxito!" : "Amexzone connected successfully!");
                         setMfaCode('');
                         fetchTasks(); // Refresh tasks list
-                        clearInterval(interval);
                     } else if (data.mfa_status === 'expired' || data.mfa_status === 'not_connected') {
                         toast.error(language === 'es' ? "Fallo en la conexión. Revisa las credenciales e intenta de nuevo." : "Connection failed. Please check credentials and try again.");
-                        clearInterval(interval);
                     }
                 }
-            } catch (e) {
-                console.error("Error polling MFA status:", e);
+            } finally {
+                if (!cancelled) {
+                    nextPoll = setTimeout(pollMfaStatus, 3000);
+                }
             }
-        }, 3000);
+        };
 
-        return () => clearInterval(interval);
+        nextPoll = setTimeout(pollMfaStatus, 3000);
+
+        return () => {
+            cancelled = true;
+            if (nextPoll) clearTimeout(nextPoll);
+        };
     }, [mfaStatus, user?.id, language]);
 
     // Disconnect / Reset Integration

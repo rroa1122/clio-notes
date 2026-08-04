@@ -39,7 +39,7 @@ class ErrorBoundary extends Component<Props, State> {
                             We encountered a runtime error. This has been logged, but the current screen cannot be displayed.
                         </p>
 
-                        {this.state.error && (
+                        {import.meta.env.DEV && this.state.error && (
                             <div className="error-code-box">
                                 {this.state.error.toString()}
                             </div>

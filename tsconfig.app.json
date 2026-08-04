@@ -39,6 +39,8 @@
     "src"
   ],
   "exclude": [
-    "src/notes-module/scripts"
+    "src/notes-module/scripts",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

@@ -10,8 +10,7 @@ export function NewNote() {
 
     const handleAudioReady = (data: AudioData) => {
         setSelectedRecording(data);
-        // In a real app, we would store this in global state or context
-        console.log('Audio ready for processing:', data);
+        // In a real app, we would store this in global state or context.
     };
 
     const handleDiscard = () => {

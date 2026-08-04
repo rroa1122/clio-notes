@@ -21,13 +21,106 @@ const TCM_USCIS_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm
 const TCM_HOUSING_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-housing-assistance-note';
 const SYNTHESIS_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/nextSteps';
 
+const TEMPLATE_WEBHOOK_URLS: Record<string, string> = {
+    tcm_progress_note: TCM_WEBHOOK_URL,
+    tcm_assessment_note: TCM_ASSESSMENT_WEBHOOK_URL,
+    tcm_service_plan_note: TCM_SERVICE_PLAN_WEBHOOK_URL,
+    tcm_initial_home_visit_note: TCM_INITIAL_HOME_VISIT_WEBHOOK_URL,
+    tcm_collateral_note: TCM_COLLATERAL_WEBHOOK_URL,
+    tcm_service_plan_discussion: TCM_SERVICE_PLAN_DISCUSSION_WEBHOOK_URL,
+    tcm_hurricane_addendum_note: TCM_HURRICANE_ADDENDUM_WEBHOOK_URL,
+    tcm_hurricane_update_note: TCM_HURRICANE_UPDATE_WEBHOOK_URL,
+    tcm_sts_complete_note: TCM_STS_COMPLETE_WEBHOOK_URL,
+    tcm_sts_collect_note: TCM_STS_COLLECT_WEBHOOK_URL,
+    tcm_sts_submit_note: TCM_STS_SUBMIT_WEBHOOK_URL,
+    tcm_dpp_obtain_note: TCM_DPP_OBTAIN_WEBHOOK_URL,
+    tcm_dpp_complete_note: TCM_DPP_COMPLETE_WEBHOOK_URL,
+    tcm_dpp_submit_pcp_note: TCM_DPP_SUBMIT_PCP_WEBHOOK_URL,
+    tcm_mhv_provide_donation_note: TCM_MHV_PROVIDE_DONATION_WEBHOOK_URL,
+    tcm_donation_obtain_note: TCM_DONATION_OBTAIN_WEBHOOK_URL,
+    tcm_vaccination_assistance_note: TCM_VACCINATION_ASSISTANCE_WEBHOOK_URL,
+    tcm_provider_appt_coord_note: TCM_PROVIDER_APPT_COORD_WEBHOOK_URL,
+    tcm_uscis_assistance_note: TCM_USCIS_ASSISTANCE_WEBHOOK_URL,
+    tcm_housing_assistance_note: TCM_HOUSING_ASSISTANCE_WEBHOOK_URL,
+};
+
+export const getWebhookUrl = (templateId?: string): string =>
+    (templateId && TEMPLATE_WEBHOOK_URLS[templateId]) || PDF_WEBHOOK_URL;
+
+export class PDFServiceError extends Error {
+    public readonly code: 'HTTP_ERROR' | 'EMPTY_RESPONSE' | 'INVALID_JSON' | 'REQUEST_FAILED';
+    public readonly status?: number;
+
+    constructor(
+        code: 'HTTP_ERROR' | 'EMPTY_RESPONSE' | 'INVALID_JSON' | 'REQUEST_FAILED',
+        message: string,
+        status?: number,
+    ) {
+        super(message);
+        this.name = 'PDFServiceError';
+        this.code = code;
+        this.status = status;
+    }
+}
+
+export const getPDFServiceErrorMessage = (error: unknown): string => {
+    if (error instanceof Error && error.name === 'AbortError') {
+        return 'The note request timed out. Nothing was saved; please try again.';
+    }
+    if (error instanceof PDFServiceError) {
+        if (error.code === 'EMPTY_RESPONSE' || error.code === 'INVALID_JSON') {
+            return 'The note service returned an incomplete response. Nothing was saved; please try again.';
+        }
+        if (error.code === 'HTTP_ERROR') {
+            return `The note service is unavailable${error.status ? ` (HTTP ${error.status})` : ''}. Nothing was saved; please try again.`;
+        }
+        return error.message;
+    }
+    return 'Could not generate the document. Nothing was saved; please try again.';
+};
+
 // Minimal interface for the data we expect from/to the webhook
 export interface ClinicalNoteData {
+    id?: string;
     patient_name?: string;
     patient_dob?: string;
     context?: string;
     sections_by_title?: Record<string, string>;
-    [key: string]: any;
+    patientName?: string;
+    patientDob?: string;
+    template_text?: string;
+    templateText?: string;
+    template_id?: string;
+    template_version?: string;
+    provider_name?: string;
+    providerName?: string;
+    transcript?: string;
+    raw_model_text?: string;
+    text?: string;
+    noteText?: string;
+    outcome?: string;
+    outcome_of_services?: string;
+    nextSteps?: string;
+    next_steps?: string;
+    note?: {
+        fields?: {
+            patient_name?: string;
+            patient_dob?: string;
+            context?: string;
+            template_text?: string;
+            provider_name?: string;
+        };
+        meta?: {
+            template_id?: string;
+            template_version?: string;
+        };
+    };
+    patient?: {
+        full_name?: string;
+        dob?: string;
+        context?: string;
+    };
+    [key: string]: unknown;
 }
 
 export type PDFResponse =
@@ -39,48 +132,7 @@ export const PDFService = {
      * Sends audio/metadata (FormData) to the server.
      */
     generatePDF: async (formData: FormData, options?: { template_id?: string; patient_id?: string }, signal?: AbortSignal): Promise<PDFResponse> => {
-        let url = PDF_WEBHOOK_URL;
-        if (options?.template_id === 'tcm_progress_note') {
-            url = TCM_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_assessment_note') {
-            url = TCM_ASSESSMENT_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_service_plan_note') {
-            url = TCM_SERVICE_PLAN_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_initial_home_visit_note') {
-            url = TCM_INITIAL_HOME_VISIT_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_collateral_note') {
-            url = TCM_COLLATERAL_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_service_plan_discussion') {
-            url = TCM_SERVICE_PLAN_DISCUSSION_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_hurricane_addendum_note') {
-            url = TCM_HURRICANE_ADDENDUM_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_hurricane_update_note') {
-            url = TCM_HURRICANE_UPDATE_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_sts_complete_note') {
-            url = TCM_STS_COMPLETE_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_sts_collect_note') {
-            url = TCM_STS_COLLECT_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_sts_submit_note') {
-            url = TCM_STS_SUBMIT_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_dpp_obtain_note') {
-            url = TCM_DPP_OBTAIN_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_dpp_complete_note') {
-            url = TCM_DPP_COMPLETE_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_dpp_submit_pcp_note') {
-            url = TCM_DPP_SUBMIT_PCP_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_mhv_provide_donation_note') {
-            url = TCM_MHV_PROVIDE_DONATION_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_donation_obtain_note') {
-            url = TCM_DONATION_OBTAIN_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_vaccination_assistance_note') {
-            url = TCM_VACCINATION_ASSISTANCE_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_provider_appt_coord_note') {
-            url = TCM_PROVIDER_APPT_COORD_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_uscis_assistance_note') {
-            url = TCM_USCIS_ASSISTANCE_WEBHOOK_URL;
-        } else if (options?.template_id === 'tcm_housing_assistance_note') {
-            url = TCM_HOUSING_ASSISTANCE_WEBHOOK_URL;
-        }
+        const url = getWebhookUrl(options?.template_id);
         return PDFService._sendRequest(formData, undefined, signal, url);
     },
 
@@ -133,8 +185,8 @@ export const PDFService = {
 
         // n8n should return { outcome: "...", nextSteps: "..." }
         return {
-            outcome: (response.data as any)?.outcome || (response.data as any)?.outcome_of_services || "",
-            nextSteps: (response.data as any)?.nextSteps || (response.data as any)?.next_steps || ""
+            outcome: response.data?.outcome || response.data?.outcome_of_services || "",
+            nextSteps: response.data?.nextSteps || response.data?.next_steps || ""
         };
     },
 
@@ -144,7 +196,6 @@ export const PDFService = {
     _sendRequest: async (body: FormData | string, contentType?: string, signal?: AbortSignal, targetUrl?: string): Promise<PDFResponse> => {
         try {
             const requestUrl = targetUrl || PDF_WEBHOOK_URL;
-            console.log("Sending request to:", requestUrl);
 
             const headers: HeadersInit = {};
             if (contentType) {
@@ -159,8 +210,11 @@ export const PDFService = {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || `Server returned ${response.status}`);
+                throw new PDFServiceError(
+                    'HTTP_ERROR',
+                    `The note service returned HTTP ${response.status}.`,
+                    response.status,
+                );
             }
 
             const respContentType = response.headers.get("content-type") || "";
@@ -169,8 +223,11 @@ export const PDFService = {
             if (respContentType.includes("application/json")) {
                 const rawText = await response.text();
                 if (!rawText || rawText.trim() === "") {
-                    // Success but empty body
-                    return { mode: 'url', url: '', data: {} as any } as PDFResponse;
+                    throw new PDFServiceError(
+                        'EMPTY_RESPONSE',
+                        'The note service returned an empty response.',
+                        response.status,
+                    );
                 }
 
                 try {
@@ -182,9 +239,13 @@ export const PDFService = {
                         url: pdfUrl,
                         data: data
                     } as PDFResponse;
-                } catch (e) {
-                    console.warn("Server returned application/json but content was not valid JSON. Falling back to empty response.");
-                    return { mode: 'url', url: '', data: {} as any } as PDFResponse;
+                } catch (error) {
+                    if (error instanceof PDFServiceError) throw error;
+                    throw new PDFServiceError(
+                        'INVALID_JSON',
+                        'The note service returned an invalid JSON response.',
+                        response.status,
+                    );
                 }
             }
 
@@ -197,13 +258,20 @@ export const PDFService = {
                 blob
             } as PDFResponse;
 
-        } catch (error: any) {
-            if (error.name === 'AbortError') {
+        } catch (error: unknown) {
+            if (error instanceof Error && error.name === 'AbortError') {
                 console.warn("Request was aborted by signal.");
                 throw error;
             }
-            console.error("PDF Generation Failed:", error);
-            throw error;
+            if (error instanceof PDFServiceError) {
+                console.error(`PDF generation failed (${error.code}).`);
+                throw error;
+            }
+            console.error('PDF generation failed (REQUEST_FAILED).');
+            throw new PDFServiceError(
+                'REQUEST_FAILED',
+                'Unable to reach the note service. Please try again.',
+            );
         }
     }
 };

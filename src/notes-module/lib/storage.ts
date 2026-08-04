@@ -31,6 +31,7 @@ export interface Patient {
     updated_at?: string;
     deleted_at?: string | null;
     diagnoses?: string | null;
+    allergies?: string | null;
 
     // New Fields
     ssn?: string | null;
@@ -743,7 +744,7 @@ export const storage = {
                 
                 if (existing) {
                     targetId = existing.id;
-                    console.log(`[Storage] Matching patient found by name: ${patient.full_name} (${targetId})`);
+                    console.log('[Storage] Existing patient match found.');
                 }
             }
 

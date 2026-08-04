@@ -57,8 +57,7 @@ export function CallsProvider({ children }: { children: ReactNode }) {
 
     // Expose global handler for manual debugging
     useEffect(() => {
-        (window as any).handlePacket = (json: any) => {
-            console.log("Packet manually injected:", json);
+        (window as any).handlePacket = (_json: any) => {
             // This could be mapped to a call if needed, or just skip as we have realtime now
         };
         return () => {

@@ -13,7 +13,7 @@ export interface BootstrapResult {
  * - Sets setup_complete = false for new profiles.
  */
 export async function ensureUserBootstrap(userId: string, email: string): Promise<BootstrapResult> {
-    console.log(`[Bootstrap] Starting for user ${userId} (${email})`);
+    console.log('[Bootstrap] Starting user profile initialization.');
 
     try {
         // 1. Check existing profile

@@ -209,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 clearTimeout(timeoutId); // Clear fail-safe if successful
  
                 if (session?.user) {
-                    console.log('[Auth] Session found for:', session.user.email);
+                    console.log('[Auth] Active session found.');
                     setSession(session);
                     // Check MFA status
                     checkMfaStatusSync(session.user, (isMfaActive) => {

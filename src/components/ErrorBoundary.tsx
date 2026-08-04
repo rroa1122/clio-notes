@@ -47,9 +47,11 @@ export class ErrorBoundary extends Component<Props, State> {
                             </p>
                         </div>
 
-                        <div className="p-4 bg-slate-50 rounded-xl text-xs font-mono text-slate-400 text-left overflow-auto max-h-32">
-                            {this.state.error?.toString()}
-                        </div>
+                        {import.meta.env.DEV && this.state.error && (
+                            <div className="p-4 bg-slate-50 rounded-xl text-xs font-mono text-slate-400 text-left overflow-auto max-h-32">
+                                {this.state.error.toString()}
+                            </div>
+                        )}
 
                         <Button
                             onClick={this.handleReset}

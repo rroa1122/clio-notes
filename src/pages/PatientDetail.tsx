@@ -715,7 +715,7 @@ export function PatientDetail() {
             return;
         }
         setIsExtracting(true);
-        console.log("Starting handleAutofillAssessment for patient:", patient.id, patient.full_name);
+        console.log("Starting assessment autofill.");
         toast.info(language === 'es' ? "Generando evaluación con IA..." : "Generating assessment with AI...", { icon: "✨" });
 
         try {
@@ -752,7 +752,6 @@ export function PatientDetail() {
                 console.log("Response status:", response.status, response.statusText);
                 if (response.ok) {
                     const resData = await response.json();
-                    console.log("Received data from n8n:", resData);
                     let content = resData;
                     if (Array.isArray(resData) && resData.length > 0) content = resData[0];
                     if (content && content.json) content = content.json;
@@ -781,7 +780,6 @@ export function PatientDetail() {
                             });
                         }
                     }
-                    console.log("Extracted tcm_social_needs payload:", tcm_social_needs);
                 } else {
                     const errText = await response.text();
                     console.error("Webhook responded with error:", response.status, errText);
@@ -4109,9 +4107,10 @@ interface FieldProps {
     onChange?: (name: string, value: string) => void;
     type?: string;
     options?: string[];
+    placeholder?: string;
 }
 
-function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, large, theme, isEditing, name, onChange, type, options }: FieldProps) {
+function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, large, theme, isEditing, name, onChange, type, options, placeholder }: FieldProps) {
     const { language } = useLanguage();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -4264,7 +4263,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                         className="w-full bg-transparent border-none outline-none p-4 text-[14px] font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none leading-relaxed overflow-hidden"
                         value={value || ''}
                         onChange={(e) => onChange?.(name!, e.target.value)}
-                        placeholder={language === 'es' ? `Documentar ${translatedLabel.toLowerCase()}...` : `Document ${label.toLowerCase()}...`}
+                        placeholder={placeholder || (language === 'es' ? `Documentar ${translatedLabel.toLowerCase()}...` : `Document ${label.toLowerCase()}...`)}
                     />
                 ) : options ? (
                     <Select 
@@ -4288,7 +4287,7 @@ function PremiumGlassField({ icon: Icon, label, value, className, isTextarea, la
                         className="w-full h-full bg-transparent border-none outline-none px-5 text-[14px] font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 leading-none pr-8"
                         value={value || ''}
                         onChange={(e) => onChange?.(name!, e.target.value)}
-                        placeholder={language === 'es' ? `Ingresar ${translatedLabel.toLowerCase()}...` : `Enter ${label.toLowerCase()}...`}
+                        placeholder={placeholder || (language === 'es' ? `Ingresar ${translatedLabel.toLowerCase()}...` : `Enter ${label.toLowerCase()}...`)}
                     />
                 )}
             </div>
@@ -4381,7 +4380,7 @@ function TcmCheckbox({
     onTextChange
 }: { 
     label: string, 
-    labelEs: string, 
+    labelEs?: string, 
     field: string, 
     isEditing: boolean, 
     needs: any, 
@@ -4390,7 +4389,7 @@ function TcmCheckbox({
 }) {
     const { language } = useLanguage();
     const isChecked = !!(needs && needs[field]);
-    const displayLabel = language === 'es' ? labelEs : label;
+    const displayLabel = language === 'es' ? (labelEs || label) : label;
     const noteField = `${field}_note`;
     const noteValue = needs ? needs[noteField] || '' : '';
 

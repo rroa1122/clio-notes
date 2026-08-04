@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
+import type { User } from '../context/AuthContext';
 
 export interface CallEvent {
     id: string;
@@ -34,21 +35,24 @@ export function useCallEvents() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [activeClinicId, setActiveClinicId] = useState<string | null>(null);
 
-    const fetchInitial = useCallback(async (user: any) => {
+    const fetchInitial = useCallback(async (user: User | null) => {
         if (!user) {
-            console.log("[useCallEvents] fetchInitial skipped: no user provided");
+            setEvents([]);
+            setActiveClinicId(null);
+            setLoading(false);
             return;
         }
 
 
         try {
             setLoading(true);
+            setError(null);
             let activeClinicId = user.clinic_id;
 
             // Second-Chance Logic: If clinic_id is missing from auth context, fetch user profile directly
             if (!activeClinicId) {
-                console.log("[useCallEvents] clinic_id missing from auth session, attempting profile recovery...");
                 const { data: profile, error: profileErr } = await supabase
                     .from('profiles')
                     .select('clinic_id')
@@ -56,40 +60,60 @@ export function useCallEvents() {
                     .single();
 
                 if (profileErr) {
-                    console.error("[useCallEvents] Profile recovery failed:", profileErr);
+                    throw new Error('Clinic context is unavailable.');
                 } else if (profile?.clinic_id) {
-                    console.log("[useCallEvents] Profile recovery success! found clinic_id:", profile.clinic_id);
                     activeClinicId = profile.clinic_id;
                 }
             }
 
-            let query = supabase.from('clinic_call_intakes').select('*');
+            if (!activeClinicId) {
+                setActiveClinicId(null);
+                setEvents([]);
+                setError('Clinic context is unavailable.');
+                return;
+            }
 
-            const { data, error } = await query
+            setActiveClinicId(activeClinicId);
+
+            const { data, error } = await supabase
+                .from('clinic_call_intakes')
+                .select('*')
+                .eq('clinic_id', activeClinicId)
                 .order('started_at', { ascending: false, nullsFirst: false })
                 .limit(50);
 
             if (error) throw error;
 
             setEvents(data || []);
-        } catch (err: any) {
-            console.error('[useCallEvents] Error fetching initial call events:', err);
-            setError(err.message);
+        } catch {
+            setEvents([]);
+            setError('Unable to load call events.');
         } finally {
             setLoading(false);
         }
-    }, []); // No external dependencies now, user is passed in
+    }, []);
 
     useEffect(() => {
         if (!authLoading && authUser) {
             fetchInitial(authUser);
+        } else if (!authLoading) {
+            fetchInitial(null);
         }
+    }, [authUser, authLoading, fetchInitial]);
+
+    useEffect(() => {
+        if (!activeClinicId) return;
 
         const channel = supabase
-            .channel('call_events_stream')
+            .channel(`call_events_stream:${activeClinicId}`)
             .on(
                 'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'clinic_call_intakes' },
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'clinic_call_intakes',
+                    filter: `clinic_id=eq.${activeClinicId}`
+                },
                 (payload) => {
                     const newEvent = payload.new as CallEvent;
                     // Dedupe: find if exists by id
@@ -103,7 +127,12 @@ export function useCallEvents() {
             )
             .on(
                 'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'clinic_call_intakes' },
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'clinic_call_intakes',
+                    filter: `clinic_id=eq.${activeClinicId}`
+                },
                 (payload) => {
                     const updatedEvent = payload.new as CallEvent;
                     setEvents((prev) =>
@@ -124,7 +153,7 @@ export function useCallEvents() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [authUser?.id, authLoading, fetchInitial]);
+    }, [activeClinicId]);
 
     const refetch = useCallback(async () => {
         await fetchInitial(authUser);

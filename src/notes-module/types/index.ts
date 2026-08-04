@@ -287,6 +287,11 @@ export interface AppSettings {
 }
 
 export interface ClioNote {
+    id?: string;
+    template_id?: string;
+    templateId?: string;
+    subTemplate?: string;
+    _frontend_service_title?: string;
     patient: {
         full_name: string;
         dob: string;
@@ -309,6 +314,11 @@ export interface ClioNote {
         duration?: string;
         duration_minutes?: string | number;
         units?: string | number;
+        billing_units?: string | number;
+        location_name?: string;
+        place_of_service_name?: string;
+        sub_template?: string;
+        primary_service_provided?: string;
     };
     facility?: {
         name?: string;
@@ -334,6 +344,10 @@ export interface ClioNote {
         provider?: string;
         visitDate?: string;
         visit_date?: string;
+        subTemplate?: string;
+    };
+    services?: {
+        service_focus_title?: string;
     };
     staff?: {
         case_manager_name?: string;

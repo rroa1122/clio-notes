@@ -9,12 +9,13 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { PDFService } from '../lib/PDFService';
+import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
 import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
+import { createAudioUploadPayload } from '../lib/noteRequestUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
 import { supabase } from '../../lib/supabaseClient';
 import { settingsService } from '../../services/settingsService';
@@ -1057,7 +1058,7 @@ const Record: React.FC = () => {
         if (recordedServices.length === 0 && hasContext) {
             allServicesToProcess.push({
                 id: 'text-only',
-                audioBlob: new Blob([''], { type: 'audio/webm' }),
+                audioBlob: null,
                 subTemplate: selectedSubTemplate,
                 duration: 0,
                 serviceDate: serviceDate,
@@ -1084,7 +1085,8 @@ const Record: React.FC = () => {
                 
                 // If there's no audio, we send a tiny silent audio placeholder (100 bytes) 
                 // to satisfy n8n binary nodes that might fail on a truly empty 0-byte file.
-                const blobToSend = svc.audioBlob || new Blob([new Uint8Array(100)], { type: 'audio/webm' });
+                const audioPayload = createAudioUploadPayload(svc.audioBlob);
+                const blobToSend = audioPayload.blob;
                 formData.append(audioFieldName, blobToSend, 'encounter_audio.' + (blobToSend.type.split('/')[1] || 'webm'));
 
                 // Always send the text field explicitly as well, as some n8n versions might prefer it
@@ -1166,19 +1168,23 @@ const Record: React.FC = () => {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 180000);
 
-                const result = await PDFService.generatePDF(
-                    formData,
-                    {
-                        template_id: selectedTemplateId,
-                        patient_id: selectedPatient?.id
-                    },
-                    controller.signal
-                );
-                clearTimeout(timeoutId);
+                let result: PDFResponse;
+                try {
+                    result = await PDFService.generatePDF(
+                        formData,
+                        {
+                            template_id: selectedTemplateId,
+                            patient_id: selectedPatient?.id
+                        },
+                        controller.signal
+                    );
+                } finally {
+                    clearTimeout(timeoutId);
+                }
 
                 if (!result.data || Object.keys(result.data).length === 0) {
                     // Specific handling for text-only TCM notes that the backend might not be ready for
-                    if (!svc.audioBlob) {
+                    if (audioPayload.isPlaceholder) {
                         throw new Error(`The backend (n8n) did not return a response for this text-only service. This usually means the workflow requires audio to proceed. Please record a short audio or update the n8n workflow.`);
                     }
                     throw new Error(`Service ${i + 1} (${svc.subTemplate}) returned an empty response. Verify n8n logs.`);
@@ -1290,15 +1296,10 @@ const Record: React.FC = () => {
                         const outcomes = generatedNotes.map(n => n.narrative?.outcome_of_services).filter(Boolean) as string[];
                         const nextSteps = generatedNotes.map(n => n.narrative?.next_steps).filter(Boolean) as string[];
                         
-                        console.log("[JointNote] Individual outcomes:", outcomes);
-                        console.log("[JointNote] Individual next steps:", nextSteps);
-
                         if (outcomes.length > 0 || nextSteps.length > 0) {
                             toast.loading("Synthesizing joint narrative (n8n)...", { id: 'joint-progress' });
                             const synthesized = await PDFService.synthesizeJointNote(outcomes, nextSteps);
                             
-                            console.log("[JointNote] Synthesis response:", synthesized);
-
                             if (synthesized.outcome) {
                                 unifiedNote.narrative!.outcome_of_services = synthesized.outcome;
                             }
@@ -1328,11 +1329,10 @@ const Record: React.FC = () => {
                 toast.success('Documentation Ready');
             }
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             toast.dismiss('joint-progress');
-            console.error('GenerateNote error:', err);
-            let errorMessage = 'Could not generate document. Please try again.';
-            if (err.name === 'AbortError') errorMessage = 'Request timed out (180s).';
+            console.error('Note generation failed.');
+            const errorMessage = getPDFServiceErrorMessage(err);
             setError(errorMessage);
             setStatus('idle');
             toast.error(errorMessage);
