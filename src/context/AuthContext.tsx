@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: sbUser.email || '',
                 name: sbUser.email?.split('@')[0] || 'Doctor',
                 role: isSuperAdmin ? 'super_admin' : 'doctor',
-                setup_complete: isSuperAdmin ? true : false, // Default to true for super_admin to prevent setup loops
+                setup_complete: isSuperAdmin ? true : undefined, // Default to undefined to prevent setup redirect loop on transient errors
                 subscription_tier: 'free'
             });
         }
@@ -292,6 +292,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             subscription.unsubscribe();
         };
     }, []);
+
+    useEffect(() => {
+        if (!loading && !user) {
+            setIsLocked(false);
+            sessionStorage.removeItem('clio_screen_locked');
+        }
+    }, [loading, user]);
 
     const login = async (email: string, password: string) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });

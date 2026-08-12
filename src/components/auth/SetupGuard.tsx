@@ -17,9 +17,8 @@ export const SetupGuard: React.FC = () => {
     const impersonatingId = sessionStorage.getItem('clio_impersonating_user_id');
     const isImpersonating = !!impersonatingId;
 
-    if (!user.setup_complete && !(isSuperAdmin && !isImpersonating)) {
-        // Deterministic redirect to setup if not complete
-        // This covers null, undefined, and false
+    if (user.setup_complete === false && !(isSuperAdmin && !isImpersonating)) {
+        // Deterministic redirect to setup if strictly false
         return <Navigate to="/setup" replace />;
     }
 
