@@ -579,99 +579,101 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
 
                                     const themeColors = isAssessment 
                                         ? {
-                                            bg: 'bg-emerald-950/25 hover:bg-emerald-950/40 border-emerald-500/30 hover:border-emerald-500/60',
-                                            bar: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
-                                            timeText: 'text-emerald-400',
-                                            clockIcon: 'text-emerald-400',
-                                            tagText: 'text-emerald-300/80',
-                                            glow: 'from-emerald-500/10'
+                                            cardBg: 'bg-slate-900/95 hover:bg-slate-850 border-emerald-500/30 hover:border-emerald-400/60 shadow-sm hover:shadow-emerald-950/30',
+                                            accentBar: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
+                                            timeColor: 'text-emerald-400',
+                                            timeIcon: 'text-emerald-400',
+                                            badgeBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                                            dotColor: 'bg-emerald-400'
                                           }
                                         : isPlan
                                         ? {
-                                            bg: 'bg-amber-950/25 hover:bg-amber-950/40 border-amber-500/30 hover:border-amber-500/60',
-                                            bar: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
-                                            timeText: 'text-amber-400',
-                                            clockIcon: 'text-amber-400',
-                                            tagText: 'text-amber-300/80',
-                                            glow: 'from-amber-500/10'
+                                            cardBg: 'bg-slate-900/95 hover:bg-slate-850 border-amber-500/30 hover:border-amber-400/60 shadow-sm hover:shadow-amber-950/30',
+                                            accentBar: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
+                                            timeColor: 'text-amber-400',
+                                            timeIcon: 'text-amber-400',
+                                            badgeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+                                            dotColor: 'bg-amber-400'
                                           }
                                         : isMhv
                                         ? {
-                                            bg: 'bg-sky-950/25 hover:bg-sky-950/40 border-sky-500/30 hover:border-sky-500/60',
-                                            bar: 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]',
-                                            timeText: 'text-sky-400',
-                                            clockIcon: 'text-sky-400',
-                                            tagText: 'text-sky-300/80',
-                                            glow: 'from-sky-500/10'
+                                            cardBg: 'bg-slate-900/95 hover:bg-slate-850 border-sky-500/30 hover:border-sky-400/60 shadow-sm hover:shadow-sky-950/30',
+                                            accentBar: 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]',
+                                            timeColor: 'text-sky-400',
+                                            timeIcon: 'text-sky-400',
+                                            badgeBg: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+                                            dotColor: 'bg-sky-400'
                                           }
                                         : {
-                                            bg: 'bg-indigo-950/30 hover:bg-indigo-950/45 border-indigo-500/35 hover:border-indigo-500/70',
-                                            bar: 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]',
-                                            timeText: 'text-indigo-300',
-                                            clockIcon: 'text-indigo-400',
-                                            tagText: 'text-indigo-200/80',
-                                            glow: 'from-indigo-500/10'
+                                            cardBg: 'bg-slate-900/95 hover:bg-slate-850 border-indigo-500/30 hover:border-indigo-400/60 shadow-sm hover:shadow-indigo-950/30',
+                                            accentBar: 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]',
+                                            timeColor: 'text-indigo-300',
+                                            timeIcon: 'text-indigo-400',
+                                            badgeBg: 'bg-indigo-500/15 text-indigo-200 border-indigo-500/30',
+                                            dotColor: 'bg-indigo-400'
                                           };
 
                                     return (
-                                        <TiltCard key={note.id || i} intensity={3} scale={1.01}>
-                                            <div 
-                                                onClick={() => onSelectNote(note)}
-                                                className={cn(
-                                                    "relative overflow-hidden rounded-xl p-2.5 transition-all duration-200 cursor-pointer group/card",
-                                                    "backdrop-blur-md border shadow-sm hover:-translate-y-0.5 hover:shadow-md",
-                                                    themeColors.bg
-                                                )}
-                                            >
-                                                {/* Left vertical accent indicator */}
-                                                <div className={cn("absolute left-0 top-0 bottom-0 w-[3px]", themeColors.bar)} />
+                                        <div 
+                                            key={note.id || i}
+                                            onClick={() => onSelectNote(note)}
+                                            className={cn(
+                                                "relative overflow-hidden rounded-xl p-3 border transition-all duration-150 cursor-pointer group/card",
+                                                "transform-gpu hover:-translate-y-0.5",
+                                                themeColors.cardBg
+                                            )}
+                                        >
+                                            {/* Left vertical accent bar */}
+                                            <div className={cn("absolute left-0 top-0 bottom-0 w-[3.5px]", themeColors.accentBar)} />
 
-                                                <div className="flex flex-col gap-1 pl-1 relative z-10 w-full min-w-0">
-                                                    {/* Line 1: Patient Name + Status Badge */}
-                                                    <div className="flex items-center justify-between w-full gap-1.5 min-w-0">
-                                                        <h3 
-                                                            className="font-bold text-slate-100 text-xs tracking-tight leading-tight group-hover/card:text-white transition-colors truncate"
-                                                            title={pName}
-                                                        >
-                                                            {pName}
-                                                        </h3>
-
-                                                        <div className="shrink-0 flex items-center gap-1">
-                                                            {isSigned ? (
-                                                                <span className="size-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                                                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                                                </span>
-                                                            ) : isPending ? (
-                                                                <span className="relative flex size-2">
-                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                                    <span className="relative inline-flex rounded-full size-2 bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]"></span>
-                                                                </span>
-                                                            ) : (
-                                                                <span className="size-1.5 rounded-full bg-slate-500/40" />
-                                                            )}
-                                                        </div>
+                                            <div className="flex flex-col gap-1.5 pl-1.5 relative z-10 w-full min-w-0">
+                                                {/* Top row: Time + Status */}
+                                                <div className="flex items-center justify-between w-full gap-1">
+                                                    <div className="flex items-center gap-1.5 min-w-0">
+                                                        <Clock className={cn("w-3 h-3 shrink-0", themeColors.timeIcon)} />
+                                                        <span className={cn("font-bold text-[11px] tracking-tight truncate", themeColors.timeColor)}>
+                                                            {timeStr}
+                                                        </span>
                                                     </div>
 
-                                                    {/* Line 2: Time & Service Type */}
-                                                    <div className="flex items-center gap-1.5 text-[10.5px] font-medium min-w-0">
-                                                        <div className="flex items-center gap-1 shrink-0">
-                                                            <Clock className={cn("w-3 h-3 shrink-0", themeColors.clockIcon)} />
-                                                            <span className={cn("font-semibold tracking-tight", themeColors.timeText)}>
-                                                                {start || timeStr}
+                                                    <div className="shrink-0 flex items-center">
+                                                        {isSigned ? (
+                                                            <span className="size-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.3)]">
+                                                                <Check className="w-2.5 h-2.5 stroke-[3]" />
                                                             </span>
-                                                        </div>
-
-                                                        <span className="size-0.5 rounded-full bg-slate-600 shrink-0" />
-
-                                                        <span className={cn("truncate capitalize", themeColors.tagText)} title={serviceTitle}>
-                                                            {serviceTitle}
-                                                        </span>
+                                                        ) : isPending ? (
+                                                            <span className="relative flex size-2">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                                <span className="relative inline-flex rounded-full size-2 bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]"></span>
+                                                            </span>
+                                                        ) : (
+                                                            <span className="size-1.5 rounded-full bg-slate-500/40" />
+                                                        )}
                                                     </div>
                                                 </div>
 
-                                                <div className={cn("absolute inset-0 bg-gradient-to-r to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 pointer-events-none", themeColors.glow)} />
+                                                {/* Middle row: Patient Name */}
+                                                <div className="w-full min-w-0">
+                                                    <h3 
+                                                        className="font-bold text-white text-[12.5px] tracking-tight leading-snug group-hover/card:text-indigo-200 transition-colors line-clamp-2"
+                                                        title={pName}
+                                                    >
+                                                        {pName}
+                                                    </h3>
+                                                </div>
+
+                                                {/* Bottom row: Clinical Service Pill Badge */}
+                                                <div className="flex items-center min-w-0 mt-0.5">
+                                                    <span className={cn(
+                                                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border truncate max-w-full",
+                                                        themeColors.badgeBg
+                                                    )}>
+                                                        <span className={cn("size-1 rounded-full shrink-0", themeColors.dotColor)} />
+                                                        <span className="truncate capitalize">{serviceTitle}</span>
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </TiltCard>
+                                        </div>
                                     );
                                 })}
 
