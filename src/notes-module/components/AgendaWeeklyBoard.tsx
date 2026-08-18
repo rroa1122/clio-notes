@@ -577,40 +577,40 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                     const isPlan = String(note.template_id || '').includes('plan');
                                     const isMhv = String(note.subTemplate || '').toLowerCase().includes('mhv');
 
-                                    const themeColors = isAssessment 
+                                    const theme = isAssessment 
                                         ? {
-                                            cardBg: 'bg-slate-900/95 hover:bg-slate-850 border-emerald-500/30 hover:border-emerald-400/60 shadow-sm hover:shadow-emerald-950/30',
-                                            accentBar: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
-                                            timeColor: 'text-emerald-400',
+                                            card: 'bg-gradient-to-b from-[#09221b] to-[#061410] border-emerald-500/50 hover:border-emerald-400 shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:shadow-[0_6px_25px_rgba(16,185,129,0.3)]',
+                                            timeColor: 'text-emerald-300 font-bold',
                                             timeIcon: 'text-emerald-400',
-                                            badgeBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-                                            dotColor: 'bg-emerald-400'
+                                            badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
+                                            dot: 'bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]',
+                                            topGlow: 'from-emerald-500/30'
                                           }
                                         : isPlan
                                         ? {
-                                            cardBg: 'bg-slate-900/95 hover:bg-slate-850 border-amber-500/30 hover:border-amber-400/60 shadow-sm hover:shadow-amber-950/30',
-                                            accentBar: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
-                                            timeColor: 'text-amber-400',
+                                            card: 'bg-gradient-to-b from-[#241708] to-[#140d04] border-amber-500/50 hover:border-amber-400 shadow-[0_4px_20px_rgba(245,158,11,0.15)] hover:shadow-[0_6px_25px_rgba(245,158,11,0.3)]',
+                                            timeColor: 'text-amber-300 font-bold',
                                             timeIcon: 'text-amber-400',
-                                            badgeBg: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-                                            dotColor: 'bg-amber-400'
+                                            badge: 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]',
+                                            dot: 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)]',
+                                            topGlow: 'from-amber-500/30'
                                           }
                                         : isMhv
                                         ? {
-                                            cardBg: 'bg-slate-900/95 hover:bg-slate-850 border-sky-500/30 hover:border-sky-400/60 shadow-sm hover:shadow-sky-950/30',
-                                            accentBar: 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]',
-                                            timeColor: 'text-sky-400',
+                                            card: 'bg-gradient-to-b from-[#081b2b] to-[#040f1a] border-sky-500/50 hover:border-sky-400 shadow-[0_4px_20px_rgba(14,165,233,0.15)] hover:shadow-[0_6px_25px_rgba(14,165,233,0.3)]',
+                                            timeColor: 'text-sky-300 font-bold',
                                             timeIcon: 'text-sky-400',
-                                            badgeBg: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-                                            dotColor: 'bg-sky-400'
+                                            badge: 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]',
+                                            dot: 'bg-sky-400 shadow-[0_0_6px_rgba(14,165,233,0.8)]',
+                                            topGlow: 'from-sky-500/30'
                                           }
                                         : {
-                                            cardBg: 'bg-slate-900/95 hover:bg-slate-850 border-indigo-500/30 hover:border-indigo-400/60 shadow-sm hover:shadow-indigo-950/30',
-                                            accentBar: 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]',
-                                            timeColor: 'text-indigo-300',
+                                            card: 'bg-gradient-to-b from-[#111633] to-[#090b1e] border-indigo-500/55 hover:border-indigo-400 shadow-[0_4px_20px_rgba(99,102,241,0.2)] hover:shadow-[0_6px_28px_rgba(99,102,241,0.35)]',
+                                            timeColor: 'text-indigo-300 font-bold',
                                             timeIcon: 'text-indigo-400',
-                                            badgeBg: 'bg-indigo-500/15 text-indigo-200 border-indigo-500/30',
-                                            dotColor: 'bg-indigo-400'
+                                            badge: 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/40 shadow-[0_0_10px_rgba(99,102,241,0.25)]',
+                                            dot: 'bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]',
+                                            topGlow: 'from-indigo-500/30'
                                           };
 
                                     return (
@@ -618,36 +618,36 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                             key={note.id || i}
                                             onClick={() => onSelectNote(note)}
                                             className={cn(
-                                                "relative overflow-hidden rounded-xl p-3 border transition-all duration-150 cursor-pointer group/card",
-                                                "transform-gpu hover:-translate-y-0.5",
-                                                themeColors.cardBg
+                                                "relative overflow-hidden rounded-2xl p-3 border transition-all duration-200 cursor-pointer group/card",
+                                                "hover:-translate-y-1 hover:scale-[1.01]",
+                                                theme.card
                                             )}
                                         >
-                                            {/* Left vertical accent bar */}
-                                            <div className={cn("absolute left-0 top-0 bottom-0 w-[3.5px]", themeColors.accentBar)} />
+                                            {/* Subtle top glow line */}
+                                            <div className={cn("absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r via-current to-transparent opacity-60", theme.topGlow)} />
 
-                                            <div className="flex flex-col gap-1.5 pl-1.5 relative z-10 w-full min-w-0">
+                                            <div className="flex flex-col gap-2 relative z-10 w-full min-w-0">
                                                 {/* Top row: Time + Status */}
                                                 <div className="flex items-center justify-between w-full gap-1">
                                                     <div className="flex items-center gap-1.5 min-w-0">
-                                                        <Clock className={cn("w-3 h-3 shrink-0", themeColors.timeIcon)} />
-                                                        <span className={cn("font-bold text-[11px] tracking-tight truncate", themeColors.timeColor)}>
+                                                        <Clock className={cn("w-3.5 h-3.5 shrink-0", theme.timeIcon)} />
+                                                        <span className={cn("text-[11.5px] tracking-tight truncate", theme.timeColor)}>
                                                             {timeStr}
                                                         </span>
                                                     </div>
 
                                                     <div className="shrink-0 flex items-center">
                                                         {isSigned ? (
-                                                            <span className="size-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.3)]">
-                                                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                                            <span className="size-4.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.5)]">
+                                                                <Check className="w-3 h-3 stroke-[3]" />
                                                             </span>
                                                         ) : isPending ? (
-                                                            <span className="relative flex size-2">
+                                                            <span className="relative flex size-2.5">
                                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                                <span className="relative inline-flex rounded-full size-2 bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]"></span>
+                                                                <span className="relative inline-flex rounded-full size-2.5 bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
                                                             </span>
                                                         ) : (
-                                                            <span className="size-1.5 rounded-full bg-slate-500/40" />
+                                                            <span className="size-2 rounded-full bg-slate-500/50" />
                                                         )}
                                                     </div>
                                                 </div>
@@ -655,21 +655,21 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                 {/* Middle row: Patient Name */}
                                                 <div className="w-full min-w-0">
                                                     <h3 
-                                                        className="font-bold text-white text-[12.5px] tracking-tight leading-snug group-hover/card:text-indigo-200 transition-colors line-clamp-2"
+                                                        className="font-black text-white text-[13px] tracking-tight leading-snug group-hover/card:text-indigo-100 transition-colors"
                                                         title={pName}
                                                     >
                                                         {pName}
                                                     </h3>
                                                 </div>
 
-                                                {/* Bottom row: Clinical Service Pill Badge */}
-                                                <div className="flex items-center min-w-0 mt-0.5">
+                                                {/* Bottom row: Neon Pill Badge */}
+                                                <div className="flex items-center min-w-0 pt-0.5">
                                                     <span className={cn(
-                                                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border truncate max-w-full",
-                                                        themeColors.badgeBg
+                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9.5px] font-bold tracking-wider uppercase truncate max-w-full",
+                                                        theme.badge
                                                     )}>
-                                                        <span className={cn("size-1 rounded-full shrink-0", themeColors.dotColor)} />
-                                                        <span className="truncate capitalize">{serviceTitle}</span>
+                                                        <span className={cn("size-1.5 rounded-full shrink-0", theme.dot)} />
+                                                        <span className="truncate">{serviceTitle}</span>
                                                     </span>
                                                 </div>
                                             </div>
