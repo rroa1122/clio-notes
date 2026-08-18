@@ -610,7 +610,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                             className="relative rounded-xl p-3 bg-[#0d1222] hover:bg-[#13192f] border border-slate-800/90 hover:border-slate-700 transition-all duration-150 cursor-pointer group/card shadow-sm"
                                         >
                                             <div className="flex flex-col gap-1.5 relative z-10 w-full min-w-0">
-                                                {/* Row 1: Clean Time (No Clock Icon) + Status */}
+                                                {/* Row 1: Clean Time (No Clock Icon) + Colored Status Dot */}
                                                 <div className="flex items-center justify-between w-full gap-1">
                                                     <span className="font-semibold text-slate-400 text-[11px] tracking-tight truncate">
                                                         {timeStr}
@@ -618,16 +618,14 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
 
                                                     <div className="shrink-0 flex items-center">
                                                         {isSigned ? (
-                                                            <span className="size-4 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400" title="Firmado">
-                                                                <Check className="w-2.5 h-2.5 stroke-[2.5]" />
-                                                            </span>
+                                                            <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" title={language === 'es' ? "Firmado / Sincronizado" : "Signed / Synced"} />
                                                         ) : isPending ? (
-                                                            <span className="relative flex size-2" title="Pendiente">
+                                                            <span className="relative flex size-2" title={language === 'es' ? "Pendiente de firma" : "Pending Signature"}>
                                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                                <span className="relative inline-flex rounded-full size-2 bg-amber-500"></span>
+                                                                <span className="relative inline-flex rounded-full size-2 bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]"></span>
                                                             </span>
                                                         ) : (
-                                                            <span className="size-1.5 rounded-full bg-slate-600" title="Borrador" />
+                                                            <span className="size-2 rounded-full bg-indigo-400/80 shadow-[0_0_6px_rgba(129,140,248,0.5)]" title={language === 'es' ? "Borrador" : "Draft"} />
                                                         )}
                                                     </div>
                                                 </div>
@@ -642,10 +640,9 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                     </h3>
                                                 </div>
 
-                                                {/* Row 3: Subtitle of clinical note */}
-                                                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium min-w-0">
-                                                    <span className={cn("size-1.5 rounded-full shrink-0", categoryDot)} />
-                                                    <span className="truncate capitalize">{serviceTitle}</span>
+                                                {/* Row 3: Subtitle of clinical note (No dot) */}
+                                                <div className="text-[11px] text-slate-400 font-medium min-w-0 truncate capitalize">
+                                                    {serviceTitle}
                                                 </div>
                                             </div>
                                         </div>
