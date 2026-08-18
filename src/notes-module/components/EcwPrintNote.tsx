@@ -256,6 +256,9 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
     const [clinicSettings, setClinicSettings] = useState<ClinicSettings | null>(null);
     const [isFullNoteCopied, setIsFullNoteCopied] = useState(false);
     const [copyingField, setCopyingField] = useState<string | null>(null);
+    const [lastSavedId, setLastSavedId] = useState<string | null>(
+        (note as any)?.id || (note as any)?._id || (note as any)?.noteId || null
+    );
 
     const handleCopy = async (text: string, fieldId: string) => {
         if (!text) return;
@@ -386,11 +389,17 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
 
     const mergedNote = useMemo(() => {
         let result = { ...note };
+        if (lastSavedId && !result.id) {
+            result.id = lastSavedId;
+        }
         Object.keys(noteOverrides).forEach(path => {
             result = setValueByPath(result, path, noteOverrides[path]);
         });
+        if (lastSavedId) {
+            result.id = lastSavedId;
+        }
         return result;
-    }, [note, noteOverrides]);
+    }, [note, noteOverrides, lastSavedId]);
 
     const isSigned = useMemo(() => {
         return (mergedNote as any).signature_status === 'signed';
@@ -437,7 +446,15 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                 mergedNote.patient_id = (note as any).patient_id;
             }
 
-            await storage.saveAnalyzedNote(mergedNote);
+            const noteToSave = { ...mergedNote };
+            if (lastSavedId) {
+                noteToSave.id = lastSavedId;
+            }
+
+            const savedResult = await storage.saveAnalyzedNote(noteToSave);
+            if (savedResult && savedResult.id) {
+                setLastSavedId(savedResult.id);
+            }
             setIsSaved(true);
             if (onSaveComplete) onSaveComplete(true);
             toast.success("Saved to Clinical History");
@@ -1000,7 +1017,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                             <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-800 border-b-2 border-slate-200 pb-1 mb-4">Summary / Clinical Notes</h2>
                             <div className="bg-slate-50/10 p-4 rounded-xl border border-slate-100/50 print:bg-transparent print:p-0 print:border-0">
                                 <PrintValue
-                                    value={mergedNote.narrative?.summary_notes}
+                                    value={(mergedNote.narrative as any)?.summary_notes || (mergedNote.narrative as any)?.clinical_narrative || (mergedNote.narrative as any)?.summary || (mergedNote as any).summary_notes || (mergedNote as any).raw_model_text}
                                     isEditMode={isEditMode}
                                     onChange={(val) => handleUpdateField('narrative.summary_notes', val)}
                                     field={{ path: 'narrative.summary_notes', defaultText: "Clinical summary not provided." }}
@@ -1050,19 +1067,41 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                             </div>
                             <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-800 border-b-2 border-slate-200 pb-1 mb-4">Diagnoses</h2>
                             <div className="space-y-3">
-                                {mergedNote.diagnoses && mergedNote.diagnoses.length > 0 ? (
-                                    mergedNote.diagnoses.map((dx: any, idx: number) => (
-                                        <div key={idx} className="flex gap-4 items-start py-2 border-b border-slate-50 last:border-0">
-                                            <span className="text-[13px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded min-w-[70px] text-center">{dx.icd10 || "—"}</span>
-                                            <div className="flex-1">
-                                                <p className="text-[13px] font-bold text-slate-950">{dx.name || "—"}</p>
-                                                {dx.type && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{dx.type}</p>}
+                                {(() => {
+                                    const rawList = Array.isArray(mergedNote.diagnoses) ? mergedNote.diagnoses : [];
+                                    const seen = new Set<string>();
+                                    const cleanList: Array<{ icd10: string; name: string; type?: string }> = [];
+
+                                    rawList.forEach((dx: any) => {
+                                        let code = dx.icd10 || '';
+                                        let name = dx.name || '';
+                                        if (!code && name) {
+                                            const match = name.match(/^\(?([A-Z]\d[0-9A-Z]?(?:\.[0-9A-Z]{1,4})?)\)?\s*[:-]?\s*(.*)$/i);
+                                            if (match) {
+                                                code = match[1].toUpperCase();
+                                                name = match[2].trim() || name;
+                                            }
+                                        }
+                                        const key = (code || name).toLowerCase().replace(/[^a-z0-9]/g, '');
+                                        if (key && !seen.has(key)) {
+                                            seen.add(key);
+                                            cleanList.push({ icd10: code, name: name, type: dx.type });
+                                        }
+                                    });
+
+                                    if (cleanList.length > 0) {
+                                        return cleanList.map((dx: any, idx: number) => (
+                                            <div key={idx} className="flex gap-4 items-start py-2 border-b border-slate-50 last:border-0">
+                                                <span className="text-[13px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded min-w-[70px] text-center">{dx.icd10 || "—"}</span>
+                                                <div className="flex-1">
+                                                    <p className="text-[13px] font-bold text-slate-950">{dx.name || "—"}</p>
+                                                    {dx.type && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{dx.type}</p>}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-[13px] text-slate-400 italic">No structured diagnoses recorded.</p>
-                                )}
+                                        ));
+                                    }
+                                    return <p className="text-[13px] text-slate-400 italic">No structured diagnoses recorded.</p>;
+                                })()}
                             </div>
                         </section>
 

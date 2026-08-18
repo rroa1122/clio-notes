@@ -2431,7 +2431,27 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         (mergedNote._frontend_service_title || "").toLowerCase().includes("otc") ||
                                         (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")
                                     );
-                                    const list = Array.isArray(mergedNote.diagnoses) ? mergedNote.diagnoses : [];
+                                    const rawList = Array.isArray(mergedNote.diagnoses) ? mergedNote.diagnoses : [];
+                                    const seen = new Set<string>();
+                                    const list: Array<{ icd10: string; name: string }> = [];
+
+                                    rawList.forEach((diag: any) => {
+                                        let code = diag.icd10 || '';
+                                        let name = diag.name || '';
+                                        if (!code && name) {
+                                            const match = name.match(/^\(?([A-Z]\d[0-9A-Z]?(?:\.[0-9A-Z]{1,4})?)\)?\s*[:-]?\s*(.*)$/i);
+                                            if (match) {
+                                                code = match[1].toUpperCase();
+                                                name = match[2].trim() || name;
+                                            }
+                                        }
+                                        const key = (code || name).toLowerCase().replace(/[^a-z0-9]/g, '');
+                                        if (key && !seen.has(key)) {
+                                            seen.add(key);
+                                            list.push({ icd10: code, name: name });
+                                        }
+                                    });
+
                                     const diagnosesToRender = (isOtc && list.length > 0) ? [list[0]] : list;
 
                                     if (diagnosesToRender.length > 0) {

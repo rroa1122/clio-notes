@@ -24,43 +24,40 @@ export const mergePatientIntoNote = (note: ClioNote, patient: Patient): ClioNote
     if (patient.phone) note.patient.mobile = patient.phone;
     if (patient.case_number) note.patient.case_no = patient.case_number;
 
-    // Map Patient Diagnoses to Note Diagnoses section
-    if (patient.diagnoses) {
+    // Map Patient Diagnoses to Note Diagnoses section (STRICT AUTHORITATIVE EMR SOURCE)
+    if (patient.diagnoses && patient.diagnoses.trim().length > 0) {
         // Parse string diagnoses into array of objects, splitting by semicolon, actual newline, or literal \n
-        const diagList = patient.diagnoses
+        const seenCodes = new Set<string>();
+        const seenNames = new Set<string>();
+        const cleanList: Array<{ icd10: string; name: string }> = [];
+
+        patient.diagnoses
             .split(/[;\n]|\\n/)
             .map(d => d.trim())
             .filter(d => d.length > 0)
-            .map(d => {
-                // Try to match ICD-10 code at the beginning
-                const match = d.match(/^([A-Z]\d[0-9A-Z](?:\.[0-9A-Z]{1,4})?)\s*[:-]?\s*(.*)$/i);
+            .forEach(d => {
+                // Match ICD-10 code at the beginning with optional parentheses, e.g. "(F33.1) Major depressive..." or "F33.1 - Major depressive..."
+                const match = d.match(/^\(?([A-Z]\d[0-9A-Z]?(?:\.[0-9A-Z]{1,4})?)\)?\s*[:-]?\s*(.*)$/i);
+                let code = '';
+                let name = d;
                 if (match) {
-                    return {
-                        icd10: match[1].toUpperCase(),
-                        name: match[2].trim()
-                    };
+                    code = match[1].toUpperCase();
+                    name = match[2].trim() || d;
                 }
-                return {
-                    icd10: '',
-                    name: d
-                };
-            });
+                const nameKey = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const codeKey = code ? code.toUpperCase() : '';
 
-        if (diagList.length > 0) {
-            // Initialize array if missing
-            if (!note.diagnoses) note.diagnoses = [];
-
-            // Merge, avoiding duplicates (simple name check)
-            const existingNames = new Set(note.diagnoses.map(d => d.name.toLowerCase()));
-            diagList.forEach(d => {
-                if (!existingNames.has(d.name.toLowerCase())) {
-                    note.diagnoses!.push(d);
-                    existingNames.add(d.name.toLowerCase());
+                if ((codeKey && !seenCodes.has(codeKey)) || (!codeKey && !seenNames.has(nameKey))) {
+                    if (codeKey) seenCodes.add(codeKey);
+                    if (nameKey) seenNames.add(nameKey);
+                    cleanList.push({ icd10: code, name: name });
                 }
             });
 
-            // Also ensure `diagnosis` alias is synced
-            note.diagnosis = note.diagnoses;
+        if (cleanList.length > 0) {
+            // Authoritative EMR overwrite: Note diagnoses must strictly match official patient records
+            note.diagnoses = cleanList;
+            note.diagnosis = cleanList;
         }
     }
     return note;
