@@ -20,10 +20,24 @@ import { useProviderTimeConflicts } from '../hooks/useProviderTimeConflicts';
 import { TimeConflictBanner } from './TimeConflictBanner';
 import { areOverlapping, extractNormalizedTimeRange } from '../lib/conflictUtils';
 import { settingsService, type ClinicSettings } from '../../services/settingsService';
+import { SyncErrorModal } from './SyncErrorModal';
+import { formatSyncError } from '../../lib/services/syncErrorFormatter';
 
 const getValueByPath = (obj: any, path: string) => {
     if (!path) return undefined;
-    return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+    const directVal = path.split('.').reduce((acc, part) => acc && acc[part], obj);
+    if (directVal !== undefined && directVal !== null && directVal !== '') return directVal;
+
+    if (path === 'note.summary_notes' || path === 'narrative.summary_notes' || path === 'summary_notes') {
+        return obj.narrative?.summary_notes || obj.narrative?.clinical_narrative || obj.narrative?.summary || obj.narrative?.narrative || obj.summary_notes || obj.summary || obj.clinical_narrative || obj.raw_model_text;
+    }
+    if (path === 'note.outcome_of_services' || path === 'narrative.outcome_of_services' || path === 'outcome_of_services') {
+        return obj.narrative?.outcome_of_services || obj.outcome_of_services || obj.outcome;
+    }
+    if (path === 'note.next_steps' || path === 'narrative.next_steps' || path === 'next_steps') {
+        return obj.narrative?.next_steps || obj.next_steps || obj.plan;
+    }
+    return directVal;
 };
 
 const formatValueForPrint = (value: any): string | null => {
@@ -214,25 +228,51 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField, parentT
         (mergedNote.services?.service_focus_title || "").toLowerCase().includes("handicap")
     );
 
-    const isMhvDonationNote = (
-        templateId === 'tcm_mhv_provide_donation_note' ||
-        (mergedNote.subTemplate || "").toLowerCase().includes("mhv + prov") ||
-        (mergedNote.subTemplate || "").toLowerCase().includes("provide clothing") ||
-        (mergedNote.subTemplate || "").toLowerCase().includes("provide food") ||
-        (mergedNote._frontend_service_title || "").toLowerCase().includes("mhv + prov") ||
-        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("mhv + prov") ||
-        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("mhv + prov")
+    const isMhvNote = (
+        templateId === 'tcm_mhv_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("mhv") ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("monthly home visit") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("mhv") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("monthly home visit") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("mhv") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("mhv")
+    );
+
+    const isLtcNote = (
+        templateId?.startsWith('tcm_ltc_') ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("ltc") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("ltc") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("ltc") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("ltc")
     );
 
     const isDonationObtainNote = (
         templateId === 'tcm_donation_obtain_note' ||
+        templateId === 'tcm_cleaning_donation_gather_note' ||
+        templateId === 'tcm_cleaning_donation_obtain_note' ||
+        templateId === 'tcm_clothing_donation_gather_note' ||
+        templateId === 'tcm_clothing_donation_obtain_note' ||
+        templateId === 'tcm_food_donation_gather_note' ||
+        templateId === 'tcm_food_donation_obtain_note' ||
         (mergedNote.subTemplate || "").toLowerCase().includes("obtain supply") ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("cleaning donation") ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("clothing donation") ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("food donation") ||
         (mergedNote._frontend_service_title || "").toLowerCase().includes("obtain supply") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("cleaning donation") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("clothing donation") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("food donation") ||
         (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("obtain supply") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("cleaning donation") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("clothing donation") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("food donation") ||
         (mergedNote.services?.service_focus_title || "").toLowerCase().includes("upd food donat") ||
         (mergedNote.services?.service_focus_title || "").toLowerCase().includes("obt food donat") ||
         (mergedNote.services?.service_focus_title || "").toLowerCase().includes("upd cloth donat") ||
-        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("obt cloth donat")
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("obt cloth donat") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("cleaning donation") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("clothing donation") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("food donation")
     );
 
     const isVaccinationAssistanceNote = (
@@ -269,6 +309,15 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField, parentT
         (mergedNote.services?.service_focus_title || "").toLowerCase().includes("housing")
     );
 
+    const isSnapRecertificationNote = (
+        templateId === 'tcm_snap_recertification_note' ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("food stamp") ||
+        (mergedNote.subTemplate || "").toLowerCase().includes("snap") ||
+        (mergedNote._frontend_service_title || "").toLowerCase().includes("snap") ||
+        (mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("snap") ||
+        (mergedNote.services?.service_focus_title || "").toLowerCase().includes("snap")
+    );
+
     // Exactly one domain checked: Hurricane -> #12, OTC -> #2, STS -> #10, otherwise -> #1
     let isChecked = false;
     if (isHurricaneNote) {
@@ -277,8 +326,12 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField, parentT
         isChecked = domain.path === 'services.domains_selected.2_physical_health_medical_dental';
     } else if (isStsNote || isDppNote) {
         isChecked = domain.path === 'services.domains_selected.10_transportation';
-    } else if (isMhvDonationNote) {
-        isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse' || domain.path === 'services.domains_selected.9_basic_needs';
+    } else if (isMhvNote) {
+        const domainKey = domain.path.split('.').pop() || '';
+        isChecked = domainKey === '1_mental_health_substance_abuse' || Boolean(mergedNote.services?.domains_selected?.[domainKey]);
+    } else if (isLtcNote) {
+        const domainKey = domain.path.split('.').pop() || '';
+        isChecked = domainKey === '1_mental_health_substance_abuse' || domainKey === '6_activities_of_daily_living' || Boolean(mergedNote.services?.domains_selected?.[domainKey]);
     } else if (isDonationObtainNote) {
         isChecked = domain.path === 'services.domains_selected.9_basic_needs';
     } else if (isApptCoordNote) {
@@ -313,6 +366,8 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField, parentT
         }
     } else if (isHousingAssistanceNote) {
         isChecked = domain.path === 'services.domains_selected.7_housing_shelter';
+    } else if (isSnapRecertificationNote) {
+        isChecked = domain.path === 'services.domains_selected.8_economic_financial';
     } else {
         isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse';
     }
@@ -701,7 +756,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     const [supSignatureImg, setSupSignatureImg] = useState<string | null>(null);
     const [activeSigType, setActiveSigType] = useState<'cm' | 'sup' | null>(null);
     const [copyingSection, setCopyingSection] = useState<string | null>(null);
-    const [lastSavedId, setLastSavedId] = useState<string | null>(null);
+    const [lastSavedId, setLastSavedId] = useState<string | null>(
+        (note as any)?.id || (note as any)?._id || (note as any)?.noteId || null
+    );
 
     // Signature Request States
     const [isRequestSignatureModalOpen, setIsRequestSignatureModalOpen] = useState(false);
@@ -713,6 +770,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     const [focusedTimeKey, setFocusedTimeKey] = useState<string | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncTask, setSyncTask] = useState<{ status: string; error_message: string | null } | null>(null);
+    const [isSyncErrorModalOpen, setIsSyncErrorModalOpen] = useState(false);
 
     const loadSyncStatus = React.useCallback(async () => {
         const noteIdToSync = note?.id || lastSavedId;
@@ -906,11 +964,17 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
     const mergedNote = useMemo(() => {
         let result = { ...note };
+        if (lastSavedId && !result.id) {
+            result.id = lastSavedId;
+        }
         Object.keys(noteOverrides).forEach(path => {
             result = setValueByPath(result, path, noteOverrides[path]);
         });
+        if (lastSavedId) {
+            result.id = lastSavedId;
+        }
         return result;
-    }, [note, noteOverrides]);
+    }, [note, noteOverrides, lastSavedId]);
 
     const isSigned = useMemo(() => {
         return (mergedNote as any).signature_status === 'signed';
@@ -996,19 +1060,14 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                 const parseTime = (timeStr: string) => {
                     if (!timeStr) return null;
-                    let parts = timeStr.trim().split(/\s+/);
-                    if (parts.length < 2) return null;
-                    let time = parts[0];
-                    let period = parts[1];
-                    let [hh, mm] = time.split(':');
-                    if (!hh || !mm) return null;
-                    
-                    let hours = parseInt(hh, 10);
-                    let minutes = parseInt(mm, 10);
-                    
-                    if (period.toUpperCase() === 'PM' && hours < 12) hours += 12;
-                    if (period.toUpperCase() === 'AM' && hours === 12) hours = 0;
-                    
+                    const match = timeStr.trim().match(/^(\d{1,2}):(\d{1,2})\s*(am|pm)?$/i);
+                    if (!match) return null;
+                    let hours = parseInt(match[1], 10);
+                    const minutes = parseInt(match[2], 10);
+                    const period = match[3]?.toLowerCase();
+                    if (isNaN(hours) || isNaN(minutes) || minutes < 0 || minutes > 59) return null;
+                    if (period === 'pm' && hours < 12) hours += 12;
+                    if (period === 'am' && hours === 12) hours = 0;
                     return hours * 60 + minutes;
                 };
 
@@ -1113,7 +1172,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
         setIsSaving(true);
         try {
-            const savedNoteResult = await storage.saveAnalyzedNote(mergedNote);
+            const noteToSave = { ...mergedNote };
+            if (lastSavedId) {
+                noteToSave.id = lastSavedId;
+            }
+            const savedNoteResult = await storage.saveAnalyzedNote(noteToSave);
             if (savedNoteResult && savedNoteResult.id) {
                 setLastSavedId(savedNoteResult.id);
             }
@@ -1199,19 +1262,42 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 (note.services?.service_focus_title || "").toLowerCase().includes("dpp") ||
                 (note.services?.service_focus_title || "").toLowerCase().includes("handicap")
             );
-            const isMhvDonationNote = (
-                templateId === 'tcm_mhv_provide_donation_note' ||
-                (note.subTemplate || "").toLowerCase().includes("mhv + prov") ||
-                (note.subTemplate || "").toLowerCase().includes("provide clothing") ||
-                (note.services?.service_focus_title || "").toLowerCase().includes("provide donation") ||
-                (note.services?.service_focus_title || "").toLowerCase().includes("mhv + prov")
+            const isMhvNote = (
+                templateId === 'tcm_mhv_note' ||
+                (note.subTemplate || "").toLowerCase().includes("mhv") ||
+                (note.subTemplate || "").toLowerCase().includes("monthly home visit") ||
+                (note._frontend_service_title || "").toLowerCase().includes("mhv") ||
+                (note._frontend_service_title || "").toLowerCase().includes("monthly home visit") ||
+                (note.encounter?.primary_service_provided || "").toLowerCase().includes("mhv") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("mhv")
+            );
+
+            const isLtcNote = (
+                templateId?.startsWith('tcm_ltc_') ||
+                (note.subTemplate || "").toLowerCase().includes("ltc") ||
+                (note._frontend_service_title || "").toLowerCase().includes("ltc") ||
+                (note.encounter?.primary_service_provided || "").toLowerCase().includes("ltc") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("ltc")
             );
             const isDonationObtainNote = (
                 templateId === 'tcm_mhv_obtain_donation_note' ||
+                templateId === 'tcm_donation_obtain_note' ||
+                templateId === 'tcm_cleaning_donation_gather_note' ||
+                templateId === 'tcm_cleaning_donation_obtain_note' ||
+                templateId === 'tcm_clothing_donation_gather_note' ||
+                templateId === 'tcm_clothing_donation_obtain_note' ||
+                templateId === 'tcm_food_donation_gather_note' ||
+                templateId === 'tcm_food_donation_obtain_note' ||
                 (note.subTemplate || "").toLowerCase().includes("mhv + obt") ||
                 (note.subTemplate || "").toLowerCase().includes("obtain clothing") ||
+                (note.subTemplate || "").toLowerCase().includes("cleaning donation") ||
+                (note.subTemplate || "").toLowerCase().includes("clothing donation") ||
+                (note.subTemplate || "").toLowerCase().includes("food donation") ||
                 (note.services?.service_focus_title || "").toLowerCase().includes("obtain donation") ||
-                (note.services?.service_focus_title || "").toLowerCase().includes("mhv + obt")
+                (note.services?.service_focus_title || "").toLowerCase().includes("mhv + obt") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("cleaning donation") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("clothing donation") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("food donation")
             );
             const isApptCoordNote = (
                 templateId === 'tcm_provider_appt_coord_note' ||
@@ -1234,6 +1320,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 (note._frontend_service_title || "").toLowerCase().includes("housing") ||
                 (note.services?.service_focus_title || "").toLowerCase().includes("housing")
             );
+            const isSnapRecertificationNote = (
+                templateId === 'tcm_snap_recertification_note' ||
+                (note.subTemplate || "").toLowerCase().includes("food stamp") ||
+                (note.subTemplate || "").toLowerCase().includes("snap") ||
+                (note._frontend_service_title || "").toLowerCase().includes("snap") ||
+                (note.services?.service_focus_title || "").toLowerCase().includes("snap")
+            );
             const isVaccinationAssistanceNote = (
                 templateId === 'tcm_vaccination_assistance_note' ||
                 (note.subTemplate || "").toLowerCase().includes("vaccin") ||
@@ -1248,8 +1341,12 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     isChecked = domain.path === 'services.domains_selected.2_physical_health_medical_dental';
                 } else if (isStsNote || isDppNote) {
                     isChecked = domain.path === 'services.domains_selected.10_transportation';
-                } else if (isMhvDonationNote) {
-                    isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse' || domain.path === 'services.domains_selected.9_basic_needs';
+                } else if (isMhvNote) {
+                    const domainKey = domain.path.split('.').pop() || '';
+                    isChecked = domainKey === '1_mental_health_substance_abuse' || Boolean(note.services?.domains_selected?.[domainKey]);
+                } else if (isLtcNote) {
+                    const domainKey = domain.path.split('.').pop() || '';
+                    isChecked = domainKey === '1_mental_health_substance_abuse' || domainKey === '6_activities_of_daily_living' || Boolean(note.services?.domains_selected?.[domainKey]);
                 } else if (isDonationObtainNote) {
                     isChecked = domain.path === 'services.domains_selected.9_basic_needs';
                 } else if (isApptCoordNote) {
@@ -1280,6 +1377,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     }
                 } else if (isHousingAssistanceNote) {
                     isChecked = domain.path === 'services.domains_selected.7_housing_shelter';
+                } else if (isSnapRecertificationNote) {
+                    isChecked = domain.path === 'services.domains_selected.8_economic_financial';
                 } else {
                     isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse';
                 }
@@ -1289,31 +1388,49 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 }
             });
 
-            const isJoint = !!(note.joint_services && note.joint_services.length > 0);
-            const servicesToSync = isJoint ? note.joint_services : [note];
+            const isJoint = !!(mergedNote.joint_services && mergedNote.joint_services.length > 0);
+            const servicesToSync = (isJoint ? mergedNote.joint_services : [mergedNote]) || [];
 
+            const todayDateStr = new Date().toISOString().split('T')[0];
             for (const svc of servicesToSync) {
+                const effectiveVisitDate = svc.encounter?.dos_date 
+                    || (svc as any).service_date 
+                    || (svc as any).date_of_service 
+                    || mergedNote.encounter?.dos_date 
+                    || (mergedNote as any).service_date 
+                    || (mergedNote as any).date_of_service 
+                    || (mergedNote as any).meta?.dos_date 
+                    || (mergedNote as any).meta?.service_date 
+                    || (mergedNote as any).meta?.visitDate 
+                    || note.encounter?.dos_date 
+                    || note.meta?.visitDate 
+                    || todayDateStr;
+
+                const patAny = (mergedNote.patient as any) || (note.patient as any) || {};
+
                 // Construct JSON payload for this specific service block
                 const payload = {
-                    patient_emr_id: note.patient?.emr_id || note.patient?.id || note.patient?.account_number || (note.patient?.emr ? note.patient.emr.replace(/\D/g, '') : '') || "",
-                    patient_name: note.patient?.full_name || "",
-                    patient_dob: note.patient?.dob || "",
-                    visit_date: svc.encounter?.dos_date || note.encounter?.dos_date || note.meta?.visitDate || "",
+                    patient_emr_id: patAny.emr_id || patAny.id || patAny.account_number || (patAny.emr ? patAny.emr.replace(/\D/g, '') : '') || "",
+                    amexzone_id: patAny.amexzone_id || patAny.id_amexzone || "",
+                    patient_id: patAny.id || "",
+                    patient_name: patAny.full_name || "",
+                    patient_dob: patAny.dob || "",
+                    visit_date: effectiveVisitDate,
                     encounter: {
-                        dos_date: svc.encounter?.dos_date || note.encounter?.dos_date || note.meta?.visitDate || "",
-                        time_in: svc.encounter?.time_in || "",
-                        time_out: svc.encounter?.time_out || "",
-                        duration: svc.encounter?.duration_minutes || svc.encounter?.duration || "",
-                        units: svc.encounter?.units || "",
-                        pos: svc.encounter?.pos || ""
+                        dos_date: effectiveVisitDate,
+                        time_in: svc.encounter?.time_in || mergedNote.encounter?.time_in || "",
+                        time_out: svc.encounter?.time_out || mergedNote.encounter?.time_out || "",
+                        duration: svc.encounter?.duration_minutes || svc.encounter?.duration || mergedNote.encounter?.duration_minutes || mergedNote.encounter?.duration || "",
+                        units: svc.encounter?.units || mergedNote.encounter?.units || "",
+                        pos: svc.encounter?.pos || mergedNote.encounter?.pos || ""
                     },
                     narrative: {
-                        summary_notes: svc.narrative?.summary_notes || "",
-                        outcome_of_services: svc.narrative?.outcome_of_services || note.narrative?.outcome_of_services || "",
-                        next_steps: svc.narrative?.next_steps || note.narrative?.next_steps || ""
+                        summary_notes: svc.narrative?.summary_notes || mergedNote.narrative?.summary_notes || "",
+                        outcome_of_services: svc.narrative?.outcome_of_services || mergedNote.narrative?.outcome_of_services || "",
+                        next_steps: svc.narrative?.next_steps || mergedNote.narrative?.next_steps || ""
                     },
                     domains: activeDomains,
-                    service_type: svc.subTemplate || svc.services?.service_focus_title || note.subTemplate || note.services?.service_focus_title || ""
+                    service_type: svc.subTemplate || svc.services?.service_focus_title || mergedNote.subTemplate || mergedNote.services?.service_focus_title || ""
                 };
 
                 const { error: insertError } = await supabase
@@ -1322,9 +1439,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         note_id: noteIdToSync,
                         user_id: user?.id,
                         clinic_id: user?.clinic_id || clinicSettings?.id || null,
-                        patient_name: note.patient?.full_name || 'Desconocido',
-                        patient_dob: note.patient?.dob || null,
-                        visit_date: svc.encounter?.dos_date || note.encounter?.dos_date || note.meta?.visitDate || null,
+                        patient_name: mergedNote.patient?.full_name || note.patient?.full_name || 'Desconocido',
+                        patient_dob: mergedNote.patient?.dob || note.patient?.dob || null,
+                        visit_date: effectiveVisitDate,
                         note_text: '[TCM_PROGRESS_NOTE]\n' + JSON.stringify(payload),
                         status: 'pending'
                     });
@@ -1364,49 +1481,49 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     return (
         <div className={`tcm-print-shell ${!isStandalone ? 'max-w-[1050px] mx-auto' : ''}`} style={{ minHeight: '100%' }}>
 
-            {/* FLOATING TOOLBAR - PREMIUM STYLE */}
+            {/* FLOATING TOOLBAR - MODERN CLINICAL HUD */}
             {!hideToolbar && (
-                <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[60] no-print">
-                    <div className="flex items-center gap-2 p-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800/60 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.06)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] ring-1 ring-slate-900/5 dark:ring-white/10">
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] no-print max-w-[95vw]">
+                    <div className="flex items-center gap-1.5 p-2 bg-card/95 dark:bg-card/90 backdrop-blur-2xl border border-border/80 shadow-2xl shadow-primary/10 dark:shadow-black/50 rounded-full ring-1 ring-primary/10 transition-all duration-300">
                         <button
                             disabled={isSigned}
                             onClick={() => setIsEditMode(!isEditMode)}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 ${
+                            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                                 isSigned
-                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                                ? 'bg-muted text-muted-foreground/60 cursor-not-allowed border border-border/40'
                                 : isEditMode 
-                                ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-lg' 
-                                : 'bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
+                                ? 'bg-foreground text-background shadow-md active:scale-95' 
+                                : 'bg-transparent text-foreground hover:bg-secondary border border-transparent hover:border-border/60 active:scale-95'
                             }`}
                         >
-                            {isSigned ? <Lock size={16} /> : (isEditMode ? <Check size={16} /> : <Edit3 size={16} />)}
-                            {isSigned ? 'Locked' : (isEditMode ? 'Done' : 'Edit')}
+                            {isSigned ? <Lock size={15} /> : (isEditMode ? <Check size={15} /> : <Edit3 size={15} />)}
+                            <span>{isSigned ? 'Locked' : (isEditMode ? 'Done' : 'Edit')}</span>
                         </button>
  
-                        <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
+                        <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
  
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-indigo-650 dark:hover:text-indigo-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 group"
+                            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-primary font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group"
                         >
-                            <Printer size={16} className="group-hover:scale-110 transition-transform" />
-                            Print
+                            <Printer size={15} className="group-hover:scale-110 transition-transform" />
+                            <span>Print</span>
                         </button>
 
-                        <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
+                        <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                             <button
                                 disabled={isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing'}
                                 onClick={handleSyncWithEhr}
-                                className="flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-cyan-650 dark:hover:text-cyan-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 group disabled:opacity-50"
+                                className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-cyan-500 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group disabled:opacity-50"
                             >
                                 {isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing' ? (
-                                    <RefreshCw size={16} className="animate-spin text-cyan-500" />
+                                    <RefreshCw size={15} className="animate-spin text-cyan-500" />
                                 ) : (
-                                    <Cpu size={16} className="group-hover:scale-110 transition-transform text-cyan-500 group-hover:text-white" />
+                                    <Cpu size={15} className="group-hover:scale-110 transition-transform text-cyan-500" />
                                 )}
-                                {isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing' ? 'Syncing' : 'Sync'}
+                                <span>{isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing' ? 'Syncing' : 'Sync'}</span>
                             </button>
                             {(() => {
                                 if (!syncTask) return null;
@@ -1432,16 +1549,21 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                 Synced
                                             </span>
                                         );
-                                    case 'failed':
+                                    case 'failed': {
+                                        const formatted = formatSyncError(syncTask.error_message);
                                         return (
-                                            <span 
-                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 cursor-help"
-                                                title={syncTask.error_message || 'Sync failed'}
+                                            <button 
+                                                type="button"
+                                                onClick={() => setIsSyncErrorModalOpen(true)}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all cursor-pointer group/syncerr active:scale-95 shadow-sm"
+                                                title="Haz clic para ver el motivo y cómo resolverlo"
                                             >
-                                                <span className="size-1.5 rounded-full bg-rose-500" />
-                                                Failed
-                                            </span>
+                                                <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                                <span className="max-w-[140px] truncate">{formatted.title}</span>
+                                                <span className="underline ml-0.5 opacity-80 group-hover/syncerr:opacity-100 text-[9px]">Detalles</span>
+                                            </button>
                                         );
+                                    }
                                     default:
                                         return null;
                                 }
@@ -1450,35 +1572,35 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
  
                         {!isSigned && (
                             <>
-                                <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
+                                <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
  
                                 <button
                                     onClick={handleSaveNote}
                                     disabled={isSaving}
-                                    className={`flex items-center gap-2 px-8 py-3 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300 ${
+                                    className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer ${
                                         isSaved 
-                                        ? 'bg-emerald-500 dark:bg-emerald-600 text-white shadow-lg' 
-                                        : 'bg-indigo-600 dark:bg-indigo-600 text-white hover:bg-indigo-700 dark:hover:bg-indigo-500 shadow-lg hover:-translate-y-0.5'
+                                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' 
+                                        : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 hover:-translate-y-0.5'
                                     } disabled:opacity-50`}
                                 >
                                     {isSaving ? (
-                                        <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <div className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                     ) : isSaved ? (
-                                        <CheckCircle size={16} />
+                                        <CheckCircle size={15} />
                                     ) : (
-                                        <Save size={16} />
+                                        <Save size={15} />
                                     )}
-                                    {isSaving ? 'Saving' : (isSaved ? 'Saved' : 'Save')}
+                                    <span>{isSaving ? 'Saving' : (isSaved ? 'Saved' : 'Save')}</span>
                                 </button>
  
-                                <div className="w-[1px] h-8 bg-slate-200/80 dark:bg-slate-800/80 mx-1" />
+                                <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
  
                                 <button
                                     onClick={() => setIsRequestSignatureModalOpen(true)}
-                                    className="flex items-center gap-2 px-6 py-3 rounded-full bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-300"
+                                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
                                 >
-                                    <PenTool size={16} />
-                                    Sign
+                                    <PenTool size={15} />
+                                    <span>Sign</span>
                                 </button>
                             </>
                         )}
@@ -2045,7 +2167,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             const servicesToRender = (isJoint ? mergedNote.joint_services : [mergedNote]) || [];
 
                             return servicesToRender.map((svc: any, svcIndex: number) => {
-                                const svcSummary = svc.narrative?.summary_notes;
+                                const svcSummary = svc.narrative?.summary_notes || svc.narrative?.clinical_narrative || svc.narrative?.summary || svc.narrative?.narrative || svc.summary_notes || svc.summary || svc.clinical_narrative || svc.raw_model_text || "";
                                 const pathPrefix = isJoint ? `joint_services.${svcIndex}.` : "";
 
                                 return (
@@ -2512,6 +2634,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     </div>
                 </div>
             )}
+            <SyncErrorModal 
+                isOpen={isSyncErrorModalOpen}
+                onClose={() => setIsSyncErrorModalOpen(false)}
+                errorMessage={syncTask?.error_message}
+                onRetry={handleSyncWithEhr}
+                isRetrying={isSyncing}
+                patientName={mergedNote?.patient?.full_name || (mergedNote as any)?.meta?.patientName}
+                visitDate={mergedNote?.encounter?.dos_date || (mergedNote as any)?.date_of_service}
+            />
         </div>
     );
 };

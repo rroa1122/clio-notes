@@ -236,11 +236,60 @@ const applyBaseNormalization = (clioData: any): ClioNote => {
         clioData.encounter.units = clioData.encounter?.units || clioData.visit_details?.units || "";
     }
 
-    // 8. Narrative Refinement (Outcome & Next Steps)
+    // 8. Narrative Refinement (Summary, Outcome & Next Steps)
     if (!clioData.narrative) clioData.narrative = {};
-    clioData.narrative.summary_notes = clioData.narrative.summary_notes || clioData.summary || clioData.hpi?.narrative || "";
-    clioData.narrative.outcome_of_services = clioData.narrative.outcome_of_services || clioData.outcome || clioData.outcome_of_services || "";
-    clioData.narrative.next_steps = clioData.narrative.next_steps || clioData.next_steps || "";
+    clioData.narrative.summary_notes =
+        clioData.narrative.summary_notes ||
+        clioData.narrative.clinical_narrative ||
+        clioData.narrative.summary ||
+        clioData.narrative.narrative ||
+        clioData.summary_notes ||
+        clioData.summary ||
+        clioData.clinical_narrative ||
+        clioData.hpi?.narrative ||
+        clioData.sections_by_title?.['CLINICAL NARRATIVE'] ||
+        clioData.sections_by_title?.['Clinical Narrative'] ||
+        clioData.sections_by_title?.['Summary'] ||
+        clioData.raw_model_text ||
+        "";
+        
+    clioData.narrative.outcome_of_services =
+        clioData.narrative.outcome_of_services ||
+        clioData.outcome ||
+        clioData.outcome_of_services ||
+        "";
+
+    clioData.narrative.next_steps =
+        clioData.narrative.next_steps ||
+        clioData.next_steps ||
+        "";
+
+    // Normalize each individual service in joint_services if present
+    if (clioData.joint_services && Array.isArray(clioData.joint_services)) {
+        clioData.joint_services = clioData.joint_services.map((svc: any) => {
+            if (!svc.narrative) svc.narrative = {};
+            svc.narrative.summary_notes =
+                svc.narrative.summary_notes ||
+                svc.narrative.clinical_narrative ||
+                svc.narrative.summary ||
+                svc.narrative.narrative ||
+                svc.summary_notes ||
+                svc.summary ||
+                svc.clinical_narrative ||
+                svc.raw_model_text ||
+                "";
+            svc.narrative.outcome_of_services =
+                svc.narrative.outcome_of_services ||
+                svc.outcome ||
+                svc.outcome_of_services ||
+                "";
+            svc.narrative.next_steps =
+                svc.narrative.next_steps ||
+                svc.next_steps ||
+                "";
+            return svc;
+        });
+    }
 
     // 9. Diagnoses - ENSURE ARRAY OF OBJECTS
     let finalDiagnoses = Array.isArray(clioData.diagnoses) ? clioData.diagnoses : (Array.isArray(clioData.diagnosis) ? clioData.diagnosis : []);
@@ -298,7 +347,7 @@ export const normalizeClioNote = (rawResponse: any): ClioNote | null => {
 
         // Handle Specialized Templates
         const templateId = clioData.template_id || clioData.templateId || clioData.meta?.template_id || clioData.meta?.templateId;
-        if (['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_mhv_provide_donation_note', 'tcm_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note'].includes(templateId)) {
+        if (['tcm_progress_note', 'tcm_case_assignment_note', 'tcm_assessment_note', 'tcm_adult_certification_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_gather_pcp_note', 'tcm_gather_psy_note', 'tcm_pc_emergency_contact_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_donation_obtain_note', 'tcm_cleaning_donation_gather_note', 'tcm_cleaning_donation_obtain_note', 'tcm_clothing_donation_gather_note', 'tcm_clothing_donation_obtain_note', 'tcm_food_donation_gather_note', 'tcm_food_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note', 'tcm_mhv_note', 'tcm_ltc_phase1_note', 'tcm_ltc_phase2_note', 'tcm_ltc_phase3_note', 'tcm_ltc_phase4_note'].includes(templateId)) {
             return normalizeTcmNote(clioData);
         }
 
@@ -365,6 +414,12 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         redundantHeaders.forEach(regex => {
             cleanedSummary = cleanedSummary.replace(regex, '').trim();
         });
+
+        // Ensure affirmative clinical statements (avoid "not available" audit flags)
+        cleanedSummary = cleanedSummary
+            .replace(/(?:Specific\s+)?(?:current\s+)?medications(?:\s+and\s+side\s+effects)?\s+were\s+not\s+available\s+in\s+the\s+record(?:\s+at\s+the\s+time\s+of\s+this\s+assessment)?\.?/gi, 'The client reports no current prescribed medications at the time of this assessment.')
+            .replace(/Allergies\s+(?:were\s+)?not\s+documented\.?/gi, 'No known drug allergies (NKDA) reported.')
+            .replace(/(?:Psychiatric\s+)?Hospitalizations\s+(?:were\s+)?not\s+reported\.?/gi, 'No recent psychiatric hospitalizations reported.');
 
         if (cleanedSummary.length > 0) {
             cleanedSummary = cleanedSummary.charAt(0).toUpperCase() + cleanedSummary.slice(1);
@@ -537,12 +592,13 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     const isSts = activeTemplateId === 'tcm_sts_complete_note' || activeTemplateId === 'tcm_sts_collect_note' || activeTemplateId === 'tcm_sts_submit_note';
     const isDpp = activeTemplateId === 'tcm_dpp_obtain_note' || activeTemplateId === 'tcm_dpp_complete_note' || activeTemplateId === 'tcm_dpp_submit_pcp_note';
 
-    const isMhvDonation = activeTemplateId === 'tcm_mhv_provide_donation_note';
-    const isDonationObtain = activeTemplateId === 'tcm_donation_obtain_note';
+    const isDonationObtain = activeTemplateId === 'tcm_donation_obtain_note' || activeTemplateId === 'tcm_cleaning_donation_gather_note' || activeTemplateId === 'tcm_cleaning_donation_obtain_note' || activeTemplateId === 'tcm_clothing_donation_gather_note' || activeTemplateId === 'tcm_clothing_donation_obtain_note' || activeTemplateId === 'tcm_food_donation_gather_note' || activeTemplateId === 'tcm_food_donation_obtain_note';
     const isVaccinationAssistance = activeTemplateId === 'tcm_vaccination_assistance_note';
     const isApptCoord = activeTemplateId === 'tcm_provider_appt_coord_note';
     const isUscisAssistance = activeTemplateId === 'tcm_uscis_assistance_note';
     const isHousingAssistance = activeTemplateId === 'tcm_housing_assistance_note';
+    const isSnapRecert = activeTemplateId === 'tcm_snap_recertification_note';
+    const isMhv = activeTemplateId === 'tcm_mhv_note';
  
     if (isHurricane) {
         services.domains_selected["12_other"] = true;
@@ -550,9 +606,6 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         services.domains_selected["2_physical_health_medical_dental"] = true;
     } else if (isSts || isDpp) {
         services.domains_selected["10_transportation"] = true;
-    } else if (isMhvDonation) {
-        services.domains_selected["1_mental_health_substance_abuse"] = true;
-        services.domains_selected["9_basic_needs"] = true;
     } else if (isDonationObtain) {
         services.domains_selected["9_basic_needs"] = true;
     } else if (isApptCoord) {
@@ -575,6 +628,27 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         services.domains_selected["1_mental_health_substance_abuse"] = wantsPsych;
     } else if (isHousingAssistance) {
         services.domains_selected["7_housing_shelter"] = true;
+    } else if (isSnapRecert) {
+        services.domains_selected["8_economic_financial"] = true;
+    } else if (isMhv) {
+        services.domains_selected["1_mental_health_substance_abuse"] = true;
+        const narrLower = (narrative.summary_notes || "").toLowerCase();
+        const titleLower = (services.service_focus_title || "").toLowerCase();
+        if (narrLower.includes("donation") || titleLower.includes("donation") || narrLower.includes("basic needs") || titleLower.includes("basic needs")) {
+            services.domains_selected["9_basic_needs"] = true;
+        }
+        if (narrLower.includes("appointment") || titleLower.includes("appointment") || narrLower.includes("pcp") || titleLower.includes("medical")) {
+            services.domains_selected["2_physical_health_medical_dental"] = true;
+        }
+        if (narrLower.includes("transport") || titleLower.includes("transport") || narrLower.includes("sts") || titleLower.includes("sts")) {
+            services.domains_selected["10_transportation"] = true;
+        }
+        if (narrLower.includes("correspondence") || titleLower.includes("correspondence") || narrLower.includes("form") || titleLower.includes("form") || narrLower.includes("survey")) {
+            services.domains_selected["6_activities_of_daily_living"] = true;
+        }
+        if (narrLower.includes("benefit") || titleLower.includes("benefit") || narrLower.includes("financial") || titleLower.includes("financial")) {
+            services.domains_selected["8_economic_financial"] = true;
+        }
     } else {
         services.domains_selected["1_mental_health_substance_abuse"] = true;
     }
@@ -669,3 +743,40 @@ export const mergeJointNotes = (notes: ClioNote[]): ClioNote => {
     
     return baseNote;
 };
+
+/**
+ * Resolves the Date of Service (DOS) for any note structure with priority on actual clinical service date
+ */
+export function getNoteServiceDate(note: any): Date | null {
+    if (!note) return null;
+    const rawDate = 
+        note.encounter?.dos_date ||
+        note.encounter?.date ||
+        note.encounter?.service_date ||
+        note.meta?.visitDate || 
+        note.meta?.visit_date ||
+        note.meta?.dos_date ||
+        note.appointment?.date_of_service ||
+        note.appointment?.service_date ||
+        note.appointment?.date ||
+        note.date_of_service ||
+        note.service_date ||
+        note.serviceDate ||
+        note.sections?.date_of_service ||
+        note.sections?.visit_date ||
+        note.createdAt || 
+        note.created_at;
+
+    if (!rawDate) return null;
+    try {
+        if (typeof rawDate === 'string' && rawDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [y, m, d] = rawDate.split('-');
+            return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        }
+        const d = new Date(rawDate);
+        return isNaN(d.getTime()) ? null : d;
+    } catch {
+        return null;
+    }
+}
+

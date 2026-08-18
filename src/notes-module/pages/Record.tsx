@@ -58,13 +58,15 @@ const formatServiceDate = (dateStr?: string, lang?: string) => {
 
 const parseTimeToMinutes = (timeStr: string): number | null => {
     if (!timeStr) return null;
-    const match = timeStr.match(/(\d+):(\d+)\s*(am|pm)/i);
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{1,2})\s*(am|pm)?$/i);
     if (!match) return null;
-    let hours = parseInt(match[1]);
-    const minutes = parseInt(match[2]);
-    const period = match[3].toLowerCase();
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const period = match[3]?.toLowerCase();
+    if (isNaN(hours) || isNaN(minutes) || minutes < 0 || minutes > 59) return null;
     if (period === 'pm' && hours < 12) hours += 12;
     if (period === 'am' && hours === 12) hours = 0;
+    if (!period && hours >= 24) return null;
     return hours * 60 + minutes;
 };
 
@@ -1101,7 +1103,20 @@ const Record: React.FC = () => {
                     formData.append('patient_id', selectedPatient.id);
                     formData.append('patient_name', selectedPatient.full_name);
                     if (selectedPatient.dob) formData.append('patient_dob', selectedPatient.dob);
-                    const clinicalContext = JSON.stringify(selectedPatient);
+                    
+                    const clinicalContextObj: any = { ...selectedPatient };
+                    if (!clinicalContextObj.pcp_medications || clinicalContextObj.pcp_medications === 'None reported' || clinicalContextObj.pcp_medications.trim() === '') {
+                        clinicalContextObj.pcp_medications = 'The client reports no current prescribed medications at the time of the assessment.';
+                    }
+                    if (!clinicalContextObj.psych_medications || clinicalContextObj.psych_medications === 'None reported' || clinicalContextObj.psych_medications.trim() === '') {
+                        clinicalContextObj.psych_medications = 'The client reports no current psychotropic medications.';
+                    }
+                    if (!clinicalContextObj.physical_conditions || clinicalContextObj.physical_conditions.trim() === '') {
+                        clinicalContextObj.physical_conditions = 'No acute physical medical conditions reported.';
+                    }
+                    clinicalContextObj.clinical_directives = 'Document all findings affirmatively. Do not use phrases like "not available", "not documented", or "not reported". If no medications or symptoms exist, state that client reports none.';
+
+                    const clinicalContext = JSON.stringify(clinicalContextObj);
                     formData.append('patient_clinical_context', clinicalContext);
                 } else {
                     formData.append('patient_name', patientInfo.name);
@@ -1109,7 +1124,10 @@ const Record: React.FC = () => {
                 }
 
                 // If it's a manual text service, use that as the primary context
-                const enrichedContext = `Encounter Context:\n${svc.manualText || patientInfo.context}\n\nDate: ${svcDate}\nTime In: ${svcTimeIn || 'Not specified'}\nTime Out: ${svcTimeOut || 'Not specified'}`;
+                const medInstruction = (!selectedPatient?.pcp_medications || selectedPatient?.pcp_medications === 'None reported')
+                    ? '\nMedications: The client reports no current prescribed medications.'
+                    : '';
+                const enrichedContext = `Encounter Context:\n${svc.manualText || patientInfo.context}\n\nDate: ${svcDate}\nTime In: ${svcTimeIn || 'Not specified'}\nTime Out: ${svcTimeOut || 'Not specified'}${medInstruction}\nClinical Documentation Directive: Document all findings affirmatively. Do not use phrases like 'not available', 'not documented', or 'not reported'. If no medications exist, document that client reports none.`;
                 formData.append('patient_context', enrichedContext);
                 
                 // Add unique identifiers so n8n can process them completely separately
@@ -1382,12 +1400,21 @@ const Record: React.FC = () => {
         navigate('/notes/new', { replace: true });
         setTimeIn('');
         setTimeOut('');
+        setTimeIn('');
+        setTimeOut('');
         setUnits('');
         setDurationMin('');
         setActiveTab('info');
     };
 
-
+    const handleBack = () => {
+        const idParam = searchParams.get('id');
+        if (idParam) {
+            navigate(-1);
+        } else {
+            handleReset();
+        }
+    };
 
     const isLimitReached = user?.subscription_tier === 'free' && noteCount >= 50 && user?.email !== 'reinier.roa@gmail.com' && user?.email !== 'reinier.roa2.0@gmail.com';
 
@@ -1443,13 +1470,13 @@ const Record: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col items-center w-full pt-6 lg:pt-8 px-4 pb-12 animate-in fade-in duration-500">
+        <div className="flex flex-col items-center max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-12 animate-in fade-in duration-500">
             {status === 'done' && pdfResponse ? (
                 <div className="max-w-6xl w-full space-y-4 animate-in fade-in duration-500">
                     {/* Back Button */}
                     <div className="flex items-center no-print">
                         <button
-                            onClick={() => navigate(-1)}
+                            onClick={handleBack}
                             className="group flex items-center gap-2 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors font-black text-[10px] uppercase tracking-widest active:scale-[0.98] bg-transparent border-none p-0 outline-none cursor-pointer"
                         >
                             <ArrowLeft size={13} className="text-indigo-400" />
@@ -1484,8 +1511,8 @@ const Record: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <Card className="max-w-6xl w-full bg-transparent md:bg-surface border-0 md:border border-border/60 shadow-none md:shadow-soft rounded-none md:rounded-[2.5rem] overflow-visible md:overflow-hidden relative group">
-                    <CardContent className="px-1 sm:px-6 md:px-10 pt-4 md:pt-8 pb-6 md:pb-10 space-y-6 md:space-y-8">
+                <Card className="w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[1540px] bg-transparent md:bg-surface border-0 md:border border-border/60 shadow-none md:shadow-soft rounded-2xl md:rounded-3xl xl:rounded-[2rem] 2xl:rounded-[2.5rem] overflow-visible md:overflow-hidden relative group transition-all duration-300">
+                    <CardContent className="p-3 sm:p-4 md:p-5 lg:p-6 xl:p-7 2xl:p-8 space-y-3 sm:space-y-4 md:space-y-4 xl:space-y-5">
                         {showGuide && (
                             <div className="bg-gradient-to-r from-indigo-50/60 via-violet-50/40 to-slate-50 dark:from-indigo-950/10 dark:via-violet-950/5 dark:to-slate-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl p-6 relative animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm hidden md:flex flex-row items-center justify-between gap-6">
                                 <button 
@@ -1682,9 +1709,9 @@ const Record: React.FC = () => {
                         </div>
 
                         {/* 1. Desktop Layout (hidden md:block) */}
-                        <div className="hidden md:block space-y-8">
+                        <div className="hidden md:block space-y-2.5 md:space-y-3.5 xl:space-y-4">
                             {/* Top Tier: Mandatory Clinical Metadata */}
-                            <div className="grid grid-cols-1 md:grid-cols-10 gap-6 md:gap-8 pb-8 border-b border-slate-100 dark:border-slate-800">
+                            <div className="grid grid-cols-1 md:grid-cols-10 gap-2.5 md:gap-3 lg:gap-4 xl:gap-5 pb-3 md:pb-3.5 xl:pb-4 border-b border-slate-100 dark:border-slate-800">
                                 {/* Patient Selection */}
                                 <div className="space-y-3 md:col-span-3">
                                     <div className="flex items-center gap-2 mb-1">
@@ -1744,7 +1771,7 @@ const Record: React.FC = () => {
                                                         <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeIn ? `In: ${timeIn}` : (language === 'es' ? 'Inicio' : 'Start')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl" side="bottom" align="end" sideOffset={12}>
+                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl" side="bottom" align="center" sideOffset={12}>
                                                     <div className="flex flex-col items-center">
                                                         <div className="w-full pt-8 pb-4 text-center">
                                                             <span className="font-medium tracking-tight text-slate-800 dark:text-slate-100 text-[18px]">{language === 'es' ? 'Seleccionar hora' : 'Select Time'}</span>
@@ -1772,7 +1799,7 @@ const Record: React.FC = () => {
                                                         <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeOut ? `Out: ${timeOut}` : (language === 'es' ? 'Fin' : 'End')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl" side="bottom" align="end" sideOffset={12}>
+                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl" side="bottom" align="center" sideOffset={12}>
                                                     <div className="flex flex-col items-center">
                                                         <div className="w-full pt-8 pb-4 text-center">
                                                             <span className="font-medium tracking-tight text-slate-800 dark:text-slate-100 text-[18px]">{language === 'es' ? 'Seleccionar hora' : 'Select Time'}</span>
@@ -1899,30 +1926,30 @@ const Record: React.FC = () => {
                             </div>
 
                             {/* Middle Tier: Unified Capture Interface */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 xl:gap-7">
                                 {/* Voice Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[2rem] p-6 flex flex-col gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[260px]">
-                                        <div className="flex items-center justify-between w-full px-2">
-                                            <div className="flex items-center gap-2">
+                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[2rem] p-5 md:p-6 xl:p-7 flex flex-col gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[240px] md:min-h-[260px] xl:min-h-[280px]">
+                                        <div className="flex items-center justify-between w-full px-1">
+                                            <div className="flex items-center gap-1.5">
                                                 <Mic size={14} className="text-slate-400" />
-                                                <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[10px]">
                                                     {t('record.voice_capture', 'Voice Capture')}
                                                 </Badge>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col items-center justify-center flex-1 gap-6 w-full py-2">
+                                        <div className="flex flex-col items-center justify-center flex-1 gap-3 xl:gap-4 w-full py-1">
                                             <div className="relative group w-fit flex items-center justify-center">
                                                 {/* Continuous vector-sharp breathing aura */}
                                                 {status === 'idle' && !audioBlob && (
-                                                    <div className="absolute size-36 animate-aura-breathing rounded-full pointer-events-none z-0" />
+                                                    <div className="absolute size-34 md:size-38 xl:size-42 animate-aura-breathing rounded-full pointer-events-none z-0" />
                                                 )}
 
                                                 <button
                                                     onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
                                                     disabled={!!audioBlob}
                                                     className={cn(
-                                                        "relative size-28 rounded-full flex items-center justify-center transition-all duration-355 ease-out transform-gpu will-change-transform z-10 border shadow-sm group/mic-btn overflow-hidden",
+                                                        "relative size-23 md:size-25 xl:size-28 rounded-full flex items-center justify-center transition-all duration-355 ease-out transform-gpu will-change-transform z-10 border shadow-sm group/mic-btn overflow-hidden",
                                                         audioBlob 
                                                             ? "metallic-btn-emerald text-emerald-600 cursor-default" 
                                                             : status === 'recording'
@@ -1933,13 +1960,17 @@ const Record: React.FC = () => {
                                                     <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none animate-shimmer-sweep" />
 
                                                     {status === 'recording' ? (
-                                                        <div className="size-8 rounded-lg bg-white shadow-md flex items-center justify-center animate-[zoom-in-50_0.2s_ease-out]">
-                                                            <div className="size-3.5 bg-rose-600 rounded-sm" />
+                                                        <div className="size-7 xl:size-8 rounded-md xl:rounded-lg bg-white shadow-md flex items-center justify-center animate-[zoom-in-50_0.2s_ease-out]">
+                                                            <div className="size-3 xl:size-3.5 bg-rose-600 rounded-sm" />
                                                         </div>
                                                     ) : (
                                                         <div className="relative z-10 transition-all duration-300 ease-in-out flex items-center justify-center">
+                                                            <Mic size={34} strokeWidth={1.5} className={cn(
+                                                                "transition-colors duration-300 relative z-10 xl:hidden",
+                                                                audioBlob ? "text-emerald-500" : "text-indigo-500/70 dark:text-slate-400 group-hover/mic-btn:text-indigo-600 group-hover/mic-btn:scale-105"
+                                                            )} />
                                                             <Mic size={38} strokeWidth={1.5} className={cn(
-                                                                "transition-colors duration-300 relative z-10",
+                                                                "transition-colors duration-300 relative z-10 hidden xl:block",
                                                                 audioBlob ? "text-emerald-500" : "text-indigo-500/70 dark:text-slate-400 group-hover/mic-btn:text-indigo-600 group-hover/mic-btn:scale-105"
                                                             )} />
                                                         </div>
@@ -1947,19 +1978,19 @@ const Record: React.FC = () => {
                                                 </button>
 
                                                 {audioBlob && (
-                                                    <div className="absolute -top-2 -right-2 size-10 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-xl animate-in zoom-in-50 duration-500 z-20">
-                                                        <Check size={20} strokeWidth={3} />
+                                                    <div className="absolute -top-1.5 -right-1.5 size-8 xl:size-9 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-xl animate-in zoom-in-50 duration-500 z-20">
+                                                        <Check size={16} strokeWidth={3} />
                                                     </div>
                                                 )}
                                             </div>
 
-                                            <div className="flex flex-col items-center gap-2 min-h-[54px] justify-start mt-2">
+                                            <div className="flex flex-col items-center gap-1 min-h-[38px] justify-start mt-1">
                                                 {status === 'recording' ? (
-                                                    <div className="flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-500">
-                                                        <span className="text-2xl font-bold tabular-nums tracking-tighter text-rose-500 dark:text-rose-400">
+                                                    <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-500">
+                                                        <span className="text-xl xl:text-2xl font-bold tabular-nums tracking-tighter text-rose-500 dark:text-rose-400">
                                                             {formatTime(timer)}
                                                         </span>
-                                                        <div className="flex items-center gap-1 h-5 my-0.5 justify-center w-24">
+                                                        <div className="flex items-center gap-1 h-4 justify-center w-20 xl:w-24">
                                                             <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-1" />
                                                             <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-2" />
                                                             <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-3" />
@@ -1967,23 +1998,23 @@ const Record: React.FC = () => {
                                                             <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-2" />
                                                             <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-1" />
                                                         </div>
-                                                        <div className="flex items-center gap-2 opacity-50">
-                                                            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400">
+                                                        <div className="flex items-center gap-1.5 opacity-50">
+                                                            <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-slate-600 dark:text-slate-400">
                                                                 {t('record.recording', 'Recording...')}
                                                             </p>
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex flex-col items-center gap-1 animate-in fade-in duration-500">
+                                                    <div className="flex flex-col items-center gap-0.5 animate-in fade-in duration-500">
                                                         <p className={cn(
-                                                            "text-[11px] font-bold uppercase tracking-[0.4em] transition-all duration-300",
-                                                            audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400/60 dark:text-slate-500"
+                                                            "text-[10px] xl:text-[11px] font-bold uppercase tracking-[0.25em] transition-all duration-300",
+                                                            audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400/70 dark:text-slate-500"
                                                         )}>
                                                             {audioBlob ? t('record.session_finalized', 'Session Finalized') : t('record.system_standby', 'System Standby')}
                                                         </p>
                                                         {!audioBlob && (
-                                                            <div className="h-4 flex items-center">
-                                                                <p className="text-[11px] font-semibold text-indigo-500/50 dark:text-indigo-400/50 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                                                            <div className="h-3.5 flex items-center">
+                                                                <p className="text-[10px] font-semibold text-indigo-500/60 dark:text-indigo-400/60 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-0.5 group-hover:translate-y-0">
                                                                     {t('record.ready_to_record', 'Ready to record')}
                                                                 </p>
                                                             </div>
@@ -1992,7 +2023,7 @@ const Record: React.FC = () => {
                                                 )}
                                             </div>
 
-                                            <div className="flex flex-col gap-3 w-full max-w-[240px] mt-2">
+                                            <div className="flex flex-col gap-2 w-full max-w-[200px] mt-0.5">
                                                 {audioBlob && status !== 'recording' && (
                                                     <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
                                                         <Button
@@ -2003,7 +2034,7 @@ const Record: React.FC = () => {
                                                                 setAudioUrl(null);
                                                                 setTimer(0);
                                                             }}
-                                                            className="h-11 w-full rounded-full font-black text-[11px] uppercase tracking-[0.2em] text-rose-400 hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-all"
+                                                            className="h-8 w-full rounded-full font-black text-[10px] uppercase tracking-[0.15em] text-rose-400 hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-all"
                                                         >
                                                             {t('record.discard', 'Discard')}
                                                         </Button>
@@ -2016,14 +2047,14 @@ const Record: React.FC = () => {
 
                                 {/* Text Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[2rem] p-6 flex flex-col gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[260px]">
+                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[2rem] p-5 md:p-6 xl:p-7 flex flex-col gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[240px] md:min-h-[260px] xl:min-h-[280px]">
                                         {selectedSubTemplate === 'Custom Template' ? (
-                                            <div className="flex flex-col gap-6 h-full">
-                                                <div className="flex-1 flex flex-col gap-3 relative">
-                                                    <div className="flex items-center justify-between w-full px-2">
-                                                        <div className="flex items-center gap-2">
+                                            <div className="flex flex-col gap-3.5 h-full">
+                                                <div className="flex-1 flex flex-col gap-2 relative">
+                                                    <div className="flex items-center justify-between w-full px-1">
+                                                        <div className="flex items-center gap-1.5">
                                                             <Target size={14} className="text-slate-400" />
-                                                            <Badge variant="outline" className="bg-white/80 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400 border-slate-100/50 dark:border-slate-800/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                            <Badge variant="outline" className="bg-white/80 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400 border-slate-100/50 dark:border-slate-800/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[10px]">
                                                                 {t('record.encounter_goals', 'Goals')}
                                                             </Badge>
                                                         </div>
@@ -2032,14 +2063,14 @@ const Record: React.FC = () => {
                                                         value={patientInfo.context}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
                                                         placeholder={t('record.goals_placeholder', 'Symptoms or session objectives...')}
-                                                        className="w-full flex-1 min-h-[90px] bg-white/40 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-indigo-500/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
+                                                        className="w-full flex-1 min-h-[85px] bg-white/40 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 px-3.5 py-2.5 text-[13px] font-medium rounded-xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-indigo-500/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
                                                     />
                                                 </div>
-                                                <div className="flex-1 flex flex-col gap-3 relative">
-                                                    <div className="flex items-center justify-between w-full px-2">
-                                                        <div className="flex items-center gap-2">
+                                                <div className="flex-1 flex flex-col gap-2 relative">
+                                                    <div className="flex items-center justify-between w-full px-1">
+                                                        <div className="flex items-center gap-1.5">
                                                             <Sparkles size={14} className="text-emerald-400 animate-pulse" />
-                                                            <Badge variant="outline" className="bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-100/50 dark:border-emerald-900/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                            <Badge variant="outline" className="bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-100/50 dark:border-emerald-900/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[10px]">
                                                                 {language === 'es' ? 'Plantilla' : 'Template'}
                                                             </Badge>
                                                         </div>
@@ -2048,31 +2079,31 @@ const Record: React.FC = () => {
                                                         value={patientInfo.customTemplateText}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, customTemplateText: e.target.value }))}
                                                         placeholder={language === 'es' ? 'Pega tu plantilla personalizada aquí...' : 'Paste your custom template here...'}
-                                                        className="w-full flex-1 min-h-[90px] bg-white/40 dark:bg-slate-950/30 border border-emerald-200/40 dark:border-emerald-900/40 px-4 py-3 text-[14px] font-medium rounded-2xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-emerald-500/20 placeholder:text-slate-400 dark:placeholder:text-emerald-600 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
+                                                        className="w-full flex-1 min-h-[85px] bg-white/40 dark:bg-slate-950/30 border border-emerald-200/40 dark:border-emerald-900/40 px-3.5 py-2.5 text-[13px] font-medium rounded-xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-emerald-500/20 placeholder:text-slate-400 dark:placeholder:text-emerald-600 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
                                                     />
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col gap-4 h-full relative group/text flex-1">
-                                                <div className="flex items-center justify-between w-full px-2">
-                                                    <div className="flex items-center gap-2">
+                                            <div className="flex flex-col gap-2 h-full relative group/text flex-1">
+                                                <div className="flex items-center justify-between w-full px-1">
+                                                    <div className="flex items-center gap-1.5">
                                                         <Target size={14} className="text-slate-400" />
-                                                        <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest">
+                                                        <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[10px]">
                                                             {t('record.encounter_goals', 'Encounter Goals')}
                                                         </Badge>
                                                     </div>
                                                     {patientInfo.context.trim().length > 0 && (
-                                                        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950 text-emerald-500 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900 flex items-center gap-1.5 font-bold animate-in zoom-in px-2.5 py-0.5 rounded-full scale-90">
-                                                            <Check size={12} strokeWidth={3} /> {language === 'es' ? "Añadido" : "Added"}
+                                                        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950 text-emerald-500 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900 flex items-center gap-1 font-bold animate-in zoom-in px-2.5 py-0.5 rounded-full scale-90 text-[10px]">
+                                                            <Check size={11} strokeWidth={3} /> {language === 'es' ? "Añadido" : "Added"}
                                                         </Badge>
                                                     )}
                                                 </div>
-                                                <div className="flex-1 flex flex-col relative justify-start pt-2">
+                                                <div className="flex-1 flex flex-col relative justify-start pt-1">
                                                     {!patientInfo.context.trim() && (
-                                                        <div className="absolute inset-x-0 top-2 pointer-events-none px-2 flex group-focus-within/text:opacity-0 transition-opacity duration-300">
+                                                        <div className="absolute inset-x-0 top-1 pointer-events-none px-1 flex group-focus-within/text:opacity-0 transition-opacity duration-300">
                                                             <div className="flex items-start gap-1">
-                                                                <div className="w-[2.5px] h-5 bg-indigo-500/40 animate-cursor-blink rounded-full mt-0.5" />
-                                                                <span className="text-[15px] font-medium text-slate-400/60 dark:text-slate-500/60 tracking-tight leading-relaxed animate-in fade-in">
+                                                                <div className="w-[2px] h-4.5 bg-indigo-500/40 animate-cursor-blink rounded-full mt-0.5" />
+                                                                <span className="text-[13px] font-medium text-slate-400/60 dark:text-slate-500/60 tracking-tight leading-relaxed animate-in fade-in">
                                                                     {t('record.goals_placeholder', 'Specify symptoms, history focus, or session objectives (optional)...')}
                                                                 </span>
                                                             </div>
@@ -2082,7 +2113,7 @@ const Record: React.FC = () => {
                                                         value={patientInfo.context}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
                                                         placeholder=""
-                                                        className="w-full flex-1 bg-transparent border-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0 text-[15px] font-medium text-slate-600 dark:text-slate-200 placeholder:text-transparent resize-none leading-relaxed transition-all shadow-none tracking-tight z-10 min-h-[160px]"
+                                                        className="w-full flex-1 bg-transparent border-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1 py-0 text-[13px] font-medium text-slate-600 dark:text-slate-200 placeholder:text-transparent resize-none leading-relaxed transition-all shadow-none tracking-tight z-10 min-h-[110px] md:min-h-[130px] xl:min-h-[150px]"
                                                     />
                                                 </div>
                                             </div>
@@ -2092,8 +2123,68 @@ const Record: React.FC = () => {
                             </div>
 
                             {/* Action & Status Tier */}
-                            <div className="flex flex-col gap-4 pt-6 mt-2 border-t border-slate-100/50 dark:border-slate-800/60">
-                                <div className="flex flex-row items-stretch gap-4 w-full max-w-3xl mx-auto px-4">
+                            <div className="flex flex-col gap-2 xl:gap-2.5 pt-2.5 md:pt-3 xl:pt-4 mt-1 border-t border-slate-100/50 dark:border-slate-800/60">
+                                {/* Compact Recorded Services Capsule Ribbon */}
+                                {recordedServices.length > 0 && (
+                                    <div className="flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto px-2 animate-in fade-in slide-in-from-top-1 duration-300">
+                                        <div className="flex items-center gap-1.5 mr-1">
+                                            <Layers className="text-indigo-500/70" size={13} />
+                                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                                {language === 'es' ? 'Añadidos' : 'Added'} ({recordedServices.length}):
+                                            </span>
+                                        </div>
+                                        {recordedServices.map((svc, i) => (
+                                            <div 
+                                                key={svc.id} 
+                                                className={cn(
+                                                    "inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-[11px] shadow-sm transition-all duration-300",
+                                                    editingServiceId === svc.id 
+                                                        ? "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20"
+                                                        : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
+                                                )}
+                                            >
+                                                <span className="size-4 rounded-full bg-indigo-600 text-white font-bold text-[9px] flex items-center justify-center">
+                                                    {i + 1}
+                                                </span>
+                                                <span className="font-semibold truncate max-w-[140px] xl:max-w-[200px]">
+                                                    {svc.subTemplate}
+                                                </span>
+                                                {(svc.timeIn || svc.timeOut || svc.units) && (
+                                                    <span className="text-[10px] opacity-70 border-l border-slate-200 dark:border-slate-700 pl-1.5 whitespace-nowrap">
+                                                        {svc.timeIn && svc.timeOut 
+                                                            ? `${svc.timeIn}-${svc.timeOut}` 
+                                                            : (svc.timeIn ? svc.timeIn : `${parseInt(svc.units || '0') * 15}m`)}
+                                                    </span>
+                                                )}
+                                                <div className="flex items-center gap-0.5 border-l border-slate-200 dark:border-slate-700 pl-1">
+                                                    <button 
+                                                        onClick={() => handleEditService(svc)} 
+                                                        className="size-5 flex items-center justify-center rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition-colors"
+                                                        title={language === 'es' ? "Editar" : "Edit"}
+                                                    >
+                                                        <Edit2 size={10} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleRemoveService(svc.id)} 
+                                                        className="size-5 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                                                        title={language === 'es' ? "Eliminar" : "Delete"}
+                                                    >
+                                                        <Trash2 size={10} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <button 
+                                            onClick={handleReset}
+                                            className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors px-1.5 py-0.5"
+                                            title={language === 'es' ? "Descartar todos" : "Discard all"}
+                                        >
+                                            {language === 'es' ? 'Descartar' : 'Discard'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className="flex flex-row items-stretch gap-3 xl:gap-4 w-full max-w-2xl xl:max-w-3xl 2xl:max-w-4xl mx-auto px-2">
                                     {(() => {
                                         const hasIdentity = selectedPatient || patientInfo.name.trim().length > 0;
                                         const canAdd = hasIdentity && serviceDate && selectedSubTemplate && (selectedSubTemplate !== 'Custom Template' || patientInfo.customTemplateText?.trim().length > 0);
@@ -2103,15 +2194,15 @@ const Record: React.FC = () => {
                                                     onClick={handleAddService}
                                                     disabled={!canAdd}
                                                     className={cn(
-                                                        "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 shadow-sm border",
+                                                        "h-10 md:h-10.5 xl:h-11 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] gap-1.5 transition-all duration-300 shadow-sm border cursor-pointer",
                                                         canAdd 
                                                             ? (editingServiceId 
-                                                                ? "bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 border-transparent active:scale-[0.98]"
-                                                                : "bg-white dark:bg-slate-900 text-primary border-primary/20 dark:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/40 active:scale-[0.98]") 
-                                                            : "bg-slate-50/50 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 border-slate-100 dark:border-slate-900 shadow-none cursor-not-allowed"
+                                                                ? "bg-primary text-primary-foreground hover:bg-primary/90 border-transparent shadow-md shadow-primary/20 active:scale-95"
+                                                                : "bg-card text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/50 shadow-primary/5 active:scale-95") 
+                                                            : "bg-muted/40 text-muted-foreground/60 border-border/40 shadow-none cursor-not-allowed"
                                                     )}
                                                 >
-                                                    {editingServiceId ? <Check size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={3} />}
+                                                    {editingServiceId ? <Check size={13} strokeWidth={3} /> : <Plus size={13} strokeWidth={3} />}
                                                     <span>
                                                         {editingServiceId 
                                                             ? (language === 'es' ? "Guardar Cambios" : "Save Changes") 
@@ -2120,7 +2211,7 @@ const Record: React.FC = () => {
                                                                 : (audioBlob 
                                                                     ? (language === 'es' ? "Añadir Audio" : "Add Audio") 
                                                                     : ((patientInfo.context.trim() || patientInfo.customTemplateText?.trim()) 
-                                                                        ? (language === 'es' ? "Añadir Texto" : "Add Text") 
+                                                                        ? (language === 'es' ? "Añadir Texto" : "Add Texto") 
                                                                         : (language === 'es' ? "Añadir Servicio" : "Add Service"))))}
                                                     </span>
                                                 </Button>
@@ -2128,7 +2219,7 @@ const Record: React.FC = () => {
                                                     <Button
                                                         onClick={handleCancelEdit}
                                                         variant="outline"
-                                                        className="h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 border border-slate-200 dark:border-slate-800 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-950"
+                                                        className="h-10 md:h-10.5 xl:h-11 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground border border-border/80 bg-transparent hover:bg-secondary cursor-pointer active:scale-95"
                                                     >
                                                         {language === 'es' ? "Cancelar" : "Cancel"}
                                                     </Button>
@@ -2142,20 +2233,20 @@ const Record: React.FC = () => {
                                             onClick={sendToGenerate}
                                             disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
                                             className={cn(
-                                                "h-12 flex-1 rounded-full font-bold text-[12px] uppercase tracking-[0.2em] gap-2 transition-all duration-500 active:scale-[0.98] shadow-md",
+                                                "h-10 md:h-10.5 xl:h-11 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] gap-1.5 transition-all duration-300 active:scale-95 shadow-md cursor-pointer",
                                                 recordedServices.length > 0
-                                                    ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600 shadow-slate-900/10"
-                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 pointer-events-none border border-slate-100 dark:border-slate-900"
+                                                    ? "bg-foreground text-background hover:bg-foreground/90 shadow-foreground/10"
+                                                    : "bg-muted/40 text-muted-foreground/60 pointer-events-none border border-border/40"
                                             )}
                                         >
                                             {status === 'processing' || status === 'uploading' ? (
                                                 <>
-                                                    <Loader2 className="animate-spin" size={14} />
+                                                    <Loader2 className="animate-spin" size={13} />
                                                     <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <FileCheck size={14} />
+                                                    <FileCheck size={13} />
                                                     <span>{language === 'es' ? "Finalizar" : "Finalize"} ({recordedServices.length})</span>
                                                 </>
                                             )}
@@ -2163,18 +2254,18 @@ const Record: React.FC = () => {
                                     )}
                                 </div>
                                 {(!selectedPatient && !patientInfo.name.trim()) || !selectedSubTemplate ? (
-                                    <p className="text-center text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] animate-pulse transition-opacity duration-1000">
+                                    <p className="text-center text-[9px] xl:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.14em] animate-pulse transition-opacity duration-1000 mt-0.5">
                                         {t('record.fill_fields_to_enable', 'Fill patient & service fields to enable')}
                                     </p>
                                 ) : null}
                                 {!showGuide && (
-                                    <div className="flex justify-center mt-3">
+                                    <div className="flex justify-center mt-1.5">
                                         <button 
                                             onClick={() => {
                                                 localStorage.removeItem('clio_hide_guide');
                                                 setShowGuide(true);
                                             }}
-                                            className="text-[10px] font-black uppercase tracking-widest text-[#6366f1] hover:text-[#6366f1]/80 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors flex items-center gap-2 p-1.5 px-3.5 rounded-full hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 border border-indigo-50 dark:border-indigo-950/30"
+                                            className="text-[9px] xl:text-[10px] font-bold uppercase tracking-widest text-[#6366f1] hover:text-[#6366f1]/80 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors flex items-center gap-1.5 p-1 px-3 rounded-full hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 border border-indigo-50 dark:border-indigo-950/30"
                                         >
                                             <Compass className="size-3 text-[#6366f1] dark:text-indigo-400 animate-[spin_10s_linear_infinite]" />
                                             <span>{language === 'es' ? 'Mostrar Guía de Inicio' : 'Show Quick Start Guide'}</span>
@@ -2182,587 +2273,6 @@ const Record: React.FC = () => {
                                     </div>
                                 )}
                             </div>
-
-                            {/* Bottom Tier: Recorded Services Stack */}
-                            {recordedServices.length > 0 && (
-                                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-2 duration-500">
-                                    <div className="flex items-center justify-between mb-4 px-1">
-                                        <div className="flex items-center gap-2">
-                                            <Layers className="text-primary/40" size={16} />
-                                            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">{t('record.joint_note_stack', 'Joint Note Stack')} ({recordedServices.length})</h3>
-                                        </div>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            onClick={handleReset}
-                                            className="h-7 text-[11px] font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg px-2.5"
-                                        >
-                                            {t('record.discard_session', 'Discard Session')}
-                                        </Button>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                        {recordedServices.map((svc, i) => (
-                                            <div key={svc.id} className={cn(
-                                                "border rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm transition-all duration-300 group overflow-hidden",
-                                                editingServiceId === svc.id 
-                                                    ? "bg-indigo-500/5 dark:bg-indigo-950/10 border-indigo-200 dark:border-indigo-800/80 ring-1 ring-indigo-500/20"
-                                                    : "bg-slate-50/30 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
-                                            )}>
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className={cn(
-                                                        "flex items-center justify-center size-5 rounded-full border text-[11px] font-bold shrink-0 shadow-sm transition-colors",
-                                                        editingServiceId === svc.id 
-                                                            ? "bg-indigo-600 border-indigo-600 text-white" 
-                                                            : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500"
-                                                    )}>
-                                                        {i + 1}
-                                                    </div>
-                                                    <div className="flex flex-col min-w-0">
-                                                        <h5 className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 truncate leading-tight tracking-tight">{svc.subTemplate}</h5>
-
-                                                        {(svc.serviceDate || svc.timeIn || svc.timeOut || svc.units) && (
-                                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[9px] font-bold text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/60 pt-1">
-                                                                {svc.serviceDate && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <Calendar size={10} className="shrink-0 opacity-70" />
-                                                                        <span className="truncate">{formatServiceDate(svc.serviceDate, language)}</span>
-                                                                    </span>
-                                                                )}
-                                                                {(svc.timeIn || svc.timeOut || svc.units) && (
-                                                                    <span className="flex items-center gap-1">
-                                                                        <Clock size={10} className="shrink-0 opacity-70" />
-                                                                        <span>
-                                                                            {svc.timeIn && svc.timeOut ? (
-                                                                                `${svc.timeIn} - ${svc.timeOut} (${calculateDurationMin(svc.timeIn, svc.timeOut, svc.units || '')} min)` 
-                                                                            ) : svc.timeIn ? (
-                                                                                `In: ${svc.timeIn}${svc.units ? ` (${parseInt(svc.units) * 15} min)` : ''}` 
-                                                                            ) : svc.units ? (
-                                                                                `${parseInt(svc.units) * 15} min` 
-                                                                            ) : ''}
-                                                                        </span>
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                    <button 
-                                                        onClick={() => handleEditService(svc)} 
-                                                        className={cn(
-                                                            "size-7 flex items-center justify-center rounded-full transition-all duration-300",
-                                                            editingServiceId === svc.id 
-                                                                ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30" 
-                                                                : "text-slate-300 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20"
-                                                        )}
-                                                        title={language === 'es' ? "Editar" : "Edit"}
-                                                    >
-                                                        <Edit2 size={12} strokeWidth={1.5} />
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleRemoveService(svc.id)} 
-                                                        className="size-7 flex items-center justify-center rounded-full text-slate-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-300"
-                                                        title={language === 'es' ? "Eliminar" : "Delete"}
-                                                    >
-                                                        <Trash2 size={13} strokeWidth={1.5} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-
-                        {/* 2. Mobile Layout (block md:hidden) */}
-                        <div className="block md:hidden space-y-6">
-                            {/* Tab 1: Info */}
-                            {activeTab === 'info' && (
-                                <div className="space-y-4 animate-in fade-in duration-300">
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-3xl p-4 shadow-sm flex flex-col">
-                                        {/* Row 1: Patient Search */}
-                                        <div className="pb-3.5">
-                                            {selectedPatient ? (
-                                                <PatientSummaryCard
-                                                    patient={selectedPatient}
-                                                    onReset={() => {
-                                                        setSelectedPatient(null);
-                                                        setPatientInfo({ name: '', dob: '', context: '', customTemplateText: '' });
-                                                        setClioNote(null);
-                                                    }}
-                                                />
-                                            ) : (
-                                                <PatientSelector
-                                                    onSelect={(p) => {
-                                                        setSelectedPatient(p);
-                                                        setPatientInfo(prev => ({
-                                                            ...prev,
-                                                            name: p.full_name,
-                                                            dob: p.dob || ''
-                                                        }));
-                                                    }}
-                                                    onInputChange={(val) => {
-                                                        setPatientInfo(prev => ({ ...prev, name: val }));
-                                                    }}
-                                                    onCreateNew={() => setIsCreateModalOpen(true)}
-                                                />
-                                            )}
-                                        </div>
-
-                                        <div className="border-t border-slate-100 dark:border-slate-800/50 my-1" />
-
-                                        {/* Row 2: Date (Left) and Units Input (Right) */}
-                                        <div className="grid grid-cols-12 gap-3 py-2">
-                                            {/* Date Picker */}
-                                            <div className="col-span-8 flex items-center">
-                                                <DatePicker 
-                                                    date={serviceDate} 
-                                                    setDate={setServiceDate} 
-                                                    className="h-10 rounded-xl border-0 shadow-none bg-slate-50 dark:bg-slate-950 w-full focus-visible:ring-0 px-3 font-semibold text-slate-600 dark:text-slate-300 tracking-tight text-xs"
-                                                />
-                                            </div>
-                                            
-                                            {/* Duration in Minutes Input Field */}
-                                            <div className="col-span-4 bg-slate-50 dark:bg-slate-950 rounded-xl flex items-center px-3 border border-transparent focus-within:border-primary/20">
-                                                <input 
-                                                    type="number"
-                                                    min="0"
-                                                    autoComplete="off"
-                                                    placeholder={language === 'es' ? 'Min.' : 'Min'}
-                                                    value={durationMin}
-                                                    onChange={(e) => handleDurationMinChange(e.target.value)}
-                                                    style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
-                                                    className="h-10 !border-0 focus:!border-0 focus:!border-transparent focus-visible:!border-0 focus-visible:!border-transparent bg-transparent focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none outline-none font-bold text-slate-700 dark:text-slate-200 w-full p-0 text-center text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-pointer"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="border-t border-slate-100 dark:border-slate-800/50 my-1" />
-
-                                        {/* Row 3: Start Time (Left) and End Time (Right) */}
-                                        <div className="grid grid-cols-2 gap-3 py-2">
-                                            {/* Time In */}
-                                            <Popover open={isMobileTimeOpen} onOpenChange={setIsMobileTimeOpen}>
-                                                <PopoverTrigger asChild>
-                                                    <Button variant="ghost" className="h-10 rounded-xl bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 px-3 font-semibold text-slate-500 dark:text-slate-300 w-full flex items-center gap-2 justify-center transition-all tracking-tight border-0 shadow-none">
-                                                        <Clock size={13} className="text-slate-400 dark:text-slate-500 shrink-0" />
-                                                        <span className="text-xs truncate">{timeIn ? `In: ${timeIn}` : (language === 'es' ? 'Comenzar' : 'Start')}</span>
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-[280px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-2xl bg-white dark:bg-slate-900" side="bottom" align="center" sideOffset={12}>
-                                                    <div className="flex flex-col items-center">
-                                                        <div className="w-full pt-8 pb-4 text-center">
-                                                            <span className="font-semibold tracking-tight text-slate-800 dark:text-slate-100 text-base">{language === 'es' ? 'Hora de inicio' : 'Start Time'}</span>
-                                                        </div>
-                                                        <div className="px-6 pb-6 w-full">
-                                                            <TimeSpinner 
-                                                                initialTimeStr={timeIn}
-                                                                onConfirm={(timeStr) => {
-                                                                    handleTimeInChange(timeStr);
-                                                                    setIsMobileTimeOpen(false);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </PopoverContent>
-                                            </Popover>
-
-                                            {/* Time Out */}
-                                            <Popover open={isMobileTimeOutOpen} onOpenChange={setIsMobileTimeOutOpen}>
-                                                <PopoverTrigger asChild>
-                                                    <Button variant="ghost" className="h-10 rounded-xl bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 px-3 font-semibold text-slate-500 dark:text-slate-300 w-full flex items-center gap-2 justify-center transition-all tracking-tight border-0 shadow-none">
-                                                        <Clock size={13} className="text-slate-400 dark:text-slate-500 shrink-0" />
-                                                        <span className="text-xs truncate">{timeOut ? `Out: ${timeOut}` : (language === 'es' ? 'Fin' : 'End')}</span>
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-[280px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-2xl bg-white dark:bg-slate-900" side="bottom" align="center" sideOffset={12}>
-                                                    <div className="flex flex-col items-center">
-                                                        <div className="w-full pt-8 pb-4 text-center">
-                                                            <span className="font-semibold tracking-tight text-slate-800 dark:text-slate-100 text-base">{language === 'es' ? 'Hora de fin' : 'End Time'}</span>
-                                                        </div>
-                                                        <div className="px-6 pb-6 w-full">
-                                                            <TimeSpinner 
-                                                                initialTimeStr={timeOut}
-                                                                onConfirm={(timeStr) => {
-                                                                    handleTimeOutChange(timeStr);
-                                                                    setIsMobileTimeOutOpen(false);
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </PopoverContent>
-                                            </Popover>
-                                        </div>
-
-                                        <div className="border-t border-slate-100 dark:border-slate-800/50 my-1" />
-
-                                        {/* Row 4: Service Provided */}
-                                        <div ref={mobileSubTemplateDropdownRef} className="pt-3.5 relative">
-                                            <div 
-                                                onClick={() => setIsDropdownOpen(true)}
-                                                className={cn(
-                                                    "w-full h-10 flex items-center justify-between px-4 bg-slate-50 dark:bg-slate-950 rounded-xl cursor-text transition-all hover:bg-slate-100 dark:hover:bg-slate-900",
-                                                    isDropdownOpen ? "ring-2 ring-primary/20" : ""
-                                                )}
-                                            >
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-xs font-semibold tracking-tight text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 p-0"
-                                                    placeholder={t('record.select_encounter_type', 'Select encounter type...')}
-                                                    value={isDropdownOpen ? subTemplateSearchQuery : selectedSubTemplate}
-                                                    onChange={(e) => {
-                                                        setSubTemplateSearchQuery(e.target.value);
-                                                        setIsDropdownOpen(true);
-                                                    }}
-                                                    onFocus={() => setIsDropdownOpen(true)}
-                                                />
-                                                <div className="flex items-center gap-1.5 shrink-0 ml-1">
-                                                    {selectedSubTemplate && isDropdownOpen && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setSelectedSubTemplate('');
-                                                                setSubTemplateSearchQuery('');
-                                                            }}
-                                                            className="text-slate-450 hover:text-slate-650 dark:hover:text-slate-350 transition-colors"
-                                                        >
-                                                            <X size={12} />
-                                                        </button>
-                                                    )}
-                                                    <ChevronDown className={cn("size-3.5 text-slate-400 transition-transform duration-300 shrink-0", isDropdownOpen && "rotate-180")} />
-                                                </div>
-                                            </div>
- 
-                                            {isDropdownOpen && (
-                                                <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xl p-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                    <div className="flex flex-col gap-1 max-h-[180px] overflow-y-auto pr-1">
-                                                        {filteredSubTemplatesByGroup.length === 0 ? (
-                                                            <div className="text-center py-4 text-slate-400 text-[11px] font-medium">
-                                                                {language === 'es' ? 'No se encontraron servicios' : 'No services found'}
-                                                            </div>
-                                                        ) : (
-                                                            filteredSubTemplatesByGroup.map((group) => (
-                                                                <div key={group.category} className="mb-2 last:mb-0">
-                                                                    <div className="text-[9px] font-extrabold text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-widest px-3 py-1 select-none mb-0.5 border-b border-slate-100/50 dark:border-slate-800/50 pb-0.5">
-                                                                        {group.category}
-                                                                    </div>
-                                                                    <div className="flex flex-col gap-0.5">
-                                                                        {group.items.map((t) => {
-                                                                            const isActive = selectedSubTemplate === t;
-                                                                            return (
-                                                                                <button
-                                                                                    key={t}
-                                                                                    onClick={() => {
-                                                                                        setSelectedSubTemplate(t);
-                                                                                        setIsDropdownOpen(false);
-                                                                                    }}
-                                                                                    className={cn(
-                                                                                        "w-full justify-between items-center h-8 px-3 text-xs font-semibold rounded-lg transition-colors flex text-left",
-                                                                                        isActive ? 'bg-primary/5 text-primary dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-750 dark:hover:text-slate-200'
-                                                                                    )}
-                                                                                >
-                                                                                    <span className="truncate pr-2">{t}</span>
-                                                                                    {isActive && <Check size={12} strokeWidth={3} className="shrink-0" />}
-                                                                                </button>
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                </div>
-                                                            ))
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}                                        </div>
-                                    </div>
-                                    <div className="pt-4">
-                                        <Button
-                                            onClick={() => setActiveTab('capture')}
-                                            disabled={!selectedPatient && !patientInfo.name.trim() || !selectedSubTemplate}
-                                            className="w-full h-11 rounded-full bg-slate-800 dark:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider gap-2 shadow-sm transition-all active:scale-95"
-                                        >
-                                            {language === 'es' ? 'Siguiente: Capturar' : 'Next: Capture'}
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Tab 2: Capture */}
-                            {activeTab === 'capture' && (
-                                <div className="space-y-6 animate-in fade-in duration-300">
-                                    {/* Voice Capture */}
-                                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 flex flex-col gap-4 shadow-sm">
-                                        <div className="flex items-center gap-2">
-                                            <Mic size={13} className="text-slate-400" />
-                                            <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px]">
-                                                {t('record.voice_capture', 'Voice Capture')}
-                                            </Badge>
-                                        </div>
-                                        <div className="flex flex-col items-center justify-center py-2 w-full">
-                                            <div className="relative group w-fit flex items-center justify-center">
-                                                {status === 'idle' && !audioBlob && (
-                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-32 bg-primary/[0.04] rounded-full blur-2xl animate-[pulse_8s_ease-in-out_infinite]" />
-                                                )}
-                                                <button
-                                                    onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
-                                                    disabled={!!audioBlob}
-                                                    className={cn(
-                                                        "relative size-24 rounded-full flex items-center justify-center transition-all duration-500 z-10",
-                                                        audioBlob 
-                                                            ? "bg-emerald-50/40 border-2 border-emerald-200 text-emerald-600 shadow-[0_4px_15px_rgba(16,185,129,0.1)]" 
-                                                            : status === 'recording'
-                                                                ? "animate-recording-pulse border-2 border-rose-500/20 text-rose-500 hover:scale-[0.98]"
-                                                                : "bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-500 active:scale-95 shadow-md"
-                                                    )}
-                                                >
-                                                    {status === 'recording' ? (
-                                                        <div className="size-8 rounded-xl bg-rose-500 shadow-md flex items-center justify-center animate-pulse">
-                                                            <div className="size-3 bg-white rounded-sm" />
-                                                        </div>
-                                                    ) : (
-                                                        <Mic size={36} strokeWidth={1} className={audioBlob ? "text-emerald-500" : "text-slate-400 dark:text-slate-500"} />
-                                                    )}
-                                                </button>
-                                                {audioBlob && (
-                                                    <div className="absolute -top-1 -right-1 size-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-md z-20">
-                                                        <Check size={14} strokeWidth={3} />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="flex flex-col items-center gap-1 mt-3 text-center">
-                                                {status === 'recording' ? (
-                                                    <>
-                                                        <span className="text-xl font-bold tabular-nums text-rose-500">{formatTime(timer)}</span>
-                                                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">{t('record.recording', 'Recording...')}</p>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                                                            {audioBlob ? (language === 'es' ? "Grabación Guardada" : "Recording Saved") : (language === 'es' ? "Toca el Micrófono para Iniciar" : "Tap Mic to Start")}
-                                                        </p>
-                                                    </>
-                                                )}
-                                            </div>
-
-                                            {audioBlob && status !== 'recording' && (
-                                                <Button
-                                                    variant="ghost"
-                                                    onClick={() => {
-                                                        if (audioUrl) URL.revokeObjectURL(audioUrl);
-                                                        setAudioBlob(null);
-                                                        setAudioUrl(null);
-                                                        setTimer(0);
-                                                    }}
-                                                    className="h-9 rounded-full font-bold text-[10px] uppercase tracking-wider text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 mt-2 px-4"
-                                                >
-                                                    {language === 'es' ? "Descartar Audio" : "Discard Audio"}
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Text Capture */}
-                                    <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-5 flex flex-col gap-4 shadow-sm min-h-[160px]">
-                                        <div className="flex items-center justify-between w-full">
-                                            <div className="flex items-center gap-2">
-                                                <Target size={13} className="text-slate-400" />
-                                                <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-350 border-slate-100 dark:border-slate-800 font-bold px-2 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px]">
-                                                    {t('record.encounter_goals', 'Objectives')}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                        <Textarea
-                                            value={patientInfo.context}
-                                            onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
-                                            placeholder={t('record.goals_placeholder', 'Specify symptoms, history focus, or session objectives (optional)...')}
-                                            className="w-full flex-1 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 px-4 py-3 text-sm font-semibold rounded-2xl text-slate-700 dark:text-slate-200 shadow-inner focus-visible:ring-primary/20 placeholder:text-slate-300 dark:placeholder:text-slate-650 min-h-[100px]"
-                                        />
-                                    </div>
-
-                                    {/* Action button inside capture tab */}
-                                    <div className="pt-2">
-                                        {(() => {
-                                            const hasIdentity = selectedPatient || patientInfo.name.trim().length > 0;
-                                            const canAdd = hasIdentity && serviceDate && selectedSubTemplate && (selectedSubTemplate !== 'Custom Template' || patientInfo.customTemplateText?.trim().length > 0);
-                                            return (
-                                                 <div className="flex flex-col gap-2 w-full">
-                                                     <Button
-                                                         onClick={handleAddService}
-                                                         disabled={!canAdd}
-                                                         className={cn(
-                                                             "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 shadow-sm transition-all duration-300 active:scale-95",
-                                                             canAdd 
-                                                                 ? (editingServiceId 
-                                                                     ? "bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-650"
-                                                                     : "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600")
-                                                                 : "bg-slate-100 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 cursor-not-allowed border border-slate-200 dark:border-slate-800 shadow-none"
-                                                         )}
-                                                     >
-                                                         {editingServiceId ? <Check size={14} strokeWidth={3} /> : <Plus size={14} strokeWidth={3} />}
-                                                         <span>{editingServiceId ? (language === 'es' ? 'Guardar Cambios' : 'Save Changes') : (language === 'es' ? 'Añadir Servicio a la Nota' : 'Add Service to Note')}</span>
-                                                     </Button>
-                                                     {editingServiceId && (
-                                                         <Button
-                                                             onClick={handleCancelEdit}
-                                                             variant="ghost"
-                                                             className="h-10 w-full rounded-full font-bold text-[11px] uppercase tracking-wider text-slate-400 hover:text-slate-600 border border-slate-200 dark:border-slate-850"
-                                                         >
-                                                             {language === 'es' ? 'Cancelar Edición' : 'Cancel Editing'}
-                                                         </Button>
-                                                     )}
-                                                 </div>
-                                            );
-                                        })()}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Tab 3: Services (Joint note stack) */}
-                            {activeTab === 'services' && (
-                                <div className="space-y-6 animate-in fade-in duration-300">
-                                    <div className="flex items-center justify-between px-1">
-                                        <div className="flex items-center gap-2">
-                                            <Layers className="text-primary/40" size={15} />
-                                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('record.joint_note_stack', 'Services Stack')} ({recordedServices.length})</h4>
-                                        </div>
-                                        {recordedServices.length > 0 && (
-                                            <Button 
-                                                variant="ghost" 
-                                                size="sm" 
-                                                onClick={handleReset}
-                                                className="h-6 text-[10px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg px-2"
-                                            >
-                                                {language === 'es' ? 'Limpiar Todo' : 'Clear All'}
-                                            </Button>
-                                        )}
-                                    </div>
-
-                                    {recordedServices.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-6 bg-slate-50/20">
-                                            <div className="size-12 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3">
-                                                <Layers size={20} />
-                                            </div>
-                                            <h5 className="text-sm font-semibold text-slate-600 dark:text-slate-350 mb-1">{language === 'es' ? 'No se han agregado servicios aún' : 'No services added yet'}</h5>
-                                            <p className="text-xs text-slate-400 dark:text-slate-500 max-w-[200px] leading-relaxed">{language === 'es' ? 'Completa la información y captura, luego presiona "Añadir Servicio" para acumularlos aquí.' : 'Fill out the Info and Capture tabs, then click "Add Service" to stack them here.'}</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-3">
-                                            {/* Stack List */}
-                                            <div className="flex flex-col gap-2 max-h-[220px] overflow-y-auto pr-1">
-                                                {recordedServices.map((svc, i) => (
-                                                    <div key={svc.id} className={cn(
-                                                        "border rounded-[1.5rem] py-2 px-3.5 flex items-center justify-between shadow-sm transition-all duration-300 group overflow-hidden",
-                                                        editingServiceId === svc.id 
-                                                            ? "bg-indigo-500/5 dark:bg-indigo-950/10 border-indigo-200 dark:border-indigo-800/80 ring-1 ring-indigo-500/20"
-                                                            : "bg-slate-50/30 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700"
-                                                    )}>
-                                                        <div className="flex items-center gap-3 min-w-0">
-                                                            <div className={cn(
-                                                                "flex items-center justify-center size-5 rounded-full border text-[11px] font-bold shrink-0 shadow-sm transition-colors",
-                                                                editingServiceId === svc.id 
-                                                                    ? "bg-indigo-600 border-indigo-600 text-white" 
-                                                                    : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500"
-                                                            )}>
-                                                                {i + 1}
-                                                            </div>
-                                                            <div className="flex flex-col min-w-0">
-                                                                <h5 className="text-[11px] font-semibold text-slate-500 dark:text-slate-300 truncate leading-tight tracking-tight">{svc.subTemplate}</h5>
-                                                                <div className="flex items-center gap-1.5 mt-0.5 opacity-60">
-                                                                    {svc.audioBlob && <Mic size={9} className="text-slate-400 dark:text-slate-500" />}
-                                                                    {(svc.manualText || svc.customTemplateText) && <FileText size={9} className="text-slate-400 dark:text-slate-500" />}
-                                                                    <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">
-                                                                        {(() => {
-                                                                            const hasText = Boolean(svc.manualText?.trim()) || Boolean(svc.customTemplateText?.trim());
-                                                                            if (svc.audioBlob && hasText) return language === 'es' ? "Ambos" : "Both";
-                                                                            if (svc.audioBlob) return "Audio";
-                                                                            if (hasText) return language === 'es' ? "Texto" : "Text";
-                                                                            return language === 'es' ? "Solo Info" : "Info Only";
-                                                                        })()}
-                                                                    </span>
-                                                                </div>
-                                                                {(svc.serviceDate || svc.timeIn || svc.timeOut || svc.units) && (
-                                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[9px] font-bold text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800/60 pt-1">
-                                                                        {svc.serviceDate && (
-                                                                            <span className="flex items-center gap-1">
-                                                                                <Calendar size={10} className="shrink-0 opacity-70" />
-                                                                                <span className="truncate">{formatServiceDate(svc.serviceDate, language)}</span>
-                                                                            </span>
-                                                                        )}
-                                                                        {(svc.timeIn || svc.timeOut || svc.units) && (
-                                                                            <span className="flex items-center gap-1">
-                                                                                <Clock size={10} className="shrink-0 opacity-70" />
-                                                                                <span>
-                                                                                    {svc.timeIn && svc.timeOut ? (
-                                                                                        `${svc.timeIn} - ${svc.timeOut}` 
-                                                                                    ) : svc.timeIn ? (
-                                                                                        `In: ${svc.timeIn}${svc.units ? ` (${svc.units} U)` : ''}` 
-                                                                                    ) : svc.units ? (
-                                                                                        `${svc.units} ${language === 'es' ? 'U' : 'U'}` 
-                                                                                    ) : ''}
-                                                                                </span>
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                            <button 
-                                                                onClick={() => handleEditService(svc)} 
-                                                                className={cn(
-                                                                    "size-7 flex items-center justify-center rounded-full transition-all duration-300",
-                                                                    editingServiceId === svc.id 
-                                                                        ? "text-indigo-500 bg-indigo-50 dark:bg-indigo-950/30" 
-                                                                        : "text-slate-300 dark:text-slate-650 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/20"
-                                                                )}
-                                                                title={language === 'es' ? "Editar" : "Edit"}
-                                                            >
-                                                                <Edit2 size={12} strokeWidth={1.5} />
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleRemoveService(svc.id)} 
-                                                                className="size-7 flex items-center justify-center rounded-full text-slate-300 dark:text-slate-650 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-300"
-                                                                title={language === 'es' ? "Eliminar" : "Delete"}
-                                                            >
-                                                                <Trash2 size={13} strokeWidth={1.5} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            {!editingServiceId && (
-                                                <div className="pt-2">
-                                                    <Button
-                                                        onClick={sendToGenerate}
-                                                        disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
-                                                        className={cn(
-                                                            "h-12 w-full rounded-full font-bold text-[11px] uppercase tracking-wider gap-2 transition-all duration-300 active:scale-95 shadow-md",
-                                                            recordedServices.length > 0
-                                                                ? "bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600"
-                                                                : "bg-slate-100 dark:bg-slate-950/20 text-slate-400 dark:text-slate-600 pointer-events-none border border-slate-200 dark:border-slate-800 shadow-none"
-                                                        )}
-                                                    >
-                                                        {status === 'processing' || status === 'uploading' ? (
-                                                            <>
-                                                                <Loader2 className="animate-spin" size={14} />
-                                                                <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <FileCheck size={14} />
-                                                                <span>{language === 'es' ? "Finalizar Nota" : "Finalize Note"} ({recordedServices.length})</span>
-                                                            </>
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
 
 

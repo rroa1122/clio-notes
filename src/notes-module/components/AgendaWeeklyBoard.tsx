@@ -6,17 +6,18 @@ import {
   subWeeks, 
   startOfWeek, 
   endOfWeek, 
-  eachDayOfInterval, 
-  isToday,
+  eachDayOfInterval,
+  isToday
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, Search, User, CalendarPlus, SlidersHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, Search, User, CalendarPlus, SlidersHorizontal, Check } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { cn } from '../../lib/utils';
 import { TiltCard } from '../../components/ui/tilt-card';
 import type { Note } from '../lib/storage';
+import { getNoteServiceDate } from '../lib/clioUtils';
 
 interface AgendaWeeklyBoardProps {
   notes: Note[];
@@ -50,8 +51,30 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searchQuery = '', onSearchChange }: AgendaWeeklyBoardProps) {
   const { t, language } = useLanguage();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const getInitialDate = () => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlDate = params.get('date');
+      if (urlDate && urlDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [y, m, d] = urlDate.split('-');
+        const parsed = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        if (!isNaN(parsed.getTime())) return parsed;
+      }
+      const saved = sessionStorage.getItem('clio_agenda_active_date');
+      if (saved && saved.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [y, m, d] = saved.split('-');
+        const parsed = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        if (!isNaN(parsed.getTime())) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return new Date();
+  };
+
+  const [currentDate, setCurrentDate] = useState<Date>(getInitialDate);
+  const [selectedDate, setSelectedDate] = useState<Date>(getInitialDate);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   
@@ -77,17 +100,21 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
     const nextDate = subWeeks(currentDate, 1);
     setCurrentDate(nextDate);
     setSelectedDate(subWeeks(selectedDate, 1));
+    sessionStorage.setItem('clio_agenda_active_date', format(nextDate, 'yyyy-MM-dd'));
   };
   
   const nextWeek = () => {
     const nextDate = addWeeks(currentDate, 1);
     setCurrentDate(nextDate);
     setSelectedDate(addWeeks(selectedDate, 1));
+    sessionStorage.setItem('clio_agenda_active_date', format(nextDate, 'yyyy-MM-dd'));
   };
 
   const goToToday = () => {
-    setCurrentDate(new Date());
-    setSelectedDate(new Date());
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedDate(today);
+    sessionStorage.setItem('clio_agenda_active_date', format(today, 'yyyy-MM-dd'));
   };
 
   const startDate = startOfWeek(currentDate);
@@ -95,18 +122,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
   const getNoteDate = (note: any) => {
-    const rawDate = note.meta?.visitDate || note.appointment?.date_of_service || note.createdAt || note.created_at;
-    if (!rawDate) return null;
-    try {
-      if (typeof rawDate === 'string' && rawDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [y, m, d] = rawDate.split('-');
-        return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-      }
-      const d = new Date(rawDate);
-      return isNaN(d.getTime()) ? null : d;
-    } catch (e) {
-      return null;
-    }
+    return getNoteServiceDate(note);
   };
 
   const notesByDate = notes.reduce((acc, note) => {
@@ -132,47 +148,47 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
       <div className="flex flex-col flex-1 bg-transparent lg:bg-surface rounded-[2rem] shadow-none lg:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 lg:border border-border/60 overflow-hidden relative">
         
         {/* Desktop Header */}
-        <div className="hidden lg:flex flex-none items-end justify-between gap-6 px-8 py-8 bg-surface z-20 shrink-0">
+        <div className="hidden lg:flex flex-none items-center justify-between gap-4 px-5 py-3 xl:px-8 xl:py-4 bg-surface z-20 shrink-0">
              {/* Nav Left - Date Controls */}
-             <div className="flex flex-col gap-2">
-                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">{language === 'es' ? "Línea de Tiempo de Agenda" : "Agenda Timeline"}</span>
-                 <div className="flex items-center gap-3 border border-slate-200/50 dark:border-slate-800/50 rounded-[28px] p-1 h-12 bg-slate-50/30 dark:bg-slate-950/10 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.01)]">
+             <div className="flex flex-col gap-1">
+                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">{language === 'es' ? "Línea de Tiempo de Agenda" : "Agenda Timeline"}</span>
+                 <div className="flex items-center gap-2 border border-slate-200/50 dark:border-slate-800/50 rounded-full p-0.5 h-10 bg-slate-50/30 dark:bg-slate-950/10 shadow-sm">
                      <button 
                          onClick={goToToday}
-                         className="rounded-full h-10 px-5 font-black text-[10px] tracking-wider bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white hover:shadow-sm transition-all cursor-pointer"
+                         className="rounded-full h-8 px-3.5 font-black text-[9px] tracking-wider bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white hover:shadow-sm transition-all cursor-pointer"
                      >
                          {language === 'es' ? "HOY" : "TODAY"}
                      </button>
-                     <div className="text-xs font-bold tracking-tight text-slate-750 dark:text-slate-300 px-2">
+                     <div className="text-[11px] font-bold tracking-tight text-slate-750 dark:text-slate-300 px-1">
                          {format(startDate, language === 'es' ? "d 'de' MMMM" : 'MMMM d', { locale: language === 'es' ? es : undefined })} - {format(endDate, language === 'es' ? "d 'de' MMMM, yyyy" : 'MMMM d, yyyy', { locale: language === 'es' ? es : undefined })}
                      </div>
-                     <div className="flex items-center gap-0.5 bg-white/60 dark:bg-slate-900/60 p-0.5 rounded-[20px] border border-slate-200/50 dark:border-slate-800/80 h-10 ml-auto">
+                     <div className="flex items-center gap-0.5 bg-white/60 dark:bg-slate-900/60 p-0.5 rounded-full border border-slate-200/50 dark:border-slate-800/80 h-8 ml-auto">
                          <button 
                              onClick={previousWeek} 
-                             className="h-9 w-9 rounded-[18px] text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 transition-all bg-transparent border-0 cursor-pointer flex items-center justify-center"
+                             className="h-7 w-7 rounded-full text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 transition-all bg-transparent border-0 cursor-pointer flex items-center justify-center"
                          >
-                             <ChevronLeft className="w-4 h-4" />
+                             <ChevronLeft className="w-3.5 h-3.5" />
                          </button>
                          <button 
                              onClick={nextWeek} 
-                             className="h-9 w-9 rounded-[18px] text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 transition-all bg-transparent border-0 cursor-pointer flex items-center justify-center"
+                             className="h-7 w-7 rounded-full text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 transition-all bg-transparent border-0 cursor-pointer flex items-center justify-center"
                          >
-                             <ChevronRight className="w-4 h-4" />
+                             <ChevronRight className="w-3.5 h-3.5" />
                          </button>
                      </div>
                  </div>
             </div>
 
             {/* Nav Right - Search */}
-             <div className="flex flex-col gap-2 flex-1 max-w-[500px]" ref={searchContainerRef}>
+             <div className="flex flex-col gap-1 flex-1 max-w-[420px]" ref={searchContainerRef}>
                  <div className="flex items-center justify-between px-1">
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><SlidersHorizontal className="w-3 h-3 text-slate-400" /> {language === 'es' ? "Filtrar Pacientes" : "Filter Patients"}</span>
-                     <Link to="/notes/new" className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:text-indigo-500 flex items-center gap-1.5 transition-colors">
+                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><SlidersHorizontal className="w-3 h-3 text-slate-400" /> {language === 'es' ? "Filtrar Pacientes" : "Filter Patients"}</span>
+                     <Link to="/notes/new" className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:text-indigo-500 flex items-center gap-1.5 transition-colors">
                          <Plus className="w-3 h-3" />
                          {language === 'es' ? "Nuevo Registro" : "New Acquisition"}
                      </Link>
                  </div>
-                 <div className="flex items-center border border-slate-200/80 dark:border-slate-800/80 rounded-[28px] px-5 h-12 bg-slate-50/50 dark:bg-slate-950/20 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.02)] relative group hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-primary/40 focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                 <div className="flex items-center border border-slate-200/80 dark:border-slate-800/80 rounded-full px-4 h-10 bg-slate-50/50 dark:bg-slate-950/20 shadow-sm relative group hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
                       <div className="text-slate-400 mr-3 pointer-events-none flex-shrink-0">
                           <Search className="w-4 h-4" />
                       </div>
@@ -290,7 +306,10 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                 return (
                     <button
                         key={day.toString()}
-                        onClick={() => setSelectedDate(day)}
+                        onClick={() => {
+                            setSelectedDate(day);
+                            sessionStorage.setItem('clio_agenda_active_date', format(day, 'yyyy-MM-dd'));
+                        }}
                         className={cn(
                             "flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-2xl transition-all duration-300",
                             isSelected 
@@ -404,24 +423,24 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                 key={note.id || i}
                                 onClick={() => onSelectNote(note)}
                                 className={cn(
-                                    "p-4 rounded-3xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/60 shadow-sm flex items-center justify-between group active:scale-[0.99] transition-all duration-300 cursor-pointer"
+                                    "p-3.5 rounded-2xl bg-card/90 dark:bg-card/70 backdrop-blur-sm border border-border/70 shadow-sm flex items-center justify-between group active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-soft hover:border-primary/40 transition-all duration-200 cursor-pointer"
                                 )}
                             >
                                 <div className="flex items-center gap-3.5 min-w-0">
-                                    <div className="size-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                                        <Clock className="w-5 h-5 opacity-80" />
+                                    <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                        <Clock className="w-4.5 h-4.5 opacity-80" />
                                     </div>
                                     <div className="flex flex-col min-w-0">
-                                        <span className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate leading-tight">
+                                        <span className="font-bold text-foreground text-sm truncate leading-tight group-hover:text-primary transition-colors">
                                             {pName}
                                         </span>
-                                        <div className="flex items-center gap-2 mt-1.5 text-[11px] font-semibold text-slate-450 dark:text-slate-500">
+                                        <div className="flex items-center gap-2 mt-1 text-[11px] font-semibold text-muted-foreground">
                                             {timeStr ? (
                                                 <span>{timeStr}</span>
                                             ) : (
                                                 <span className="italic">{language === 'es' ? 'No programado' : 'Unscheduled'}</span>
                                             )}
-                                            <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                            <span className="size-1 rounded-full bg-border" />
                                             <span className="truncate">{title}</span>
                                         </div>
                                     </div>
@@ -429,15 +448,18 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                 
                                 <div className="flex items-center gap-2 shrink-0">
                                     {isSigned ? (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 dark:bg-emerald-950/30 text-emerald-650 dark:text-emerald-400 border border-emerald-100/20 dark:border-emerald-900/20">
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                            <span className="size-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
                                             {language === 'es' ? 'Firmado' : 'Signed'}
                                         </span>
                                     ) : isPending ? (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black bg-amber-50 dark:bg-amber-950/30 text-amber-650 dark:text-amber-400 border border-amber-100/20 dark:border-amber-900/20 animate-pulse">
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                            <span className="size-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_6px_rgba(245,158,11,0.5)]" />
                                             {language === 'es' ? 'Pendiente' : 'Pending'}
                                         </span>
                                     ) : (
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-200/20 dark:border-slate-800">
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold bg-secondary text-muted-foreground border border-border/60">
+                                            <span className="size-1.5 rounded-full bg-muted-foreground/40" />
                                             {language === 'es' ? 'Borrador' : 'Draft'}
                                         </span>
                                     )}
@@ -488,8 +510,8 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
         </div>
 
         {/* Agenda Grid Compact View (Desktop only) */}
-        <div className="hidden lg:flex flex-1 overflow-x-auto custom-scrollbar relative px-8 pb-6 bg-surface border-t border-border/60">
-            <div className="min-w-[1100px] min-h-[500px] h-full flex gap-3 pt-6 w-full">
+        <div className="hidden lg:flex flex-1 overflow-x-auto custom-scrollbar relative px-4 pb-3 xl:px-6 xl:pb-4 bg-surface border-t border-border/60 min-h-0">
+            <div className="min-w-0 w-full h-full flex gap-2 xl:gap-2.5 pt-2.5 xl:pt-3">
                 {days.map((day) => {
                     const dateStr = format(day, 'yyyy-MM-dd');
                     const dayNotes = notesByDate[dateStr] || [];
@@ -503,24 +525,23 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                     });
  
                     return (
-                        <div key={dateStr} className={cn("flex-1 flex flex-col min-h-full transition-all duration-300 relative group/col rounded-[1.5rem] border overflow-hidden", isTodayDate ? "bg-white dark:bg-slate-900 border-indigo-500/35 shadow-[0_4px_24px_-8px_rgba(99,102,241,0.18)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-6px_rgba(99,102,241,0.28)]" : "bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800/80 shadow-[0_4px_16px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-6px_rgba(99,102,241,0.1)] dark:hover:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/80 dark:hover:border-indigo-900/60")}>
+                        <div key={dateStr} className={cn("flex-1 min-w-[100px] flex flex-col min-h-0 h-full transition-all duration-300 relative group/col rounded-2xl border overflow-hidden", isTodayDate ? "bg-white dark:bg-slate-900 border-indigo-500/35 shadow-[0_4px_24px_-8px_rgba(99,102,241,0.18)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-6px_rgba(99,102,241,0.28)]" : "bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800/80 shadow-sm hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-6px_rgba(99,102,241,0.1)] hover:border-indigo-200/80 dark:hover:border-indigo-900/60")}>
                             {/* Day Header */}
-                            <div className={cn("py-4 px-4 text-center border-b flex flex-col items-center justify-center gap-1 transition-colors", isTodayDate ? "bg-indigo-50/20 dark:bg-indigo-950/15 border-indigo-100/50 dark:border-indigo-900/40" : "bg-transparent border-slate-100 dark:border-slate-800/50")}>
-                                <span className={cn("text-[10px] font-bold tracking-widest uppercase", isTodayDate ? "text-indigo-650 dark:text-indigo-400" : "text-slate-400 dark:text-slate-350")}>
+                            <div className={cn("py-2 px-1.5 text-center border-b flex flex-col items-center justify-center gap-0.5 transition-colors shrink-0", isTodayDate ? "bg-indigo-50/20 dark:bg-indigo-950/15 border-indigo-100/50 dark:border-indigo-900/40" : "bg-transparent border-slate-100 dark:border-slate-800/50")}>
+                                <span className={cn("text-[9px] font-bold tracking-widest uppercase", isTodayDate ? "text-indigo-650 dark:text-indigo-400" : "text-slate-400 dark:text-slate-350")}>
                                     {format(day, 'EEEE', { locale: language === 'es' ? es : undefined })}
                                 </span>
-                                <div className="flex items-center gap-1.5 flex-col mt-0.5">
-                                    <span className={cn("text-[28px] font-medium tracking-tight leading-none relative z-10", isTodayDate ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-700 dark:text-slate-300 font-normal")}>
+                                <div className="flex items-center gap-1 flex-col mt-0.5">
+                                    <span className={cn("text-lg xl:text-xl font-bold tracking-tight leading-none relative z-10", isTodayDate ? "text-indigo-600 dark:text-indigo-400" : "text-slate-700 dark:text-slate-300 font-semibold")}>
                                         {format(day, 'd')}
                                     </span>
-                                    {isTodayDate && <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-1.5 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />}
+                                    {isTodayDate && <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-0.5 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />}
                                 </div>
                             </div>
                             
                             {/* Events Container */}
-                            <div className="flex-1 p-2.5 flex flex-col gap-2.5 relative pb-6 h-full overflow-y-auto custom-scrollbar">
+                            <div className="flex-1 p-2 flex flex-col gap-1.5 relative pb-2 min-h-0 overflow-y-auto custom-scrollbar">
                                 {dayNotes.map((note: any, i) => {
-                                    const title = note.meta?.title || note.encounter?.type || 'Session';
                                     const pName = note.meta?.patientName || note.patient?.full_name || 'Anonymous';
                                     
                                     const formatTime = (t: string) => t.replace(':00', '').replace(' AM', 'am').replace(' PM', 'pm');
@@ -535,68 +556,113 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                     const isSigned = note.signature || (note as any).sign_off?.status === 'signed' || note.signature_status === 'signed';
                                     const isPending = (note as any).sign_off?.status === 'pending' || note.signature_status === 'pending';
 
+                                    const getInitials = (name: string) => {
+                                        if (!name || name === 'Anonymous' || name === 'Desconocido') return 'PT';
+                                        const parts = name.trim().split(/\s+/);
+                                        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+                                        return name.slice(0, 2).toUpperCase();
+                                    };
+
+                                    const serviceTitle = (
+                                        note.subTemplate || 
+                                        note._frontend_service_title || 
+                                        note.services?.service_focus_title || 
+                                        note.encounter?.primary_service_provided || 
+                                        note.meta?.title || 
+                                        (note.template_id ? note.template_id.replace(/^tcm_/, '').replace(/_note$/, '').replace(/_/g, ' ') : '') ||
+                                        'TCM Service'
+                                    );
+
+                                    const isAssessment = String(note.template_id || '').includes('assessment');
+                                    const isPlan = String(note.template_id || '').includes('plan');
+                                    const isMhv = String(note.subTemplate || '').toLowerCase().includes('mhv');
+
+                                    const leftBorderClass = isAssessment 
+                                        ? 'bg-gradient-to-b from-emerald-400 to-teal-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                                        : isPlan
+                                        ? 'bg-gradient-to-b from-amber-400 to-orange-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                        : isMhv
+                                        ? 'bg-gradient-to-b from-sky-400 to-blue-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]'
+                                        : 'bg-gradient-to-b from-indigo-400 to-violet-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]';
+
                                     return (
-                                        <TiltCard key={note.id || i} intensity={6} scale={1.01}>
+                                        <TiltCard key={note.id || i} intensity={3} scale={1.01}>
                                             <div 
                                                 onClick={() => onSelectNote(note)}
                                                 className={cn(
-                                                    "relative overflow-hidden rounded-2xl p-3 bg-card border border-border/70 transition-all duration-300 cursor-pointer group/card",
-                                                    "shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]",
-                                                    "hover:shadow-[0_12px_24px_-10px_rgba(99,102,241,0.22)] hover:-translate-y-[2px] hover:border-indigo-500/40 hover:z-10",
-                                                    isPending && "bg-gradient-to-br from-card to-amber-500/5",
-                                                    !isSigned && !isPending && "bg-gradient-to-br from-card to-slate-900/5"
+                                                    "relative overflow-hidden rounded-xl p-2.5 bg-slate-900/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-800/80 transition-all duration-200 cursor-pointer group/card",
+                                                    "shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-indigo-500/50 hover:bg-slate-850/90",
+                                                    isPending && "border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-transparent",
+                                                    isSigned && "border-emerald-500/25"
                                                 )}
                                             >
-                                                <div className="flex flex-col gap-1 relative z-10 w-full min-w-0">
-                                                    <div className="flex items-start justify-between w-full gap-2">
-                                                        <span 
-                                                            className={cn(
-                                                                "font-semibold text-[10px] tracking-tight flex items-center gap-1.5 min-w-0",
-                                                                start ? "text-slate-400" : "text-slate-300"
+                                                {/* Left vertical accent indicator */}
+                                                <div className={cn("absolute left-0 top-0 bottom-0 w-[3px]", leftBorderClass)} />
+
+                                                <div className="flex flex-col gap-1 pl-1 relative z-10 w-full min-w-0">
+                                                    {/* Top row: Time + Duration & Status Badge */}
+                                                    <div className="flex items-center justify-between w-full gap-1.5">
+                                                        <div className="flex items-center gap-1 min-w-0">
+                                                            <Clock className="w-2.5 h-2.5 text-indigo-400/80 shrink-0" />
+                                                            <span className="font-semibold text-[9.5px] text-slate-300 dark:text-slate-300 tracking-tight truncate">
+                                                                {timeStr}
+                                                            </span>
+                                                            {rawD && (
+                                                                <span className="text-[8.5px] px-1 py-0.2 rounded bg-slate-800/80 text-slate-400 font-medium shrink-0">
+                                                                    {rawD}m
+                                                                </span>
                                                             )}
-                                                            title={start ? (end ? `${rawStart} - ${rawEnd}` : rawStart) : ''}
-                                                        >
-                                                            {start && <Clock className="w-3 h-3 opacity-60 shrink-0" />}
-                                                            <span className="truncate">{timeStr}</span>
-                                                        </span>
-                                                        <span 
-                                                            className="relative flex h-2 w-2 shrink-0"
-                                                            title={isSigned ? (language === 'es' ? "Firmado" : "Signed") : isPending ? (language === 'es' ? "Firma pendiente" : "Pending Signature") : (language === 'es' ? "Borrador" : "Draft")}
-                                                        >
-                                                            {isPending && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>}
-                                                            <span className={cn(
-                                                                "relative inline-flex rounded-full h-2 w-2", 
-                                                                isSigned 
-                                                                    ? "bg-emerald-500" 
-                                                                    : isPending 
-                                                                        ? "bg-amber-500" 
-                                                                        : "bg-slate-300 dark:bg-slate-700"
-                                                            )}></span>
-                                                        </span>
+                                                        </div>
+
+                                                        <div className="shrink-0 flex items-center gap-1">
+                                                            {isSigned ? (
+                                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                                                    <Check className="w-2.5 h-2.5" />
+                                                                </span>
+                                                            ) : isPending ? (
+                                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                                                                    <span className="size-1 rounded-full bg-amber-400 animate-ping" />
+                                                                </span>
+                                                            ) : (
+                                                                <span className="size-1.5 rounded-full bg-slate-600/60" />
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     
-                                                    <div className="min-w-0">
+                                                    {/* Middle row: Avatar initials + Patient Name */}
+                                                    <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
+                                                        <div className="size-5 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-300 text-[8.5px] font-black flex items-center justify-center shrink-0">
+                                                            {getInitials(pName)}
+                                                        </div>
                                                         <h3 
-                                                            className="font-medium text-slate-700 dark:text-slate-200 text-[12px] tracking-tight leading-tight group-hover/card:text-indigo-600 dark:group-hover/card:text-indigo-400 transition-colors truncate"
+                                                            className="font-bold text-slate-100 dark:text-slate-100 text-[11.5px] tracking-tight leading-tight group-hover/card:text-indigo-300 transition-colors truncate"
                                                             title={pName}
                                                         >
                                                             {pName}
                                                         </h3>
                                                     </div>
+
+                                                    {/* Bottom row: Micro-badge for service type */}
+                                                    <div className="flex items-center gap-1 min-w-0 mt-0.5 pl-0.5">
+                                                        <span className="text-[9px] font-medium text-slate-400 dark:text-slate-400 truncate capitalize">
+                                                            {serviceTitle}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-indigo-500/5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 pointer-events-none" />
                                             </div>
                                         </TiltCard>
-                                    )
+                                    );
                                 })}
 
                                 {/* ADD NOTE POPOVER BUTTON */}
-                                <div className="mt-auto pt-4 relative flex justify-center">
+                                <div className="mt-auto pt-2 relative flex justify-center shrink-0">
                                     <Popover open={openPopoverId === dateStr} onOpenChange={(open) => setOpenPopoverId(open ? dateStr : null)}>
                                         <PopoverTrigger asChild>
                                             <Button 
                                                 variant="ghost" 
-                                                className="w-full text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 border border-transparent hover:border-indigo-100/50 dark:hover:border-indigo-900/40 gap-1.5 h-8 px-4 shadow-none font-black text-[10px] uppercase tracking-widest rounded-full transition-all cursor-pointer"
+                                                className="w-full text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 border border-transparent hover:border-indigo-100/50 dark:hover:border-indigo-900/40 gap-1 h-7 px-2 shadow-none font-bold text-[9px] uppercase tracking-wider rounded-full transition-all cursor-pointer"
                                             >
                                                 <Plus className="w-3 h-3 stroke-[3]" />
                                                 {language === 'es' ? "Nueva Sesión" : "New Session"}
