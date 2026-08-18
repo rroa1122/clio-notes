@@ -1,5 +1,5 @@
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react"
 import { 
   format, 
   addMonths, 
@@ -10,15 +10,12 @@ import {
   endOfWeek, 
   isSameMonth, 
   isSameDay, 
-  addDays, 
   eachDayOfInterval,
   isToday
 } from "date-fns"
 import { es } from "date-fns/locale"
 import { useLanguage } from "../../context/LanguageContext"
-
 import { cn } from "../../lib/utils"
-import { TiltCard } from "./tilt-card"
 
 export interface CalendarProps {
   selected?: Date
@@ -29,6 +26,24 @@ export interface CalendarProps {
 export function Calendar({ selected, onSelect, className }: CalendarProps) {
   const { language } = useLanguage()
   const [currentMonth, setCurrentMonth] = React.useState(selected || new Date())
+  const [showPicker, setShowPicker] = React.useState(false)
+  const containerRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (selected) {
+      setCurrentMonth(selected)
+    }
+  }, [selected])
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowPicker(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
@@ -54,76 +69,104 @@ export function Calendar({ selected, onSelect, className }: CalendarProps) {
     }
   })
 
+  const handleSelectToday = () => {
+    const today = new Date()
+    setCurrentMonth(today)
+    onSelect?.(today)
+  }
+
+  const handleSelectYesterday = () => {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    setCurrentMonth(yesterday)
+    onSelect?.(yesterday)
+  }
+
   return (
-    <TiltCard intensity={3} scale={1.005}>
-      <div className={cn("p-4 bg-white dark:bg-slate-950", className)}>
-      <div className="flex items-center justify-between mb-5 px-1">
-        <div className="flex items-center gap-1.5 bg-slate-50/80 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-100 dark:border-slate-800">
-          <select
-            className="bg-transparent text-[13px] font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer px-2 py-1 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors"
-            value={format(currentMonth, "M")}
-            onChange={(e) => {
-              const newMonth = parseInt(e.target.value) - 1;
-              const next = new Date(currentMonth);
-              next.setMonth(newMonth);
-              setCurrentMonth(next);
-            }}
+    <div ref={containerRef} className={cn("p-2 select-none relative w-full text-slate-800 dark:text-slate-200", className)}>
+      {/* Unified Month & Year Header */}
+      <div className="flex items-center justify-between pb-2 mb-1.5 border-b border-slate-100 dark:border-slate-800/60">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowPicker(!showPicker)}
+            className="flex items-center gap-1.5 px-2 py-1 -ml-1 rounded-lg text-xs font-semibold text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer capitalize"
           >
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i} value={i + 1}>
-                {format(new Date(2024, i, 1), "MMMM", { locale: language === 'es' ? es : undefined })}
-              </option>
-            ))}
-          </select>
-          <select
-            className="bg-transparent text-[13px] font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer px-2 py-1 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors"
-            value={format(currentMonth, "yyyy")}
-            onChange={(e) => {
-              const newYear = parseInt(e.target.value);
-              const next = new Date(currentMonth);
-              next.setFullYear(newYear);
-              setCurrentMonth(next);
-            }}
-          >
-            {Array.from({ length: 120 }, (_, i) => {
-              const year = new Date().getFullYear() - i;
-              return (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              );
-            })}
-          </select>
+            <span>{format(currentMonth, "MMMM yyyy", { locale: language === 'es' ? es : undefined })}</span>
+            <ChevronDown size={13} className="text-slate-400 dark:text-slate-500" />
+          </button>
+
+          {/* Quick Month / Year Selector Dropdown */}
+          {showPicker && (
+            <div className="absolute top-full left-0 mt-1 w-44 max-h-56 overflow-y-auto bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-1.5 backdrop-blur-xl flex flex-col gap-1 custom-scrollbar">
+              <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 px-2 py-0.5 uppercase tracking-wider">
+                {language === 'es' ? "Mes" : "Month"}
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date(2024, i, 1)
+                  const name = format(date, "MMM", { locale: language === 'es' ? es : undefined })
+                  const isCurrent = currentMonth.getMonth() === i
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        const next = new Date(currentMonth)
+                        next.setMonth(i)
+                        setCurrentMonth(next)
+                        setShowPicker(false)
+                      }}
+                      className={cn(
+                        "px-2 py-1 text-xs rounded-md text-left capitalize transition-colors cursor-pointer",
+                        isCurrent 
+                          ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-medium" 
+                          : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      )}
+                    >
+                      {name}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
-        <div className="flex gap-1">
+
+        {/* Prev / Next Arrows */}
+        <div className="flex items-center gap-0.5">
           <button
             type="button"
             onClick={prevMonth}
-            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+            className="size-7 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Previous month"
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={15} />
           </button>
           <button
             type="button"
             onClick={nextMonth}
-            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+            className="size-7 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Next month"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={15} />
           </button>
         </div>
       </div>
       
-      <div className="grid grid-cols-7 mb-2">
+      {/* Days of Week Header */}
+      <div className="grid grid-cols-7 mb-1 text-center">
         {(language === 'es' ? ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"] : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]).map((day) => (
-          <div key={day} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <div key={day} className="text-[11px] font-medium text-slate-400 dark:text-slate-500 py-0.5">
             {day}
           </div>
         ))}
       </div>
 
-      <div className="space-y-1">
+      {/* Days Grid */}
+      <div className="space-y-0.5">
         {rows.map((row, i) => (
-          <div key={i} className="grid grid-cols-7">
+          <div key={i} className="grid grid-cols-7 gap-0.5 text-center">
             {row.map((day) => {
               const isSelected = selected && isSameDay(day, selected)
               const isCurrentMonth = isSameMonth(day, monthStart)
@@ -135,16 +178,16 @@ export function Calendar({ selected, onSelect, className }: CalendarProps) {
                   key={day.toString()}
                   onClick={() => onSelect?.(day)}
                   className={cn(
-                    "h-9 w-9 text-xs font-semibold rounded-2xl transition-all relative group flex items-center justify-center",
-                    !isCurrentMonth && "text-slate-300 dark:text-slate-700",
-                    isCurrentMonth && "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-indigo-600",
-                    isSelected && "bg-indigo-600 !text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-700",
-                    isTodayDay && !isSelected && "text-indigo-600"
+                    "size-7.5 mx-auto text-xs rounded-full transition-all relative flex items-center justify-center cursor-pointer",
+                    !isCurrentMonth && "text-slate-300 dark:text-slate-700 pointer-events-none",
+                    isCurrentMonth && !isSelected && "text-slate-700 dark:text-slate-300 font-normal hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100",
+                    isSelected && "bg-indigo-600 dark:bg-indigo-500 text-white font-medium shadow-xs hover:bg-indigo-700",
+                    isTodayDay && !isSelected && "text-indigo-600 dark:text-indigo-400 font-medium ring-1 ring-indigo-500/40"
                   )}
                 >
                   {format(day, "d")}
                   {isTodayDay && !isSelected && (
-                    <div className="absolute bottom-1 right-1 size-1 rounded-full bg-indigo-500" />
+                    <div className="absolute bottom-0.5 size-0.5 rounded-full bg-indigo-500" />
                   )}
                 </button>
               )
@@ -152,7 +195,24 @@ export function Calendar({ selected, onSelect, className }: CalendarProps) {
           </div>
         ))}
       </div>
+
+      {/* Subtle Bottom Quick Presets */}
+      <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-slate-100 dark:border-slate-800/60 px-1 text-[11px]">
+        <button
+          type="button"
+          onClick={handleSelectToday}
+          className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors cursor-pointer"
+        >
+          {language === 'es' ? 'Hoy' : 'Today'}
+        </button>
+        <button
+          type="button"
+          onClick={handleSelectYesterday}
+          className="text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors cursor-pointer"
+        >
+          {language === 'es' ? 'Ayer' : 'Yesterday'}
+        </button>
+      </div>
     </div>
-    </TiltCard>
   )
 }

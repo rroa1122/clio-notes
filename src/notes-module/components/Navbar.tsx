@@ -1,6 +1,7 @@
 import { Bell, User, Moon, Sun, LogOut, ChevronDown, UserCircle, Menu } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -8,21 +9,9 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
-  const [isDark, setIsDark] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Sync with system or saved preference
-    const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
-    setIsDark(isDarkTheme);
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = !isDark ? 'dark' : 'light';
-    setIsDark(!isDark);
-    document.documentElement.setAttribute('data-theme', newTheme);
-  };
 
   // Click outside to close menu
   useEffect(() => {
@@ -37,61 +26,94 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
   return (
     <>
-      <header className="navbar no-print">
+      <header className="sticky top-0 z-50 h-16 w-full px-6 md:px-8 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-border/60 no-print transition-colors duration-300">
         <button
-          className="icon-btn mobile-menu-toggle mobile-only"
+          className="size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 dark:hover:bg-white/5 border border-transparent hover:border-border/60 transition-all md:hidden cursor-pointer"
           onClick={onMenuClick}
           aria-label="Toggle Menu"
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
 
         <div className="flex-1"></div>
-        <div className="navbar-actions">
-          <button className="icon-btn" onClick={toggleTheme} title="Toggle Theme">
-            {isDark ? <Sun size={20} strokeWidth={2} /> : <Moon size={20} strokeWidth={2} />}
+        <div className="flex items-center gap-2">
+          <button
+            className="size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 dark:hover:bg-white/5 border border-transparent hover:border-border/60 transition-all duration-200 cursor-pointer"
+            onClick={toggleTheme}
+            title="Toggle Theme"
+          >
+            {theme === 'dark' ? <Sun size={18} strokeWidth={2} /> : <Moon size={18} strokeWidth={2} />}
           </button>
 
-          <button className="icon-btn" title="Notifications">
-            <Bell size={20} strokeWidth={2} />
-            {user && <span className="notification-badge"></span>}
+          <button
+            className="size-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 dark:hover:bg-white/5 border border-transparent hover:border-border/60 transition-all duration-200 relative cursor-pointer"
+            title="Notifications"
+          >
+            <Bell size={18} strokeWidth={2} />
+            {user && (
+              <span className="absolute top-2 right-2 size-2 bg-primary rounded-full ring-2 ring-background"></span>
+            )}
           </button>
 
-          <div className="navbar-divider"></div>
+          <div className="h-6 w-px bg-border/60 mx-1 hidden sm:block"></div>
 
-          <div className="user-profile" ref={menuRef} style={{ position: 'relative' }}>
+          <div className="relative" ref={menuRef}>
             <button
-              className="user-profile-trigger"
+              className="flex items-center gap-2.5 pl-3 pr-2 py-1.5 bg-card/60 dark:bg-card/40 hover:bg-card border border-border/60 rounded-2xl group transition-all duration-200 hover:border-primary/40 hover:shadow-soft cursor-pointer"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <div className="avatar">
-                <User size={18} strokeWidth={2.5} />
+              <div
+                className={`size-8 rounded-xl bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center font-bold text-xs ring-2 ${isMenuOpen ? 'ring-primary' : 'ring-transparent'} group-hover:ring-primary/40 transition-all duration-300 overflow-hidden`}
+              >
+                {user?.name ? (
+                  <span>{user.name.charAt(0).toUpperCase()}</span>
+                ) : (
+                  <User size={16} strokeWidth={2.5} />
+                )}
               </div>
-              <div className="user-info hidden-mobile-text">
-                <span className="user-name">{user?.name}</span>
+              <div className="flex flex-col items-start hidden sm:flex leading-none">
+                <span className="text-xs font-bold text-foreground tracking-tight">
+                  {user?.name || 'Physician'}
+                </span>
+                <span className="text-[9px] font-bold text-primary uppercase tracking-wider mt-0.5 opacity-80">
+                  Clinical User
+                </span>
               </div>
-              <ChevronDown size={14} className="hidden-mobile" style={{ opacity: 0.5, transform: isMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              <ChevronDown
+                size={14}
+                className={`text-muted-foreground transition-transform duration-200 group-hover:text-foreground ml-0.5 ${isMenuOpen ? 'rotate-180 text-primary' : ''}`}
+              />
             </button>
 
-            {/* Premium User Dropdown Menu */}
+            {/* Premium Frosted Glassmorphism Dropdown Menu */}
             {isMenuOpen && (
-              <div className="user-dropdown">
-                <div className="dropdown-header">
-                  <p className="dropdown-header-label">Active Session</p>
-                  <p className="dropdown-header-email">{user?.email}</p>
+              <div className="absolute right-0 mt-3 w-72 backdrop-blur-xl bg-card/95 border border-border/60 shadow-elevated rounded-2xl p-1.5 z-[100] animate-in fade-in zoom-in-95 slide-in-from-top-3 duration-200 origin-top-right">
+                <div className="px-4 py-3 bg-secondary/50 dark:bg-secondary/30 rounded-xl mb-1 border border-border/40">
+                  <p className="text-[10px] uppercase font-black text-muted-foreground tracking-wider">Active Session</p>
+                  <p className="text-xs font-bold text-foreground truncate mt-0.5">{user?.email}</p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <button className="dropdown-item">
-                    <UserCircle size={18} />
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-foreground/80 hover:bg-primary/10 hover:text-primary rounded-xl transition-all duration-150 group cursor-pointer"
+                  >
+                    <div className="size-8 rounded-lg bg-background/80 border border-border/60 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
+                      <UserCircle size={18} />
+                    </div>
                     <span>Profile Settings</span>
                   </button>
 
                   <button
-                    onClick={() => logout()}
-                    className="dropdown-item danger"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      logout();
+                    }}
+                    className="w-full flex items-center gap-3 px-3.5 py-2.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-150 group cursor-pointer"
                   >
-                    <LogOut size={18} />
+                    <div className="size-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">
+                      <LogOut size={18} />
+                    </div>
                     <span>Logout</span>
                   </button>
                 </div>

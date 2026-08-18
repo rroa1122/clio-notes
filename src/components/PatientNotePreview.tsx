@@ -6,33 +6,58 @@ import {
     Maximize2,
     Calendar,
     User,
-    Stethoscope
+    Stethoscope,
+    Trash2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { ClioNoteViewer } from '../notes-module/components/ClioNoteViewer';
-import { normalizeClioNote } from '../notes-module/lib/clioUtils';
+import { normalizeClioNote, getNoteServiceDate } from '../notes-module/lib/clioUtils';
 import { format } from 'date-fns';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PatientNotePreviewProps {
     note: any;
     isOpen: boolean;
     onClose: () => void;
     onViewFull: (id: string) => void;
+    onDelete?: (id: string) => void;
 }
 
 export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
     note,
     isOpen,
     onClose,
-    onViewFull
+    onViewFull,
+    onDelete
 }) => {
+    const { language } = useLanguage();
     if (!note) return null;
 
     const normalizedNote = normalizeClioNote(note.rawResponse || note.structured_note || note);
-    const date = note.created_at || note.createdAt;
-    const templateName = note.template_name || note.noteType || (normalizedNote as any)?.meta?.template_id || 'Clinical Note';
+    const svcDate = getNoteServiceDate(note);
+    const timeStr = note.encounter?.time_in || note.appointment?.start_time || '';
+    
+    // Extract service / template name accurately
+    const rawNote = note as any;
+    const norm = normalizedNote as any;
+    const templateName = rawNote.primary_service_provided ||
+        rawNote.primaryServiceProvided ||
+        norm?.primary_service_provided ||
+        norm?.meta?.primary_service_provided ||
+        rawNote.subTemplate ||
+        rawNote.sub_template ||
+        rawNote.service_title ||
+        norm?.meta?.subTemplate ||
+        rawNote.template_name ||
+        rawNote.templateName ||
+        norm?.meta?.template_name ||
+        rawNote.noteType ||
+        rawNote.note_type ||
+        norm?.meta?.noteType ||
+        norm?.meta?.note_type ||
+        (norm?.meta?.template_id ? norm.meta.template_id.split('_').map((w: string) => w.toUpperCase() === 'TCM' ? 'TCM' : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : 'Clinical Note');
 
     // Defensive provider extraction
     const providerName = (normalizedNote as any)?.provider?.provider_name ||
@@ -56,10 +81,14 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
                 {/* Sub-header / Meta (Now the top bar) */}
                 <div className="px-6 py-4 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/60 flex items-center gap-6 overflow-x-auto no-scrollbar shrink-0">
                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">DOS / Timestamp</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                            {language === 'es' ? 'Fecha de Servicio (DOS)' : 'Date of Service (DOS)'}
+                        </span>
                         <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
                             <Calendar size={14} className="text-slate-400" />
-                            {date ? format(new Date(date), 'MMM d, yyyy • h:mm a') : 'N/A'}
+                            {svcDate ? (
+                                timeStr ? `${format(svcDate, 'MMM d, yyyy')} • ${timeStr}` : format(svcDate, 'MMM d, yyyy')
+                            ) : 'N/A'}
                         </div>
                     </div>
                     <Separator orientation="vertical" className="h-8 dark:bg-slate-800" />
@@ -71,6 +100,18 @@ export const PatientNotePreview: React.FC<PatientNotePreviewProps> = ({
                         </div>
                     </div>
                     <div className="ml-auto flex items-center gap-2">
+                        {onDelete && (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => onDelete(note.id)}
+                                className="rounded-lg font-bold gap-2 h-9 px-3 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200/50 dark:border-rose-900/40"
+                                title={language === 'es' ? "Eliminar nota clínica" : "Delete clinical note"}
+                            >
+                                <Trash2 size={15} />
+                                <span className="hidden sm:inline">{language === 'es' ? 'Borrar' : 'Delete'}</span>
+                            </Button>
+                        )}
                         <Button
                             size="sm"
                             onClick={() => onViewFull(note.id)}

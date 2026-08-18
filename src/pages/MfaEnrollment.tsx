@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../lib/supabaseClient';
-import { Lock, LogOut, ShieldAlert } from 'lucide-react';
+import { OtpInput } from '../components/ui/OtpInput';
+import { 
+    ShieldCheck, 
+    LogOut, 
+    ShieldAlert, 
+    QrCode, 
+    Smartphone, 
+    ArrowRight,
+    Lock
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 // Module-level cache to prevent StrictMode double-mount race conditions
@@ -37,13 +47,15 @@ const startEnrollment = async (userEmail: string) => {
 
 export const MfaEnrollment: React.FC = () => {
     const { user, setMfaEnrollmentRequired, signOut } = useAuth();
+    const { language } = useLanguage();
     const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
-    const [mfaSecret, setMfaSecret] = useState<string | null>(null);
     const [mfaQrCode, setMfaQrCode] = useState<string | null>(null);
     const [mfaQrUri, setMfaQrUri] = useState<string | null>(null);
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const isEs = language === 'es';
 
     useEffect(() => {
         if (!user?.email) return;
@@ -56,145 +68,199 @@ export const MfaEnrollment: React.FC = () => {
                 }
                 const data = await activeEnrollmentPromise;
                 setMfaFactorId(data.id);
-                setMfaSecret(data.secret);
                 setMfaQrCode(data.qrCode);
                 setMfaQrUri(data.qrUri);
             } catch (err: any) {
                 console.error("Failed to start MFA enrollment:", err);
-                setError(err.message || "Failed to start 2FA enrollment. Please try again.");
-                activeEnrollmentPromise = null; // Clear cache on failure to allow retry
+                setError(err.message || (isEs ? "No se pudo iniciar la inscripción 2FA. Reintente." : "Failed to start 2FA enrollment. Please try again."));
+                activeEnrollmentPromise = null;
             }
         };
         enrollMfa();
-    }, [user?.email]);
+    }, [user?.email, isEs]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (code.length !== 6) {
-            setError("Please enter a 6-digit code.");
+    const handleVerify = async (codeToVerify?: string) => {
+        const targetCode = codeToVerify || code;
+        if (targetCode.length !== 6) {
+            setError(isEs ? "Por favor ingrese un código de 6 dígitos." : "Please enter a 6-digit code.");
             return;
         }
         if (!mfaFactorId) {
-            setError("MFA enrollment was not initialized correctly.");
+            setError(isEs ? "Error al inicializar 2FA." : "MFA enrollment was not initialized correctly.");
             return;
         }
         setLoading(true);
         setError(null);
         try {
-            // Challenge the factor
             const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
                 factorId: mfaFactorId
             });
             if (challengeError) throw challengeError;
 
-            // Verify the challenge
             const { error: verifyError } = await supabase.auth.mfa.verify({
                 factorId: mfaFactorId,
                 challengeId: challengeData.id,
-                code: code
+                code: targetCode
             });
             if (verifyError) throw verifyError;
 
-            // Successfully enrolled!
-            activeEnrollmentPromise = null; // Clear cache
+            activeEnrollmentPromise = null;
             setMfaEnrollmentRequired(false);
-            toast.success("Two-Factor Authentication activated successfully!");
+            toast.success(isEs ? "¡Autenticación de 2 Factores activada con éxito!" : "Two-Factor Authentication activated successfully!");
         } catch (err: any) {
             console.error("MFA verification error:", err);
-            setError(err.message || "Invalid code. Please try again.");
+            setError(err.message || (isEs ? "Código inválido. Por favor intente de nuevo." : "Invalid code. Please try again."));
         } finally {
             setLoading(false);
         }
     };
 
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        handleVerify();
+    };
+
     const handleSignOut = () => {
-        activeEnrollmentPromise = null; // Clear cache
+        activeEnrollmentPromise = null;
         signOut('voluntary');
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Premium background radial gradient */}
-            <div className="absolute inset-0 bg-[#0B1020]/[0.025] pointer-events-none" />
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-indigo-500 selection:text-white">
+            {/* Background glowing gradient Orbs */}
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-indigo-600/15 to-violet-600/15 rounded-full blur-[140px] pointer-events-none" />
+            <div className="absolute bottom-10 right-10 w-96 h-96 bg-rose-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="max-w-md w-full bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
-                <div className="absolute -top-24 -right-24 w-48 h-48 bg-rose-500/10 rounded-full blur-[100px]" />
+            <div className="max-w-lg w-full bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 rounded-[2.5rem] p-6 sm:p-9 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] relative overflow-hidden group z-10 animate-in fade-in zoom-in-95 duration-300">
+                {/* Decorative border highlight */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent rounded-full opacity-70" />
 
-                <div className="relative z-10 flex flex-col items-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 shadow-lg mb-4 text-rose-600">
-                        <Lock size={32} className="animate-pulse" />
+                <div className="flex flex-col items-center text-center">
+                    {/* Header Icon */}
+                    <div className="flex size-16 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 shadow-[0_0_25px_rgba(99,102,241,0.2)] mb-5">
+                        <ShieldCheck size={32} className="stroke-[2.2] animate-pulse" />
                     </div>
 
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight text-center mb-2">Setup 2-Factor Auth</h1>
-                    <p className="text-xs font-semibold text-slate-500 text-center max-w-xs mb-6 leading-relaxed">
-                        Secure your account. Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.).
+                    <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-2">
+                        {isEs ? "Configurar Autenticación 2FA" : "Setup 2-Factor Auth"}
+                    </h1>
+                    <p className="text-xs sm:text-sm font-medium text-slate-400 max-w-sm mb-6 leading-relaxed">
+                        {isEs 
+                            ? "Proteja su cuenta y cumpla con el estándar de seguridad HIPAA escaneando el código QR con su aplicación autenticadora."
+                            : "Protect your account according to HIPAA guidelines. Scan the QR code using your preferred authenticator app."}
                     </p>
 
+                    {/* Step-by-Step Container */}
                     <div className="w-full space-y-6">
-                        <div className="flex justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100 max-w-[220px] mx-auto">
-                            {mfaQrCode ? (
-                                <img src={mfaQrCode} alt="2FA QR Code" className="size-44" />
-                            ) : mfaQrUri ? (
-                                <img 
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mfaQrUri)}`} 
-                                    alt="2FA QR Code" 
-                                    className="size-44" 
-                                />
-                            ) : (
-                                <div className="size-44 flex items-center justify-center text-xs text-slate-400 font-bold">Loading QR Code...</div>
-                            )}
-                        </div>
+                        
+                        {/* STEP 1 */}
+                        <div className="bg-slate-950/70 p-5 rounded-2xl border border-slate-800/80 space-y-4 text-left">
+                            <div className="flex items-center gap-2">
+                                <span className="flex size-6 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 font-black text-xs border border-indigo-500/30">1</span>
+                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                                    <QrCode size={14} className="text-indigo-400" />
+                                    {isEs ? "Escanear Código QR" : "Scan QR Code"}
+                                </h3>
+                            </div>
 
-                        {mfaSecret && (
-                            <div className="space-y-1 text-center">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Manual Secret Key</span>
-                                <div className="bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-150 text-xs font-mono font-bold select-all tracking-wider text-slate-600 max-w-xs mx-auto truncate">
-                                    {mfaSecret}
+                            {/* QR Code Container */}
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-1">
+                                <div className="p-3 bg-white rounded-2xl border border-slate-200 shadow-lg shrink-0 transition-transform hover:scale-105">
+                                    {mfaQrCode ? (
+                                        <img src={mfaQrCode} alt="2FA QR Code" className="size-36 sm:size-40 object-contain" />
+                                    ) : mfaQrUri ? (
+                                        <img 
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mfaQrUri)}`} 
+                                            alt="2FA QR Code" 
+                                            className="size-36 sm:size-40 object-contain" 
+                                        />
+                                    ) : (
+                                        <div className="size-36 sm:size-40 flex items-center justify-center text-xs text-slate-400 font-bold animate-pulse">
+                                            {isEs ? "Cargando QR..." : "Loading QR..."}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-3 text-left">
+                                    <p className="text-[11px] font-medium text-slate-400 leading-relaxed">
+                                        {isEs 
+                                            ? "Abra su app de autenticación (Google Authenticator, Authy, 1Password, Microsoft Authenticator) y escanee la imagen."
+                                            : "Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan the image."}
+                                    </p>
+                                    
+                                    {/* App Badges */}
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {['Google Auth', 'Authy', '1Password', 'Microsoft'].map((app) => (
+                                            <span key={app} className="px-2 py-0.5 rounded-md bg-slate-800/80 text-[10px] font-bold text-slate-400 border border-slate-700/60">
+                                                {app}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
 
-                        <div className="h-px bg-slate-100" />
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2 text-center">
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                    Enter 6-Digit Code
-                                </label>
-                                <input
-                                    type="text"
-                                    maxLength={6}
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                                    className="w-full text-center h-14 rounded-2xl border border-slate-200 bg-slate-50 text-xl font-bold tracking-[0.5em] focus:bg-white focus:outline-none focus:ring-4 focus:ring-rose-500/5 focus:border-rose-500/50 transition-all text-slate-800"
-                                    placeholder="000000"
-                                    required
-                                />
-                                {error && (
-                                    <p className="text-xs font-bold text-red-500 pt-1 flex items-center justify-center gap-1.5 leading-relaxed text-center animate-shake">
-                                        <ShieldAlert size={12} className="shrink-0" /> {error}
-                                    </p>
-                                )}
+                        {/* STEP 2 */}
+                        <form onSubmit={handleSubmit} className="bg-slate-950/70 p-5 rounded-2xl border border-slate-800/80 space-y-4">
+                            <div className="flex items-center gap-2 text-left">
+                                <span className="flex size-6 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 font-black text-xs border border-indigo-500/30">2</span>
+                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                                    <Smartphone size={14} className="text-indigo-400" />
+                                    {isEs ? "Ingresar Código de 6 Dígitos" : "Enter 6-Digit Verification Code"}
+                                </h3>
                             </div>
+
+                            {/* OTP 6-Digit Input */}
+                            <div className="py-2">
+                                <OtpInput
+                                    length={6}
+                                    value={code}
+                                    onChange={(val) => {
+                                        setCode(val);
+                                        if (error) setError(null);
+                                    }}
+                                    disabled={loading}
+                                    hasError={Boolean(error)}
+                                    autoFocus={true}
+                                    onComplete={(completedCode) => handleVerify(completedCode)}
+                                />
+                            </div>
+
+                            {error && (
+                                <p className="text-xs font-bold text-rose-400 flex items-center justify-center gap-1.5 animate-bounce">
+                                    <ShieldAlert size={14} className="shrink-0" /> {error}
+                                </p>
+                            )}
 
                             <button
                                 type="submit"
                                 disabled={loading || code.length !== 6}
-                                className="w-full h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-widest transition-all hover:shadow-lg hover:shadow-rose-500/10 active:scale-95 animate-in fade-in"
+                                className="w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-40 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/20 active:scale-98 flex items-center justify-center gap-2"
                             >
-                                {loading ? "Verifying..." : "Verify & Activate"}
+                                {loading ? (
+                                    <>
+                                        <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        {isEs ? "Verificando..." : "Verifying..."}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Lock size={14} />
+                                        {isEs ? "Verificar y Activar 2FA" : "Verify & Activate 2FA"}
+                                        <ArrowRight size={14} />
+                                    </>
+                                )}
                             </button>
                         </form>
 
-                        <div className="h-px w-full bg-slate-100" />
-
-                        <div className="flex justify-center">
+                        {/* Footer Actions */}
+                        <div className="pt-2 flex justify-center">
                             <button
+                                type="button"
                                 onClick={handleSignOut}
-                                className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-wider"
+                                className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors uppercase tracking-wider py-1 px-3 rounded-lg hover:bg-slate-800/50"
                             >
                                 <LogOut size={14} />
-                                Cancel & Sign Out
+                                {isEs ? "Cancelar y Cerrar Sesión" : "Cancel & Sign Out"}
                             </button>
                         </div>
                     </div>

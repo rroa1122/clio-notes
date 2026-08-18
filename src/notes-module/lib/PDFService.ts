@@ -1,9 +1,14 @@
 const PDF_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/medical-note';
 const TCM_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-note';
+const TCM_CASE_ASSIGNMENT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-case-assignment-note';
 const TCM_ASSESSMENT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-assessment-note';
+const TCM_ADULT_CERTIFICATION_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-adult-certification-note';
 const TCM_SERVICE_PLAN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-service-plan-note';
 const TCM_INITIAL_HOME_VISIT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-initial-home-visit-note';
 const TCM_COLLATERAL_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-collateral-note';
+const TCM_GATHER_PCP_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-gather-pcp-note';
+const TCM_GATHER_PSY_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-gather-psy-note';
+const TCM_PC_EMERGENCY_CONTACT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-pc-emergency-contact-note';
 const TCM_SERVICE_PLAN_DISCUSSION_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-service-plan-discussion';
 const TCM_HURRICANE_ADDENDUM_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-hurricane-addendum-note';
 const TCM_HURRICANE_UPDATE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-hurricane-update-note';
@@ -13,20 +18,33 @@ const TCM_STS_SUBMIT_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-sts-s
 const TCM_DPP_OBTAIN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-dpp-obtain-note';
 const TCM_DPP_COMPLETE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-dpp-complete-note';
 const TCM_DPP_SUBMIT_PCP_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-dpp-submit-pcp-note';
-const TCM_MHV_PROVIDE_DONATION_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-mhv-provide-donation-note';
+
 const TCM_DONATION_OBTAIN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-donation-obtain-note';
+const TCM_CLEANING_DONATION_GATHER_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-cleaning-donation-gather-note';
+const TCM_CLEANING_DONATION_OBTAIN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-cleaning-donation-obtain-note';
+const TCM_CLOTHING_DONATION_GATHER_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-clothing-donation-gather-note';
+const TCM_CLOTHING_DONATION_OBTAIN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-clothing-donation-obtain-note';
+const TCM_FOOD_DONATION_GATHER_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-food-donation-gather-note';
+const TCM_FOOD_DONATION_OBTAIN_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-food-donation-obtain-note';
 const TCM_VACCINATION_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-vaccination-assistance-note';
 const TCM_PROVIDER_APPT_COORD_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-provider-appt-coord-note';
 const TCM_USCIS_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-uscis-assistance-note';
 const TCM_HOUSING_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-housing-assistance-note';
+const TCM_SNAP_RECERTIFICATION_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-snap-recertification-note';
+const TCM_MHV_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-mhv-note';
 const SYNTHESIS_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/nextSteps';
 
 const TEMPLATE_WEBHOOK_URLS: Record<string, string> = {
     tcm_progress_note: TCM_WEBHOOK_URL,
+    tcm_case_assignment_note: TCM_CASE_ASSIGNMENT_WEBHOOK_URL,
     tcm_assessment_note: TCM_ASSESSMENT_WEBHOOK_URL,
+    tcm_adult_certification_note: TCM_ADULT_CERTIFICATION_WEBHOOK_URL,
     tcm_service_plan_note: TCM_SERVICE_PLAN_WEBHOOK_URL,
     tcm_initial_home_visit_note: TCM_INITIAL_HOME_VISIT_WEBHOOK_URL,
     tcm_collateral_note: TCM_COLLATERAL_WEBHOOK_URL,
+    tcm_gather_pcp_note: TCM_GATHER_PCP_WEBHOOK_URL,
+    tcm_gather_psy_note: TCM_GATHER_PSY_WEBHOOK_URL,
+    tcm_pc_emergency_contact_note: TCM_PC_EMERGENCY_CONTACT_WEBHOOK_URL,
     tcm_service_plan_discussion: TCM_SERVICE_PLAN_DISCUSSION_WEBHOOK_URL,
     tcm_hurricane_addendum_note: TCM_HURRICANE_ADDENDUM_WEBHOOK_URL,
     tcm_hurricane_update_note: TCM_HURRICANE_UPDATE_WEBHOOK_URL,
@@ -36,12 +54,24 @@ const TEMPLATE_WEBHOOK_URLS: Record<string, string> = {
     tcm_dpp_obtain_note: TCM_DPP_OBTAIN_WEBHOOK_URL,
     tcm_dpp_complete_note: TCM_DPP_COMPLETE_WEBHOOK_URL,
     tcm_dpp_submit_pcp_note: TCM_DPP_SUBMIT_PCP_WEBHOOK_URL,
-    tcm_mhv_provide_donation_note: TCM_MHV_PROVIDE_DONATION_WEBHOOK_URL,
+
     tcm_donation_obtain_note: TCM_DONATION_OBTAIN_WEBHOOK_URL,
+    tcm_cleaning_donation_gather_note: TCM_CLEANING_DONATION_GATHER_WEBHOOK_URL,
+    tcm_cleaning_donation_obtain_note: TCM_CLEANING_DONATION_OBTAIN_WEBHOOK_URL,
+    tcm_clothing_donation_gather_note: TCM_CLOTHING_DONATION_GATHER_WEBHOOK_URL,
+    tcm_clothing_donation_obtain_note: TCM_CLOTHING_DONATION_OBTAIN_WEBHOOK_URL,
+    tcm_food_donation_gather_note: TCM_FOOD_DONATION_GATHER_WEBHOOK_URL,
+    tcm_food_donation_obtain_note: TCM_FOOD_DONATION_OBTAIN_WEBHOOK_URL,
     tcm_vaccination_assistance_note: TCM_VACCINATION_ASSISTANCE_WEBHOOK_URL,
     tcm_provider_appt_coord_note: TCM_PROVIDER_APPT_COORD_WEBHOOK_URL,
     tcm_uscis_assistance_note: TCM_USCIS_ASSISTANCE_WEBHOOK_URL,
     tcm_housing_assistance_note: TCM_HOUSING_ASSISTANCE_WEBHOOK_URL,
+    tcm_snap_recertification_note: TCM_SNAP_RECERTIFICATION_WEBHOOK_URL,
+    tcm_mhv_note: TCM_MHV_WEBHOOK_URL,
+    tcm_ltc_phase1_note: TCM_WEBHOOK_URL,
+    tcm_ltc_phase2_note: TCM_WEBHOOK_URL,
+    tcm_ltc_phase3_note: TCM_WEBHOOK_URL,
+    tcm_ltc_phase4_note: TCM_WEBHOOK_URL,
 };
 
 export const getWebhookUrl = (templateId?: string): string =>

@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight, Plus, FileText, CheckCircle2, Clock } from '
 import { Button } from '../../components/ui/button';
 import { cn } from '../../lib/utils';
 import type { Note } from '../lib/storage';
+import { getNoteServiceDate } from '../lib/clioUtils';
 
 interface PatientHistoryCalendarProps {
   notes: Note[];
@@ -38,19 +39,7 @@ export function PatientHistoryCalendar({
 
   // Extract dates from notes and group them
   const getNoteDate = (note: any) => {
-    const rawDate = note.meta?.visitDate || note.appointment?.date_of_service || note.createdAt || note.created_at;
-    if (!rawDate) return null;
-    try {
-      // Handle YYYY-MM-DD vs ISO strings properly
-      if (typeof rawDate === 'string' && rawDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [y, m, d] = rawDate.split('-');
-        return new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
-      }
-      const d = new Date(rawDate);
-      return isNaN(d.getTime()) ? null : d;
-    } catch (e) {
-      return null;
-    }
+    return getNoteServiceDate(note);
   };
 
   const notesByDate = notes.reduce((acc, note) => {

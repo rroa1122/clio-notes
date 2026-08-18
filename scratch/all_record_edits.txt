@@ -1,0 +1,1972 @@
+=== EDIT 1: Replace Obtain Supply Donation dropdown items with Cleaning Donation - Gather and Obtain. ===
+Type: single
+StartLine: 104, EndLine: 111
+TargetContent:
+    {
+        category: "Basic Needs & Supplies",
+        items: [
+            'Obtain Supply Donation',
+            'TCM MHV + Provide Donation',
+            'TCM Food Stamps Recertification'
+        ]
+    },
+----------------------------------
+ReplacementContent:
+    {
+        category: "Basic Needs & Supplies",
+        items: [
+            'Cleaning Donation – Gather',
+            'Cleaning Donation – Obtain',
+            'TCM MHV + Provide Donation',
+            'TCM Food Stamps Recertification'
+        ]
+    },
+==================================
+
+
+=== EDIT 2: Map subTemplates to the new Cleaning Donation template IDs in Record.tsx. ===
+Type: single
+StartLine: 445, EndLine: 449
+TargetContent:
+        } else if (selectedSubTemplate === 'TCM MHV + Provide Donation') {
+            setSelectedTemplateId('tcm_mhv_provide_donation_note');
+        } else if (selectedSubTemplate === 'Obtain Supply Donation') {
+            setSelectedTemplateId('tcm_donation_obtain_note');
+----------------------------------
+ReplacementContent:
+        } else if (selectedSubTemplate === 'TCM MHV + Provide Donation') {
+            setSelectedTemplateId('tcm_mhv_provide_donation_note');
+        } else if (selectedSubTemplate === 'Obtain Supply Donation') {
+            setSelectedTemplateId('tcm_donation_obtain_note');
+        } else if (selectedSubTemplate === 'Cleaning Donation – Gather') {
+            setSelectedTemplateId('tcm_cleaning_donation_gather_note');
+        } else if (selectedSubTemplate === 'Cleaning Donation – Obtain') {
+            setSelectedTemplateId('tcm_cleaning_donation_obtain_note');
+==================================
+
+
+=== EDIT 3: Import lookupDonationSites and DonationSite in Record.tsx. ===
+Type: single
+StartLine: 21, EndLine: 21
+TargetContent:
+import { settingsService } from '../../services/settingsService';
+----------------------------------
+ReplacementContent:
+import { settingsService } from '../../services/settingsService';
+import { lookupDonationSites, type DonationSite } from '../lib/donationDirectory';
+==================================
+
+
+=== EDIT 4: Add state variables and auto-population useEffect in Record.tsx. ===
+Type: single
+StartLine: 294, EndLine: 294
+TargetContent:
+    // Bootstrap Data State
+----------------------------------
+ReplacementContent:
+    // ZIP code lookup states
+    const [matchedSites, setMatchedSites] = useState<DonationSite[]>([]);
+    const [searchExpanded, setSearchExpanded] = useState<boolean>(false);
+    const [clientZipCode, setClientZipCode] = useState<string>("");
+
+    // Auto-population logic for Cleaning Donation - Gather
+    useEffect(() => {
+        if (selectedSubTemplate === 'Cleaning Donation – Gather' && selectedPatient) {
+            // Extract ZIP code
+            const zipMatch = selectedPatient.address?.match(/\b\d{5}\b/);
+            const zip = zipMatch ? zipMatch[0] : "";
+            setClientZipCode(zip);
+            
+            if (zip) {
+                const { sites, isExpanded } = lookupDonationSites(zip, 'Cleaning');
+                setMatchedSites(sites);
+                setSearchExpanded(isExpanded);
+                
+                // Format the resource text for insertion into context
+                const resourcesHeader = language === 'es' ? "Recursos locales identificados:\n" : "Identified local resources:\n";
+                const resourceLines = sites.map(s => {
+                    const isOld = (dateStr: string) => {
+                        const verifiedDate = new Date(dateStr);
+                        const currentDate = new Date();
+                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return diffDays > 90;
+                    };
+                    const verificationFlag = isOld(s.lastVerifiedDate) 
+                        ? (language === 'es' ? " (¡REQUIERE VERIFICACIÓN TELEFÓNICA!)" : " (NEEDS PHONE VERIFICATION!)")
+                        : "";
+                    return `• ${s.organization} – ${s.address}, ${s.city}, FL ${s.zip}. Tel: ${s.phone}. (Verificado: ${s.lastVerifiedDate}${verificationFlag})`;
+                }).join('\n');
+                
+                const fullResourceText = `\n\n${resourcesHeader}${resourceLines}`;
+                
+                // Set context if it doesn't already contain the matching text
+                setPatientInfo(prev => {
+                    if (prev.context.includes(sites[0]?.organization || "---")) {
+                        return prev;
+                    }
+                    const cleanContext = prev.context.replace(/\n\n(Identified local resources:|Recursos locales identificados:)[\s\S]*/g, "");
+                    return {
+                        ...prev,
+                        context: cleanContext ? `${cleanContext}${fullResourceText}` : resourceLines
+                    };
+                });
+            } else {
+                setMatchedSites([]);
+                setSearchExpanded(false);
+            }
+        } else {
+            setMatchedSites([]);
+            setSearchExpanded(false);
+            setClientZipCode("");
+        }
+    }, [selectedSubTemplate, selectedPatient, language]);
+
+    // Bootstrap Data State
+==================================
+
+
+=== EDIT 5: Add matched sites UI indicator and scenario picker to goals section. ===
+Type: single
+StartLine: 2180, EndLine: 2187
+TargetContent:
+                                                    <Textarea
+                                                        value={patientInfo.context}
+                                                        onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
+                                                        placeholder=""
+                                                        className="w-full flex-1 bg-transparent border-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0 text-[15px] font-medium text-slate-600 dark:text-slate-200 placeholder:text-transparent resize-none leading-relaxed transition-all shadow-none tracking-tight z-10 min-h-[160px]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+----------------------------------
+ReplacementContent:
+                                                    <Textarea
+                                                        value={patientInfo.context}
+                                                        onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
+                                                        placeholder=""
+                                                        className="w-full flex-1 bg-transparent border-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-0 text-[15px] font-medium text-slate-600 dark:text-slate-200 placeholder:text-transparent resize-none leading-relaxed transition-all shadow-none tracking-tight z-10 min-h-[160px]"
+                                                    />
+                                                </div>
+                                                
+                                                {/* Matched Sites directory auto-population info */}
+                                                {selectedSubTemplate === 'Cleaning Donation – Gather' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider">
+                                                                {language === 'es' ? 'Sitios de Donación Asignados' : 'Assigned Donation Sites'}
+                                                            </span>
+                                                            {searchExpanded && (
+                                                                <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200/40 dark:border-amber-900/40 text-[9px] font-black uppercase px-2 py-0">
+                                                                    {language === 'es' ? 'Búsqueda Expandida' : 'Expanded Search'}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            {matchedSites.length > 0 ? (
+                                                                matchedSites.map((site, index) => {
+                                                                    const isOld = (dateStr: string) => {
+                                                                        const verifiedDate = new Date(dateStr);
+                                                                        const currentDate = new Date();
+                                                                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                                                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                                        return diffDays > 90;
+                                                                    };
+                                                                    const needsVerification = isOld(site.lastVerifiedDate);
+                                                                    return (
+                                                                        <div key={index} className={cn(
+                                                                            "flex flex-col gap-1 p-3 rounded-2xl border transition-all text-[12px] leading-relaxed",
+                                                                            needsVerification
+                                                                                ? "bg-red-50/30 dark:bg-red-950/10 border-red-200/40 dark:border-red-900/30 text-red-900 dark:text-red-300"
+                                                                                : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                                                                        )}>
+                                                                            <div className="flex items-center justify-between font-bold">
+                                                                                <span className="text-[13px] tracking-tight">{site.organization}</span>
+                                                                                {needsVerification && (
+                                                                                    <Badge className="bg-red-500 hover:bg-red-600 text-white font-black text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border-none scale-90">
+                                                                                        {language === 'es' ? 'Llamar' : 'Call'}
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                            <span className="text-[11px] opacity-80">{site.address}, {site.city}, FL {site.zip}</span>
+                                                                            <div className="flex items-center justify-between text-[10px] mt-1 opacity-70">
+                                                                                <span>{language === 'es' ? 'Tel:' : 'Phone:'} {site.phone}</span>
+                                                                                <span>{language === 'es' ? 'Verificado:' : 'Verified:'} {site.lastVerifiedDate}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            ) : (
+                                                                <span className="text-slate-400 text-[11px] italic">
+                                                                    {language === 'es' ? 'No se encontraron centros para el código ZIP: ' : 'No centers found for ZIP code: '} {clientZipCode || 'N/A'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Scenario selection helper for Cleaning Donation - Obtain */}
+                                                {selectedSubTemplate === 'Cleaning Donation – Obtain' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider block mb-3">
+                                                            {language === 'es' ? 'Seleccionar Escenario de Obtención' : 'Select Obtain Scenario'}
+                                                        </span>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [AB]: [\s\S]*?\]/g, "").replace(/\[Escenario [AB]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario A: TCM obtiene en nombre del cliente. El cliente tiene limitaciones físicas/psiquiátricas y no puede trasladarse. TCM visitará el lugar, recibirá los artículos y los entregará.]"
+                                                                            : "[Scenario A: TCM obtains on client's behalf. Client has physical/psychiatric limitations and cannot go. TCM will visit site, receive items, and deliver.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario A") || patientInfo.context.includes("Escenario A")
+                                                                        ? "bg-indigo-600 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario A' : 'Scenario A'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM obtiene los artículos. El cliente tiene limitaciones.' 
+                                                                        : 'TCM obtains on client\'s behalf. Client has limitations.'}
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [AB]: [\s\S]*?\]/g, "").replace(/\[Escenario [AB]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario B: TCM asiste, el cliente obtiene. El cliente puede trasladarse. TCM revisará opciones, coordinará transporte y confirmará el proceso.]"
+                                                                            : "[Scenario B: TCM assists, client obtains. Client is able to go. TCM will review options, coordinate transport, and confirm process.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario B") || patientInfo.context.includes("Escenario B")
+                                                                        ? "bg-indigo-600 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario B' : 'Scenario B'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM asiste al cliente. El cliente acude al sitio.' 
+                                                                        : 'TCM assists, client obtains. Client goes to site.'}
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+==================================
+
+
+=== EDIT 6: Make auto-population logic in Record.tsx support both Cleaning and Clothing templates. ===
+Type: single
+StartLine: 300, EndLine: 350
+TargetContent:
+    // Auto-population logic for Cleaning Donation - Gather
+    useEffect(() => {
+        if (selectedSubTemplate === 'Cleaning Donation – Gather' && selectedPatient) {
+            // Extract ZIP code
+            const zipMatch = selectedPatient.address?.match(/\b\d{5}\b/);
+            const zip = zipMatch ? zipMatch[0] : "";
+            setClientZipCode(zip);
+            
+            if (zip) {
+                const { sites, isExpanded } = lookupDonationSites(zip, 'Cleaning');
+                setMatchedSites(sites);
+                setSearchExpanded(isExpanded);
+                
+                // Format the resource text for insertion into context
+                const resourcesHeader = language === 'es' ? "Recursos locales identificados:\n" : "Identified local resources:\n";
+                const resourceLines = sites.map(s => {
+                    const isOld = (dateStr: string) => {
+                        const verifiedDate = new Date(dateStr);
+                        const currentDate = new Date();
+                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return diffDays > 90;
+                    };
+                    const verificationFlag = isOld(s.lastVerifiedDate) 
+                        ? (language === 'es' ? " (¡REQUIERE VERIFICACIÓN TELEFÓNICA!)" : " (NEEDS PHONE VERIFICATION!)")
+                        : "";
+                    return `• ${s.organization} – ${s.address}, ${s.city}, FL ${s.zip}. Tel: ${s.phone}. (Verificado: ${s.lastVerifiedDate}${verificationFlag})`;
+                }).join('\n');
+                
+                const fullResourceText = `\n\n${resourcesHeader}${resourceLines}`;
+                
+                // Set context if it doesn't already contain the matching text
+                setPatientInfo(prev => {
+                    if (prev.context.includes(sites[0]?.organization || "---")) {
+                        return prev;
+                    }
+                    const cleanContext = prev.context.replace(/\n\n(Identified local resources:|Recursos locales identificados:)[\s\S]*/g, "");
+                    return {
+                        ...prev,
+                        context: cleanContext ? `${cleanContext}${fullResourceText}` : resourceLines
+                    };
+                });
+            } else {
+                setMatchedSites([]);
+                setSearchExpanded(false);
+            }
+        } else {
+            setMatchedSites([]);
+            setSearchExpanded(false);
+            setClientZipCode("");
+        }
+    }, [selectedSubTemplate, selectedPatient, language]);
+----------------------------------
+ReplacementContent:
+    // Auto-population logic for Cleaning/Clothing Donation - Gather
+    useEffect(() => {
+        const isCleaning = selectedSubTemplate === 'Cleaning Donation – Gather';
+        const isClothing = selectedSubTemplate === 'Clothing Donation – Gather';
+        
+        if ((isCleaning || isClothing) && selectedPatient) {
+            const resourceType = isCleaning ? 'Cleaning' : 'Clothing';
+            // Extract ZIP code
+            const zipMatch = selectedPatient.address?.match(/\b\d{5}\b/);
+            const zip = zipMatch ? zipMatch[0] : "";
+            setClientZipCode(zip);
+            
+            if (zip) {
+                const { sites, isExpanded } = lookupDonationSites(zip, resourceType);
+                setMatchedSites(sites);
+                setSearchExpanded(isExpanded);
+                
+                // Format the resource text for insertion into context
+                const resourcesHeader = language === 'es' ? "Recursos locales identificados:\n" : "Identified local resources:\n";
+                const resourceLines = sites.map(s => {
+                    const isOld = (dateStr: string) => {
+                        const verifiedDate = new Date(dateStr);
+                        const currentDate = new Date();
+                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return diffDays > 90;
+                    };
+                    const verificationFlag = isOld(s.lastVerifiedDate) 
+                        ? (language === 'es' ? " (¡REQUIERE VERIFICACIÓN TELEFÓNICA!)" : " (NEEDS PHONE VERIFICATION!)")
+                        : "";
+                    return `• ${s.organization} – ${s.address}, ${s.city}, FL ${s.zip}. Tel: ${s.phone}. (Verificado: ${s.lastVerifiedDate}${verificationFlag})`;
+                }).join('\n');
+                
+                const fullResourceText = `\n\n${resourcesHeader}${resourceLines}`;
+                
+                // Set context if it doesn't already contain the matching text
+                setPatientInfo(prev => {
+                    if (prev.context.includes(sites[0]?.organization || "---")) {
+                        return prev;
+                    }
+                    const cleanContext = prev.context.replace(/\n\n(Identified local resources:|Recursos locales identificados:)[\s\S]*/g, "");
+                    return {
+                        ...prev,
+                        context: cleanContext ? `${cleanContext}${fullResourceText}` : resourceLines
+                    };
+                });
+            } else {
+                setMatchedSites([]);
+                setSearchExpanded(false);
+            }
+        } else if (selectedSubTemplate !== 'Cleaning Donation – Gather' && selectedSubTemplate !== 'Clothing Donation – Gather') {
+            setMatchedSites([]);
+            setSearchExpanded(false);
+            setClientZipCode("");
+        }
+    }, [selectedSubTemplate, selectedPatient, language]);
+==================================
+
+
+=== EDIT 7: Add clothingSizes state and dynamic sizes prepending useEffect in Record.tsx. ===
+Type: single
+StartLine: 294, EndLine: 299
+TargetContent:
+    // ZIP code lookup states
+    const [matchedSites, setMatchedSites] = useState<DonationSite[]>([]);
+    const [searchExpanded, setSearchExpanded] = useState<boolean>(false);
+    const [clientZipCode, setClientZipCode] = useState<string>("");
+
+    // Auto-population logic for Cleaning/Clothing Donation - Gather
+----------------------------------
+ReplacementContent:
+    // ZIP code lookup states
+    const [matchedSites, setMatchedSites] = useState<DonationSite[]>([]);
+    const [searchExpanded, setSearchExpanded] = useState<boolean>(false);
+    const [clientZipCode, setClientZipCode] = useState<string>("");
+    
+    // Clothing sizes state
+    const [clothingSizes, setClothingSizes] = useState({
+        tops: '',
+        bottoms: '',
+        outerwear: '',
+        shoes: ''
+    });
+
+    // Prepend sizes to context when they are filled in Clothing Donation - Gather
+    useEffect(() => {
+        if (selectedSubTemplate === 'Clothing Donation – Gather') {
+            const hasSizes = clothingSizes.tops || clothingSizes.bottoms || clothingSizes.outerwear || clothingSizes.shoes;
+            const sizesStr = hasSizes 
+                ? `[Sizes: Tops: ${clothingSizes.tops || 'N/A'}, Bottoms: ${clothingSizes.bottoms || 'N/A'}, Outerwear/Dress: ${clothingSizes.outerwear || 'N/A'}, Shoes: ${clothingSizes.shoes || 'N/A'}]`
+                : `[SIZES NOT DOCUMENTED — required before Obtain note]`;
+                
+            setPatientInfo(prev => {
+                const clean = prev.context
+                    .replace(/\[Sizes: Tops: [\s\S]*?\]/g, "")
+                    .replace(/\[SIZES NOT DOCUMENTED — required before Obtain note\]/g, "")
+                    .trim();
+                return {
+                    ...prev,
+                    context: `${sizesStr}\n\n${clean}`.trim()
+                };
+            });
+        }
+    }, [clothingSizes, selectedSubTemplate]);
+
+    // Auto-population logic for Cleaning/Clothing Donation - Gather
+==================================
+
+
+=== EDIT 8: Add Clothing Donation templates to Basic Needs & Supplies sub-templates group. ===
+Type: single
+StartLine: 106, EndLine: 112
+TargetContent:
+        category: "Basic Needs & Supplies",
+        items: [
+            'Cleaning Donation – Gather',
+            'Cleaning Donation – Obtain',
+            'TCM MHV + Provide Donation',
+            'TCM Food Stamps Recertification'
+        ]
+----------------------------------
+ReplacementContent:
+        category: "Basic Needs & Supplies",
+        items: [
+            'Cleaning Donation – Gather',
+            'Cleaning Donation – Obtain',
+            'Clothing Donation – Gather',
+            'Clothing Donation – Obtain',
+            'TCM MHV + Provide Donation',
+            'TCM Food Stamps Recertification'
+        ]
+==================================
+
+
+=== EDIT 9: Map Clothing Donation sub-templates to template IDs in Record.tsx. ===
+Type: single
+StartLine: 543, EndLine: 547
+TargetContent:
+        } else if (selectedSubTemplate === 'Cleaning Donation – Gather') {
+            setSelectedTemplateId('tcm_cleaning_donation_gather_note');
+        } else if (selectedSubTemplate === 'Cleaning Donation – Obtain') {
+            setSelectedTemplateId('tcm_cleaning_donation_obtain_note');
+        } else if (selectedSubTemplate === 'TCM Vaccination Assistance') {
+----------------------------------
+ReplacementContent:
+        } else if (selectedSubTemplate === 'Cleaning Donation – Gather') {
+            setSelectedTemplateId('tcm_cleaning_donation_gather_note');
+        } else if (selectedSubTemplate === 'Cleaning Donation – Obtain') {
+            setSelectedTemplateId('tcm_cleaning_donation_obtain_note');
+        } else if (selectedSubTemplate === 'Clothing Donation – Gather') {
+            setSelectedTemplateId('tcm_clothing_donation_gather_note');
+        } else if (selectedSubTemplate === 'Clothing Donation – Obtain') {
+            setSelectedTemplateId('tcm_clothing_donation_obtain_note');
+        } else if (selectedSubTemplate === 'TCM Vaccination Assistance') {
+==================================
+
+
+=== EDIT 10: Implement generic matched sites display, sizes input panel, and scenario selectors for clothing donation in Record.tsx. ===
+Type: single
+StartLine: 2227, EndLine: 2342
+TargetContent:
+                                                {/* Matched Sites directory auto-population info */}
+                                                {selectedSubTemplate === 'Cleaning Donation – Gather' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider">
+                                                                {language === 'es' ? 'Sitios de Donación Asignados' : 'Assigned Donation Sites'}
+                                                            </span>
+                                                            {searchExpanded && (
+                                                                <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200/40 dark:border-amber-900/40 text-[9px] font-black uppercase px-2 py-0">
+                                                                    {language === 'es' ? 'Búsqueda Expandida' : 'Expanded Search'}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            {matchedSites.length > 0 ? (
+                                                                matchedSites.map((site, index) => {
+                                                                    const isOld = (dateStr: string) => {
+                                                                        const verifiedDate = new Date(dateStr);
+                                                                        const currentDate = new Date();
+                                                                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                                                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                                        return diffDays > 90;
+                                                                    };
+                                                                    const needsVerification = isOld(site.lastVerifiedDate);
+                                                                    return (
+                                                                        <div key={index} className={cn(
+                                                                            "flex flex-col gap-1 p-3 rounded-2xl border transition-all text-[12px] leading-relaxed",
+                                                                            needsVerification
+                                                                                ? "bg-red-50/30 dark:bg-red-950/10 border-red-200/40 dark:border-red-900/30 text-red-900 dark:text-red-300"
+                                                                                : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                                                                        )}>
+                                                                            <div className="flex items-center justify-between font-bold">
+                                                                                <span className="text-[13px] tracking-tight">{site.organization}</span>
+                                                                                {needsVerification && (
+                                                                                    <Badge className="bg-red-500 hover:bg-red-600 text-white font-black text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border-none scale-90">
+                                                                                        {language === 'es' ? 'Llamar' : 'Call'}
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                            <span className="text-[11px] opacity-80">{site.address}, {site.city}, FL {site.zip}</span>
+                                                                            <div className="flex items-center justify-between text-[10px] mt-1 opacity-70">
+                                                                                <span>{language === 'es' ? 'Tel:' : 'Phone:'} {site.phone}</span>
+                                                                                <span>{language === 'es' ? 'Verificado:' : 'Verified:'} {site.lastVerifiedDate}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            ) : (
+                                                                <span className="text-slate-400 text-[11px] italic">
+                                                                    {language === 'es' ? 'No se encontraron centros para el código ZIP: ' : 'No centers found for ZIP code: '} {clientZipCode || 'N/A'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Scenario selection helper for Cleaning Donation - Obtain */}
+                                                {selectedSubTemplate === 'Cleaning Donation – Obtain' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider block mb-3">
+                                                            {language === 'es' ? 'Seleccionar Escenario de Obtención' : 'Select Obtain Scenario'}
+                                                        </span>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [AB]: [\s\S]*?\]/g, "").replace(/\[Escenario [AB]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario A: TCM obtiene en nombre del cliente. El cliente tiene limitaciones físicas/psiquiátricas y no puede trasladarse. TCM visitará el lugar, recibirá los artículos y los entregará.]"
+                                                                            : "[Scenario A: TCM obtains on client's behalf. Client has physical/psychiatric limitations and cannot go. TCM will visit site, receive items, and deliver.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario A") || patientInfo.context.includes("Escenario A")
+                                                                        ? "bg-indigo-600 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario A' : 'Scenario A'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM obtiene los artículos. El cliente tiene limitaciones.' 
+                                                                        : 'TCM obtains on client\'s behalf. Client has limitations.'}
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [AB]: [\s\S]*?\]/g, "").replace(/\[Escenario [AB]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario B: TCM asiste, el cliente obtiene. El cliente puede trasladarse. TCM revisará opciones, coordinará transporte y confirmará el proceso.]"
+                                                                            : "[Scenario B: TCM assists, client obtains. Client is able to go. TCM will review options, coordinate transport, and confirm process.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario B") || patientInfo.context.includes("Escenario B")
+                                                                        ? "bg-indigo-600 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario B' : 'Scenario B'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM asiste al cliente. El cliente acude al sitio.' 
+                                                                        : 'TCM assists, client obtains. Client goes to site.'}
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+----------------------------------
+ReplacementContent:
+                                                {/* Matched Sites directory auto-population info */}
+                                                {(selectedSubTemplate === 'Cleaning Donation – Gather' || selectedSubTemplate === 'Clothing Donation – Gather') && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider">
+                                                                {language === 'es' ? 'Sitios de Donación Asignados' : 'Assigned Donation Sites'}
+                                                            </span>
+                                                            {searchExpanded && (
+                                                                <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200/40 dark:border-amber-900/40 text-[9px] font-black uppercase px-2 py-0">
+                                                                    {language === 'es' ? 'Búsqueda Expandida' : 'Expanded Search'}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            {matchedSites.length > 0 ? (
+                                                                matchedSites.map((site, index) => {
+                                                                    const isOld = (dateStr: string) => {
+                                                                        const verifiedDate = new Date(dateStr);
+                                                                        const currentDate = new Date();
+                                                                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                                                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                                        return diffDays > 90;
+                                                                    };
+                                                                    const needsVerification = isOld(site.lastVerifiedDate);
+                                                                    return (
+                                                                        <div key={index} className={cn(
+                                                                            "flex flex-col gap-1 p-3 rounded-2xl border transition-all text-[12px] leading-relaxed",
+                                                                            needsVerification
+                                                                                ? "bg-red-50/30 dark:bg-red-950/10 border-red-200/40 dark:border-red-900/30 text-red-900 dark:text-red-300"
+                                                                                : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                                                                        )}>
+                                                                            <div className="flex items-center justify-between font-bold">
+                                                                                <span className="text-[13px] tracking-tight">{site.organization}</span>
+                                                                                {needsVerification && (
+                                                                                    <Badge className="bg-red-500 hover:bg-red-600 text-white font-black text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border-none scale-90">
+                                                                                        {language === 'es' ? 'Llamar' : 'Call'}
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                            <span className="text-[11px] opacity-80">{site.address}, {site.city}, FL {site.zip}</span>
+                                                                            <div className="flex items-center justify-between text-[10px] mt-1 opacity-70 border-b border-dashed border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5">
+                                                                                <span>{language === 'es' ? 'Tel:' : 'Phone:'} {site.phone}</span>
+                                                                                <span>{language === 'es' ? 'Verificado:' : 'Verified:'} {site.lastVerifiedDate}</span>
+                                                                            </div>
+                                                                            
+                                                                            {/* Clothing details */}
+                                                                            {selectedSubTemplate === 'Clothing Donation – Gather' && (
+                                                                                <div className="flex flex-col gap-1 text-[11px] opacity-95">
+                                                                                    {site.sizesInventoryNotes && (
+                                                                                        <div>
+                                                                                            <span className="font-bold text-indigo-700 dark:text-indigo-400">{language === 'es' ? 'Inventario/Notas:' : 'Inventory/Notes:'} </span>
+                                                                                            <span className="text-slate-600 dark:text-slate-350">{site.sizesInventoryNotes}</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                                                        {site.walkInAccepted !== undefined && (
+                                                                                            <Badge variant="outline" className={cn(
+                                                                                                "text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95",
+                                                                                                site.walkInAccepted 
+                                                                                                    ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
+                                                                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400"
+                                                                                            )}>
+                                                                                                {language === 'es' 
+                                                                                                    ? `Walk-in: ${site.walkInAccepted ? 'Sí' : 'No'}`
+                                                                                                    : `Walk-in: ${site.walkInAccepted ? 'Yes' : 'No'}`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.appointmentRequired !== undefined && (
+                                                                                            <Badge variant="outline" className={cn(
+                                                                                                "text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95",
+                                                                                                site.appointmentRequired 
+                                                                                                    ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400"
+                                                                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400"
+                                                                                            )}>
+                                                                                                {language === 'es' 
+                                                                                                    ? `Cita: ${site.appointmentRequired ? 'Sí' : 'No'}`
+                                                                                                    : `Appointment: ${site.appointmentRequired ? 'Yes' : 'No'}`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.languagesSpoken && site.languagesSpoken.length > 0 && (
+                                                                                            <Badge variant="outline" className="bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95">
+                                                                                                {language === 'es' ? 'Idiomas:' : 'Languages:'} {site.languagesSpoken.join(', ')}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            ) : (
+                                                                <span className="text-slate-400 text-[11px] italic">
+                                                                    {language === 'es' ? 'No se encontraron centros para el código ZIP: ' : 'No centers found for ZIP code: '} {clientZipCode || 'N/A'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Clothing Sizes Form (only for Clothing Donation - Gather) */}
+                                                {selectedSubTemplate === 'Clothing Donation – Gather' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider block mb-3">
+                                                            {language === 'es' ? 'Tallas del Cliente (Obligatorio)' : 'Client Sizes (Mandatory)'}
+                                                        </span>
+                                                        <div className="grid grid-cols-4 gap-2">
+                                                            <div className="flex flex-col gap-1">
+                                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">{language === 'es' ? 'Tops' : 'Tops'}</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={clothingSizes.tops}
+                                                                    onChange={(e) => setClothingSizes(prev => ({ ...prev, tops: e.target.value }))}
+                                                                    placeholder="e.g. M, L"
+                                                                    className="h-9 px-3 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-col gap-1">
+                                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">{language === 'es' ? 'Pantalones' : 'Bottoms'}</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={clothingSizes.bottoms}
+                                                                    onChange={(e) => setClothingSizes(prev => ({ ...prev, bottoms: e.target.value }))}
+                                                                    placeholder="e.g. 32, M"
+                                                                    className="h-9 px-3 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-col gap-1">
+                                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">{language === 'es' ? 'Abrigo/Vestido' : 'Outer/Dress'}</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={clothingSizes.outerwear}
+                                                                    onChange={(e) => setClothingSizes(prev => ({ ...prev, outerwear: e.target.value }))}
+                                                                    placeholder="e.g. L, 8"
+                                                                    className="h-9 px-3 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-col gap-1">
+                                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">{language === 'es' ? 'Zapatos' : 'Shoes'}</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={clothingSizes.shoes}
+                                                                    onChange={(e) => setClothingSizes(prev => ({ ...prev, shoes: e.target.value }))}
+                                                                    placeholder="e.g. 9.5"
+                                                                    className="h-9 px-3 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Scenario selection helper for Cleaning Donation - Obtain */}
+                                                {selectedSubTemplate === 'Cleaning Donation – Obtain' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider block mb-3">
+                                                            {language === 'es' ? 'Seleccionar Escenario de Obtención' : 'Select Obtain Scenario'}
+                                                        </span>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [AB]: [\s\S]*?\]/g, "").replace(/\[Escenario [AB]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario A: TCM obtiene en nombre del cliente. El cliente tiene limitaciones físicas/psiquiátricas y no puede trasladarse. TCM visitará el lugar, recibirá los artículos y los entregará.]"
+                                                                            : "[Scenario A: TCM obtains on client's behalf. Client has physical/psychiatric limitations and cannot go. TCM will visit site, receive items, and deliver.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario A") || patientInfo.context.includes("Escenario A")
+                                                                        ? "bg-indigo-650 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario A' : 'Scenario A'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM obtiene los artículos. El cliente tiene limitaciones.' 
+                                                                        : 'TCM obtains on client\'s behalf. Client has limitations.'}
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [AB]: [\s\S]*?\]/g, "").replace(/\[Escenario [AB]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario B: TCM asiste, el cliente obtiene. El cliente puede trasladarse. TCM revisará opciones, coordinará transporte y confirmará el proceso.]"
+                                                                            : "[Scenario B: TCM assists, client obtains. Client is able to go. TCM will review options, coordinate transport, and confirm process.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario B") || patientInfo.context.includes("Escenario B")
+                                                                        ? "bg-indigo-650 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario B' : 'Scenario B'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM asiste al cliente. El cliente acude al sitio.' 
+                                                                        : 'TCM assists, client obtains. Client goes to site.'}
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Scenario selection helper for Clothing Donation - Obtain */}
+                                                {selectedSubTemplate === 'Clothing Donation – Obtain' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider block mb-3">
+                                                            {language === 'es' ? 'Seleccionar Escenario de Obtención (Ropa)' : 'Select Obtain Scenario (Clothing)'}
+                                                        </span>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [AB]: [\s\S]*?\]/g, "").replace(/\[Escenario [AB]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario A: TCM obtiene las prendas en nombre del cliente. El TCM acude al sitio de donación y selecciona personalmente las prendas de vestir adecuadas para el cliente según sus tallas y preferencias.]"
+                                                                            : "[Scenario A: TCM obtains on client's behalf. TCM goes to the site and personally selects the garments appropriate for the client based on sizes and preferences.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario A") || patientInfo.context.includes("Escenario A")
+                                                                        ? "bg-indigo-650 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario A' : 'Scenario A'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM selecciona y obtiene las prendas en el lugar.' 
+                                                                        : 'TCM personally selects and obtains clothing at site.'}
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [AB]: [\s\S]*?\]/g, "").replace(/\[Escenario [AB]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario B: TCM asiste, el cliente obtiene. El TCM confirma los requisitos de entrada y los días de distribución de ropa, y coordina la visita del cliente para obtener sus prendas.]"
+                                                                            : "[Scenario B: TCM assists, client obtains. TCM reviews clothing program requirements and distribution days, and coordinates client's visit to obtain garments.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario B") || patientInfo.context.includes("Escenario B")
+                                                                        ? "bg-indigo-650 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario B' : 'Scenario B'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM asiste. El cliente acude al sitio de donación.' 
+                                                                        : 'TCM assists client. Client goes to donation site.'}
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+==================================
+
+
+=== EDIT 11: Add dietary restrictions and household size state and useEffect to Record.tsx. ===
+Type: single
+StartLine: 308, EndLine: 309
+TargetContent:
+    // Prepend sizes to context when they are filled in Clothing Donation - Gather
+----------------------------------
+ReplacementContent:
+    
+    // Food donation states
+    const [dietaryRestrictions, setDietaryRestrictions] = useState<string>("");
+    const [householdSize, setHouseholdSize] = useState<string>("");
+
+    // Prepend dietary restrictions and household size to context when they are filled in Food Donation - Gather
+    useEffect(() => {
+        if (selectedSubTemplate === 'Food Donation – Gather') {
+            const dietStr = dietaryRestrictions.trim() 
+                ? `[Dietary Restrictions: ${dietaryRestrictions.trim()}]`
+                : `[DIETARY RESTRICTIONS NOT DOCUMENTED — required before Obtain note]`;
+            const hhStr = householdSize.trim()
+                ? `[Household Size: ${householdSize.trim()} people fed]`
+                : `[Household Size: Not documented]`;
+            const headerStr = `${dietStr}\n${hhStr}`;
+                
+            setPatientInfo(prev => {
+                const clean = prev.context
+                    .replace(/\[Dietary Restrictions: [\s\S]*?\]/g, "")
+                    .replace(/\[DIETARY RESTRICTIONS NOT DOCUMENTED — required before Obtain note\]/g, "")
+                    .replace(/\[Household Size: [\s\S]*?\]/g, "")
+                    .trim();
+                return {
+                    ...prev,
+                    context: `${headerStr}\n\n${clean}`.trim()
+                };
+            });
+        }
+    }, [dietaryRestrictions, householdSize, selectedSubTemplate]);
+
+    // Prepend sizes to context when they are filled in Clothing Donation - Gather
+==================================
+
+
+=== EDIT 12: Update auto-population useEffect to support Food donation type and 30-day verification threshold. ===
+Type: single
+StartLine: 360, EndLine: 415
+TargetContent:
+    // Auto-population logic for Cleaning/Clothing Donation - Gather
+    useEffect(() => {
+        const isCleaning = selectedSubTemplate === 'Cleaning Donation – Gather';
+        const isClothing = selectedSubTemplate === 'Clothing Donation – Gather';
+        
+        if ((isCleaning || isClothing) && selectedPatient) {
+            const resourceType = isCleaning ? 'Cleaning' : 'Clothing';
+            // Extract ZIP code
+            const zipMatch = selectedPatient.address?.match(/\b\d{5}\b/);
+            const zip = zipMatch ? zipMatch[0] : "";
+            setClientZipCode(zip);
+            
+            if (zip) {
+                const { sites, isExpanded } = lookupDonationSites(zip, resourceType);
+                setMatchedSites(sites);
+                setSearchExpanded(isExpanded);
+                
+                // Format the resource text for insertion into context
+                const resourcesHeader = language === 'es' ? "Recursos locales identificados:\n" : "Identified local resources:\n";
+                const resourceLines = sites.map(s => {
+                    const isOld = (dateStr: string) => {
+                        const verifiedDate = new Date(dateStr);
+                        const currentDate = new Date();
+                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return diffDays > 90;
+                    };
+                    const verificationFlag = isOld(s.lastVerifiedDate) 
+                        ? (language === 'es' ? " (¡REQUIERE VERIFICACIÓN TELEFÓNICA!)" : " (NEEDS PHONE VERIFICATION!)")
+                        : "";
+                    return `• ${s.organization} – ${s.address}, ${s.city}, FL ${s.zip}. Tel: ${s.phone}. (Verificado: ${s.lastVerifiedDate}${verificationFlag})`;
+                }).join('\n');
+                
+                const fullResourceText = `\n\n${resourcesHeader}${resourceLines}`;
+                
+                // Set context if it doesn't already contain the matching text
+                setPatientInfo(prev => {
+                    if (prev.context.includes(sites[0]?.organization || "---")) {
+                        return prev;
+                    }
+                    const cleanContext = prev.context.replace(/\n\n(Identified local resources:|Recursos locales identificados:)[\s\S]*/g, "");
+                    return {
+                        ...prev,
+                        context: cleanContext ? `${cleanContext}${fullResourceText}` : resourceLines
+                    };
+                });
+            } else {
+                setMatchedSites([]);
+                setSearchExpanded(false);
+            }
+        } else if (selectedSubTemplate !== 'Cleaning Donation – Gather' && selectedSubTemplate !== 'Clothing Donation – Gather') {
+            setMatchedSites([]);
+            setSearchExpanded(false);
+            setClientZipCode("");
+        }
+    }, [selectedSubTemplate, selectedPatient, language]);
+----------------------------------
+ReplacementContent:
+    // Auto-population logic for Cleaning/Clothing/Food Donation - Gather
+    useEffect(() => {
+        const isCleaning = selectedSubTemplate === 'Cleaning Donation – Gather';
+        const isClothing = selectedSubTemplate === 'Clothing Donation – Gather';
+        const isFood = selectedSubTemplate === 'Food Donation – Gather';
+        
+        if ((isCleaning || isClothing || isFood) && selectedPatient) {
+            let resourceType: 'Cleaning' | 'Clothing' | 'Food' = 'Cleaning';
+            if (isClothing) resourceType = 'Clothing';
+            if (isFood) resourceType = 'Food';
+            
+            // Extract ZIP code
+            const zipMatch = selectedPatient.address?.match(/\b\d{5}\b/);
+            const zip = zipMatch ? zipMatch[0] : "";
+            setClientZipCode(zip);
+            
+            if (zip) {
+                const { sites, isExpanded } = lookupDonationSites(zip, resourceType);
+                setMatchedSites(sites);
+                setSearchExpanded(isExpanded);
+                
+                // Format the resource text for insertion into context
+                const resourcesHeader = language === 'es' ? "Recursos locales identificados:\n" : "Identified local resources:\n";
+                const resourceLines = sites.map(s => {
+                    const isOld = (dateStr: string) => {
+                        const verifiedDate = new Date(dateStr);
+                        const currentDate = new Date();
+                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        const threshold = isFood ? 30 : 90;
+                        return diffDays > threshold;
+                    };
+                    const verificationFlag = isOld(s.lastVerifiedDate) 
+                        ? (language === 'es' ? " (¡REQUIERE VERIFICACIÓN TELEFÓNICA!)" : " (NEEDS PHONE VERIFICATION!)")
+                        : "";
+                    return `• ${s.organization} – ${s.address}, ${s.city}, FL ${s.zip}. Tel: ${s.phone}. (Verificado: ${s.lastVerifiedDate}${verificationFlag})`;
+                }).join('\n');
+                
+                const fullResourceText = `\n\n${resourcesHeader}${resourceLines}`;
+                
+                // Set context if it doesn't already contain the matching text
+                setPatientInfo(prev => {
+                    if (prev.context.includes(sites[0]?.organization || "---")) {
+                        return prev;
+                    }
+                    const cleanContext = prev.context.replace(/\n\n(Identified local resources:|Recursos locales identificados:)[\s\S]*/g, "");
+                    return {
+                        ...prev,
+                        context: cleanContext ? `${cleanContext}${fullResourceText}` : resourceLines
+                    };
+                });
+            } else {
+                setMatchedSites([]);
+                setSearchExpanded(false);
+            }
+        } else if (selectedSubTemplate !== 'Cleaning Donation – Gather' && selectedSubTemplate !== 'Clothing Donation – Gather' && selectedSubTemplate !== 'Food Donation – Gather') {
+            setMatchedSites([]);
+            setSearchExpanded(false);
+            setClientZipCode("");
+        }
+    }, [selectedSubTemplate, selectedPatient, language]);
+==================================
+
+
+=== EDIT 13: Add generic matched food sites details, food assessment forms, and scenario helpers for food donation in Record.tsx. ===
+Type: single
+StartLine: 2262, EndLine: 2358
+TargetContent:
+                                                {/* Matched Sites directory auto-population info */}
+                                                {(selectedSubTemplate === 'Cleaning Donation – Gather' || selectedSubTemplate === 'Clothing Donation – Gather') && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider">
+                                                                {language === 'es' ? 'Sitios de Donación Asignados' : 'Assigned Donation Sites'}
+                                                            </span>
+                                                            {searchExpanded && (
+                                                                <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200/40 dark:border-amber-900/40 text-[9px] font-black uppercase px-2 py-0">
+                                                                    {language === 'es' ? 'Búsqueda Expandida' : 'Expanded Search'}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            {matchedSites.length > 0 ? (
+                                                                matchedSites.map((site, index) => {
+                                                                    const isOld = (dateStr: string) => {
+                                                                        const verifiedDate = new Date(dateStr);
+                                                                        const currentDate = new Date();
+                                                                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                                                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                                        return diffDays > 90;
+                                                                    };
+                                                                    const needsVerification = isOld(site.lastVerifiedDate);
+                                                                    return (
+                                                                        <div key={index} className={cn(
+                                                                            "flex flex-col gap-1 p-3 rounded-2xl border transition-all text-[12px] leading-relaxed",
+                                                                            needsVerification
+                                                                                ? "bg-red-50/30 dark:bg-red-950/10 border-red-200/40 dark:border-red-900/30 text-red-900 dark:text-red-300"
+                                                                                : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                                                                        )}>
+                                                                            <div className="flex items-center justify-between font-bold">
+                                                                                <span className="text-[13px] tracking-tight">{site.organization}</span>
+                                                                                {needsVerification && (
+                                                                                    <Badge className="bg-red-500 hover:bg-red-600 text-white font-black text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border-none scale-90">
+                                                                                        {language === 'es' ? 'Llamar' : 'Call'}
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                            <span className="text-[11px] opacity-80">{site.address}, {site.city}, FL {site.zip}</span>
+                                                                            <div className="flex items-center justify-between text-[10px] mt-1 opacity-70 border-b border-dashed border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5">
+                                                                                <span>{language === 'es' ? 'Tel:' : 'Phone:'} {site.phone}</span>
+                                                                                <span>{language === 'es' ? 'Verificado:' : 'Verified:'} {site.lastVerifiedDate}</span>
+                                                                            </div>
+                                                                            
+                                                                            {/* Clothing details */}
+                                                                            {selectedSubTemplate === 'Clothing Donation – Gather' && (
+                                                                                <div className="flex flex-col gap-1 text-[11px] opacity-95">
+                                                                                    {site.sizesInventoryNotes && (
+                                                                                        <div>
+                                                                                            <span className="font-bold text-indigo-700 dark:text-indigo-400">{language === 'es' ? 'Inventario/Notas:' : 'Inventory/Notes:'} </span>
+                                                                                            <span className="text-slate-600 dark:text-slate-350">{site.sizesInventoryNotes}</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                                                        {site.walkInAccepted !== undefined && (
+                                                                                            <Badge variant="outline" className={cn(
+                                                                                                "text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95",
+                                                                                                site.walkInAccepted 
+                                                                                                    ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
+                                                                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400"
+                                                                                            )}>
+                                                                                                {language === 'es' 
+                                                                                                    ? `Walk-in: ${site.walkInAccepted ? 'Sí' : 'No'}`
+                                                                                                    : `Walk-in: ${site.walkInAccepted ? 'Yes' : 'No'}`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.appointmentRequired !== undefined && (
+                                                                                            <Badge variant="outline" className={cn(
+                                                                                                "text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95",
+                                                                                                site.appointmentRequired 
+                                                                                                    ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400"
+                                                                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400"
+                                                                                            )}>
+                                                                                                {language === 'es' 
+                                                                                                    ? `Cita: ${site.appointmentRequired ? 'Sí' : 'No'}`
+                                                                                                    : `Appointment: ${site.appointmentRequired ? 'Yes' : 'No'}`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.languagesSpoken && site.languagesSpoken.length > 0 && (
+                                                                                            <Badge variant="outline" className="bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95">
+                                                                                                {language === 'es' ? 'Idiomas:' : 'Languages:'} {site.languagesSpoken.join(', ')}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            ) : (
+                                                                <span className="text-slate-400 text-[11px] italic">
+                                                                    {language === 'es' ? 'No se encontraron centros para el código ZIP: ' : 'No centers found for ZIP code: '} {clientZipCode || 'N/A'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+----------------------------------
+ReplacementContent:
+                                                {/* Matched Sites directory auto-population info */}
+                                                {(selectedSubTemplate === 'Cleaning Donation – Gather' || selectedSubTemplate === 'Clothing Donation – Gather' || selectedSubTemplate === 'Food Donation – Gather') && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider">
+                                                                {language === 'es' ? 'Sitios de Donación Asignados' : 'Assigned Donation Sites'}
+                                                            </span>
+                                                            {searchExpanded && (
+                                                                <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200/40 dark:border-amber-900/40 text-[9px] font-black uppercase px-2 py-0">
+                                                                    {language === 'es' ? 'Búsqueda Expandida' : 'Expanded Search'}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-2">
+                                                            {matchedSites.length > 0 ? (
+                                                                matchedSites.map((site, index) => {
+                                                                    const isOld = (dateStr: string) => {
+                                                                        const verifiedDate = new Date(dateStr);
+                                                                        const currentDate = new Date();
+                                                                        const diffTime = Math.abs(currentDate.getTime() - verifiedDate.getTime());
+                                                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                                        const threshold = selectedSubTemplate === 'Food Donation – Gather' ? 30 : 90;
+                                                                        return diffDays > threshold;
+                                                                    };
+                                                                    const needsVerification = isOld(site.lastVerifiedDate);
+                                                                    return (
+                                                                        <div key={index} className={cn(
+                                                                            "flex flex-col gap-1 p-3 rounded-2xl border transition-all text-[12px] leading-relaxed",
+                                                                            needsVerification
+                                                                                ? "bg-red-50/30 dark:bg-red-950/10 border-red-200/40 dark:border-red-900/30 text-red-900 dark:text-red-300"
+                                                                                : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                                                                        )}>
+                                                                            <div className="flex items-center justify-between font-bold">
+                                                                                <span className="text-[13px] tracking-tight">{site.organization}</span>
+                                                                                {needsVerification && (
+                                                                                    <Badge className="bg-red-500 hover:bg-red-600 text-white font-black text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider border-none scale-90">
+                                                                                        {language === 'es' ? 'Llamar' : 'Call'}
+                                                                                    </Badge>
+                                                                                )}
+                                                                            </div>
+                                                                            <span className="text-[11px] opacity-80">{site.address}, {site.city}, FL {site.zip}</span>
+                                                                            <div className="flex items-center justify-between text-[10px] mt-1 opacity-70 border-b border-dashed border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5">
+                                                                                <span>{language === 'es' ? 'Tel:' : 'Phone:'} {site.phone}</span>
+                                                                                <span>{language === 'es' ? 'Verificado:' : 'Verified:'} {site.lastVerifiedDate}</span>
+                                                                            </div>
+                                                                            
+                                                                            {/* Clothing details */}
+                                                                            {selectedSubTemplate === 'Clothing Donation – Gather' && (
+                                                                                <div className="flex flex-col gap-1 text-[11px] opacity-95">
+                                                                                    {site.sizesInventoryNotes && (
+                                                                                        <div>
+                                                                                            <span className="font-bold text-indigo-700 dark:text-indigo-400">{language === 'es' ? 'Inventario/Notas:' : 'Inventory/Notes:'} </span>
+                                                                                            <span className="text-slate-600 dark:text-slate-350">{site.sizesInventoryNotes}</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                                                        {site.walkInAccepted !== undefined && (
+                                                                                            <Badge variant="outline" className={cn(
+                                                                                                "text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95",
+                                                                                                site.walkInAccepted 
+                                                                                                    ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
+                                                                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400"
+                                                                                            )}>
+                                                                                                {language === 'es' 
+                                                                                                    ? `Walk-in: ${site.walkInAccepted ? 'Sí' : 'No'}`
+                                                                                                    : `Walk-in: ${site.walkInAccepted ? 'Yes' : 'No'}`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.appointmentRequired !== undefined && (
+                                                                                            <Badge variant="outline" className={cn(
+                                                                                                "text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95",
+                                                                                                site.appointmentRequired 
+                                                                                                    ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400"
+                                                                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400"
+                                                                                            )}>
+                                                                                                {language === 'es' 
+                                                                                                    ? `Cita: ${site.appointmentRequired ? 'Sí' : 'No'}`
+                                                                                                    : `Appointment: ${site.appointmentRequired ? 'Yes' : 'No'}`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.languagesSpoken && site.languagesSpoken.length > 0 && (
+                                                                                            <Badge variant="outline" className="bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 text-[8px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95">
+                                                                                                {language === 'es' ? 'Idiomas:' : 'Languages:'} {site.languagesSpoken.join(', ')}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+
+                                                                            {/* Food details */}
+                                                                            {selectedSubTemplate === 'Food Donation – Gather' && (
+                                                                                <div className="flex flex-col gap-1 text-[11px] opacity-95">
+                                                                                    <div className="flex flex-wrap gap-2 mt-1">
+                                                                                        {site.walkUpOrDriveThrough && (
+                                                                                            <Badge variant="outline" className="bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95">
+                                                                                                {language === 'es' ? 'Modalidad:' : 'Type:'} {site.walkUpOrDriveThrough}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.proxyPickupAllowed !== undefined && (
+                                                                                            <Badge variant="outline" className={cn(
+                                                                                                "text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95",
+                                                                                                site.proxyPickupAllowed 
+                                                                                                    ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400"
+                                                                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400"
+                                                                                            )}>
+                                                                                                {language === 'es' 
+                                                                                                    ? `Delegado: ${site.proxyPickupAllowed ? 'Sí' : 'No'}`
+                                                                                                    : `Proxy: ${site.proxyPickupAllowed ? 'Yes' : 'No'}`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.perishablesIncluded !== undefined && (
+                                                                                            <Badge variant="outline" className={cn(
+                                                                                                "text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95",
+                                                                                                site.perishablesIncluded 
+                                                                                                    ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400"
+                                                                                                    : "bg-slate-50 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400"
+                                                                                            )}>
+                                                                                                {language === 'es' 
+                                                                                                    ? `Perecederos: ${site.perishablesIncluded ? 'Sí' : 'No'}`
+                                                                                                    : `Perishables: ${site.perishablesIncluded ? 'Yes' : 'No'}`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {site.languagesSpoken && site.languagesSpoken.length > 0 && (
+                                                                                            <Badge variant="outline" className="bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0 border-none scale-95">
+                                                                                                {language === 'es' ? 'Idiomas:' : 'Languages:'} {site.languagesSpoken.join(', ')}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })
+                                                            ) : (
+                                                                <span className="text-slate-400 text-[11px] italic">
+                                                                    {language === 'es' ? 'No se encontraron centros para el código ZIP: ' : 'No centers found for ZIP code: '} {clientZipCode || 'N/A'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+==================================
+
+
+=== EDIT 14: Add Food donation assessment form and scenario selectors to Record.tsx. ===
+Type: single
+StartLine: 2575, EndLine: 2578
+TargetContent:
+                                                )}
+                                            </div>
+                                        )}
+----------------------------------
+ReplacementContent:
+                                                )}
+
+                                                {/* Food Donation Input Form (only for Food Donation - Gather) */}
+                                                {selectedSubTemplate === 'Food Donation – Gather' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider block mb-3">
+                                                            {language === 'es' ? 'Evaluación de Comida (Obligatorio)' : 'Food Assessment (Mandatory)'}
+                                                        </span>
+                                                        <div className="grid grid-cols-3 gap-3">
+                                                            <div className="flex flex-col gap-1 col-span-2">
+                                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+                                                                    {language === 'es' ? 'Restricciones Dietéticas' : 'Dietary Restrictions'}
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={dietaryRestrictions}
+                                                                    onChange={(e) => setDietaryRestrictions(e.target.value)}
+                                                                    placeholder={language === 'es' ? "Ej: diabético, bajo en sodio, o 'ninguna'" : "e.g. diabetic, low-sodium, or 'none'"}
+                                                                    className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-col gap-1">
+                                                                <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+                                                                    {language === 'es' ? 'Núcleo Familiar' : 'Household Size'}
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={householdSize}
+                                                                    onChange={(e) => setHouseholdSize(e.target.value)}
+                                                                    placeholder="e.g. 1, 3"
+                                                                    className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Scenario selection helper for Food Donation - Obtain */}
+                                                {selectedSubTemplate === 'Food Donation – Obtain' && selectedPatient && (
+                                                    <div className="mt-4 p-4 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/30 rounded-3xl animate-in fade-in duration-300">
+                                                        <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider block mb-3">
+                                                            {language === 'es' ? 'Seleccionar Escenario de Obtención (Comida)' : 'Select Obtain Scenario (Food)'}
+                                                        </span>
+                                                        <div className="grid grid-cols-3 gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [ABC]: [\s\S]*?\]/g, "").replace(/\[Escenario [ABC]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario A: Acompañamiento. El TCM se reúne con el cliente en el sitio de distribución, explica el proceso para reducir ansiedad, asiste con el formulario de registro y se entrega la comida.]"
+                                                                            : "[Scenario A: Accompaniment. TCM meets the client at the distribution site, explains the process to reduce anxiety, assists with registration form, and client receives the food.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario A") || patientInfo.context.includes("Escenario A")
+                                                                        ? "bg-indigo-650 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario A' : 'Scenario A'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM acompaña al cliente al lugar.' 
+                                                                        : 'TCM accompanies client at site.'}
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [ABC]: [\s\S]*?\]/g, "").replace(/\[Escenario [ABC]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario B: Cliente asiste solo. El TCM verifica requisitos, horarios y documentación, repasa la información con el cliente y coordina transporte si es necesario. Cliente acude solo.]"
+                                                                            : "[Scenario B: Client attends independently. TCM reviews requirements, schedules, and documentation with the client, and coordinates transportation if needed. Client goes alone.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario B") || patientInfo.context.includes("Escenario B")
+                                                                        ? "bg-indigo-650 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario B' : 'Scenario B'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM asiste. El cliente acude de forma independiente.' 
+                                                                        : 'TCM assists. Client attends independently.'}
+                                                                </span>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setPatientInfo(prev => {
+                                                                        const clean = prev.context.replace(/\[Scenario [ABC]: [\s\S]*?\]/g, "").replace(/\[Escenario [ABC]: [\s\S]*?\]/g, "").trim();
+                                                                        const scenarioText = language === 'es'
+                                                                            ? "[Escenario C: Proxy pickup. El programa autorizó la recogida por delegado. El TCM acude con la carta de autorización del cliente y el registro previo en nombre del cliente para recoger la comida.]"
+                                                                            : "[Scenario C: Proxy pickup. The program authorized third-party pickup. TCM goes with authorization letter and prior registration in client's name to collect food.]";
+                                                                        return { ...prev, context: `${scenarioText}\n\n${clean}`.trim() };
+                                                                    });
+                                                                }}
+                                                                className={cn(
+                                                                    "flex flex-col text-left p-3.5 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5",
+                                                                    patientInfo.context.includes("Scenario C") || patientInfo.context.includes("Escenario C")
+                                                                        ? "bg-indigo-650 border-indigo-650 text-white shadow-md shadow-indigo-500/20"
+                                                                        : "bg-white dark:bg-slate-900 border-slate-150 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-200"
+                                                                )}
+                                                            >
+                                                                <span className="text-[12px] font-bold">{language === 'es' ? 'Escenario C' : 'Scenario C'}</span>
+                                                                <span className="text-[10px] mt-1 opacity-80 leading-normal">
+                                                                    {language === 'es' 
+                                                                        ? 'TCM recoge la comida con autorización.' 
+                                                                        : 'TCM collects food with authorization.'}
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+==================================
+
+
+=== EDIT 15: Add new cleaning, clothing, and food donation templates to the isTcm check in Record.tsx to ensure TCM parameters (like service_date, units, times) are sent to n8n correctly. ===
+Type: single
+StartLine: 1203, EndLine: 1203
+TargetContent:
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_mhv_provide_donation_note', 'tcm_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note'].includes(selectedTemplateId);
+----------------------------------
+ReplacementContent:
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_mhv_provide_donation_note', 'tcm_donation_obtain_note', 'tcm_cleaning_donation_gather_note', 'tcm_cleaning_donation_obtain_note', 'tcm_clothing_donation_gather_note', 'tcm_clothing_donation_obtain_note', 'tcm_food_donation_gather_note', 'tcm_food_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note'].includes(selectedTemplateId);
+==================================
+
+
+=== EDIT 16: Add Food Donation – Gather and Food Donation – Obtain to the list of sub-templates under Basic Needs & Supplies category. ===
+Type: single
+StartLine: 105, EndLine: 116
+TargetContent:
+    {
+        category: "Basic Needs & Supplies",
+        items: [
+            'Cleaning Donation – Gather',
+            'Cleaning Donation – Obtain',
+            'Clothing Donation – Gather',
+            'Clothing Donation – Obtain',
+            'TCM MHV + Provide Donation',
+            'TCM Food Stamps Recertification'
+        ]
+    },
+----------------------------------
+ReplacementContent:
+    {
+        category: "Basic Needs & Supplies",
+        items: [
+            'Cleaning Donation – Gather',
+            'Cleaning Donation – Obtain',
+            'Clothing Donation – Gather',
+            'Clothing Donation – Obtain',
+            'Food Donation – Gather',
+            'Food Donation – Obtain',
+            'TCM MHV + Provide Donation',
+            'TCM Food Stamps Recertification'
+        ]
+    },
+==================================
+
+
+=== EDIT 17: Map Food Donation sub-templates to their corresponding template IDs. ===
+Type: single
+StartLine: 584, EndLine: 588
+TargetContent:
+        } else if (selectedSubTemplate === 'Clothing Donation – Gather') {
+            setSelectedTemplateId('tcm_clothing_donation_gather_note');
+        } else if (selectedSubTemplate === 'Clothing Donation – Obtain') {
+            setSelectedTemplateId('tcm_clothing_donation_obtain_note');
+        } else if (selectedSubTemplate === 'TCM Vaccination Assistance') {
+----------------------------------
+ReplacementContent:
+        } else if (selectedSubTemplate === 'Clothing Donation – Gather') {
+            setSelectedTemplateId('tcm_clothing_donation_gather_note');
+        } else if (selectedSubTemplate === 'Clothing Donation – Obtain') {
+            setSelectedTemplateId('tcm_clothing_donation_obtain_note');
+        } else if (selectedSubTemplate === 'Food Donation – Gather') {
+            setSelectedTemplateId('tcm_food_donation_gather_note');
+        } else if (selectedSubTemplate === 'Food Donation – Obtain') {
+            setSelectedTemplateId('tcm_food_donation_obtain_note');
+        } else if (selectedSubTemplate === 'TCM Vaccination Assistance') {
+==================================
+
+
+=== EDIT 18: Remove TCM MHV + Provide Donation from category items list in Record.tsx. ===
+Type: single
+StartLine: 105, EndLine: 117
+TargetContent:
+    {
+        category: "Basic Needs & Supplies",
+        items: [
+            'Cleaning Donation – Gather',
+            'Cleaning Donation – Obtain',
+            'Clothing Donation – Gather',
+            'Clothing Donation – Obtain',
+            'Food Donation – Gather',
+            'Food Donation – Obtain',
+            'TCM MHV + Provide Donation',
+            'TCM Food Stamps Recertification'
+        ]
+    },
+----------------------------------
+ReplacementContent:
+    {
+        category: "Basic Needs & Supplies",
+        items: [
+            'Cleaning Donation – Gather',
+            'Cleaning Donation – Obtain',
+            'Clothing Donation – Gather',
+            'Clothing Donation – Obtain',
+            'Food Donation – Gather',
+            'Food Donation – Obtain',
+            'TCM Food Stamps Recertification'
+        ]
+    },
+==================================
+
+
+=== EDIT 19: Remove TCM MHV + Provide Donation selectedSubTemplate mapping. ===
+Type: single
+StartLine: 573, EndLine: 579
+TargetContent:
+        } else if (selectedSubTemplate === 'TCM Submit DPP to PCP') {
+            setSelectedTemplateId('tcm_dpp_submit_pcp_note');
+        } else if (selectedSubTemplate === 'TCM MHV + Provide Donation') {
+            setSelectedTemplateId('tcm_mhv_provide_donation_note');
+        } else if (selectedSubTemplate === 'Obtain Supply Donation') {
+----------------------------------
+ReplacementContent:
+        } else if (selectedSubTemplate === 'TCM Submit DPP to PCP') {
+            setSelectedTemplateId('tcm_dpp_submit_pcp_note');
+        } else if (selectedSubTemplate === 'Obtain Supply Donation') {
+==================================
+
+
+=== EDIT 20: Remove tcm_mhv_provide_donation_note from isTcm array in Record.tsx. ===
+Type: single
+StartLine: 1206, EndLine: 1206
+TargetContent:
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_mhv_provide_donation_note', 'tcm_donation_obtain_note', 'tcm_cleaning_donation_gather_note', 'tcm_cleaning_donation_obtain_note', 'tcm_clothing_donation_gather_note', 'tcm_clothing_donation_obtain_note', 'tcm_food_donation_gather_note', 'tcm_food_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note'].includes(selectedTemplateId);
+----------------------------------
+ReplacementContent:
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_donation_obtain_note', 'tcm_cleaning_donation_gather_note', 'tcm_cleaning_donation_obtain_note', 'tcm_clothing_donation_gather_note', 'tcm_clothing_donation_obtain_note', 'tcm_food_donation_gather_note', 'tcm_food_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note'].includes(selectedTemplateId);
+==================================
+
+
+=== EDIT 21: Add Routine Monthly Visits category with Monthly Home Visit item to Record.tsx. ===
+Type: single
+StartLine: 149, EndLine: 156
+TargetContent:
+    {
+        category: "Other",
+        items: [
+            'Custom Template',
+            'Other'
+        ]
+    }
+];
+----------------------------------
+ReplacementContent:
+    {
+        category: "Routine Monthly Visits",
+        items: [
+            'Monthly Home Visit'
+        ]
+    },
+    {
+        category: "Other",
+        items: [
+            'Custom Template',
+            'Other'
+        ]
+    }
+];
+==================================
+
+
+=== EDIT 22: Add Monthly Home Visit mapping to selectedSubTemplate useEffect in Record.tsx. ===
+Type: single
+StartLine: 603, EndLine: 608
+TargetContent:
+        } else if (selectedSubTemplate === 'TCM Food Stamps Recertification') {
+            setSelectedTemplateId('tcm_snap_recertification_note');
+        } else if (selectedSubTemplate) {
+----------------------------------
+ReplacementContent:
+        } else if (selectedSubTemplate === 'TCM Food Stamps Recertification') {
+            setSelectedTemplateId('tcm_snap_recertification_note');
+        } else if (selectedSubTemplate === 'Monthly Home Visit') {
+            setSelectedTemplateId('tcm_mhv_note');
+        } else if (selectedSubTemplate) {
+==================================
+
+
+=== EDIT 23: Add tcm_mhv_note to isTcm templates list in Record.tsx. ===
+Type: single
+StartLine: 1214, EndLine: 1214
+TargetContent:
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_donation_obtain_note', 'tcm_cleaning_donation_gather_note', 'tcm_cleaning_donation_obtain_note', 'tcm_clothing_donation_gather_note', 'tcm_clothing_donation_obtain_note', 'tcm_food_donation_gather_note', 'tcm_food_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note'].includes(selectedTemplateId);
+----------------------------------
+ReplacementContent:
+        const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_donation_obtain_note', 'tcm_cleaning_donation_gather_note', 'tcm_cleaning_donation_obtain_note', 'tcm_clothing_donation_gather_note', 'tcm_clothing_donation_obtain_note', 'tcm_food_donation_gather_note', 'tcm_food_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note', 'tcm_mhv_note'].includes(selectedTemplateId);
+==================================
+
+
+=== EDIT 24: Declare state variables and sync hook for MHV modules in Record.tsx. ===
+Type: single
+StartLine: 317, EndLine: 325
+TargetContent:
+    // Food donation states
+    const [dietaryRestrictions, setDietaryRestrictions] = useState<string>("");
+    const [householdSize, setHouseholdSize] = useState<string>("");
+ 
+    // Prepend dietary restrictions and household size to context when they are filled in Food Donation - Gather
+    useEffect(() => {
+        if (selectedSubTemplate === 'Food Donation – Gather') {
+            const dietStr = dietaryRestrictions.trim() 
+                ? `[Dietary Restrictions: ${dietaryRestrictions.trim()}]`
+----------------------------------
+ReplacementContent:
+    // Food donation states
+    const [dietaryRestrictions, setDietaryRestrictions] = useState<string>("");
+    const [householdSize, setHouseholdSize] = useState<string>("");
+
+    // MHV states
+    const [mhvModuleA, setMhvModuleA] = useState(false);
+    const [mhvModuleADonationType, setMhvModuleADonationType] = useState<'food' | 'cleaning' | 'clothing'>('food');
+    const [mhvModuleASourceOrg, setMhvModuleASourceOrg] = useState('');
+    const [mhvModuleAItems, setMhvModuleAItems] = useState('');
+
+    const [mhvModuleB, setMhvModuleB] = useState(false);
+    const [mhvModuleBProvider, setMhvModuleBProvider] = useState('');
+    const [mhvModuleBRole, setMhvModuleBRole] = useState('');
+    const [mhvModuleBTransport, setMhvModuleBTransport] = useState(false);
+
+    const [mhvModuleC, setMhvModuleC] = useState(false);
+    const [mhvModuleCDoc, setMhvModuleCDoc] = useState('');
+
+    const [mhvModuleD, setMhvModuleD] = useState(false);
+    const [mhvModuleDForm, setMhvModuleDForm] = useState('');
+
+    const [mhvModuleE, setMhvModuleE] = useState(false);
+    const [mhvModuleENeed, setMhvModuleENeed] = useState('');
+
+    const computeMhvTitle = () => {
+        let title = "MHV";
+        const parts: string[] = [];
+        if (mhvModuleA) {
+            const typeStr = mhvModuleADonationType === 'food' ? 'Food' : mhvModuleADonationType === 'cleaning' ? 'Cleaning' : 'Clothing';
+            parts.push(`Provide ${typeStr} Donation`);
+        }
+        if (mhvModuleB) {
+            parts.push(`Medical Appointment`);
+        }
+        if (mhvModuleC) {
+            parts.push(`Correspondence Assistance`);
+        }
+        if (mhvModuleD) {
+            parts.push(`Forms Assistance`);
+        }
+        if (parts.length > 0) {
+            title += " + " + parts.join(" + ");
+        }
+        return title;
+    };
+
+    useEffect(() => {
+        if (selectedSubTemplate === 'Monthly Home Visit') {
+            const lines: string[] = [];
+            lines.push(`[Service Code: T1017]`);
+            lines.push(`[POS: 12 – Home]`);
+            
+            if (mhvModuleA) {
+                lines.push(`[Module A: Provide Donation]`);
+                lines.push(`[Donation Type: ${mhvModuleADonationType}]`);
+                lines.push(`[Source Organization: ${mhvModuleASourceOrg.trim() || '[SOURCE ORG MISSING]'}]`);
+                lines.push(`[Items Provided: ${mhvModuleAItems.trim() || '[ITEMS MISSING]'}]`);
+            }
+            if (mhvModuleB) {
+                lines.push(`[Module B: Appointment Coordination]`);
+                lines.push(`[Provider contacted: ${mhvModuleBProvider.trim() || '[PROVIDER MISSING]'}]`);
+                lines.push(`[Provider role/person: ${mhvModuleBRole.trim() || '[ROLE MISSING]'}]`);
+                lines.push(`[Transportation coordinated: ${mhvModuleBTransport ? 'Yes' : 'No'}]`);
+            }
+            if (mhvModuleC) {
+                lines.push(`[Module C: Correspondence Assistance]`);
+                lines.push(`[Correspondence document: ${mhvModuleCDoc.trim() || '[DOCUMENT MISSING]'}]`);
+            }
+            if (mhvModuleD) {
+                lines.push(`[Module D: Forms Assistance]`);
+                lines.push(`[Form completed: ${mhvModuleDForm.trim() || '[FORM MISSING]'}]`);
+            }
+            if (mhvModuleE) {
+                lines.push(`[Module E: Unmet Need Identified]`);
+                lines.push(`[Unmet need description: ${mhvModuleENeed.trim() || '[NEED MISSING]'}]`);
+            }
+
+            const headerStr = lines.join('\n');
+            setPatientInfo(prev => {
+                const clean = prev.context
+                    .replace(/\[Service Code: [\s\S]*?\]/g, "")
+                    .replace(/\[POS: [\s\S]*?\]/g, "")
+                    .replace(/\[Module A: [\s\S]*?\]/g, "")
+                    .replace(/\[Donation Type: [\s\S]*?\]/g, "")
+                    .replace(/\[Source Organization: [\s\S]*?\]/g, "")
+                    .replace(/\[Items Provided: [\s\S]*?\]/g, "")
+                    .replace(/\[Module B: [\s\S]*?\]/g, "")
+                    .replace(/\[Provider contacted: [\s\S]*?\]/g, "")
+                    .replace(/\[Provider role\/person: [\s\S]*?\]/g, "")
+                    .replace(/\[Transportation coordinated: [\s\S]*?\]/g, "")
+                    .replace(/\[Module C: [\s\S]*?\]/g, "")
+                    .replace(/\[Correspondence document: [\s\S]*?\]/g, "")
+                    .replace(/\[Module D: [\s\S]*?\]/g, "")
+                    .replace(/\[Form completed: [\s\S]*?\]/g, "")
+                    .replace(/\[Module E: [\s\S]*?\]/g, "")
+                    .replace(/\[Unmet need description: [\s\S]*?\]/g, "")
+                    .trim();
+                return {
+                    ...prev,
+                    context: `${headerStr}\n\n${clean}`.trim()
+                };
+            });
+        }
+    }, [
+        selectedSubTemplate,
+        mhvModuleA, mhvModuleADonationType, mhvModuleASourceOrg, mhvModuleAItems,
+        mhvModuleB, mhvModuleBProvider, mhvModuleBRole, mhvModuleBTransport,
+        mhvModuleC, mhvModuleCDoc,
+        mhvModuleD, mhvModuleDForm,
+        mhvModuleE, mhvModuleENeed
+    ]);
+
+    // Prepend dietary restrictions and household size to context when they are filled in Food Donation - Gather
+    useEffect(() => {
+        if (selectedSubTemplate === 'Food Donation – Gather') {
+            const dietStr = dietaryRestrictions.trim() 
+                ? `[Dietary Restrictions: ${dietaryRestrictions.trim()}]`
+==================================
+
+
+=== EDIT 25: Insert Monthly Home Visit modules panel JSX in Record.tsx. ===
+Type: single
+StartLine: 2813, EndLine: 2815
+TargetContent:
+                                                 )}
+                                             </div>
+                                         )}
+----------------------------------
+ReplacementContent:
+                                                 )}
+                                                 
+                                                 {/* Monthly Home Visit Modules Panel */}
+                                                 {selectedSubTemplate === 'Monthly Home Visit' && selectedPatient && (
+                                                     <div className="mt-4 p-5 bg-slate-50/50 dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-3xl animate-in fade-in duration-300 space-y-4">
+                                                         <span className="text-[11px] font-black uppercase text-indigo-800 dark:text-indigo-300 tracking-wider block mb-2">
+                                                             {language === 'es' ? 'Módulos Opcionales de la Visita (MHV)' : 'Optional Visit Modules (MHV)'}
+                                                         </span>
+                                                         
+                                                         {/* Module A */}
+                                                         <div className="p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl space-y-3">
+                                                             <div className="flex items-center justify-between">
+                                                                 <div className="flex items-center gap-2">
+                                                                     <input 
+                                                                         type="checkbox" 
+                                                                         id="mhvModuleA" 
+                                                                         checked={mhvModuleA} 
+                                                                         onChange={(e) => setMhvModuleA(e.target.checked)}
+                                                                         className="rounded text-indigo-650 focus:ring-indigo-500 size-4 cursor-pointer"
+                                                                     />
+                                                                     <label htmlFor="mhvModuleA" className="text-[12px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
+                                                                         {language === 'es' ? 'Módulo A — Proveer Donación' : 'Module A — Provide Donation'}
+                                                                     </label>
+                                                                 </div>
+                                                             </div>
+                                                             {mhvModuleA && (
+                                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 pl-6 animate-in slide-in-from-top-1 duration-200">
+                                                                     <div className="flex flex-col gap-1">
+                                                                         <label className="text-[9px] font-bold text-slate-400 uppercase">{language === 'es' ? 'Tipo de Donación' : 'Donation Type'}</label>
+                                                                         <select 
+                                                                             value={mhvModuleADonationType} 
+                                                                             onChange={(e) => setMhvModuleADonationType(e.target.value as any)}
+                                                                             className="h-9 px-2 rounded-xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200"
+                                                                         >
+                                                                             <option value="food">{language === 'es' ? 'Alimentos' : 'Food'}</option>
+                                                                             <option value="cleaning">{language === 'es' ? 'Limpieza' : 'Cleaning'}</option>
+                                                                             <option value="clothing">{language === 'es' ? 'Ropa' : 'Clothing'}</option>
+                                                                         </select>
+                                                                     </div>
+                                                                     <div className="flex flex-col gap-1 col-span-2">
+                                                                         <label className="text-[9px] font-bold text-slate-400 uppercase">{language === 'es' ? 'Organización de Origen' : 'Source Organization'}</label>
+                                                                         <input 
+                                                                             type="text" 
+                                                                             value={mhvModuleASourceOrg} 
+                                                                             onChange={(e) => setMhvModuleASourceOrg(e.target.value)}
+                                                                             placeholder="e.g. Share Your Heart, Gonzalez Pharmacy"
+                                                                             className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                                                                         />
+                                                                     </div>
+                                                                     <div className="flex flex-col gap-1 col-span-3">
+                                                                         <label className="text-[9px] font-bold text-slate-400 uppercase">{language === 'es' ? 'Artículos Entregados (Detalle)' : 'Items Provided (Detail)'}</label>
+                                                                         <input 
+                                                                             type="text" 
+                                                                             value={mhvModuleAItems} 
+                                                                             onChange={(e) => setMhvModuleAItems(e.target.value)}
+                                                                             placeholder="e.g. 1 bag of rice, canned goods, size L shirts"
+                                                                             className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                                                                         />
+                                                                     </div>
+                                                                 </div>
+                                                             )}
+                                                         </div>
+
+                                                         {/* Module B */}
+                                                         <div className="p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl space-y-3">
+                                                             <div className="flex items-center gap-2">
+                                                                 <input 
+                                                                     type="checkbox" 
+                                                                     id="mhvModuleB" 
+                                                                     checked={mhvModuleB} 
+                                                                     onChange={(e) => setMhvModuleB(e.target.checked)}
+                                                                     className="rounded text-indigo-650 focus:ring-indigo-500 size-4 cursor-pointer"
+                                                                 />
+                                                                 <label htmlFor="mhvModuleB" className="text-[12px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
+                                                                     {language === 'es' ? 'Módulo B — Coordinación de Citas Médicas' : 'Module B — Medical/Psych Appointment Coordination'}
+                                                                 </label>
+                                                             </div>
+                                                             {mhvModuleB && (
+                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 pl-6 animate-in slide-in-from-top-1 duration-200">
+                                                                     <div className="flex flex-col gap-1">
+                                                                         <label className="text-[9px] font-bold text-slate-400 uppercase">{language === 'es' ? 'Proveedor contactado' : 'Provider Contacted'}</label>
+                                                                         <input 
+                                                                             type="text" 
+                                                                             value={mhvModuleBProvider} 
+                                                                             onChange={(e) => setMhvModuleBProvider(e.target.value)}
+                                                                             placeholder="e.g. Dr. Ricardo Dominguez"
+                                                                             className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                                                                         />
+                                                                     </div>
+                                                                     <div className="flex flex-col gap-1">
+                                                                         <label className="text-[9px] font-bold text-slate-400 uppercase">{language === 'es' ? 'Persona/Rol en la Oficina' : 'Role/Person in Office'}</label>
+                                                                         <input 
+                                                                             type="text" 
+                                                                             value={mhvModuleBRole} 
+                                                                             onChange={(e) => setMhvModuleBRole(e.target.value)}
+                                                                             placeholder="e.g. Front desk, Scheduler, Nurse"
+                                                                             className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                                                                         />
+                                                                     </div>
+                                                                     <div className="flex items-center gap-2 col-span-2 pt-1">
+                                                                         <input 
+                                                                             type="checkbox" 
+                                                                             id="mhvModuleBTransport" 
+                                                                             checked={mhvModuleBTransport} 
+                                                                             onChange={(e) => setMhvModuleBTransport(e.target.checked)}
+                                                                             className="rounded text-indigo-650 focus:ring-indigo-500 size-4 cursor-pointer"
+                                                                         />
+                                                                         <label htmlFor="mhvModuleBTransport" className="text-[11px] font-bold text-slate-500 dark:text-slate-400 cursor-pointer">
+                                                                             {language === 'es' ? '¿Coordinó transporte (STS/NEMT)?' : 'Did you coordinate transportation (STS/NEMT)?'}
+                                                                         </label>
+                                                                     </div>
+                                                                 </div>
+                                                             )}
+                                                         </div>
+
+                                                         {/* Module C */}
+                                                         <div className="p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl space-y-3">
+                                                             <div className="flex items-center gap-2">
+                                                                 <input 
+                                                                     type="checkbox" 
+                                                                     id="mhvModuleC" 
+                                                                     checked={mhvModuleC} 
+                                                                     onChange={(e) => setMhvModuleC(e.target.checked)}
+                                                                     className="rounded text-indigo-650 focus:ring-indigo-500 size-4 cursor-pointer"
+                                                                 />
+                                                                 <label htmlFor="mhvModuleC" className="text-[12px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
+                                                                     {language === 'es' ? 'Módulo C — Asistencia de Correspondencia Oficial' : 'Module C — Correspondence Assistance'}
+                                                                 </label>
+                                                             </div>
+                                                             {mhvModuleC && (
+                                                                 <div className="flex flex-col gap-1 pt-2 pl-6 animate-in slide-in-from-top-1 duration-200">
+                                                                     <label className="text-[9px] font-bold text-slate-400 uppercase">{language === 'es' ? 'Documento / Notificación oficial' : 'Official Document / Notification'}</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         value={mhvModuleCDoc} 
+                                                                         onChange={(e) => setMhvModuleCDoc(e.target.value)}
+                                                                         placeholder="e.g. Medicaid renewal notice, Social Security letter"
+                                                                         className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                                                                     />
+                                                                 </div>
+                                                             )}
+                                                         </div>
+
+                                                         {/* Module D */}
+                                                         <div className="p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl space-y-3">
+                                                             <div className="flex items-center gap-2">
+                                                                 <input 
+                                                                     type="checkbox" 
+                                                                     id="mhvModuleD" 
+                                                                     checked={mhvModuleD} 
+                                                                     onChange={(e) => setMhvModuleD(e.target.checked)}
+                                                                     className="rounded text-indigo-650 focus:ring-indigo-500 size-4 cursor-pointer"
+                                                                 />
+                                                                 <label htmlFor="mhvModuleD" className="text-[12px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
+                                                                     {language === 'es' ? 'Módulo D — Llenado de Formularios y Solicitudes' : 'Module D — Forms & Applications Assistance'}
+                                                                 </label>
+                                                             </div>
+                                                             {mhvModuleD && (
+                                                                 <div className="flex flex-col gap-1 pt-2 pl-6 animate-in slide-in-from-top-1 duration-200">
+                                                                     <label className="text-[9px] font-bold text-slate-400 uppercase">{language === 'es' ? 'Nombre del Formulario Completado' : 'Completed Form Name'}</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         value={mhvModuleDForm} 
+                                                                         onChange={(e) => setMhvModuleDForm(e.target.value)}
+                                                                         placeholder="e.g. Lifeline enrollment form, SNAP Recertification"
+                                                                         className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                                                                     />
+                                                                 </div>
+                                                             )}
+                                                         </div>
+
+                                                         {/* Module E */}
+                                                         <div className="p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl space-y-3">
+                                                             <div className="flex items-center gap-2">
+                                                                 <input 
+                                                                     type="checkbox" 
+                                                                     id="mhvModuleE" 
+                                                                     checked={mhvModuleE} 
+                                                                     onChange={(e) => setMhvModuleE(e.target.checked)}
+                                                                     className="rounded text-indigo-650 focus:ring-indigo-500 size-4 cursor-pointer"
+                                                                 />
+                                                                 <label htmlFor="mhvModuleE" className="text-[12px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
+                                                                     {language === 'es' ? 'Módulo E — Nueva Necesidad Insatisfecha Identificada' : 'Module E — Unmet Need Identified'}
+                                                                 </label>
+                                                             </div>
+                                                             {mhvModuleE && (
+                                                                 <div className="flex flex-col gap-1 pt-2 pl-6 animate-in slide-in-from-top-1 duration-200">
+                                                                     <label className="text-[9px] font-bold text-slate-400 uppercase">{language === 'es' ? 'Descripción de la Necesidad y Plan de Seguimiento' : 'Need Description & Action Plan'}</label>
+                                                                     <input 
+                                                                         type="text" 
+                                                                         value={mhvModuleENeed} 
+                                                                         onChange={(e) => setMhvModuleENeed(e.target.value)}
+                                                                         placeholder="e.g. Client disclosed needing food stamps assistance. TCM will coordinate next week."
+                                                                         className="h-9 px-3 rounded-xl border border-slate-155 dark:border-slate-800 bg-white dark:bg-slate-900 text-[12px] font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                                                                     />
+                                                                 </div>
+                                                             )}
+                                                         </div>
+                                                     </div>
+                                                 )}
+                                             </div>
+                                         )}
+==================================
+

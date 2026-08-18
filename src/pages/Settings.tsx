@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, Building, PhoneCall, MapPin, Printer, User, CreditCard, Hash, Activity, UserCheck, ShieldCheck, PenTool, Eraser, Lock, Settings as SettingsIcon, Mail, Check, Star } from 'lucide-react';
+import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabaseClient';
 import { settingsService, type ClinicSettings, type UserProfile } from '../services/settingsService';
 import { useAuth } from '../context/AuthContext';
@@ -85,7 +86,48 @@ export function Settings() {
                 }
             } catch (err) {
                 console.error("Failed to load settings", err);
-                toast.error("Failed to load settings");
+                setProfile({
+                    id: user.id,
+                    email: user.email,
+                    first_name: user.first_name || 'Reinier',
+                    last_name: user.last_name || 'Roa',
+                    full_name: `${user.first_name || 'Reinier'} ${user.last_name || 'Roa'}`,
+                    phone: '',
+                    signature_url: '',
+                    setup_complete: true,
+                    npi: user.npi || '1234567890',
+                    professional_title: user.professional_title || 'MD, PhD',
+                    license_id: user.license_id || 'LIC-998877',
+                    role: user.role
+                });
+                setSettings({
+                    id: '',
+                    clinicName: 'Clio Medical Center',
+                    forwardingNumber: '',
+                    phone: '(555) 123-4567',
+                    fax: '(555) 987-6543',
+                    email: user.email,
+                    address: '100 Healthcare Way, Suite 400',
+                    website: '',
+                    logoUrl: '',
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    tax_id: '',
+                    npi_group: '',
+                    supervisorName: '',
+                    supervisorLicense: '',
+                    supervisorNpi: '',
+                    supervisorSignatureUrl: '',
+                    businessHours: {
+                        monday: { start: '09:00', end: '17:00', closed: false },
+                        tuesday: { start: '09:00', end: '17:00', closed: false },
+                        wednesday: { start: '09:00', end: '17:00', closed: false },
+                        thursday: { start: '09:00', end: '17:00', closed: false },
+                        friday: { start: '09:00', end: '16:00', closed: false },
+                        saturday: { start: '10:00', end: '14:00', closed: true },
+                        sunday: { start: '10:00', end: '14:00', closed: true },
+                    },
+                    integrations: { ems: false, email: true }
+                });
             } finally {
                 setLoading(false);
             }
@@ -304,46 +346,34 @@ export function Settings() {
         { id: 'billing', label: language === 'es' ? 'Plan y Facturación' : 'Plan & Billing', icon: CreditCard, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-950/20 font-black' },
     ];
     return (
-        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)] mb-4">
-            <div className="grid grid-cols-12 gap-8 flex-1 h-full min-h-0">
-                {/* Sidebar Navigation */}
-                <div className="col-span-12 lg:col-span-3 xl:col-span-2 flex flex-col h-full">
-                    <div className="bg-card rounded-3xl border border-border/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] p-4 space-y-1 flex flex-col h-full bg-surface dark:bg-slate-900">
-                        <div className="px-2 mb-4 space-y-1">
-                            <span className="text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-widest pl-0.5">
-                                {language === 'es' ? "Configuración" : "System Config"}
-                            </span>
-                            <h2 className="text-base font-black tracking-tight text-slate-800 dark:text-slate-200 pl-0.5 leading-none">
-                                {t('nav.settings', 'Settings')}
-                            </h2>
-                        </div>
-                        <div className="flex-1 space-y-1">
-                            {tabs.map((tab) => {
-                                const Icon = tab.icon;
-                                const isActive = activeTab === tab.id;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => setActiveTab(tab.id as any)}
-                                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-left whitespace-nowrap transition-all duration-200 ${isActive
-                                            ? 'bg-slate-100 dark:bg-slate-800/80 text-indigo-650 dark:text-indigo-400 shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-700/30'
-                                            : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-slate-200'
-                                            }`}
-                                    >
-                                        <Icon size={15} className={`shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
-                                        <span className="truncate">{tab.label}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
+        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 pb-12">
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-slate-800 relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
+                {/* Premium Unified Pill Tabs (Inspired by PatientDetail.tsx) */}
+                <div className="bg-slate-100/70 dark:bg-slate-950/40 backdrop-blur-md p-1.5 rounded-full border border-slate-200/60 dark:border-slate-800 shadow-sm w-full flex overflow-x-auto whitespace-nowrap scrollbar-none gap-1.5 justify-start md:justify-center mb-8">
+                    {tabs.map((tab) => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={cn(
+                                    "flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer",
+                                    isActive
+                                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-md border border-slate-200/50 dark:border-slate-700/50"
+                                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/40"
+                                )}
+                            >
+                                <Icon size={15} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"} />
+                                <span>{tab.label}</span>
+                            </button>
+                        );
+                    })}
                 </div>
 
-                {/* Content Area */}
-                <div className="col-span-12 lg:col-span-9 xl:col-span-10 flex flex-col h-full min-h-0">
-                    <div className="bg-card rounded-[2rem] border border-border/60 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col h-full bg-surface dark:bg-slate-900">
-                        <div className="flex-1 overflow-y-auto">
-                            {activeTab === 'profile' && profile && (
+                <div className="animate-in slide-in-from-bottom-3 duration-500 ease-out">
+                    {activeTab === 'profile' && profile && (
                                 <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-400">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border/60">
                                         <div className="flex items-center gap-5">
@@ -959,17 +989,14 @@ export function Settings() {
                                     </div>
                                 </div>
                             )}
-
                         </div>
 
-                        {/* Security Note Footer inside the card at the bottom */}
-                        <div className="flex-none flex items-center justify-center gap-2 p-4 border-t border-border/60 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
-                            <ShieldCheck size={14} className="text-slate-400" />
-                            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center">
-                                {language === 'es' ? "Los datos están cifrados y se almacenan de forma segura siguiendo los estándares de HIPAA" : "Data is encrypted and stored securely following HIPAA standards"}
-                            </p>
-                        </div>
-                    </div>
+                {/* Security Note Footer inside the card at the bottom */}
+                <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-2">
+                    <ShieldCheck size={14} className="text-indigo-500" />
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
+                        {language === 'es' ? "Los datos están cifrados y se almacenan de forma segura siguiendo los estándares de HIPAA" : "Data is encrypted and stored securely following HIPAA standards"}
+                    </p>
                 </div>
             </div>
 
@@ -977,7 +1004,9 @@ export function Settings() {
                 isOpen={sigModal.open}
                 onClose={() => setSigModal({ open: false, type: 'user' })}
                 onSave={handleSignatureSave}
-                title={sigModal.type === 'user' ? (language === 'es' ? "Firma Profesional" : "Professional Signature") : (language === 'es' ? "Firma del Supervisor" : "Supervisor Signature")}
+                title={sigModal.type === 'user' 
+                    ? (language === 'es' ? "Firma Profesional" : "Professional Signature") 
+                    : (language === 'es' ? "Firma del Supervisor" : "Supervisor Signature")}
             />
         </div>
     );

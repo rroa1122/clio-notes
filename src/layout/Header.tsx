@@ -62,14 +62,13 @@ export function Header() {
     return (
         <>
             <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-100 shadow-sm print:hidden">
-            <div className="h-16 flex items-center justify-between px-4 md:px-8 max-w-[1600px] mx-auto">
+            <div className="h-16 flex items-center justify-between px-4 md:px-8 lg:px-10 w-full">
                 {/* 1. Logo Area */}
                 <Link
                     to="/notes/new"
                     onClick={() => {
-                        if (pathname === '/notes/new') {
-                            window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
-                        }
+                        sessionStorage.removeItem('clio_encounter_draft');
+                        window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
                     }}
                     className="flex items-center gap-3 shrink-0 group cursor-pointer"
                 >
@@ -82,9 +81,9 @@ export function Header() {
                         >
                             <defs>
                                 <linearGradient id="header-g4" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="#00f2fe" />
-                                    <stop offset="50%" stopColor="#3b82f6" />
-                                    <stop offset="100%" stopColor="#6366f1" />
+                                    <stop offset="0%" stopColor="#4338ca" />
+                                    <stop offset="50%" stopColor="#6366f1" />
+                                    <stop offset="100%" stopColor="#818cf8" />
                                 </linearGradient>
                             </defs>
                             <style>{`
@@ -128,7 +127,8 @@ export function Header() {
                                 key={item.path}
                                 to={item.path}
                                 onClick={() => {
-                                    if (item.path === '/notes/new' && pathname === '/notes/new') {
+                                    if (item.path === '/notes/new') {
+                                        sessionStorage.removeItem('clio_encounter_draft');
                                         window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
                                     }
                                 }}
@@ -286,6 +286,7 @@ export function Header() {
                 <NavLink
                     to="/notes/new"
                     onClick={() => {
+                        sessionStorage.removeItem('clio_encounter_draft');
                         window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
                     }}
                     className={({ isActive }) => cn(

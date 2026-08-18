@@ -9,7 +9,13 @@ wf_mapping = {
     'edM28zeSNCBx6QFI': '/tmp/tcm_prompt.md',
     'GppDFTdj19n9o3Q2': '/tmp/prompt_assessment.txt',
     'RvtViS0iE8lV67ye': '/tmp/prompt_service_plan.txt',
-    'K3aJ8zeSNCBx6QFL': '/tmp/prompt_initial_home_visit.txt'
+    'K3aJ8zeSNCBx6QFL': '/tmp/prompt_initial_home_visit.txt',
+    'K3zH8zeSNCBx6QFL': '/tmp/prompt_case_assignment.txt',
+    'K3yH8zeSNCBx6QFL': '/tmp/prompt_monthly_home_visit.txt',
+    'K3rH8zeSNCBx6QFL': '/tmp/prompt_gather_pcp.txt',
+    'K3sH8zeSNCBx6QFL': '/tmp/prompt_gather_psy.txt',
+    'K3tH8zeSNCBx6QFL': '/tmp/prompt_pc_emergency_contact.txt',
+    'K3vH8zeSNCBx6QFL': '/tmp/prompt_adult_certification.txt'
 }
 
 def update_workflow(wf_id, prompt_path):

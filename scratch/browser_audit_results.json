@@ -1,0 +1,12 @@
+{
+  "screens": {},
+  "consoleLogs": [],
+  "pageErrors": [],
+  "timings": {
+    "recordLoadMs": 1211,
+    "historyLoadMs": 585,
+    "templatesLoadMs": 576,
+    "syncLoadMs": 579
+  },
+  "findings": []
+}

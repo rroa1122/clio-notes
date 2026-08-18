@@ -35,7 +35,7 @@ def unflat(serialized):
 
 conn = sqlite3.connect('/root/n8n/database.sqlite')
 cur = conn.cursor()
-cur.execute('SELECT data FROM execution_data WHERE executionId = 35550')
+cur.execute('SELECT data FROM execution_data WHERE executionId = 45523')
 row = cur.fetchone()
 if row:
     raw_data = json.loads(row[0])
@@ -44,16 +44,14 @@ if row:
         run_data = resolved.get('resultData', {}).get('runData', {})
         print("Nodes in runData:", list(run_data.keys()))
         
-        # Check "Respond to Webhook" node
-        webhook_node = run_data.get('Respond to Webhook', [])
-        if webhook_node:
-            print("\n=== Webhook Response Node Output ===")
-            print(json.dumps(webhook_node[0].get('data', {}).get('main', [[]])[0][0].get('json', {}), indent=2))
-        else:
-            model_node = run_data.get('Message a model', [])
-            if model_node:
-                print("\n=== Message a Model Node Output ===")
-                print(json.dumps(model_node[0].get('data', {}).get('main', [[]])[0][0].get('json', {}), indent=2))
+        js3_node = run_data.get('Code in JavaScript3', [])
+        if js3_node:
+            main_data = js3_node[0]['data'].get('main', [[]])[0]
+            if main_data and 'json' in main_data[0]:
+                js = main_data[0]['json']
+                print("medications_grid:", json.dumps(js.get('medications_grid', []), indent=2))
+                print("domain_mental_health_note:", js.get('domain_mental_health_note'))
+                print("domain_physical_health_note:", js.get('domain_physical_health_note'))
     except Exception as e:
         print("Failed to unflat and parse data:", e)
         import traceback

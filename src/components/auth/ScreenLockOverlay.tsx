@@ -59,6 +59,7 @@ export const ScreenLockOverlay: React.FC = () => {
             sessionStorage.removeItem('clio_screen_locked');
             setPin('');
             setError(false);
+            window.dispatchEvent(new CustomEvent('clio_screen_unlocked'));
         } else {
             setError(true);
             setShake(true);
@@ -100,12 +101,19 @@ export const ScreenLockOverlay: React.FC = () => {
                 {/* Hidden input to capture numeric keyboard */}
                 <input
                     ref={inputRef}
+                    id="screen_lock_pin_code"
+                    name="screen_lock_pin_code"
                     type="password"
                     pattern="[0-9]*"
                     inputMode="numeric"
                     maxLength={4}
                     value={pin}
                     onChange={handlePinChange}
+                    autoComplete="one-time-code"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    data-bwignore="true"
+                    data-form-type="other"
                     className="absolute opacity-0 pointer-events-none w-0 h-0"
                     autoFocus
                 />

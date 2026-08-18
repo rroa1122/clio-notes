@@ -1,0 +1,8 @@
+{
+  "step_index": 1143,
+  "source": "MODEL",
+  "type": "CODE_ACTION",
+  "status": "DONE",
+  "created_at": "2026-08-16T23:30:43Z",
+  "content": "Created At: 2026-08-16T16:30:43-07:00\nCompleted At: 2026-08-16T16:30:43-07:00\nThe following changes were made by the replace_file_content tool to: c:\\Users\\REINIER\\.gemini\\antigravity\\scratch\\clio-dashboard\\src\\components\\ui\\date-picker.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.\n[diff_block_start]\n@@ -85,7 +85,7 @@\n           <button\n             type=\"button\"\n             className={cn(\n-              \"flex h-full w-full items-center justify-between rounded-full border border-border/80 bg-card px-4 text-xs font-semibold transition-all hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer\",\n+              \"flex h-full w-full items-center justify-between px-3 text-xs font-medium transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer bg-transparent border-0 shadow-none\",\n               !selectedDate && \"text-muted-foreground\",\n               className\n             )}\n[diff_block_end]\n\nPlease note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown."
+}

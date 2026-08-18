@@ -1,6 +1,39 @@
 import type { Patient } from '../../notes-module/lib/storage';
 
 const N8N_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/pacienteinfo';
+const AMEXZONE_AI_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/amexzone-intake-ai';
+
+export async function processAmexzoneWithN8nAI(rawAmexzoneData: any, prev: any = {}): Promise<any> {
+    try {
+        const response = await fetch(AMEXZONE_AI_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'sanitize_amexzone_data', data: rawAmexzoneData }),
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            const payload = Array.isArray(result) ? result[0] : result;
+            const content = payload?.json || payload?.message?.content || payload;
+            if (content && typeof content === 'object') {
+                return {
+                    ...prev,
+                    ...content,
+                    tcm_social_needs: {
+                        ...(prev.tcm_social_needs || {}),
+                        ...(content.tcm_social_needs || {})
+                    }
+                };
+            }
+        }
+    } catch (err) {
+        console.warn('n8n AI intake endpoint unavailable, using local processor:', err);
+    }
+
+    // Fail-safe fallback to local processor
+    const { processAmexzoneData } = await import('./amexzoneIntakeProcessor');
+    return processAmexzoneData(rawAmexzoneData, prev);
+}
 
 function formatDobToIso(dobStr: string | null | undefined): string | null {
     if (!dobStr) return null;

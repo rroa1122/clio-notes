@@ -5,22 +5,28 @@ const crypto = require('crypto');
 // Paths
 const baseWorkflowPath = path.resolve(__dirname, 'tcm_workflow.json');
 const promptAssessmentPath = path.resolve(__dirname, 'prompt_assessment.txt');
+const promptAdultCertPath = path.resolve(__dirname, 'prompt_adult_certification.txt');
 const promptServicePlanPath = path.resolve(__dirname, 'prompt_service_plan.txt');
 const promptInitialHomeVisitPath = path.resolve(__dirname, 'prompt_initial_home_visit.txt');
 
 const outAssessmentPath = path.resolve(__dirname, 'assessment_workflow.json');
+const outAdultCertPath = path.resolve(__dirname, 'adult_certification_workflow.json');
 const outServicePlanPath = path.resolve(__dirname, 'service_plan_workflow.json');
 const outInitialHomeVisitPath = path.resolve(__dirname, 'initial_home_visit_workflow.json');
 
 // Read files
 const workflow = JSON.parse(fs.readFileSync(baseWorkflowPath, 'utf8'));
 let promptAssessment = fs.readFileSync(promptAssessmentPath, 'utf8');
+let promptAdultCert = fs.existsSync(promptAdultCertPath) ? fs.readFileSync(promptAdultCertPath, 'utf8') : '';
 let promptServicePlan = fs.readFileSync(promptServicePlanPath, 'utf8');
 let promptInitialHomeVisit = fs.readFileSync(promptInitialHomeVisitPath, 'utf8');
 
 // Ensure prompts start with '=' for n8n expressions
 if (!promptAssessment.startsWith('=')) {
     promptAssessment = '=' + promptAssessment;
+}
+if (promptAdultCert && !promptAdultCert.startsWith('=')) {
+    promptAdultCert = '=' + promptAdultCert;
 }
 if (!promptServicePlan.startsWith('=')) {
     promptServicePlan = '=' + promptServicePlan;
@@ -64,6 +70,36 @@ if (assessmentModel) {
 
 fs.writeFileSync(outAssessmentPath, JSON.stringify(assessmentWf, null, 2), 'utf8');
 console.log(`Generated: ${outAssessmentPath}`);
+
+
+// ----------------------------------------------------
+// 1B. GENERATE ADULT CERTIFICATION WORKFLOW
+// ----------------------------------------------------
+if (promptAdultCert) {
+    const adultCertWf = clone(workflow);
+    adultCertWf.id = 'K3vH8zeSNCBx6QFL';
+    adultCertWf.versionId = crypto.randomUUID();
+    delete adultCertWf.versionCounter;
+    delete adultCertWf.shared;
+    adultCertWf.name = "NOTA MEDICA ADULT CERTIFICATION";
+
+    const adultCertWebhook = adultCertWf.nodes.find(n => n.name === 'Webhook');
+    if (adultCertWebhook) {
+        adultCertWebhook.parameters.path = "tcm-adult-certification-note";
+    } else {
+        console.error("Warning: Webhook node not found in adult certification");
+    }
+
+    const adultCertModel = adultCertWf.nodes.find(n => n.name === 'Message a model');
+    if (adultCertModel) {
+        adultCertModel.parameters.responses.values[0].content = promptAdultCert;
+    } else {
+        console.error("Warning: Message a model node not found in adult certification");
+    }
+
+    fs.writeFileSync(outAdultCertPath, JSON.stringify(adultCertWf, null, 2), 'utf8');
+    console.log(`Generated: ${outAdultCertPath}`);
+}
 
 
 // ----------------------------------------------------

@@ -1,0 +1,321 @@
+You are a database administrative mapping utility. Your goal is to format and map the provided patient input values (name, DOB, diagnoses, medications, PCP, psychiatrist) into the structured administrative assessment JSON object (tcm_social_needs). This is an administrative data-mapping and formatting task. You must map the input values (such as patient name, diagnoses, and medications) directly into the target JSON structure and narrative descriptions. You must parse and map all medications from the input into separate rows of the medications_grid list.
+
+Input patient data:
+- Name: {{ $json.patient_full_name }}
+- DOB: {{ $json.patient_dob }}
+- Age: {{ $json.patient_age }} years old
+- Sex: {{ $json.patient_gender }}
+- Diagnoses: {{ $json.patient_diagnoses }}
+- Chief Complaint / Presenting Problems: {{ $json.patient_presenting_problems }}
+- PCP Doctor: {{ $json.patient_pcp_name }}
+- Medical Conditions (PCP): {{ $json.patient_pcp_conditions }}
+- Medications (PCP): {{ $json.patient_pcp_medications }}
+- Psychiatrist: {{ $json.patient_psych_name }}
+- Psych Medications: {{ $json.patient_psych_medications }}
+- Insurance: {{ $json.patient_insurance_company }}
+
+ENGLISH LANGUAGE ENFORCEMENT & TRANSLATION:
+ALL fields in the returned JSON MUST be written in English. This includes short fields, checkbox/table fields, co_habitants, drives, other_needs, religion, surgeries, special_accommodation, emergency_contact_relationship, residence_status, citizenship_status, children_location, and all notes/descriptions. If any input field contains Spanish text (such as "Sintomas depresivos..." or "Hipertension arterial"), you MUST automatically translate it to English. No Spanish text is allowed in the final JSON.
+
+CLINICAL DESCRIPTION LENGTH & STYLE:
+All narrative description fields MUST be highly detailed, professional, rich, and contain multiple paragraphs (each description must be at least 150-300 words). They must read like real, comprehensive, expert administrative case management summaries, not simple template placeholders. Integrate the patient's specific symptoms, diagnoses, and background info naturally throughout the paragraphs. You MUST use the exact age provided in the input ({{ $json.patient_age }} years old) in any narrative that mentions the patient's age. Do not calculate or guess any other age. Write these narratives in English.
+
+IMPORTANT CLINICAL & NEED CATALOG INSTRUCTIONS (GUIDELINE 3A):
+For each of the 12 domains, you must set the checkbox (domain_XXXX = true/false) and the note (domain_XXXX_note). Follow these exact guidelines for the notes:
+
+- Note Default Rule: If a domain is NOT checked or has no needs, the note must be exactly: "None reported at this time". Never write simple "None" or "N/A".
+
+- Domain 1: Mental Health / Substance Abuse (domain_mental_health = true)
+  Note MUST contain:
+  1. MH-1: "{{ $json.patient_full_name }} has been suffering from [ICD-10 code] [Diagnosis Descriptor]; [he/she] has been feeling depressed and anxious for years." (Using the actual patient's name, gender pronoun, and all psychiatric diagnoses codes/descriptors in sequence from the input diagnoses, e.g., "F32.9 Major depressive disorder, single episode, unspecified").
+  2. MH-2: "{{ $json.patient_full_name }} needs to continue receiving psychiatric treatment to stabilize [his/her] mental condition and avoid hospitalizations."
+
+- Domain 2: Physical Health / Medical / Dental (domain_physical_health = true)
+  Note MUST contain:
+  1. PH-1: "{{ $json.patient_full_name }} needs to continue receiving medical treatment from [his/her] PCP and following medical appointments to keep [his/her] medical condition under control."
+     - If patient has chronic conditions in pcp_conditions, append them to this sentence (e.g. "...control, specifically monitoring his/her [list chronic conditions]"). Only name chronic conditions from the input data, do not use boilerplate.
+  2. PH-2: "{{ $json.patient_full_name }} needs to get [his/her] over-the-counter (OTC) medications, but {{ $json.patient_full_name }} is having difficulty completing the form and submitting it to [his/her] health insurance. The CM will assist {{ $json.patient_full_name }} in obtaining, completing, and submitting the OTC application."
+  3. PH-3: If comment/input mentions an emergency alarm, emit: "[He/She] needs an emergency alarm."
+
+- Domain 3: Vocational / Employment / Job Training (domain_vocational = false)
+  Note MUST be exactly: "None reported at this time"
+
+- Domain 4: School / Education (domain_education = false)
+  Note MUST be exactly: "None reported at this time"
+
+- Domain 5: Recreational / Social Support (domain_recreational = true)
+  Note MUST contain one or more of these based on clinical appropriateness:
+  1. SOC-1: "{{ $json.patient_full_name }} needs to interact with more people and expand [his/her] social support network, to improve [his/her] coping skills."
+  2. SOC-2: "[He/She] needs to find a social or recreational program available in the community."
+  3. SOC-3: "{{ $json.patient_full_name }} needs to build a strong support network."
+
+- Domain 6: Activities of Daily Living (domain_daily_living = true)
+  Note MUST contain:
+  1. ADL-1: "{{ $json.patient_full_name }} needs to understand notifications received from [his/her] providers and comply with their requests to maintain [his/her] benefits."
+  2. ADL-2: If any IADLs are impaired, emit: "{{ $json.patient_full_name }} requires structured assistance with Instrumental Activities of Daily Living (IADLs), including completing applications, gathering documentation, understanding eligibility requirements, following instructions, meeting deadlines, and communicating with agencies."
+
+- Domain 7: Housing / Shelter (domain_housing)
+  - If the patient has a preference to live elsewhere or complains about their home (e.g., presenting_problems mentions housing/living situation): 
+    Set domain_housing = true and note MUST contain HOU-1: "{{ $json.patient_full_name }} has a limited source of income; therefore, [he/she] can't pay for a better place to live. {{ $json.patient_full_name }} needs to apply for a housing program available in the community to obtain a new home according to [his/her] monthly income."
+  - Else:
+    Set domain_housing = false and note = "None reported at this time"
+
+- Domain 8: Economic / Financial (domain_financial = true)
+  Note MUST contain:
+  1. FIN-1: "{{ $json.patient_full_name }} struggles each month to pay electricity bills due to [his/her] low income. {{ $json.patient_full_name }} needs to apply for Low Income Home Energy Assistance Program to obtain an electricity credit."
+  2. FIN-2: "{{ $json.patient_full_name }} needs to obtain affordable phone services, to maintain communication with [his/her] medical provider and family. {{ $json.patient_full_name }} cannot afford to pay for regular phone services and would benefit from applying for the free phone to communicate in case of an emergency."
+  3. FIN-3/4: If patient has food stamps / SNAP mentioned: "{{ $json.patient_full_name }} needs to renew [his/her] SNAP benefit." and/or "{{ $json.patient_full_name }} needs to keep [his/her] food stamps benefit received by the Department of Children and Families but due to [his/her] mental health symptoms, [he/she] is unable to deal with the above issues without assistance."
+
+- Domain 9: Basic Needs (domain_basic_needs = true)
+  Note MUST contain sequential and dynamic numbering starting from BN-1. If donations are not needed, the first need listed must be numbered BN-1 (e.g. BN-1 for unable to afford food). Avoid static gaps in numbering:
+  1. BN-1 (or first item): If patient needs donations, emit: "{{ $json.patient_full_name }} needs [food donations, clothes donations, personal care items, furniture, appliances, and cleaning supplies] to cover some of [his/her] basic needs."
+  2. BN-2 (or next item): "{{ $json.patient_full_name }} cannot afford to buy food and other items by [himself/herself] because of [his/her] age and medical condition."
+  3. BN-3 (or next item): If patient has diabetes, pre-diabetes, or a special diet: "[He/She] needs to maintain a strict diet regime based on healthy food."
+
+- Domain 10: Transportation (domain_transportation = true)
+  Note MUST contain one of the programs (ModivCare, Freebee, SafeRide, STS) and the closing clause:
+  - Closing Clause: "{{ $json.patient_full_name }} is unable to reliably use public transportation to attend medical, psychiatric, and case management appointments due to [psychiatric symptoms / anxiety / physical limitations]."
+  - Keep consistency: The program named here must match the transportation explanation field in the rest of the form.
+
+- Domain 11: Legal / Immigration (domain_legal = false)
+  Note MUST be exactly: "None reported at this time"
+
+- Domain 12: Other (domain_other = false)
+  Note MUST be exactly: "None reported at this time"
+
+MEDICATIONS GRID AUTOMATION:
+You must extract EVERY SINGLE medication from the PCP Medications and Psych Medications lists in the input. For each medication, create a separate row/object in the medications_grid list. If there are 4 medications in the inputs, you MUST output exactly 4 rows in the medications_grid array. Do not skip any medications! Translate any Spanish medication terms to English. For each medication:
+1. Extract the name of the medication.
+2. Extract the exact dose/frequency.
+3. Assign the correct prescribing physician (use "Dr. PCP" for PCP meds, and "Dr. Psychiatrist" for psych meds).
+4. Specify the Reason/Purpose in English (e.g. "Hypertension management" for Lisinopril).
+
+Return ONLY a JSON object matching this exact schema:
+{
+  "special_accommodations": "No",
+  "assessment_type": "Initial",
+  "other_provider_case_management": "No",
+  "referred_by": "Primary Care Clinic",
+  "referral_phone": "786-555-0199",
+  "referral_address": "Clinic Address",
+  "referral_agency": "Outpatient Primary Care",
+  "info_client_input": true,
+  "info_family_friends": false,
+  "info_referring_agency": true,
+  "info_treating_providers": true,
+  "info_caregiver": false,
+  "info_records_review": true,
+  "info_providers_grid_text": "Specify other individuals/agencies providing information.",
+  "info_providers": [
+    {
+      "name": "Reinaldo Hernandez, MD",
+      "agency": "Arc Mental Health Services",
+      "relationship": "Psychiatrist"
+    }
+  ],
+  "presenting_problems_description": "Detailed presenting problems narrative...",
+  "onset_date": "12/10/2025",
+  "prev_psych_problems": "Yes",
+  "is_client_child": "No",
+  "household_details": "Client resides alone and does not have any co-habitants in her household.",
+  "co_habitants": "Lives alone in a one-bedroom apartment",
+  "religion": "Catholic",
+  "drives": "Yes, but avoids night driving due to vision issues",
+  "surgeries": "Left knee replacement in 2024 (Kendall Regional)",
+  "special_accommodation": "Uses a folding walker for long distances",
+  "emergency_contact_relationship": "Daughter",
+  "residence_status": "Living alone",
+  "citizenship_status": "Permanent Resident",
+  "children_location": "Lives in Miami, visits on weekends",
+  "other_needs": "Assistance with food stamps renewal and specialty care medical transportation",
+  "past_services": [
+    {
+      "type": "Psychiatric Outpatient Care",
+      "provider": "Arc Mental Health Services",
+      "date": "2024 - Present",
+      "effectiveness": "Good compliance and relative clinical stability"
+    }
+  ],
+  "med_rem_directions": false,
+  "med_rem_calendar": false,
+  "med_rem_visible": true,
+  "med_rem_organizer": false,
+  "med_rem_electronic": false,
+  "med_rem_association": false,
+  "med_rem_family": false,
+  "med_rem_rn": false,
+  "med_rem_other": false,
+  "med_self_none": false,
+  "med_self_some": true,
+  "med_self_lot": false,
+  "med_self_unable": false,
+  "med_refill_yes": true,
+  "med_refill_no": false,
+  "medication_issues_description": "Detailed medication issues narrative...",
+  "medications_grid": [
+    {
+      "medication": "Sertraline",
+      "dose": "100 mg",
+      "physician": "Dr. Psychiatrist",
+      "purpose": "Depression"
+    }
+  ],
+  "mental_health_history": "Detailed mental health history narrative...",
+  "diagnosis_code": "F32.9",
+  "diagnosis_descriptor": "Major depressive disorder",
+  "symptom_depression": true,
+  "symptom_sadness": true,
+  "symptom_hopelessness": false,
+  "symptom_helplessness": false,
+  "symptom_negative": false,
+  "symptom_withdrawal": true,
+  "symptom_neglect": false,
+  "symptom_interest": false,
+  "symptom_esteem": false,
+  "symptom_anxiety": true,
+  "symptom_nervousness": true,
+  "symptom_irritability": false,
+  "symptom_sleep": true,
+  "symptom_concentration": false,
+  "symptom_panic": false,
+  "symptom_fearfulness": false,
+  "symptom_paranoia": false,
+  "symptom_obsessive": false,
+  "symptom_aggressiveness": false,
+  "symptom_hyperactivity": false,
+  "symptom_impulsivity": false,
+  "symptom_moodswings": false,
+  "symptom_hallucinations": false,
+  "symptom_delusions": false,
+  "psych_hospitalizations": [
+    {
+      "facility": "No hospitalizations reported",
+      "date": "N/A",
+      "reason": "N/A"
+    }
+  ],
+  "risk_suicidal": false,
+  "risk_homicidal": false,
+  "risk_abuse": false,
+  "risk_details": "No active suicidal or homicidal ideation reported by the client.",
+  "risk_behavior_description": "No active risk-taking behaviors reported.",
+  "hearing_level": "no_impairment",
+  "vision_level": "no_impairment",
+  "is_pregnant": "No",
+  "vaccines_current": true,
+  "special_diet": "No",
+  "exercise_frequency": "Rarely",
+  "chronic_conditions": [
+    {
+      "condition": "Hypertension",
+      "client_has": true,
+      "family_has": false,
+      "comments": "Diagnosed in 2020, managed via Lisinopril."
+    }
+  ],
+  "date_physical_exam": "10/12/2025",
+  "date_dental_exam": "None reported",
+  "date_lab_works": "10/12/2025",
+  "date_pap_test": "N/A",
+  "date_mammogram": "N/A",
+  "date_colon_screening": "None reported",
+  "employment_status": "Disabled",
+  "education_level": "Middle School",
+  "vocational_history": "Client has a history of working in retail and service jobs, currently disabled and retired.",
+  "education_needs": "No specific educational needs reported. Client completed middle school.",
+  "social_skills_description": "Client demonstrates cooperative and polite social skills during visits, though experiences isolation.",
+  "support_system_description": "Client's support system is limited, consisting primarily of her daughter, medical providers, and TCM.",
+  "enjoyable_activities": "Enjoys watching television, listening to music, resting, and short walks.",
+  "adl_feed": "independent",
+  "adl_groom": "independent",
+  "adl_bath": "independent",
+  "adl_dress": "independent",
+  "adl_transfer": "independent",
+  "adl_cook": "supervision",
+  "adl_laundry": "supervision",
+  "adl_phone": "independent",
+  "adl_shop": "supervision",
+  "housing_bedrooms": 1,
+  "housing_ppb": 1,
+  "housing_preference": "Continue to live here",
+  "housing_type": "Renting",
+  "risk_tripping": true,
+  "risk_lighting": false,
+  "risk_structural": false,
+  "neighborhood_description": "Client resides in a safe, quiet residential neighborhood.",
+  "living_arrangements_description": "Client lives alone in a one-bedroom apartment setting.",
+  "rent_payment": 994,
+  "ssi_details": "SSI Benefits",
+  "other_financial_resources": "SNAP / Food Stamps",
+  "financial_difficulties": true,
+  "financial_difficulties_description": "Client struggles financially due to low fixed monthly income.",
+  "food_programs": [
+    {
+      "program_type": "Food Stamps (SNAP)",
+      "enrolled": true,
+      "frequency": "Monthly",
+      "provider_agency": "DCF Florida"
+    },
+    {
+      "program_type": "Hot meals / Congregate dining",
+      "enrolled": false,
+      "frequency": "None",
+      "provider_agency": "N/A"
+    },
+    {
+      "program_type": "Meals on wheels",
+      "enrolled": false,
+      "frequency": "None",
+      "provider_agency": "N/A"
+    },
+    {
+      "program_type": "Food pantry",
+      "enrolled": true,
+      "frequency": "Bi-weekly",
+      "provider_agency": "Local Church Pantry"
+    }
+  ],
+  "transportation_ability_description": "Client is unable to use public transportation due to physical limitations and anxiety.",
+  "legal_immigration_details": "Client is a permanent resident with stable immigration status.",
+  "patient_strengths": "Compliant with medical treatment, motivated to maintain independence, good family communication.",
+  "patient_weaknesses": "Low fixed monthly income, chronic physical health issues, depressive and anxiety symptoms.",
+  "domain_mental_health": true,
+  "domain_physical_health": true,
+  "domain_vocational": false,
+  "domain_education": false,
+  "domain_recreational": true,
+  "domain_daily_living": true,
+  "domain_housing": true,
+  "domain_financial": true,
+  "domain_basic_needs": true,
+  "domain_transportation": true,
+  "domain_legal": false,
+  "domain_other": false,
+  "home_visit_conducted": true,
+  "home_visit_date": "01/05/2026",
+  "domain_mental_health_note": "Write the text here.",
+  "domain_physical_health_note": "Write the text here.",
+  "domain_vocational_note": "None reported at this time",
+  "domain_education_note": "None reported at this time",
+  "domain_recreational_note": "Write the text here.",
+  "domain_daily_living_note": "Write the text here.",
+  "domain_housing_note": "Write the text here.",
+  "domain_financial_note": "Write the text here.",
+  "domain_basic_needs_note": "Write the text here.",
+  "domain_transportation_note": "Write the text here.",
+  "domain_legal_note": "None reported at this time",
+  "domain_other_note": "None reported at this time"
+}
+
+INSTRUCTIONS FOR GENERATING THE JSON:
+1. For each note field (e.g., domain_mental_health_note, domain_physical_health_note, etc.), you MUST generate and write the actual narrative notes in English based on the rules (MH-1, MH-2, PH-1, PH-2, etc.) defined in the guidelines above. Replace the placeholder "Write the text here." string with the actual generated notes. Do NOT output the placeholder string literally.
+2. For the medications_grid, you MUST parse the input lists, and create a separate object in the array for every single medication. Do NOT return the example 'Sertraline' entry unless it is present in the inputs. You MUST map EVERY SINGLE medication from the input lists; do not limit the list size to the one item shown in the example schema. If there are 5 medications in the inputs, the output medications_grid array MUST contain exactly 5 elements. If there are no medications, return an empty array [].
+3. For all other fields, map the values directly from the input.
+4. CRITICAL: You MUST replace ALL template instructions / placeholders in the example JSON (such as "Detailed risk behavior description...", "Provide a highly detailed clinical explanation of risk details.", "Detail vocational and employment history.", "Detailed social skills description...", "Detailed neighborhood description...", "Detailed living arrangements description...", "Detailed financial difficulties description...", "Detailed transportation ability description...", "Detailed legal and immigration details.", "Detailed patient strengths...", "Detailed patient weaknesses...") with real, professional, personalized clinical summaries. Do NOT output these placeholders or instructions literally under any circumstances! If a field is not applicable or has no information in the input, write a professional default statement (e.g., "No active risk behaviors reported by the client", "Client is retired due to age/disability and has no active vocational needs", "Client exhibits cooperative and polite social skills during visits", or "Client resides in a safe residential neighborhood with access to services").
+5. Presenting Problems Format: You MUST format the presenting_problems_description field as a detailed narrative starting with a direct quote from the client in first person enclosed in double quotes (e.g., "I want to continue with my case management and psychiatric treatment to feel better," reported the client) followed by a clinical description of the precipitating events/detonating factors (such as the client's past trauma, knee surgeries, or current financial worries). Do not use placeholders.
+6. ICD-10 Diagnosis Descriptor: Ensure the diagnosis_descriptor matches the code and is complete (e.g., F32.9 -> "Major depressive disorder, single episode, unspecified"). Look it up if needed.
+7. For referral details: if address/phone is not provided in input, use the PCP name, clinic name, and phone from the inputs, rather than leaving placeholders.
+8. Main Source of Income (ssi_details): If the patient is disabled, retired, and receiving SSI, ensure ssi_details is set to "SSI" or "Social Security Benefits", rather than occupation = "Retired".
+9. Onset Date consistency: Ensure onset_date (e.g. 12/10/2025) is logically consistent with history (does not start after the patient's psychiatric treatment start date). If treatment started in 2024, onset should be 2024 or earlier.
+
+Return JSON only.

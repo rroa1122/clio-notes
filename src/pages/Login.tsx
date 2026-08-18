@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { ArrowLeft, Mail, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Mail, ShieldCheck, Eye, EyeOff, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../notes-module/context/ThemeContext';
 
 export const Login: React.FC = () => {
+    const { theme, toggleTheme } = useTheme();
     const [searchParams] = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -63,11 +66,21 @@ export const Login: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
             {/* Premium Canvas Overlay */}
-            <div className="absolute inset-0 bg-[#0B1020]/[0.025] pointer-events-none" />
+            <div className="absolute inset-0 bg-[#0B1020]/[0.025] dark:bg-[#0B1020]/[0.4] pointer-events-none" />
 
-            <div className="max-w-md w-full bg-white/80 backdrop-blur-xl border border-border/40 rounded-[2.5rem] p-10 shadow-2xl shadow-black/[0.03] relative overflow-hidden group">
+            {/* Floating Theme Toggle */}
+            <button
+                type="button"
+                onClick={toggleTheme}
+                className="absolute top-6 right-6 p-3 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-md backdrop-blur-md hover:scale-105 active:scale-95 transition-all z-50"
+                title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+                {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
+            </button>
+
+            <div className="max-w-md w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800/60 rounded-[2.5rem] p-10 shadow-2xl shadow-black/[0.03] dark:shadow-black/[0.3] relative overflow-hidden group transition-all duration-300">
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#6366f1]/20 rounded-full blur-[100px] group-hover:bg-[#6366f1]/30 transition-all duration-700" />
 
                 <div className="relative z-10">
@@ -118,7 +131,7 @@ export const Login: React.FC = () => {
                         <h1 className="text-3xl font-black tracking-[0.1em] bg-gradient-to-r from-[#3b82f6] via-[#4f46e5] to-[#6366f1] bg-clip-text text-transparent uppercase select-none">
                             {view === 'login' ? 'Clio Notes' : 'Identity Recovery'}
                         </h1>
-                        <p className="text-slate-400 text-sm mt-2 font-medium">
+                        <p className="text-slate-400 dark:text-slate-500 text-sm mt-2 font-medium">
                             {view === 'login' ? 'Log in to your Clio account' : 'Security verification for password reset'}
                         </p>
                     </div>
@@ -133,11 +146,11 @@ export const Login: React.FC = () => {
                     {view === 'login' ? (
                         <form onSubmit={handleLogin} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Email Address</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">Email Address</label>
                                 <input
                                     type="email"
                                     required
-                                    className="w-full bg-slate-100/10 border border-border/60 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] transition-all font-medium"
+                                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] transition-all font-medium"
                                     placeholder="doctor@clioflow.dev"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -146,7 +159,7 @@ export const Login: React.FC = () => {
 
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center ml-1">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Password</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Password</label>
                                     <button
                                         type="button"
                                         onClick={() => setView('forgot')}
@@ -155,14 +168,27 @@ export const Login: React.FC = () => {
                                         Forgot Password?
                                     </button>
                                 </div>
-                                <input
-                                    type="password"
-                                    required
-                                    className="w-full bg-slate-100/10 border border-border/60 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] transition-all font-medium"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        required
+                                        className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl pl-4 pr-12 py-3 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] transition-all font-medium"
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="size-5" />
+                                        ) : (
+                                            <Eye className="size-5" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
 
                             {error && (
@@ -182,13 +208,13 @@ export const Login: React.FC = () => {
                     ) : (
                         <form onSubmit={handleForgotPassword} className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Recovery Email</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-1">Recovery Email</label>
                                 <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 size-4" />
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 size-4" />
                                     <input
                                         type="email"
                                         required
-                                        className="w-full bg-slate-100/10 border border-border/60 rounded-xl pl-12 pr-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] transition-all font-medium"
+                                        className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl pl-12 pr-4 py-3 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 focus:border-[#6366f1] transition-all font-medium"
                                         placeholder="doctor@clioflow.dev"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -213,7 +239,7 @@ export const Login: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setView('login')}
-                                    className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-white transition-colors py-2 text-[10px] font-black uppercase tracking-widest"
+                                    className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors py-2 text-[10px] font-black uppercase tracking-widest"
                                 >
                                     <ArrowLeft className="size-3" />
                                     Return to Authentication
@@ -222,7 +248,7 @@ export const Login: React.FC = () => {
                         </form>
                     )}
 
-                    <div className="mt-8 text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                    <div className="mt-8 text-center text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest">
                         Protected by Clio Security Infrastructure
                     </div>
                 </div>

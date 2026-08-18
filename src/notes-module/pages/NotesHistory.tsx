@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 import { useLanguage } from '../../context/LanguageContext';
 import { storage } from '../lib/storage';
 import type { Note } from '../lib/storage';
+import { getNoteServiceDate } from '../lib/clioUtils';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AgendaWeeklyBoard } from '../components/AgendaWeeklyBoard';
@@ -93,8 +95,14 @@ const NotesHistory = () => {
   };
 
   const handleSelectNote = (note: Note) => {
+    // Save active service date so when user returns to history, calendar opens on this date
+    const svcDate = getNoteServiceDate(note);
+    const dateStr = svcDate ? format(svcDate, 'yyyy-MM-dd') : undefined;
+    if (dateStr) {
+      sessionStorage.setItem('clio_agenda_active_date', dateStr);
+    }
     // Navigate to note detail or edit screen
-    navigate(`/notes/new?id=${note.id}`, { state: { fromHistory: true } });
+    navigate(`/notes/new?id=${note.id}`, { state: { fromHistory: true, returnDate: dateStr } });
   };
 
   return (

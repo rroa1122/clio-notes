@@ -1,0 +1,360 @@
+{
+  "updatedAt": "2026-06-16T23:05:27.000Z",
+  "createdAt": "2026-01-28T04:18:10.983Z",
+  "id": "K3vH8zeSNCBx6QFL",
+  "name": "NOTA MEDICA ADULT CERTIFICATION",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1050,
+        -416
+      ],
+      "id": "6e589162-6443-479d-8e72-2c0c5d5f441e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tcm-adult-certification-note",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "audio"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -416
+      ],
+      "id": "e99fb69a-39eb-4379-92f7-2c0a3753fed7",
+      "name": "Webhook",
+      "webhookId": "2c3c7f49-0b4c-4dd8-b148-aab2531947ac"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "audio0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        150,
+        -500
+      ],
+      "id": "e5fde99f-8745-43b0-9c7a-f6285eec8eec",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a clinical writer specialized in TCM (Targeted Case Management), with experience in professional, objective, clear medical documentation ready for record keeping. Your role is to analyze and convert the information received in the inputs into a well-written, coherent, precise clinical note that is useful for auditing, continuity of care, and documentary compliance.\n\nIMPORTANT: The input information can come from the audio transcript, text input, patient information fields, or custom forms. You MUST analyze all provided inputs holistically and must NOT assume that the information only comes from the audio transcript.\n\n------------------------------------------------\n\nINPUTS\n\nHEADER INPUTS (authoritative)\n- Primary service provided: {{ $('Normalize & Prepare Context').item.json.body.primary_service_provided }}\n- Patient Name: {{ $('Normalize & Prepare Context').item.json.body.patient_name }}\n- Patient DOB: {{ $('Normalize & Prepare Context').item.json.body.patient_dob }}\n- Patient Gender: {{ $('Normalize & Prepare Context').item.json.patient_gender }}\n- Patient Address: {{ $('Normalize & Prepare Context').item.json.patient_address }}\n- Patient Context: {{ $('Normalize & Prepare Context').item.json.body.patient_context }}\n- Custom Template: {{ $('Normalize & Prepare Context').item.json.body.custom_template_text }}\n- Patient Presenting Problems: {{ $('Normalize & Prepare Context').item.json.patient_presenting_problems }}\n- Clinical Context/History: {{ $('Normalize & Prepare Context').item.json.body.patient_clinical_context }}\n\nPCP DETAILS\n- PCP Name: {{ $('Normalize & Prepare Context').item.json.patient_pcp_name }}\n- PCP Phone: {{ $('Normalize & Prepare Context').item.json.patient_pcp_phone }}\n- PCP Address: {{ $('Normalize & Prepare Context').item.json.patient_pcp_address }}\n\nPSYCHIATRIST DETAILS\n- Psych Name: {{ $('Normalize & Prepare Context').item.json.patient_psych_name }}\n- Psych Phone: {{ $('Normalize & Prepare Context').item.json.patient_psych_phone }}\n- Psych Address: {{ $('Normalize & Prepare Context').item.json.patient_psych_address }}\n- Psych Meds: {{ $('Normalize & Prepare Context').item.json.patient_psych_medications }}\n\nEMERGENCY CONTACT DETAILS\n- Emergency Contact Name: {{ $('Normalize & Prepare Context').item.json.patient_full_object.emergency_contact_name }}\n- Emergency Contact Relation: {{ $('Normalize & Prepare Context').item.json.patient_full_object.emergency_contact_relation }}\n- Emergency Contact Phone: {{ $('Normalize & Prepare Context').item.json.patient_full_object.emergency_contact_phone }}\n\nFACILITY / AGENCY DETAILS\n- Facility Name: {{ $('Normalize & Prepare Context').item.json.body.facility_name }}\n- Facility Address: {{ $('Normalize & Prepare Context').item.json.body.facility_address }}\n- Facility Phone: {{ $('Normalize & Prepare Context').item.json.body.facility_phone }}\n- Facility Fax: {{ $('Normalize & Prepare Context').item.json.body.facility_fax }}\n- Facility Email: {{ $('Normalize & Prepare Context').item.json.body.facility_email }}\n- Agency Name: {{ $('Normalize & Prepare Context').item.json.body.agency_name }}\n\nVISIT TRANSCRIPT\n<<<TRANSCRIPT_START>>>\n{{ $json.text }}\n<<<TRANSCRIPT_END>>>\n\n------------------------------------------------\n\nGLOBAL RULES (CRITICAL)\n1) ENGLISH ONLY.\n2) NO HALLUCINATIONS: Never invent factual data, specific medications, dosages, clinics, medical conditions, or family members. Default stability applies ONLY to mental status and general safety observations as specified in Rule 8.\n3) THIRD-PERSON NARRATIVE: ALWAYS write in the third person. Use \"The Targeted Case Manager (TCM)\" on first mention, and \"TCM\" thereafter. Refer to the client by their full name on first mention, and by their first name thereafter. Never use first-person.\n4) PROFESSIONAL CLINICAL TONE: Maintain a strict, objective clinical style. You are strictly PROHIBITED from quoting casual conversational filler.\n5) NO META-COMMENTARY (CRITICAL): You are writing a final, official medical record. NEVER refer to your system instructions, the 'transcript', 'patient context', or 'default stability rules' in your text. Act entirely as the authoring clinician. DO NOT explain *how* or *why* you deduced the information, and DO NOT explicitly state that you are applying default rules; just write the clinical facts neutrally, professionally, and directly.\n6) TIME AND DURATION STRICT ISOLATION: Any mention in the input regarding the start time, end time, duration of the service, or billing units MUST be used EXCLUSIVELY to populate the `encounter` fields (`time_in`, `time_out`, `duration_minutes`, `units`) in the JSON output. You are STRICTLY PROHIBITED from including any time, duration, scheduling, or unit details in the `summary_notes`, `outcome_of_services`, or any other narrative text. Units are computed per template from its own Time In/Out (T1017 · duration drives units).\n7) PRONOUN DYNAMISM: You MUST dynamically replace all slash-pronouns (e.g., \"he/she\", \"his/her\", \"him/her\", \"himself/herself\", \"his/hers\") with the correct gender-specific pronoun based on the patient's actual gender provided in the inputs (use \"he\", \"his\", \"him\", \"himself\" for males, and \"she\", \"her\", \"herself\" for females). Never output slash-pronouns like \"he/she\" or \"his/her\" in the final text.\n8) MANDATORY DEFAULT STABILITY: Default stability applies ONLY to mental status and general safety observations (client is oriented x3/x4, calm, cooperative, denies suicidal/homicidal ideation, and no environmental hazards are observed). You are STRICTLY PROHIBITED from inventing factual data, specific medications, dosages, prescribing clinics/providers, or family members. If the input does not mention a routine mental status observation or environmental safety point, describe the client as safe, functional, and compliant by default. NEVER write \"not described\", \"not documented\", or \"not reported\". Apply these standard stability assumptions silently and seamlessly as if observed during the certification.\n9) FACILITY NAME & AGENCY SOURCING: Read the facility name and agency name from this client's case record. If absent, leave [Facility Name] and flag it in meta warnings for the CM. Never default to or invent an agency.\n10) DIAGNOSES SOURCING: Carry the referral diagnosis (primary diagnosis name, ICD-10 code, description, and Type: \"Rule-Out\"). Never emit \"No diagnoses documented\" when records provide one.\n11) DOMAIN SELECTION: Tick only those domains supported by identified needs (varies by case). A narrative mention alone does not tick a box.\n12) BLOCK TITLE: The block title and service focus title must be exactly: \"Adult Certification\". Never rename.\n\n------------------------------------------------\n\nTEMPLATE — Adult Certification\n\n## What it is\nThe Medicaid eligibility certification for Mental Health Targeted Case Management, completed after the Assessment. Distinct from Assessment.\nPOS 11 – Office · typically the shorter block.\n\n## Clinical Narrative — ONLY these beats:\n1. Medicaid certification for [Client Full Name] was completed to receive Mental Health Targeted Case Management services.\n2. State the eligibility basis using the standard criteria, as applicable:\n   - severe and persistent mental illness requiring advocacy/coordination to maintain or improve functioning;\n   - condition expected to last a minimum of one year;\n   - at risk of institutionalization for mental health reasons;\n   - lacks a natural support system to access needed mental/physical health, education, recreation, housing, finances, basic needs, transportation, etc.;\n   - NOT receiving duplicate case management from another provider.\n3. Reference to the referral diagnosis and the adult mental-health target population (e.g., Appendix J / DCF enrollment) where documented.\n4. Closing: TCM certified [Client First Name] is eligible to receive TCM services.\n\n## Must NOT appear:\n- Assessment data collection / home-visit narrative, or collateral-gathering detail.\n- Service Plan goals/objectives.\n- Omit anything the input doesn't support — no invented facts.\n\n## Outcome:\n- Narrative Outcome (`narrative.outcome_of_services`): \"[Client First Name]'s Assessment was completed and [Client First Name] was certified to receive case management services.\"\n\n## Next Step:\n- Next Step (`narrative.next_steps`): \"CM will develop [Client First Name]'s initial Service Plan.\"\n\n------------------------------------------------\n\nOUTPUT JSON SCHEMA (exact keys)\n{\n  \"template_id\": \"tcm_adult_certification_note\",\n  \"encounter\": {\n    \"dos_date\": \"\",\n    \"pos\": \"11 - Office\",\n    \"service_location\": \"Office\",\n    \"time_in\": \"\",\n    \"time_out\": \"\",\n    \"duration_minutes\": \"\",\n    \"units\": \"\"\n  },\n  \"patient\": {\n    \"full_name\": \"\",\n    \"dob\": \"\",\n    \"sex\": \"\",\n    \"emr\": \"\",\n    \"case_no\": \"\",\n    \"mobile\": \"\"\n  },\n  \"facility\": {\n    \"name\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_name }}\",\n    \"address\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_address }}\",\n    \"phone\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_phone }}\",\n    \"fax\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_fax }}\",\n    \"email\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_email }}\"\n  },\n  \"staff\": {\n    \"case_manager_name\": \"\",\n    \"case_manager_lic\": \"\",\n    \"supervisor_name\": \"\",\n    \"supervisor_lic\": \"\"\n  },\n  \"services\": {\n    \"service_focus_title\": \"Adult Certification\",\n    \"domains_selected\": {\n      \"1_mental_health_substance_abuse\": false,\n      \"2_physical_health_medical_dental\": false,\n      \"3_vocational_employment_job_training\": false,\n      \"4_school_education\": false,\n      \"5_recreational_social_support\": false,\n      \"6_activities_of_daily_living\": false,\n      \"7_housing_shelter\": false,\n      \"8_economic_financial\": false,\n      \"9_basic_needs\": false,\n      \"10_transportation\": false,\n      \"11_legal_immigration\": false,\n      \"12_other\": false\n    },\n    \"other_specify\": \"\"\n  },\n  \"narrative\": {\n    \"summary_notes\": \"\",\n    \"outcome_of_services\": \"\",\n    \"next_steps\": \"\"\n  },\n  \"diagnosis\": {\n    \"primary_diagnosis_name\": \"\",\n    \"icd10_code\": \"\",\n    \"icd10_description\": \"\",\n    \"type\": \"Rule-Out\"\n  },\n  \"signatures\": {\n    \"case_manager_signature_date\": \"\",\n    \"supervisor_signature_date\": \"\"\n  },\n  \"evidence\": {\n    \"key_facts_quotes\": []\n  },\n  \"meta\": {\n    \"confidence_overall\": \"\",\n    \"missing_fields\": [],\n    \"warnings\": []\n  }\n}\n\nReturn JSON only."
+            },
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        550,
+        -416
+      ],
+      "id": "48704574-2e0c-4e2b-b467-47612f3f1555",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node — Parse OpenAI \"Message a model\" output (new Responses shape)\n * Extracts: item.json.output[0].content[0].text\n * Returns: parsed note JSON at root, plus ok/meta helpers\n */\n\nfunction extractJsonString(raw) {\n  if (raw == null) return null;\n\n  let s = String(raw).trim();\n\n  // Remove ```json fences if present\n  s = s.replace(/^```(?:json)?\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\n  // Try direct object extraction\n  const firstBrace = s.indexOf(\"{\");\n  const lastBrace = s.lastIndexOf(\"}\");\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    return s.slice(firstBrace, lastBrace + 1).trim();\n  }\n\n  // Try array extraction\n  const firstBracket = s.indexOf(\"[\");\n  const lastBracket = s.lastIndexOf(\"]\");\n  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {\n    return s.slice(firstBracket, lastBracket + 1).trim();\n  }\n\n  return null;\n}\n\nfunction safeJsonParseFromText(text) {\n  const jsonStr = extractJsonString(text);\n  if (!jsonStr) throw new Error(\"Could not locate JSON in model output text.\");\n  return JSON.parse(jsonStr);\n}\n\nreturn items.map((item) => {\n  // ✅ This is the actual model text in your screenshot\n  const text =\n    item.json?.output?.[0]?.content?.[0]?.text ??\n    item.json?.output?.[0]?.content?.find?.((c) => c?.type === \"output_text\")?.text ??\n    item.json?.content ??\n    item.json?.message?.content ??\n    item.json?.text;\n\n  try {\n    const note = safeJsonParseFromText(text);\n\n    return {\n      json: {\n        ok: true,\n        ...note, // <-- IMPORTANT: put the note fields at the root for the UI\n        meta: {\n          ...(note.meta || {}),\n          confidence_overall: note.meta?.confidence_overall || \"\",\n        },\n      },\n    };\n  } catch (e) {\n    return {\n      json: {\n        ok: false,\n        error: e.message,\n        raw_preview: (text ? String(text).slice(0, 2000) : null),\n      },\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "47a060c5-6092-4e8c-9e61-8a747bfdbb61",
+      "name": "Parse OpenAI Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Canonical preprocessor for clinical note workflows\nconst results = [];\n\nfor (const item of items) {\n  const j = item.json ?? {};\n  const outerBody = j.body ?? {};\n\n  let inner = {};\n  if (typeof outerBody.body === \"string\") {\n    try {\n      inner = JSON.parse(outerBody.body);\n    } catch (e) {\n      inner = {};\n    }\n  } else if (typeof outerBody.body === \"object\" && outerBody.body) {\n    inner = outerBody.body;\n  }\n\n  // Combined body parameters\n  const body = {\n    ...outerBody,\n    ...inner,\n  };\n\n  // Safely parse patient_clinical_context if present\n  let patientData = {};\n  const contextString = body.patient_clinical_context || j.patient_clinical_context;\n  if (contextString) {\n    try {\n      patientData = typeof contextString === \"string\" ? JSON.parse(contextString) : contextString;\n    } catch (e) {\n      patientData = {};\n    }\n  }\n\n  // Check binary audio presence\n  const hasAudio = Boolean(item.binary && (item.binary.audio || item.binary.audio0 || item.binary.data));\n\n  // Build clean root properties\n  const normalizedJson = {\n    ...j,\n    body: body,\n    // Client provided text/transcript fallback\n    text: j.text ?? body.text ?? body.transcript ?? body.transcription ?? body.context ?? \"\",\n    // Patient Fields\n    patient_full_name: patientData.full_name || body.patient_name || body.name || \"\",\n    patient_first_name: patientData.first_name || \"\",\n    patient_last_name: patientData.last_name || \"\",\n    patient_dob: patientData.dob || body.dob || \"\",\n    patient_gender: patientData.gender || \"\",\n    patient_phone: patientData.phone || \"\",\n    patient_email: patientData.email || \"\",\n    patient_ssn: patientData.ssn || \"\",\n    patient_emr_id: patientData.emr_id || body.emr_id || \"\",\n    patient_address: patientData.address || \"\",\n    patient_citizenship: patientData.citizenship || \"\",\n    // Coordination & Insurance\n    patient_case_manager: patientData.case_manager || body.case_manager || \"\",\n    patient_insurance_company: patientData.insurance_company || body.insurance || \"\",\n    patient_diagnoses: patientData.diagnoses || body.diagnoses || [],\n    patient_presenting_problems: patientData.presenting_problems || [],\n    // PCP\n    patient_pcp_name: patientData.pcp_name || \"\",\n    patient_pcp_phone: patientData.pcp_phone || \"\",\n    patient_pcp_address: patientData.pcp_address || \"\",\n    patient_pcp_conditions: patientData.pcp_conditions || [],\n    patient_pcp_medications: patientData.pcp_medications || [],\n    // Psych\n    patient_psych_name: patientData.psych_name || \"\",\n    patient_psych_phone: patientData.psych_phone || \"\",\n    patient_psych_address: patientData.psych_address || \"\",\n    patient_psych_conditions: patientData.psych_conditions || [],\n    patient_psych_medications: patientData.psych_medications || [],\n    // Pharmacy\n    patient_pharmacy_name: patientData.pharmacy_name || \"\",\n    patient_pharmacy_phone: patientData.pharmacy_phone || \"\",\n    patient_pharmacy_fax: patientData.pharmacy_fax || \"\",\n    patient_pharmacy_address: patientData.pharmacy_address || \"\",\n    // Full object\n    patient_full_object: patientData,\n    // Audio flag\n    has_audio: hasAudio,\n  };\n\n  // Ensure audio metadata is valid if binary exists\n  const binaryObj = item.binary ? { ...item.binary } : {};\n  if (binaryObj.audio0) {\n    binaryObj.audio0.fileName = binaryObj.audio0.fileName || \"recording.webm\";\n    binaryObj.audio0.mimeType = binaryObj.audio0.mimeType || \"audio/webm\";\n  } else if (binaryObj.audio) {\n    binaryObj.audio0 = {\n      ...binaryObj.audio,\n      fileName: binaryObj.audio.fileName || \"recording.webm\",\n      mimeType: binaryObj.audio.mimeType || \"audio/webm\",\n    };\n  }\n\n  results.push({\n    json: normalizedJson,\n    binary: binaryObj,\n  });\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -350,
+        -416
+      ],
+      "id": "canonical-normalize-prep-K3vH8zeSNCBx6QFL",
+      "name": "Normalize & Prepare Context"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "audio-check-K3vH8zeSNCBx6QFL",
+              "leftValue": "={{ $json.has_audio }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -100,
+        -416
+      ],
+      "id": "if-has-audio-K3vH8zeSNCBx6QFL",
+      "name": "If Has Audio"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge transcription text while preserving all patient context from Normalize node\nconst normalized = $('Normalize & Prepare Context').item.json;\nconst transcriptionText = items[0]?.json?.text || '';\n\nreturn [{\n  json: {\n    ...normalized,\n    text: transcriptionText || normalized.text || ''\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        -500
+      ],
+      "id": "merge-transcription-K3vH8zeSNCBx6QFL",
+      "name": "Merge Transcription"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node — Parse OpenAI \"Message a model\" output (new Responses shape)\n * Extracts: item.json.output[0].content[0].text\n * Returns: parsed note JSON at root, plus ok/meta helpers\n */\n\nfunction extractJsonString(raw) {\n  if (raw == null) return null;\n\n  let s = String(raw).trim();\n\n  // Remove ```json fences if present\n  s = s.replace(/^```(?:json)?\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\n  // Try direct object extraction\n  const firstBrace = s.indexOf(\"{\");\n  const lastBrace = s.lastIndexOf(\"}\");\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    return s.slice(firstBrace, lastBrace + 1).trim();\n  }\n\n  // Try array extraction\n  const firstBracket = s.indexOf(\"[\");\n  const lastBracket = s.lastIndexOf(\"]\");\n  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {\n    return s.slice(firstBracket, lastBracket + 1).trim();\n  }\n\n  return null;\n}\n\nfunction safeJsonParseFromText(text) {\n  const jsonStr = extractJsonString(text);\n  if (!jsonStr) throw new Error(\"Could not locate JSON in model output text.\");\n  return JSON.parse(jsonStr);\n}\n\nreturn items.map((item) => {\n  // ✅ This is the actual model text in your screenshot\n  const text =\n    item.json?.output?.[0]?.content?.[0]?.text ??\n    item.json?.output?.[0]?.content?.find?.((c) => c?.type === \"output_text\")?.text ??\n    item.json?.content ??\n    item.json?.message?.content ??\n    item.json?.text;\n\n  try {\n    const note = safeJsonParseFromText(text);\n\n    return {\n      json: {\n        ok: true,\n        ...note, // <-- IMPORTANT: put the note fields at the root for the UI\n        meta: {\n          ...(note.meta || {}),\n          confidence_overall: note.meta?.confidence_overall || \"\",\n        },\n      },\n    };\n  } catch (e) {\n    return {\n      json: {\n        ok: false,\n        error: e.message,\n        raw_preview: (text ? String(text).slice(0, 2000) : null),\n      },\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "47a060c5-6092-4e8c-9e61-8a747bfdbb61",
+      "name": "Parse OpenAI Response"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Prepare Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Prepare Context": {
+      "main": [
+        [
+          {
+            "node": "If Has Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Has Audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Merge Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Transcription": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse OpenAI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse OpenAI Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.clinicflow.dev",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+            "content-length": "2106",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "es-419,es;q=0.9",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryBXqDi94h66wCe70e",
+            "origin": "http://localhost:5173",
+            "priority": "u=1, i",
+            "referer": "http://localhost:5173/",
+            "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "via": "2.0 Caddy",
+            "x-forwarded-for": "71.38.84.91",
+            "x-forwarded-host": "n8n.clinicflow.dev",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "text": "dsfsdf",
+            "custom_template_text": "sdfsdfsdfdsfsdfsdfsdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "patient_name": "as",
+            "patient_dob": "",
+            "patient_context": "Encounter Context:\r\ndsfsdf\r\n\r\nDate: 2026-04-15\r\nTime In: Not specified\r\nTime Out: Not specified",
+            "service_id": "manual-1776305617296",
+            "joint_note_index": "1",
+            "joint_note_total": "1",
+            "is_joint_note": "false",
+            "template_id": "tcm_progress_note",
+            "service_date": "2026-04-15",
+            "time_in": "",
+            "time_out": "",
+            "primary_service_provided": "Custom Template",
+            "user_id": "12022246-87fb-4d3b-ace0-1ed2836133a0"
+          },
+          "webhookUrl": "https://n8n.clinicflow.dev/webhook/tcm-note",
+          "executionMode": "production"
+        },
+        "binary": {
+          "audio0": {
+            "mimeType": "audio/webm",
+            "fileType": "audio",
+            "fileExtension": "weba",
+            "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+            "fileName": "encounter_audio.webm",
+            "fileSize": "100 B"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "eaf37df9-2118-483b-aa45-3e50d48c02b3",
+  "triggerCount": 1,
+  "tags": []
+}

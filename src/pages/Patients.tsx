@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { storage, type Patient } from '../notes-module/lib/storage';
 import { Search, Calendar, MoreHorizontal, UserPlus, Users2, Trash2, ExternalLink, Loader2, SlidersHorizontal, Tag } from 'lucide-react';
 import { format } from 'date-fns';
@@ -38,6 +39,7 @@ const getInitialsTheme = (name: string) => {
 
 export function Patients() {
     const { t, language } = useLanguage();
+    const { isLocked } = useAuth();
     const [patients, setPatients] = useState<Patient[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +67,22 @@ export function Patients() {
     useEffect(() => {
         loadPatients();
     }, [loadPatients]);
+
+    // Handle unlocking: reset search term and refresh full list
+    useEffect(() => {
+        const handleUnlock = () => {
+            setSearchTerm('');
+            loadPatients('');
+        };
+        window.addEventListener('clio_screen_unlocked', handleUnlock);
+        return () => window.removeEventListener('clio_screen_unlocked', handleUnlock);
+    }, [loadPatients]);
+
+    useEffect(() => {
+        if (!isLocked) {
+            loadPatients(searchTerm);
+        }
+    }, [isLocked, loadPatients]);
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -102,7 +120,7 @@ export function Patients() {
     };
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-auto lg:h-[calc(100vh-10rem)] mb-2">
+        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 sm:px-4 pt-1 lg:pt-3 h-auto lg:h-[calc(100vh-6.5rem)] mb-2">
             <div className="flex flex-col lg:flex-1 bg-transparent md:bg-surface md:dark:bg-slate-900 rounded-[2rem] shadow-none md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 md:border border-border/60 overflow-visible lg:overflow-hidden relative h-auto lg:h-full">
                 {/* Card Header area matching the history timeline filters */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 px-8 py-6 bg-surface border-b border-slate-105 dark:border-slate-800/80 z-20 shrink-0">
@@ -137,16 +155,23 @@ export function Patients() {
                             </button>
                         </div>
                         
-                        <div className="flex items-center border border-slate-200/80 dark:border-slate-800/80 rounded-[28px] px-5 h-11 bg-slate-50/50 dark:bg-slate-950/20 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.02)] relative group hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-indigo-500/40 focus-within:ring-4 focus-within:ring-indigo-500/5 transition-all">
+                        <div className="flex items-center border border-slate-200/80 dark:border-slate-800/80 rounded-[28px] px-5 h-11 bg-slate-50/50 dark:bg-slate-950/20 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.02)] relative group hover:border-slate-300 dark:hover:border-slate-700 transition-all">
                             <div className="text-slate-400 mr-3 pointer-events-none flex-shrink-0">
                                 <Search className="w-4 h-4" />
                             </div>
                             <Input
+                                id="patient_search_query"
+                                name="patient_search_query"
                                 type="text"
                                 placeholder={t('patients.search_placeholder', 'Search by name, DOB, or case number...')}
-                                className="h-full w-full bg-transparent border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-350 dark:placeholder:text-slate-650"
+                                className="h-full w-full bg-transparent border-0 p-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none text-xs font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-350 dark:placeholder:text-slate-650"
                                 value={searchTerm}
                                 onChange={handleSearch}
+                                autoComplete="off"
+                                data-lpignore="true"
+                                data-1p-ignore="true"
+                                data-bwignore="true"
+                                data-form-type="other"
                             />
                         </div>
                     </div>
@@ -154,7 +179,7 @@ export function Patients() {
 
                 <div className="overflow-visible lg:flex-1 lg:overflow-y-auto">                    {/* Desktop View */}                    <div className="hidden lg:block py-4 px-8">
                         {/* Header Row */}
-                        <div className="grid grid-cols-12 gap-4 px-6 pb-3 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800/80 mb-4">
+                        <div className="grid grid-cols-12 gap-4 -mx-8 px-14 pb-3.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200/60 dark:border-slate-800/80 mb-5">
                             <div className="col-span-4">{t('record.client_identity', 'Client Identity')}</div>
                             <div className="col-span-3">{t('patient.label.dob', 'Date of Birth')}</div>
                             <div className="col-span-2">{t('patient.label.case_number', 'EMR ID / MRN')}</div>

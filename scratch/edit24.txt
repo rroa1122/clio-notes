@@ -1,0 +1,129 @@
+TARGET:
+    // Food donation states
+    const [dietaryRestrictions, setDietaryRestrictions] = useState<string>("");
+    const [householdSize, setHouseholdSize] = useState<string>("");
+ 
+    // Prepend dietary restrictions and household size to context when they are filled in Food Donation - Gather
+    useEffect(() => {
+        if (selectedSubTemplate === 'Food Donation – Gather') {
+            const dietStr = dietaryRestrictions.trim() 
+                ? `[Dietary Restrictions: ${dietaryRestrictions.trim()}]`
+
+REPLACEMENT:
+    // Food donation states
+    const [dietaryRestrictions, setDietaryRestrictions] = useState<string>("");
+    const [householdSize, setHouseholdSize] = useState<string>("");
+
+    // MHV states
+    const [mhvModuleA, setMhvModuleA] = useState(false);
+    const [mhvModuleADonationType, setMhvModuleADonationType] = useState<'food' | 'cleaning' | 'clothing'>('food');
+    const [mhvModuleASourceOrg, setMhvModuleASourceOrg] = useState('');
+    const [mhvModuleAItems, setMhvModuleAItems] = useState('');
+
+    const [mhvModuleB, setMhvModuleB] = useState(false);
+    const [mhvModuleBProvider, setMhvModuleBProvider] = useState('');
+    const [mhvModuleBRole, setMhvModuleBRole] = useState('');
+    const [mhvModuleBTransport, setMhvModuleBTransport] = useState(false);
+
+    const [mhvModuleC, setMhvModuleC] = useState(false);
+    const [mhvModuleCDoc, setMhvModuleCDoc] = useState('');
+
+    const [mhvModuleD, setMhvModuleD] = useState(false);
+    const [mhvModuleDForm, setMhvModuleDForm] = useState('');
+
+    const [mhvModuleE, setMhvModuleE] = useState(false);
+    const [mhvModuleENeed, setMhvModuleENeed] = useState('');
+
+    const computeMhvTitle = () => {
+        let title = "MHV";
+        const parts: string[] = [];
+        if (mhvModuleA) {
+            const typeStr = mhvModuleADonationType === 'food' ? 'Food' : mhvModuleADonationType === 'cleaning' ? 'Cleaning' : 'Clothing';
+            parts.push(`Provide ${typeStr} Donation`);
+        }
+        if (mhvModuleB) {
+            parts.push(`Medical Appointment`);
+        }
+        if (mhvModuleC) {
+            parts.push(`Correspondence Assistance`);
+        }
+        if (mhvModuleD) {
+            parts.push(`Forms Assistance`);
+        }
+        if (parts.length > 0) {
+            title += " + " + parts.join(" + ");
+        }
+        return title;
+    };
+
+    useEffect(() => {
+        if (selectedSubTemplate === 'Monthly Home Visit') {
+            const lines: string[] = [];
+            lines.push(`[Service Code: T1017]`);
+            lines.push(`[POS: 12 – Home]`);
+            
+            if (mhvModuleA) {
+                lines.push(`[Module A: Provide Donation]`);
+                lines.push(`[Donation Type: ${mhvModuleADonationType}]`);
+                lines.push(`[Source Organization: ${mhvModuleASourceOrg.trim() || '[SOURCE ORG MISSING]'}]`);
+                lines.push(`[Items Provided: ${mhvModuleAItems.trim() || '[ITEMS MISSING]'}]`);
+            }
+            if (mhvModuleB) {
+                lines.push(`[Module B: Appointment Coordination]`);
+                lines.push(`[Provider contacted: ${mhvModuleBProvider.trim() || '[PROVIDER MISSING]'}]`);
+                lines.push(`[Provider role/person: ${mhvModuleBRole.trim() || '[ROLE MISSING]'}]`);
+                lines.push(`[Transportation coordinated: ${mhvModuleBTransport ? 'Yes' : 'No'}]`);
+            }
+            if (mhvModuleC) {
+                lines.push(`[Module C: Correspondence Assistance]`);
+                lines.push(`[Correspondence document: ${mhvModuleCDoc.trim() || '[DOCUMENT MISSING]'}]`);
+            }
+            if (mhvModuleD) {
+                lines.push(`[Module D: Forms Assistance]`);
+                lines.push(`[Form completed: ${mhvModuleDForm.trim() || '[FORM MISSING]'}]`);
+            }
+            if (mhvModuleE) {
+                lines.push(`[Module E: Unmet Need Identified]`);
+                lines.push(`[Unmet need description: ${mhvModuleENeed.trim() || '[NEED MISSING]'}]`);
+            }
+
+            const headerStr = lines.join('\n');
+            setPatientInfo(prev => {
+                const clean = prev.context
+                    .replace(/\[Service Code: [\s\S]*?\]/g, "")
+                    .replace(/\[POS: [\s\S]*?\]/g, "")
+                    .replace(/\[Module A: [\s\S]*?\]/g, "")
+                    .replace(/\[Donation Type: [\s\S]*?\]/g, "")
+                    .replace(/\[Source Organization: [\s\S]*?\]/g, "")
+                    .replace(/\[Items Provided: [\s\S]*?\]/g, "")
+                    .replace(/\[Module B: [\s\S]*?\]/g, "")
+                    .replace(/\[Provider contacted: [\s\S]*?\]/g, "")
+                    .replace(/\[Provider role\/person: [\s\S]*?\]/g, "")
+                    .replace(/\[Transportation coordinated: [\s\S]*?\]/g, "")
+                    .replace(/\[Module C: [\s\S]*?\]/g, "")
+                    .replace(/\[Correspondence document: [\s\S]*?\]/g, "")
+                    .replace(/\[Module D: [\s\S]*?\]/g, "")
+                    .replace(/\[Form completed: [\s\S]*?\]/g, "")
+                    .replace(/\[Module E: [\s\S]*?\]/g, "")
+                    .replace(/\[Unmet need description: [\s\S]*?\]/g, "")
+                    .trim();
+                return {
+                    ...prev,
+                    context: `${headerStr}\n\n${clean}`.trim()
+                };
+            });
+        }
+    }, [
+        selectedSubTemplate,
+        mhvModuleA, mhvModuleADonationType, mhvModuleASourceOrg, mhvModuleAItems,
+        mhvModuleB, mhvModuleBProvider, mhvModuleBRole, mhvModuleBTransport,
+        mhvModuleC, mhvModuleCDoc,
+        mhvModuleD, mhvModuleDForm,
+        mhvModuleE, mhvModuleENeed
+    ]);
+
+    // Prepend dietary restrictions and household size to context when they are filled in Food Donation - Gather
+    useEffect(() => {
+        if (selectedSubTemplate === 'Food Donation – Gather') {
+            const dietStr = dietaryRestrictions.trim() 
+                ? `[Dietary Restrictions: ${dietaryRestrictions.trim()}]`

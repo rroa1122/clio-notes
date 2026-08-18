@@ -6,7 +6,8 @@ import type { Template } from '../lib/storage';
 import { normalizeClioNote } from '../lib/clioUtils';
 import EcwPrintNote from '../components/EcwPrintNote';
 import TcmNoteShell from '../components/TcmNoteShell';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { ClinicalLoader } from '../../components/ui/ClinicalLoader';
 
 const PrintNote: React.FC = () => {
     const { id: routeId } = useParams();
@@ -100,9 +101,12 @@ const PrintNote: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white">
-                <Loader2 className="animate-spin text-teal-600 mb-4" size={32} />
-                <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Preparing Clinical Document...</p>
+            <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background">
+                <ClinicalLoader
+                    size="lg"
+                    message="Preparing Clinical Document..."
+                    subtext="Formatting print layout & securing document session"
+                />
             </div>
         );
     }

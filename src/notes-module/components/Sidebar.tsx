@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onNavClick }) => {
             <path d="M8 17.5H11.5L13.5 12L18.5 22L20.5 17.5H24" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             <defs>
               <linearGradient id="logo-gradient" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#3b82f6" />
+                <stop stopColor="#4338ca" />
                 <stop offset="1" stopColor="#6366f1" />
               </linearGradient>
             </defs>

@@ -42,6 +42,7 @@ export function DatePicker({
 
   // Track the raw text in the input
   const [inputValue, setInputValue] = React.useState("")
+  const [isOpen, setIsOpen] = React.useState(false)
 
   // Update input text when date prop changes (e.g. from calendar selection)
   React.useEffect(() => {
@@ -79,28 +80,29 @@ export function DatePicker({
   // Premium Button Mode (Default - Original look for Encounter Date, etc.)
   if (mode === "button") {
     return (
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
             className={cn(
-              "flex h-full w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/50 px-4 text-sm font-semibold transition-all hover:bg-slate-100/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950/50 dark:hover:bg-slate-900/50",
-              !selectedDate && "text-slate-500",
+              "flex h-full w-full items-center justify-between px-3 text-xs font-medium transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer bg-transparent border-0 shadow-none",
+              !selectedDate && "text-muted-foreground",
               className
             )}
           >
-            <span className={cn("truncate", !selectedDate && "opacity-60")}>
+            <span className={cn("truncate", !selectedDate && "opacity-70")}>
               {selectedDate ? format(selectedDate, dateFormat || "PPP", { locale: language === 'es' ? es : undefined }) : (placeholder === "MM/DD/YYYY" ? (language === 'es' ? "Seleccionar fecha..." : "Select date...") : placeholder)}
             </span>
-            {icon || <CalendarIcon className="h-4 w-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />}
+            {icon || <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 rounded-3xl shadow-2xl" align="start">
+        <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card/98 backdrop-blur-xl" align="start" sideOffset={8}>
           <Calendar
             selected={selectedDate}
             onSelect={(newDate) => {
               if (newDate) {
                 setDate(format(newDate, "yyyy-MM-dd"))
+                setIsOpen(false)
               }
             }}
           />
@@ -120,25 +122,25 @@ export function DatePicker({
         value={inputValue}
         onChange={handleInputChange}
         placeholder={placeholder}
-        className="h-full w-full bg-transparent px-5 text-[14px] font-bold text-slate-900 outline-none border-none ring-0 focus:outline-none focus:ring-0 focus:border-none focus:shadow-none placeholder:text-slate-400 placeholder:font-normal dark:text-slate-100 shadow-none hover:shadow-none"
+        className="h-full w-full bg-transparent px-5 text-[14px] font-bold text-foreground outline-none border-none ring-0 focus:outline-none focus:ring-0 focus:border-none focus:shadow-none placeholder:text-muted-foreground placeholder:font-normal shadow-none hover:shadow-none"
       />
       
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="absolute right-3 flex h-8 w-8 items-center justify-center rounded-xl text-slate-300 hover:bg-slate-50 hover:text-indigo-500 transition-all dark:hover:bg-slate-900"
+            className="absolute right-3 flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary hover:text-primary transition-all cursor-pointer"
           >
             {icon || <CalendarIcon className="h-4 w-4" />}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 rounded-3xl shadow-2xl" align="end">
+        <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card/98 backdrop-blur-xl" align="end" sideOffset={8}>
           <Calendar
             selected={selectedDate}
             onSelect={(newDate) => {
               if (newDate) {
                 setDate(format(newDate, "yyyy-MM-dd"))
-                setInputValue(format(newDate, "MM/dd/yyyy"))
+                setIsOpen(false)
               }
             }}
           />

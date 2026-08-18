@@ -154,6 +154,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const checkMfaStatusSync = (sbUser: SupabaseUser, onComplete: (isMfaActive: boolean) => void) => {
             const trustExpiry = localStorage.getItem('mfa_trusted_until');
             const isDeviceTrusted = trustExpiry && new Date(trustExpiry) > new Date();
+            const isSessionMfaVerified = sessionStorage.getItem('clio_mfa_verified') === 'true';
+
+            if (isSessionMfaVerified) {
+                setMfaRequired(false);
+                onComplete(false);
+                return;
+            }
 
             supabase.auth.mfa.listFactors().then(({ data: factorsData, error: factorsErr }) => {
                 if (factorsErr) {
@@ -342,6 +349,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error logging logout:', e);
         }
         clearCaches();
+        sessionStorage.removeItem('clio_mfa_verified');
         await supabase.auth.signOut();
         setUser(null);
         setSession(null);
@@ -437,6 +445,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             code
         });
         if (verifyError) throw verifyError;
+
+        sessionStorage.setItem('clio_mfa_verified', 'true');
 
         if (trustDevice) {
             const trustedUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();

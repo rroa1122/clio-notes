@@ -749,11 +749,31 @@ const PrintAssessment: React.FC = () => {
                         </div>
                         <div>
                             <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Diagnosis Code (ICD-10)</span>
-                            <span className="font-extrabold text-slate-800">{patient.diagnoses?.split(' - ')[0] || needs.diagnosis_code || 'N/A'}</span>
+                            <span className="font-extrabold text-slate-800">
+                                {(() => {
+                                    const firstDiag = (patient.diagnoses || '').split('\n')[0]?.trim() || '';
+                                    const matchParen = firstDiag.match(/^\(([A-Z0-9.]+)\)/i);
+                                    if (matchParen) return matchParen[1];
+                                    if (firstDiag.includes(' - ')) return firstDiag.split(' - ')[0].trim();
+                                    const matchSpace = firstDiag.match(/^([A-Z0-9.]+)/i);
+                                    if (matchSpace && matchSpace[1].length <= 7) return matchSpace[1];
+                                    return needs.diagnosis_code || 'N/A';
+                                })()}
+                            </span>
                         </div>
                         <div>
                             <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Diagnosis Descriptor</span>
-                            <span className="font-bold text-slate-800">{patient.diagnoses?.split(' - ')[1]?.split('\n')[0] || needs.diagnosis_descriptor || 'N/A'}</span>
+                            <span className="font-bold text-slate-800">
+                                {(() => {
+                                    const firstDiag = (patient.diagnoses || '').split('\n')[0]?.trim() || '';
+                                    const matchParen = firstDiag.match(/^\(([A-Z0-9.]+)\)\s*(.*)/i);
+                                    if (matchParen) return matchParen[2] || matchParen[1];
+                                    if (firstDiag.includes(' - ')) return firstDiag.split(' - ').slice(1).join(' - ').trim();
+                                    const matchSpace = firstDiag.match(/^([A-Z0-9.]+)\s+(.*)/i);
+                                    if (matchSpace && matchSpace[1].length <= 7) return matchSpace[2];
+                                    return firstDiag || needs.diagnosis_descriptor || 'N/A';
+                                })()}
+                            </span>
                         </div>
                     </div>
 
@@ -1529,11 +1549,11 @@ const PrintAssessment: React.FC = () => {
                         </div>
                         <div>
                             <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Country of Birth</span>
-                            <span className="font-extrabold text-slate-800">{needs.origin_country || 'Cuba'}</span>
+                            <span className="font-extrabold text-slate-800">{needs.origin_country || '-'}</span>
                         </div>
                         <div>
                             <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Year entered USA</span>
-                            <span className="font-extrabold text-slate-800">{needs.us_entry_date || 'N/A'}</span>
+                            <span className="font-extrabold text-slate-800">{needs.us_entry_date || '-'}</span>
                         </div>
                     </div>
 
@@ -1549,7 +1569,7 @@ const PrintAssessment: React.FC = () => {
                     <div className="flex-1 flex flex-col gap-1">
                         <span className="block text-slate-400 font-bold uppercase tracking-wider text-[8px]">Needs identified related to client's legal / immigration:</span>
                         <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 font-medium text-indigo-600 leading-relaxed flex-1 text-justify">
-                            {needs.domain_legal_note || 'None reported at this time.'}
+                            {needs.domain_legal_note || '-'}
                         </div>
                     </div>
                 </div>
@@ -1570,14 +1590,14 @@ const PrintAssessment: React.FC = () => {
                     <div className="space-y-1.5">
                         <span className="block font-bold text-slate-500 uppercase tracking-wider text-[8px]">A. List client's current and potential strengths, abilities, assets, interests, preferences, resources that may contribute to his/her recovery and wellbeing:</span>
                         <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
-                            {needs.patient_strengths || 'The client is cooperative, compliant with medication schedules when reminders are set, and has stable housing. He maintains regular attendance at clinical appointments and communicates needs clearly.'}
+                            {needs.patient_strengths || '-'}
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
                         <span className="block font-bold text-slate-500 uppercase tracking-wider text-[8px]">B. List client's current and potential weakness, needs, barriers, challenges, etc. that may interfere with his/her recovery and wellbeing:</span>
                         <div className="p-3 border border-slate-300 rounded-xl bg-slate-50/30 text-slate-700 font-medium leading-relaxed min-h-[40px] text-justify">
-                            {needs.patient_weaknesses || 'The client has chronic mental health symptoms, lack of family support, financial difficulties, and cognitive limitations that affect independent management of appointments and social services.'}
+                            {needs.patient_weaknesses || '-'}
                         </div>
                     </div>
 
@@ -1617,7 +1637,7 @@ const PrintAssessment: React.FC = () => {
                         <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2">
                             <h4 className="font-black text-slate-800 uppercase tracking-wider mb-2">I certify that either one of the following requirements was met prior to the completion of client's Assessment:</h4>
                             <div className="space-y-2">
-                                {renderCheckbox(needs.home_visit_conducted !== false, `A home visit was conducted prior to the completion of this Assessment on: ${needs.home_visit_date || '01/05/2026'}`)}
+                                {renderCheckbox(needs.home_visit_conducted !== false, `A home visit was conducted prior to the completion of this Assessment on: ${needs.home_visit_date || needs.service_plan_assessment_date || '-'}`)}
                                 {renderCheckbox(needs.home_visit_conducted === false, 'Case Manager was unable to complete a home visit')}
                             </div>
                         </div>
@@ -1634,9 +1654,9 @@ const PrintAssessment: React.FC = () => {
                             <tbody>
                                 <tr className="font-medium text-slate-700">
                                     <td className="border border-slate-300 p-2 font-bold">Case Manager</td>
-                                    <td className="border border-slate-300 p-2">{patient.case_manager || 'Claudia Leyva'}</td>
+                                    <td className="border border-slate-300 p-2">{patient.case_manager || '-'}</td>
                                     <td className="border border-slate-300 p-2">CBHCM</td>
-                                    <td className="border border-slate-300 p-2">{needs.home_visit_date || '01/07/2026'}</td>
+                                    <td className="border border-slate-300 p-2">{needs.home_visit_date || needs.service_plan_assessment_date || '-'}</td>
                                 </tr>
                                 <tr className="font-medium text-slate-700">
                                     <td className="border border-slate-300 p-2 font-bold">Senior/Lead Case Manager</td>
@@ -1646,9 +1666,9 @@ const PrintAssessment: React.FC = () => {
                                 </tr>
                                 <tr className="font-medium text-slate-700">
                                     <td className="border border-slate-300 p-2 font-bold">Case Manager Supervisor</td>
-                                    <td className="border border-slate-300 p-2">Ileana Alvarez V.</td>
+                                    <td className="border border-slate-300 p-2">{needs.supervisor_name || '-'}</td>
                                     <td className="border border-slate-300 p-2">CBHCMS</td>
-                                    <td className="border border-slate-300 p-2">{needs.home_visit_date || '01/07/2026'}</td>
+                                    <td className="border border-slate-300 p-2">{needs.home_visit_date || needs.service_plan_assessment_date || '-'}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1657,20 +1677,20 @@ const PrintAssessment: React.FC = () => {
                     {/* Digital Signatures Display */}
                     <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-3 pb-3">
                         <div className="flex flex-col items-center text-center">
-                            <span className="text-[11px] font-black text-slate-800">{patient.case_manager || 'Claudia Leyva'}</span>
+                            <span className="text-[11px] font-black text-slate-800">{patient.case_manager || '-'}</span>
                             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Case Manager</span>
                             <div className="h-12 flex items-center justify-center my-2">
-                                <span className="font-serif italic text-lg text-slate-400/60 font-medium">/ Claudia Leyva /</span>
+                                {patient.case_manager && <span className="font-serif italic text-lg text-slate-400/60 font-medium">/ {patient.case_manager} /</span>}
                             </div>
-                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{needs.home_visit_date || '01/07/2026'}</span>
+                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{needs.home_visit_date || needs.service_plan_assessment_date || '-'}</span>
                         </div>
                         <div className="flex flex-col items-center text-center">
-                            <span className="text-[11px] font-black text-slate-800">Ileana Alvarez V.</span>
+                            <span className="text-[11px] font-black text-slate-800">{needs.supervisor_name || '-'}</span>
                             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Case Manager Supervisor</span>
                             <div className="h-12 flex items-center justify-center my-2">
-                                <span className="font-serif italic text-lg text-slate-400/60 font-medium">/ Ileana Alvarez V. /</span>
+                                {needs.supervisor_name && <span className="font-serif italic text-lg text-slate-400/60 font-medium">/ {needs.supervisor_name} /</span>}
                             </div>
-                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{needs.home_visit_date || '01/07/2026'}</span>
+                            <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{needs.home_visit_date || needs.service_plan_assessment_date || '-'}</span>
                         </div>
                     </div>
                 </div>

@@ -27,6 +27,7 @@ export interface Patient {
     email?: string | null;
     gender?: string | null;
     emr_id?: string | null;
+    amexzone_id?: string | null;
     created_at?: string;
     updated_at?: string;
     deleted_at?: string | null;
@@ -319,6 +320,7 @@ export const storage = {
             const fingerprint = await computeFingerprint(noteData);
 
             const noteId = noteData.id || crypto.randomUUID();
+            noteData.id = noteId;
             const { error } = await supabase
                 .from('notes')
                 .upsert({

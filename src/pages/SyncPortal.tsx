@@ -5,13 +5,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { toast } from 'sonner';
 import { 
     RefreshCw, 
-    Cpu, 
     CheckCircle2, 
     AlertCircle, 
     Key, 
     Clock, 
     User, 
-    Calendar, 
     Lock, 
     ShieldCheck, 
     Play, 
@@ -26,8 +24,14 @@ import {
     FileText,
     Shield,
     Activity,
-    ClipboardList
+    ClipboardList,
+    Phone,
+    Mail,
+    RotateCcw,
+    Sparkles,
+    Calendar
 } from 'lucide-react';
+import { formatSyncError } from '../lib/services/syncErrorFormatter';
 
 export function SyncPortal() {
     const { user } = useAuth();
@@ -40,6 +44,7 @@ export function SyncPortal() {
     const [pin, setPin] = useState('1206');
     const [mfaStatus, setMfaStatus] = useState<'not_connected' | 'awaiting_2fa' | 'connected' | 'expired' | 'processing'>('not_connected');
     const [mfaCode, setMfaCode] = useState('');
+    const [mfaChannel, setMfaChannel] = useState<'sms' | 'email'>('sms');
     
     // UI States
     const [loadingIntegration, setLoadingIntegration] = useState(true);
@@ -81,6 +86,7 @@ export function SyncPortal() {
                     }
                     setPin(data.amexzone_pin || '1206');
                     setMfaStatus(data.mfa_status || 'not_connected');
+                    setMfaChannel(data.mfa_channel || 'sms');
                 }
             } catch (err) {
                 console.error("Error fetching integration:", err);
@@ -228,6 +234,7 @@ export function SyncPortal() {
                     amexzone_pin: pin,
                     mfa_status: 'processing',
                     mfa_code: null,
+                    mfa_channel: mfaChannel,
                     updated_at: new Date().toISOString()
                 }, {
                     onConflict: 'user_id'
@@ -252,8 +259,8 @@ export function SyncPortal() {
             setMfaStatus('processing');
             toast.info(
                 language === 'es' 
-                    ? "Iniciando conexión. Verificando si requiere código SMS." 
-                    : "Connecting. Checking if SMS verification code is required."
+                    ? "Iniciando conexión. Verificando si requiere código 2FA." 
+                    : "Connecting. Checking if 2FA verification code is required."
             );
             setTimeout(() => fetchTasks(), 1500); // Reload tasks list to show pending
         } catch (err: any) {
@@ -264,10 +271,10 @@ export function SyncPortal() {
         }
     };
 
-    // Submit MFA SMS Code to Bot
+    // Submit MFA Code to Bot
     const handleSubmitMfaCode = async () => {
         if (!mfaCode || mfaCode.length < 4) {
-            toast.error(language === 'es' ? "Ingresa un código SMS válido" : "Please enter a valid SMS code");
+            toast.error(language === 'es' ? "Ingresa un código de verificación válido" : "Please enter a valid verification code");
             return;
         }
 
@@ -327,33 +334,36 @@ export function SyncPortal() {
     });
 
     const getTaskActionType = (task: any) => {
-        if (task.note_text === '[CONNECT]') {
+        if (task.note_text && task.note_text.startsWith('[CONNECT]')) {
             return {
-                icon: <Key size={14} className="text-amber-500" />,
-                color: "bg-amber-500/10",
+                icon: <Key size={14} className="text-amber-500 dark:text-amber-400" />,
+                badgeClasses: "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20",
+                color: "bg-amber-500/10 dark:bg-amber-500/20",
                 name: language === 'es' ? "Prueba de Conexión" : "Connection Test"
             };
         }
-        if (task.note_text === '[IMPORT_PATIENT]') {
+        if (task.note_text && task.note_text.startsWith('[IMPORT_PATIENT]')) {
             return {
-                icon: <UserPlus size={14} className="text-sky-500" />,
-                color: "bg-sky-500/10",
+                icon: <UserPlus size={14} className="text-sky-500 dark:text-sky-400" />,
+                badgeClasses: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20",
+                color: "bg-sky-500/10 dark:bg-sky-500/20",
                 name: language === 'es' ? "Importar Paciente" : "Patient Import"
             };
         }
         return {
-            icon: <FileText size={14} className="text-indigo-500" />,
-            color: "bg-indigo-500/10",
+            icon: <FileText size={14} className="text-primary" />,
+            badgeClasses: "bg-primary/10 text-primary border-primary/20",
+            color: "bg-primary/10 dark:bg-primary/20",
             name: language === 'es' ? "Sincronizar Nota" : "Note Sync"
         };
     };
 
     if (loadingIntegration) {
         return (
-            <div className="flex-1 flex items-center justify-center min-h-[400px]">
-                <div className="flex flex-col items-center gap-4">
-                    <RefreshCw size={32} className="animate-spin text-[#6366f1]" />
-                    <p className="text-xs font-black uppercase text-slate-500 tracking-widest animate-pulse">
+            <div className="flex-1 flex items-center justify-center min-h-[460px]">
+                <div className="flex flex-col items-center gap-4 p-8 rounded-3xl backdrop-blur-xl bg-card/60 border border-border/60 shadow-soft">
+                    <RefreshCw size={36} className="animate-spin text-primary" />
+                    <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest animate-pulse">
                         {language === 'es' ? "Cargando Portal de Sincronización..." : "Loading Sync Portal..."}
                     </p>
                 </div>
@@ -362,470 +372,634 @@ export function SyncPortal() {
     }
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-4 pt-4 lg:pt-8 h-auto mb-16">
-            <div className="flex flex-col bg-transparent md:bg-surface md:dark:bg-slate-900 rounded-[2rem] shadow-none md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 md:border border-border/60 overflow-hidden relative h-auto">
+        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-3 sm:px-6 pt-1 pb-16 space-y-8">
 
-                {/* Content body wrapper - expands naturally, no inner scroll */}
-                <div className="p-8 space-y-8">
+            {/* Main Frosted Glass Connection Card */}
+            <div className="backdrop-blur-2xl bg-card/95 border border-border/60 shadow-elevated rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-all duration-300">
+                {/* Subtle Ambient Radial Glow */}
+                <div 
+                    className={`pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl opacity-15 transition-colors duration-700 ${
+                        mfaStatus === 'connected' 
+                            ? 'bg-emerald-500' 
+                            : mfaStatus === 'awaiting_2fa' 
+                            ? 'bg-amber-500' 
+                            : mfaStatus === 'processing' 
+                            ? 'bg-blue-500' 
+                            : mfaStatus === 'expired' 
+                            ? 'bg-rose-500' 
+                            : 'bg-primary'
+                    }`} 
+                />
+
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
                     
-                    {/* Top Row: Credentials & Authentication Cards */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                        
-                        {/* Connection credentials block (Left Card) */}
-                        <div className="lg:col-span-7 bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)] flex flex-col justify-between space-y-6">
-                            <div className="space-y-5">
-                                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
-                                    <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest pl-1">
-                                        {language === 'es' ? "Credenciales del Portal" : "Portal Credentials"}
+                    {/* Left Column: Connection credentials & configuration */}
+                    <div className="lg:col-span-7 bg-muted/30 dark:bg-slate-900/40 p-6 rounded-2xl border border-border/60 flex flex-col justify-between space-y-6">
+                        <div className="space-y-5">
+                            <div className="flex items-center justify-between pb-3 border-b border-border/50">
+                                <div className="flex items-center gap-2">
+                                    <Key size={15} className="text-primary" />
+                                    <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                                        {language === 'es' ? "Credenciales de Acceso Amexzone" : "Amexzone Portal Credentials"}
                                     </h2>
-                                    
-                                    {/* Live Badge */}
-                                    {mfaStatus === 'connected' ? (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 uppercase tracking-wider">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                                            {language === 'es' ? "En Línea" : "Active Session"}
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                            {language === 'es' ? "Desconectado" : "Offline"}
-                                        </span>
-                                    )}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <InputField
+                                    label="Amexzone Email"
+                                    value={email}
+                                    onChange={setEmail}
+                                    placeholder="doctor@arcmentalhealth.com"
+                                    icon={User}
+                                    disabled={mfaStatus !== 'not_connected'}
+                                />
+
+                                <InputField
+                                    label={language === 'es' ? "Contraseña de Amexzone" : "Amexzone Password"}
+                                    value={password}
+                                    onChange={setPassword}
+                                    placeholder="••••••••••••"
+                                    icon={Lock}
+                                    type="password"
+                                    disabled={mfaStatus !== 'not_connected'}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                                <InputField
+                                    label={language === 'es' ? "PIN de Acceso" : "Access PIN"}
+                                    value={pin}
+                                    onChange={setPin}
+                                    placeholder="1206"
+                                    icon={Key}
+                                    type="password"
+                                    disabled={mfaStatus !== 'not_connected'}
+                                />
+
+                                {/* MFA Channel Selection */}
+                                <div className="flex flex-col space-y-2">
+                                    <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">
+                                        {language === 'es' ? "Canal 2FA" : "2FA Channel"}
+                                    </label>
+                                    <div className="h-11 rounded-xl border border-border/80 bg-background/80 flex p-1 gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setMfaChannel('sms')}
+                                            disabled={mfaStatus !== 'not_connected'}
+                                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                                mfaChannel === 'sms'
+                                                    ? "bg-card text-primary shadow-sm border border-border/60"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            }`}
+                                        >
+                                            <Phone size={13} />
+                                            SMS
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setMfaChannel('email')}
+                                            disabled={mfaStatus !== 'not_connected'}
+                                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                                mfaChannel === 'email'
+                                                    ? "bg-card text-primary shadow-sm border border-border/60"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            }`}
+                                        >
+                                            <Mail size={13} />
+                                            {language === 'es' ? "Correo" : "Email"}
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <InputField
-                                        label="Amexzone Email"
-                                        value={email}
-                                        onChange={setEmail}
-                                        placeholder="doctor@arcmentalhealth.com"
-                                        icon={User}
-                                        disabled={mfaStatus !== 'not_connected'}
-                                    />
-
-                                    <InputField
-                                        label={language === 'es' ? "Contraseña de Amexzone" : "Amexzone Password"}
-                                        value={password}
-                                        onChange={setPassword}
-                                        placeholder="••••••••••••"
-                                        icon={Lock}
-                                        type="password"
-                                        disabled={mfaStatus !== 'not_connected'}
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <InputField
-                                        label={language === 'es' ? "PIN de Acceso Amexzone" : "Amexzone Access PIN"}
-                                        value={pin}
-                                        onChange={setPin}
-                                        placeholder="1206"
-                                        icon={Key}
-                                        type="password"
-                                        disabled={mfaStatus !== 'not_connected'}
-                                    />
-
-                                    {/* Status Pill Inside Container */}
-                                    <div className="flex flex-col justify-end">
-                                        <label className="block text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest pl-1 mb-2">
-                                            {language === 'es' ? "Estado de Conexión" : "Connection Status"}
-                                        </label>
-                                        <div className="h-11 rounded-xl px-4 border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
-                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                                                {language === 'es' ? "Resultado:" : "Status:"}
-                                            </span>
-                                            <div className="flex items-center gap-2">
-                                                {mfaStatus === 'connected' ? (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                                                        <CheckCircle2 size={10} /> {language === 'es' ? "Conectado" : "Connected"}
-                                                    </span>
-                                                ) : mfaStatus === 'awaiting_2fa' ? (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 uppercase tracking-wider animate-pulse">
-                                                        <Clock size={10} /> {language === 'es' ? "Esperando SMS" : "Awaiting SMS"}
-                                                    </span>
-                                                ) : mfaStatus === 'processing' ? (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 uppercase tracking-wider">
-                                                        <RefreshCw size={10} className="animate-spin" /> {language === 'es' ? "Verificando..." : "Verifying..."}
-                                                    </span>
-                                                ) : mfaStatus === 'expired' ? (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 uppercase tracking-wider">
-                                                        <AlertTriangle size={10} /> {language === 'es' ? "Expirada" : "Expired"}
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                                        <AlertCircle size={10} /> {language === 'es' ? "No Conectado" : "Not Linked"}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        {/* Session health description */}
-                                        <p className="text-[10px] text-slate-400 dark:text-slate-550 mt-2 font-semibold leading-normal pl-1">
-                                            {mfaStatus === 'connected' && (language === 'es' 
-                                                ? "✓ La sesión está activa. Las credenciales y el navegador seguro están funcionando correctamente." 
-                                                : "✓ Session is active. Credentials and persistent browser state are healthy.")}
-                                            {mfaStatus === 'expired' && (language === 'es' 
-                                                ? "⚠️ La sesión ha caducado en Amexzone. Por favor, haz clic en desconectar y vuelve a conectar para iniciar sesión." 
-                                                : "⚠️ Session has expired in Amexzone. Please disconnect and reconnect to re-authenticate.")}
-                                            {mfaStatus === 'awaiting_2fa' && (language === 'es' 
-                                                ? "⏳ El bot ha enviado un código de acceso a tu teléfono. Escríbelo en el campo de arriba." 
-                                                : "⏳ The bot has sent an access code to your phone. Enter it in the input field above.")}
-                                            {mfaStatus === 'not_connected' && (language === 'es' 
-                                                ? "ℹ️ Ingresa tus credenciales para conectar Amexzone con Clio Notes." 
-                                                : "ℹ️ Enter your credentials to link Amexzone with Clio Notes.")}
-                                        </p>
+                                {/* Status Summary Tile */}
+                                <div className="flex flex-col space-y-2">
+                                    <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">
+                                        {language === 'es' ? "Estado" : "State"}
+                                    </label>
+                                    <div className="h-11 rounded-xl px-3 border border-border/80 bg-background/80 flex items-center justify-between">
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                                            {language === 'es' ? "Sesión:" : "Session:"}
+                                        </span>
+                                        <ConnectionStatusPill status={mfaStatus} language={language} compact />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 mt-6">
-                                {mfaStatus !== 'connected' && mfaStatus !== 'processing' && mfaStatus !== 'awaiting_2fa' && (
-                                    <button
-                                        onClick={handleConnect}
-                                        disabled={saving}
-                                        className="w-full h-12 bg-[#6366f1] text-white rounded-2xl font-bold hover:bg-indigo-750 transition-all flex items-center justify-center gap-2 text-sm shadow-sm active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-                                    >
-                                        <Play size={16} />
-                                        {saving 
-                                            ? (language === 'es' ? "Estableciendo conexión..." : "Initiating connection...") 
-                                            : (language === 'es' ? "Conectar e Iniciar Login" : "Connect & Verify Account")}
-                                    </button>
-                                )}
-
-                                {(mfaStatus === 'connected' || mfaStatus === 'awaiting_2fa' || mfaStatus === 'processing' || mfaStatus === 'expired') && (
-                                    <button
-                                        onClick={handleDisconnect}
-                                        className="w-full h-12 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-350 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-sm active:scale-[0.98] cursor-pointer"
-                                    >
-                                        <Trash2 size={15} />
-                                        {language === 'es' ? "Desconectar y Modificar Credenciales" : "Disconnect & Edit Credentials"}
-                                    </button>
-                                )}
+                            {/* Session status banner message */}
+                            <div className="p-3 rounded-xl bg-background/60 border border-border/60 flex items-start gap-2.5">
+                                <Info size={15} className="text-primary shrink-0 mt-0.5" />
+                                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                                    {mfaStatus === 'connected' && (language === 'es' 
+                                        ? "La sesión está activa y verificada. Las notas se sincronizarán automáticamente con Amexzone al ser firmadas." 
+                                        : "Session is verified and active. Signed notes are automatically dispatched and synced to Amexzone.")}
+                                    {mfaStatus === 'expired' && (language === 'es' 
+                                        ? "La sesión de Amexzone ha caducado. Haz clic en desconectar y vuelve a iniciar sesión." 
+                                        : "Amexzone session has expired. Please disconnect and reconnect to re-authenticate.")}
+                                    {mfaStatus === 'awaiting_2fa' && (
+                                        mfaChannel === 'email' ? (
+                                            language === 'es'
+                                                ? "Código 2FA solicitado vía correo electrónico. Introdúcelo en el panel lateral para completar el enlace."
+                                                : "2FA code requested via Email. Enter it in the side verification card to finish connecting."
+                                        ) : (
+                                            language === 'es'
+                                                ? "Código 2FA solicitado vía SMS. Introdúcelo en el panel lateral para completar el enlace."
+                                                : "2FA code requested via SMS. Enter it in the side verification card to finish connecting."
+                                        )
+                                    )}
+                                    {mfaStatus === 'processing' && (language === 'es'
+                                        ? "El bot automatizado está validando las credenciales y conectando con el portal seguro..."
+                                        : "Automated bot is verifying credentials and linking with the secure portal...")}
+                                    {mfaStatus === 'not_connected' && (language === 'es' 
+                                        ? "Ingresa tus credenciales clínicas de Amexzone y presiona 'Conectar' para habilitar el puente de sincronización." 
+                                        : "Enter your Amexzone clinical credentials and click 'Connect' to enable the synchronization bridge.")}
+                                </p>
                             </div>
                         </div>
 
-                        {/* Status and 2FA SMS Code Entry Card (Right Card) */}
-                        <div className="lg:col-span-5 flex flex-col">
-                            {((mfaStatus === 'awaiting_2fa') || (mfaStatus === 'processing' && mfaCode)) ? (
-                                <div className="bg-gradient-to-b from-amber-500/10 to-amber-600/5 dark:from-amber-950/20 dark:to-amber-950/5 p-6 rounded-2xl border border-amber-500/25 dark:border-amber-900/30 shadow-[inset_0_1.5px_3px_rgba(245,158,11,0.015)] space-y-4 animate-in slide-in-from-top duration-300 flex flex-col justify-center h-full">
-                                    <div className="flex gap-3">
-                                        <ShieldCheck className="text-amber-500 shrink-0 mt-1" size={20} />
+                        {/* Action buttons */}
+                        <div className="pt-4 border-t border-border/50">
+                            {mfaStatus !== 'connected' && mfaStatus !== 'processing' && mfaStatus !== 'awaiting_2fa' && (
+                                <button
+                                    onClick={handleConnect}
+                                    disabled={saving}
+                                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-bold transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-md hover:shadow-lg active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                                >
+                                    {saving ? (
+                                        <>
+                                            <RefreshCw size={16} className="animate-spin" />
+                                            {language === 'es' ? "Estableciendo conexión..." : "Initiating connection..."}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Play size={16} />
+                                            {language === 'es' ? "Conectar e Iniciar Login" : "Connect & Verify Account"}
+                                        </>
+                                    )}
+                                </button>
+                            )}
+
+                            {(mfaStatus === 'connected' || mfaStatus === 'awaiting_2fa' || mfaStatus === 'processing' || mfaStatus === 'expired') && (
+                                <button
+                                    onClick={handleDisconnect}
+                                    className="w-full h-12 bg-muted/80 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 border border-border/80 text-foreground rounded-2xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm active:scale-[0.99] cursor-pointer"
+                                >
+                                    <Trash2 size={15} />
+                                    {language === 'es' ? "Desconectar y Modificar Credenciales" : "Disconnect & Edit Credentials"}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Column: 2FA Input Card or Active Status Showcase */}
+                    <div className="lg:col-span-5 flex flex-col">
+                        {mfaStatus === 'awaiting_2fa' ? (
+                            <div className="bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent dark:from-amber-950/30 dark:via-amber-950/10 dark:to-transparent p-6 sm:p-7 rounded-2xl border border-amber-500/30 shadow-soft flex flex-col justify-between h-full space-y-6 animate-in slide-in-from-top-4 duration-300">
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                                            <ShieldCheck size={22} />
+                                        </div>
                                         <div>
-                                            <h4 className="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">
-                                                {language === 'es' ? "Doble Factor (2FA) Requerido" : "Two-Factor Authentication"}
+                                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-700 dark:text-amber-400 mb-1">
+                                                <span>PASO 2 DE 3</span>
+                                            </div>
+                                            <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300 tracking-tight">
+                                                {language === 'es' ? "SMS Enviado a tu Teléfono" : "SMS Sent to Your Phone"}
                                             </h4>
-                                            <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed mt-2.5 font-semibold">
-                                                {language === 'es' 
-                                                    ? "Amexzone ha solicitado un código de verificación SMS enviado a tu teléfono. Por favor, introdúcelo abajo." 
-                                                    : "Amexzone has requested an SMS verification code sent to your phone. Enter it below."}
+                                            <p className="text-xs text-muted-foreground font-medium leading-relaxed mt-1">
+                                                {mfaChannel === 'email' ? (
+                                                    language === 'es'
+                                                        ? "Ingresa el código enviado a tu correo electrónico para autorizar la sesión del bot."
+                                                        : "Enter the code sent to your email to authenticate the synchronization bot."
+                                                ) : (
+                                                    language === 'es'
+                                                        ? "Amexzone acaba de enviar el código por SMS. Ingrésalo a continuación para autorizar el dispositivo por 90 días."
+                                                        : "Amexzone just dispatched the SMS code. Enter it below to trust this device for 90 days."
+                                                )}
                                             </p>
                                         </div>
                                     </div>
-                                    
-                                    <div className="space-y-3 pt-3">
+
+                                    <div className="space-y-3 pt-2">
+                                        <label className="block text-[11px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider text-center">
+                                            {language === 'es' ? "Código de Seguridad (6 dígitos)" : "Security Code (6 digits)"}
+                                        </label>
                                         <input
                                             type="text"
                                             value={mfaCode}
                                             onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').substring(0, 6))}
-                                            className="w-full h-12 px-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:ring-4 focus:ring-amber-500/10 text-center tracking-[0.25em] text-lg font-bold focus:border-amber-500/50 text-slate-900 dark:text-slate-100"
+                                            className="w-full h-14 px-4 rounded-2xl border-2 border-amber-500/40 bg-background/90 focus:outline-none focus:ring-4 focus:ring-amber-500/20 text-center tracking-[0.3em] font-mono text-2xl font-bold text-foreground transition-all shadow-inner"
                                             placeholder="123456"
-                                            disabled={submittingMfa || mfaStatus === 'processing'}
+                                            disabled={submittingMfa}
+                                            autoFocus
                                         />
-                                        <button
-                                            onClick={handleSubmitMfaCode}
-                                            disabled={submittingMfa || mfaStatus === 'processing' || mfaCode.length < 4}
-                                            className="w-full h-11 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors disabled:opacity-50 shadow-sm shadow-amber-500/20 active:scale-[0.98] cursor-pointer"
-                                        >
-                                            {submittingMfa ? (language === 'es' ? "Enviando..." : "Submitting...") : (language === 'es' ? "Enviar Código" : "Submit Code")}
-                                        </button>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="bg-gradient-to-b from-slate-50/60 to-slate-100/20 dark:from-slate-900/40 dark:to-slate-950/20 p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.015)] flex flex-col items-center justify-center text-center h-full space-y-4">
-                                    <div className="size-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/20 text-[#6366f1] flex items-center justify-center border border-indigo-100/30 dark:border-indigo-900/30">
-                                        <Shield size={24} className="text-[#6366f1]" />
-                                    </div>
-                                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest pl-0.5">
-                                        {mfaStatus === 'connected' 
-                                            ? (language === 'es' ? "Conexión Activa" : "Connection Secured")
-                                            : (language === 'es' ? "Enlace del Bot" : "Bot Integration")}
-                                    </h4>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed font-bold uppercase tracking-wide">
-                                        {mfaStatus === 'connected'
-                                            ? (language === 'es' 
-                                                ? "El bot local está completamente autenticado y sincronizará tus notas en tiempo real cada vez que las firmes."
-                                                : "The local bot is fully authenticated and will sync your notes in real-time as soon as they are signed.")
-                                            : (language === 'es'
-                                                ? "Ingresa tus credenciales del portal Amexzone y haz clic en Conectar para sincronizar la base de datos de tu clínica."
-                                                : "Enter your portal credentials on the left and click Connect to link your clinic database.")}
-                                    </p>
-                                    
-                                    {mfaStatus === 'connected' && (
-                                        <div className="inline-flex items-center gap-1.5 text-emerald-500 font-bold text-[9px] uppercase tracking-widest bg-emerald-500/5 px-4 py-1.5 rounded-full border border-emerald-500/10">
-                                            <Check size={11} /> {language === 'es' ? "LISTO PARA COPIAR" : "READY FOR SYNC"}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
 
-                    </div>
-
-                    {/* Bottom Section: Bot logs and reports table */}
-                    <div className="space-y-8 mt-2">
-                        
-                        {/* Table search, filter tabs & refresh button combined in a single row */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            {/* Filter tabs */}
-                            <div className="flex flex-wrap gap-2.5">
-                                {(['all', 'completed', 'failed', 'processing', 'pending'] as const).map((tab) => {
-                                    const count = tasks.filter(t => tab === 'all' || t.status === tab).length;
-                                    const label = tab === 'all' ? (language === 'es' ? 'Todos' : 'All') :
-                                                  tab === 'completed' ? (language === 'es' ? 'Completados' : 'Completed') :
-                                                  tab === 'failed' ? (language === 'es' ? 'Fallidos' : 'Failed') :
-                                                  tab === 'processing' ? (language === 'es' ? 'Procesando' : 'Processing') :
-                                                  (language === 'es' ? 'Pendientes' : 'Pending');
-                                                  
-                                    const isActive = statusFilter === tab;
-                                    return (
-                                        <button
-                                            key={tab}
-                                            onClick={() => setStatusFilter(tab)}
-                                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer ${isActive
-                                                ? 'bg-slate-100 dark:bg-slate-800/85 text-indigo-650 dark:text-indigo-400 shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-700/30'
-                                                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-850/40 hover:text-slate-900 dark:hover:text-slate-200'
-                                            }`}
-                                        >
-                                            <span>{label}</span>
-                                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-indigo-100/80 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-455' : 'bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400'}`}>
-                                                {count}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Search bar & Refresh button aligned on the right */}
-                            <div className="flex items-center gap-3 shrink-0">
-                                {/* Search Input */}
-                                <div className="flex items-center border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-full pl-3.5 pr-4 h-9 shadow-sm relative group hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-indigo-500/40 focus-within:ring-4 focus-within:ring-indigo-500/5 transition-all w-52">
-                                    <div className="text-slate-400 mr-2 pointer-events-none flex-shrink-0">
-                                        <Search className="w-3.5 h-3.5" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="h-full w-full bg-transparent border-0 p-0 !outline-none !ring-0 focus:!outline-none focus:!ring-0 focus-visible:!outline-none focus-visible:!ring-0 text-xs font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
-                                        style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
-                                        placeholder={language === 'es' ? "Buscar paciente..." : "Search patient..."}
-                                    />
-                                </div>
-
-                                {/* Refresh Button */}
-                                <button 
-                                    onClick={fetchTasks}
-                                    className="size-9 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-800/80 rounded-full border border-slate-200/80 dark:border-slate-800/80 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors flex items-center justify-center shadow-sm cursor-pointer"
-                                    title="Actualizar log"
+                                <button
+                                    onClick={handleSubmitMfaCode}
+                                    disabled={submittingMfa || mfaCode.length < 4}
+                                    className="w-full h-12 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold rounded-2xl text-xs uppercase tracking-wider transition-all duration-200 disabled:opacity-50 shadow-md shadow-amber-500/20 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
                                 >
-                                    <RefreshCw size={13} className={loadingTasks ? "animate-spin text-[#6366f1]" : ""} />
+                                    {submittingMfa ? (
+                                        <>
+                                            <RefreshCw size={15} className="animate-spin" />
+                                            {language === 'es' ? "Verificando código..." : "Verifying code..."}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check size={15} />
+                                            {language === 'es' ? "Verificar y Enlazar Cuenta (90 Días)" : "Verify & Link Account (90 Days)"}
+                                        </>
+                                    )}
                                 </button>
                             </div>
-                        </div>
+                        ) : mfaStatus === 'processing' ? (
+                            <div className="bg-gradient-to-b from-blue-500/10 via-blue-500/5 to-transparent dark:from-blue-950/30 dark:via-blue-950/10 dark:to-transparent p-6 sm:p-7 rounded-2xl border border-blue-500/30 shadow-soft flex flex-col justify-between h-full space-y-6 animate-in slide-in-from-top-4 duration-300">
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                                            <RefreshCw size={22} className="animate-spin" />
+                                        </div>
+                                        <div>
+                                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-700 dark:text-blue-400 mb-1">
+                                                <span>{mfaCode ? "PASO 3 DE 3" : "PASO 1 DE 3"}</span>
+                                            </div>
+                                            <h4 className="text-sm font-bold text-blue-900 dark:text-blue-300 tracking-tight">
+                                                {mfaCode 
+                                                    ? (language === 'es' ? "Validando Código 2FA y Guardando Sesión..." : "Validating 2FA Code & Saving Session...") 
+                                                    : (language === 'es' ? "Conectando con Amexzone..." : "Connecting to Amexzone...")}
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground font-medium leading-relaxed mt-1">
+                                                {mfaCode 
+                                                    ? (language === 'es' 
+                                                        ? "El bot está validando tu código en Amexzone y autorizando este dispositivo por 90 días." 
+                                                        : "The bot is verifying your code with Amexzone and trusting this device for 90 days.") 
+                                                    : (language === 'es' 
+                                                        ? "Iniciando sesión de forma segura y solicitando el código de verificación por SMS..." 
+                                                        : "Securely logging in and requesting the 2FA SMS verification code...")}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                        {/* Custom Table Pill-shaped List matching layout of patient list */}
-                        {loadingTasks ? (
-                            <div className="py-16 flex items-center justify-center">
-                                <RefreshCw size={24} className="animate-spin text-slate-400" />
-                            </div>
-                        ) : filteredTasks.length === 0 ? (
-                            <div className="py-16 text-center text-slate-400 dark:text-slate-500 text-xs italic font-bold">
-                                {language === 'es' ? "No hay registros disponibles." : "No records found matching filters."}
+                                    <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 flex items-center gap-3">
+                                        <div className="size-2.5 rounded-full bg-blue-500 animate-ping" />
+                                        <span className="text-xs font-semibold text-blue-800 dark:text-blue-300">
+                                            {mfaCode 
+                                                ? (language === 'es' ? "Estableciendo sesión de 90 días..." : "Establishing 90-day session...")
+                                                : (language === 'es' ? "Esperando que Amexzone despache el SMS..." : "Waiting for Amexzone SMS dispatch...")}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
-                            <div className="space-y-3.5 pb-8">
-                                {/* Header Row */}
-                                <div className="grid grid-cols-12 gap-4 px-6 pb-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800/80 mb-4">
-                                    <div className="col-span-2">{language === 'es' ? "Tipo / Acción" : "Action Type"}</div>
-                                    <div className="col-span-3">{language === 'es' ? "Paciente / Detalle" : "Patient Detail"}</div>
-                                    <div className="col-span-1">{language === 'es' ? "F. Visita" : "Visit Date"}</div>
-                                    <div className="col-span-2">{language === 'es' ? "Fecha Creación" : "Created At"}</div>
-                                    <div className="col-span-2 text-center">{language === 'es' ? "Estado" : "Status"}</div>
-                                    <div className="col-span-2 text-left pl-3">{language === 'es' ? "Acciones" : "Actions"}</div>
+                            <div className="bg-muted/30 dark:bg-slate-900/40 p-6 sm:p-7 rounded-2xl border border-border/60 flex flex-col items-center justify-center text-center h-full space-y-5">
+                                <div className={`size-16 rounded-2xl flex items-center justify-center border transition-all duration-300 ${
+                                    mfaStatus === 'connected'
+                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                                        : 'bg-primary/10 text-primary border-primary/20'
+                                }`}>
+                                    {mfaStatus === 'connected' ? <ShieldCheck size={32} /> : <Shield size={32} />}
+                                </div>
+                                
+                                <div className="space-y-1.5 max-w-xs">
+                                    <h4 className="text-sm font-bold text-foreground">
+                                        {mfaStatus === 'connected' 
+                                            ? (language === 'es' ? "Conexión EMR Segura Activa" : "Secure EMR Link Active")
+                                            : (language === 'es' ? "Integración Amexzone" : "Amexzone Bot Integration")}
+                                    </h4>
+                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                                        {mfaStatus === 'connected'
+                                            ? (language === 'es' 
+                                                ? "El bot local está completamente sincronizado y autorizado por 90 días para procesar tus notas clínicas."
+                                                : "The automated local bot is authenticated and trusted for 90 days to sync clinical notes.")
+                                            : (language === 'es'
+                                                ? "Ingresa tus credenciales en el panel izquierdo y haz clic en Conectar para sincronizar con Amexzone."
+                                                : "Provide your portal credentials on the left and click Connect to link your clinic database.")}
+                                    </p>
                                 </div>
 
-                                {/* Body Rows */}
-                                {filteredTasks.map((task) => {
-                                    const details = getTaskActionType(task);
-                                    const taskDate = new Date(task.created_at).toLocaleString(language === 'es' ? 'es-ES' : 'en-US', {
-                                        month: 'short',
-                                        day: 'numeric',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    });
-
-                                    return (
-                                        <div
-                                            key={task.id}
-                                            className="grid grid-cols-12 gap-4 items-center border border-slate-100 dark:border-slate-800/80 bg-surface dark:bg-slate-900/60 hover:bg-indigo-50/5 dark:hover:bg-indigo-950/5 hover:border-indigo-300/60 dark:hover:border-indigo-800/60 rounded-full px-6 py-2 transition-all duration-300 cursor-default group hover:-translate-y-0.5"
-                                        >
-                                            {/* Action Type */}
-                                            <div className="col-span-2 flex items-center gap-2.5 min-w-0">
-                                                <span className={`size-10 rounded-full flex items-center justify-center text-base ${details.color} shrink-0 transition-all duration-300 group-hover:scale-105 shadow-sm`}>
-                                                    {details.icon}
-                                                </span>
-                                                <span className="font-semibold text-slate-700 dark:text-slate-350 text-xs truncate">
-                                                    {details.name}
-                                                </span>
-                                            </div>
-
-                                            {/* Patient Detail */}
-                                            <div className="col-span-3 truncate">
-                                                <div className="space-y-0.5 truncate">
-                                                    <p className="font-bold text-slate-850 dark:text-slate-200 text-xs truncate">{task.patient_name}</p>
-                                                    {task.patient_dob && (
-                                                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">DOB: {task.patient_dob}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Visit Date */}
-                                            <div className="col-span-1 text-slate-400 dark:text-slate-500 font-semibold text-xs uppercase tracking-wide">
-                                                {task.visit_date || 'N/A'}
-                                            </div>
-
-                                            {/* Created At */}
-                                            <div className="col-span-2 text-slate-400 dark:text-slate-500 font-semibold text-xs uppercase tracking-wide truncate">
-                                                {taskDate}
-                                            </div>
-
-                                            {/* Status Badge */}
-                                            <div className="col-span-2 text-center whitespace-nowrap">
-                                                {task.status === 'completed' ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
-                                                        {language === 'es' ? "Completado" : "Completed"}
-                                                    </span>
-                                                ) : task.status === 'processing' ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 uppercase tracking-wider animate-pulse">
-                                                        {language === 'es' ? "Procesando" : "Processing"}
-                                                    </span>
-                                                ) : task.status === 'failed' ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 uppercase tracking-wider">
-                                                        {language === 'es' ? "Fallido" : "Failed"}
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[9px] font-bold rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                                        {language === 'es' ? "Pendiente" : "Pending"}
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Actions */}
-                                            <div className="col-span-2">
-                                                <div className="flex items-center justify-start gap-2">
-                                                    {/* View Report Button */}
-                                                    {(task.status === 'completed' && task.result_summary) || (task.status === 'failed' && task.error_message) ? (
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                                                            className="h-7 px-3 rounded-full bg-indigo-50 border border-indigo-100/50 dark:bg-indigo-950/25 dark:border-indigo-900/30 text-[#6366f1] hover:bg-[#6366f1] hover:text-white dark:hover:bg-[#6366f1] dark:hover:text-white transition-all flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider shadow-sm cursor-pointer"
-                                                        >
-                                                            <Eye size={11} />
-                                                            <span>{language === 'es' ? "Reporte" : "Report"}</span>
-                                                        </button>
-                                                    ) : null}
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    );
-                                })}
+                                {mfaStatus === 'connected' && (
+                                    <div className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-[11px] uppercase tracking-wider bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20 shadow-sm">
+                                        <Sparkles size={13} className="text-emerald-500" />
+                                        <span>{language === 'es' ? "PUENTE LISTO PARA SINCRONIZAR" : "READY FOR NOTE DISPATCH"}</span>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
 
-                </div> {/* End scrollable content body */}
-            </div> {/* End Inner card container */}
+                </div>
+            </div>
 
-        {/* Detailed Report Modal */}
+            {/* Bottom Section: Bot logs and execution history */}
+            <div className="space-y-6">
+                
+                {/* Section Title & Controls Bar */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    
+                    {/* Status Filter Tabs */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        {(['all', 'completed', 'failed', 'processing', 'pending'] as const).map((tab) => {
+                            const count = tasks.filter(t => tab === 'all' || t.status === tab).length;
+                            const label = tab === 'all' ? (language === 'es' ? 'Todos' : 'All') :
+                                          tab === 'completed' ? (language === 'es' ? 'Completados' : 'Completed') :
+                                          tab === 'failed' ? (language === 'es' ? 'Fallidos' : 'Failed') :
+                                          tab === 'processing' ? (language === 'es' ? 'Procesando' : 'Processing') :
+                                          (language === 'es' ? 'Pendientes' : 'Pending');
+                                          
+                            const isActive = statusFilter === tab;
+                            return (
+                                <button
+                                    key={tab}
+                                    onClick={() => setStatusFilter(tab)}
+                                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer ${
+                                        isActive
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
+                                    }`}
+                                >
+                                    <span>{label}</span>
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+                                        isActive 
+                                            ? 'bg-primary-foreground/20 text-primary-foreground' 
+                                            : 'bg-muted text-muted-foreground'
+                                    }`}>
+                                        {count}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Search & Refresh Bar */}
+                    <div className="flex items-center gap-2.5 shrink-0">
+                        {/* Search Input */}
+                        <div className="flex items-center border border-border/80 bg-card rounded-full pl-3.5 pr-3 h-10 shadow-sm relative group focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all w-full sm:w-64">
+                            <Search className="w-4 h-4 text-muted-foreground mr-2 shrink-0 pointer-events-none" />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="h-full w-full bg-transparent border-0 p-0 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
+                                placeholder={language === 'es' ? "Buscar paciente o nota..." : "Search patient or note..."}
+                            />
+                            {searchTerm && (
+                                <button 
+                                    onClick={() => setSearchTerm('')} 
+                                    className="p-1 text-muted-foreground hover:text-foreground rounded-full"
+                                >
+                                    <X size={12} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Refresh Button */}
+                        <button 
+                            onClick={fetchTasks}
+                            disabled={loadingTasks}
+                            className="size-10 bg-card hover:bg-muted rounded-full border border-border/80 text-muted-foreground hover:text-foreground transition-all flex items-center justify-center shadow-sm cursor-pointer active:scale-95 disabled:opacity-50"
+                            title={language === 'es' ? "Actualizar registros" : "Refresh logs"}
+                        >
+                            <RefreshCw size={14} className={loadingTasks ? "animate-spin text-primary" : ""} />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Tasks Table / Card List */}
+                {loadingTasks ? (
+                    <div className="py-20 flex flex-col items-center justify-center gap-3 backdrop-blur-sm bg-card/40 border border-border/50 rounded-3xl">
+                        <RefreshCw size={28} className="animate-spin text-primary" />
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            {language === 'es' ? "Cargando historial de sincronización..." : "Loading task records..."}
+                        </p>
+                    </div>
+                ) : filteredTasks.length === 0 ? (
+                    <div className="py-20 text-center backdrop-blur-sm bg-card/40 border border-border/50 rounded-3xl p-8 space-y-2">
+                        <ClipboardList size={32} className="mx-auto text-muted-foreground/50" />
+                        <p className="text-sm font-semibold text-foreground">
+                            {language === 'es' ? "No se encontraron tareas" : "No task logs found"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {language === 'es' ? "No hay registros que coincidan con los filtros seleccionados." : "There are no records matching your current filter criteria."}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {/* Table Header (Desktop) */}
+                        <div className="hidden lg:grid grid-cols-12 gap-4 px-6 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50">
+                            <div className="col-span-3">{language === 'es' ? "Tipo / Acción" : "Action Type"}</div>
+                            <div className="col-span-3">{language === 'es' ? "Paciente / Detalle" : "Patient Detail"}</div>
+                            <div className="col-span-1">{language === 'es' ? "Visita" : "Visit"}</div>
+                            <div className="col-span-2">{language === 'es' ? "Fecha Creación" : "Created At"}</div>
+                            <div className="col-span-1 text-center">{language === 'es' ? "Estado" : "Status"}</div>
+                            <div className="col-span-2 text-right">{language === 'es' ? "Acciones" : "Actions"}</div>
+                        </div>
+
+                        {/* Task Rows */}
+                        {filteredTasks.map((task) => {
+                            const details = getTaskActionType(task);
+                            const taskDate = new Date(task.created_at).toLocaleString(language === 'es' ? 'es-ES' : 'en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            return (
+                                <div
+                                    key={task.id}
+                                    className="backdrop-blur-sm bg-card/70 hover:bg-card border border-border/50 hover:border-primary/40 hover:shadow-md transition-all duration-200 rounded-2xl px-5 py-3.5 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 items-start lg:items-center group"
+                                >
+                                    {/* Action Type */}
+                                    <div className="lg:col-span-3 flex items-center gap-3 w-full min-w-0">
+                                        <span className={`size-9 rounded-xl flex items-center justify-center text-sm ${details.color} shrink-0 shadow-sm border border-border/40`}>
+                                            {details.icon}
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <span className="font-bold text-foreground text-xs block truncate">
+                                                {details.name}
+                                            </span>
+                                            <span className="text-[10px] text-muted-foreground font-mono block truncate">
+                                                ID: {task.id.substring(0, 8)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Patient Detail */}
+                                    <div className="lg:col-span-3 w-full min-w-0">
+                                        <div className="space-y-0.5">
+                                            <p className="font-semibold text-foreground text-xs truncate">{task.patient_name || 'N/A'}</p>
+                                            {task.patient_dob && (
+                                                <p className="text-[10px] text-muted-foreground font-medium">DOB: {task.patient_dob}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Visit Date */}
+                                    <div className="lg:col-span-1 text-xs font-medium text-muted-foreground flex items-center gap-1.5 truncate">
+                                        <Calendar size={13} className="text-muted-foreground/70 shrink-0" />
+                                        <span className="truncate">{task.visit_date || '—'}</span>
+                                    </div>
+
+                                    {/* Created At */}
+                                    <div className="lg:col-span-2 text-xs font-medium text-muted-foreground flex items-center gap-1.5 truncate">
+                                        <Clock size={13} className="text-muted-foreground/70 shrink-0" />
+                                        <span className="truncate">{taskDate}</span>
+                                    </div>
+
+                                    {/* Status Badge */}
+                                    <div className="lg:col-span-1 flex items-center lg:justify-center shrink-0">
+                                        <TaskStatusBadge status={task.status} language={language} />
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="lg:col-span-2 w-full flex items-center justify-end gap-1.5 shrink-0">
+                                        {/* Retry Button if failed */}
+                                        {task.status === 'failed' && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleRetryTask(task.id); }}
+                                                disabled={retryingTaskId === task.id}
+                                                className="h-8 px-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/20 transition-all flex items-center gap-1 text-[11px] font-semibold shadow-sm cursor-pointer disabled:opacity-50 shrink-0"
+                                                title={language === 'es' ? "Reintentar tarea" : "Retry task"}
+                                            >
+                                                <RotateCcw size={12} className={retryingTaskId === task.id ? "animate-spin" : ""} />
+                                                <span>{language === 'es' ? "Reintentar" : "Retry"}</span>
+                                            </button>
+                                        )}
+
+                                        {/* View Result Summary Button */}
+                                        {((task.status === 'completed' && task.result_summary) || (task.status === 'failed' && task.error_message)) && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
+                                                className="h-8 px-3 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all flex items-center gap-1.5 text-[11px] font-semibold shadow-sm cursor-pointer shrink-0"
+                                            >
+                                                <Eye size={13} />
+                                                <span>{language === 'es' ? "Resumen" : "Summary"}</span>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Detailed Inspection Modal (View Result Summary) */}
             {selectedTask && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-card w-full max-w-2xl rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] bg-surface dark:bg-slate-900 animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-card border border-border/80 shadow-2xl rounded-3xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+                        
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                        <div className="flex items-center justify-between p-6 border-b border-border/60 bg-muted/20">
                             <div className="flex items-center gap-3">
-                                <div className="size-9 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 flex items-center justify-center border border-indigo-100/30 dark:border-indigo-900/30 shrink-0 text-[#6366f1]">
-                                    <ClipboardList size={16} />
+                                <div className="size-10 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+                                    <ClipboardList size={18} />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest pl-0.5">
-                                        {language === 'es' ? "Reporte Detallado del Bot" : "Detailed Bot Log Report"}
+                                    <h3 className="text-sm font-bold text-foreground tracking-tight">
+                                        {language === 'es' ? "Resumen de Ejecución del Bot" : "Bot Execution Result Summary"}
                                     </h3>
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold mt-1">
-                                        {selectedTask.patient_name}
+                                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                                        {selectedTask.patient_name || 'Amexzone Task'}
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setSelectedTask(null)}
-                                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-850 rounded-xl transition-all"
+                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-xl transition-all cursor-pointer"
                             >
                                 <X size={18} />
                             </button>
                         </div>
 
-                        {/* Modal Content Scrollable */}
+                        {/* Modal Scrollable Content */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             
                             {/* Summary Status Box */}
-                            <div className={`p-4 rounded-2xl border flex items-center justify-between ${
+                            <div className={`p-4 rounded-2xl border flex items-center justify-between shadow-sm ${
                                 selectedTask.status === 'completed' 
-                                    ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-850 dark:text-emerald-400' 
-                                    : 'bg-red-500/5 border-red-500/20 text-red-850 dark:text-red-400'
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300' 
+                                    : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
                             }`}>
                                 <div className="flex items-center gap-2.5">
                                     {selectedTask.status === 'completed' ? (
-                                        <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                                        <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                                     ) : (
-                                        <AlertTriangle size={16} className="text-red-500 shrink-0" />
+                                        <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400 shrink-0" />
                                     )}
                                     <span className="text-xs font-bold uppercase tracking-wider">
                                         {selectedTask.status === 'completed' 
-                                            ? (language === 'es' ? "OPERACIÓN EXITOSA" : "OPERATION SUCCESSFUL")
-                                            : (language === 'es' ? "FALLO DE EJECUCIÓN" : "EXECUTION FAILED")}
+                                            ? (language === 'es' ? "OPERACIÓN COMPLETADA CON ÉXITO" : "EXECUTION SUCCESSFUL")
+                                            : (language === 'es' ? "FALLO DE EJECUCIÓN DETECTADO" : "EXECUTION ENCOUNTERED ERROR")}
                                     </span>
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <span className="text-[11px] font-mono font-bold opacity-80">
                                     ID: {selectedTask.id.substring(0, 8)}
                                 </span>
                             </div>
 
-                            {/* Failure details */}
-                            {selectedTask.status === 'failed' && (
-                                <div className="space-y-2">
-                                    <h4 className="text-[10px] font-semibold text-red-550 dark:text-red-450 uppercase tracking-widest pl-1">
-                                        {language === 'es' ? "Detalles del Error" : "Error Description"}
-                                    </h4>
-                                    <div className="p-4 rounded-xl border border-red-200/60 dark:border-red-950/40 bg-red-500/5 text-red-650 dark:text-red-400 text-xs font-semibold leading-relaxed whitespace-pre-wrap break-words">
-                                        {getFriendlyErrorMessage(selectedTask.error_message, language)}
+                            {/* Failure Details */}
+                            {selectedTask.status === 'failed' && (() => {
+                                const formatted = formatSyncError(selectedTask.error_message);
+                                return (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+                                                {language === 'es' ? "Motivo del Fallo" : "Failure Reason"}
+                                            </h4>
+                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                                                {formatted.categoryLabel}
+                                            </span>
+                                        </div>
+
+                                        <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 text-rose-700 dark:text-rose-300 text-xs font-semibold leading-relaxed">
+                                            <div className="font-bold text-sm text-rose-800 dark:text-rose-200 mb-1">
+                                                {formatted.title}
+                                            </div>
+                                            <p className="font-normal opacity-90">
+                                                {formatted.description}
+                                            </p>
+                                        </div>
+
+                                        <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed font-medium flex items-start gap-3">
+                                            <Info size={16} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                                            <div>
+                                                <strong className="block mb-0.5 text-indigo-950 dark:text-indigo-100">
+                                                    {language === 'es' ? "¿Qué acción tomar?" : "Action to take:"}
+                                                </strong>
+                                                <p className="text-indigo-800/90 dark:text-indigo-300 font-normal">
+                                                    {formatted.actionHint}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {formatted.rawError && (
+                                            <div className="pt-1">
+                                                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider block mb-1">
+                                                    Reporte técnico original:
+                                                </span>
+                                                <pre className="p-3 text-[10px] font-mono text-muted-foreground bg-muted/30 rounded-xl border border-border/60 overflow-x-auto max-h-24 whitespace-pre-wrap">
+                                                    {formatted.rawError}
+                                                </pre>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 text-[11px] text-slate-500 leading-relaxed font-bold uppercase tracking-wider flex items-center gap-3">
-                                        <Info size={14} className="text-[#6366f1] shrink-0" />
-                                        <span>
-                                            {language === 'es' 
-                                                ? "Asegúrate de que tus credenciales son correctas y haz clic en reintentar para reenviar la tarea." 
-                                                : "Ensure your login credentials are correct and click retry to execute again."}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
+                                );
+                            })()}
 
                             {/* Scraped Demographic Data Summary */}
                             {selectedTask.status === 'completed' && selectedTask.result_summary && (
                                 <div className="space-y-4">
-                                    <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest pl-1">
-                                        {language === 'es' ? "Datos Demográficos Importados" : "Imported Demographics Summary"}
+                                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                                        {language === 'es' ? "Datos Demográficos Extraídos" : "Extracted Demographics"}
                                     </h4>
                                     
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/50 dark:bg-slate-950/30 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/40">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/20 p-4 rounded-2xl border border-border/60">
                                         <DetailRow label="EMR ID / Case #" value={selectedTask.result_summary.emr_id || 'N/A'} />
                                         <DetailRow label="SSN / Seguro Social" value={selectedTask.result_summary.ssn || 'N/A'} />
                                         <DetailRow label="Phone / Teléfono" value={selectedTask.result_summary.phone || 'N/A'} />
@@ -834,30 +1008,30 @@ export function SyncPortal() {
                                         <DetailRow label="Psychiatrist / Psiquiatra" value={selectedTask.result_summary.psych_name || 'N/A'} />
                                         <DetailRow label="Marital Status / Estado Civil" value={selectedTask.result_summary.marital_status || 'N/A'} />
                                         <DetailRow label="Emergency Contact / Contacto" value={selectedTask.result_summary.emergency_contact_name || 'N/A'} />
-                                        <div className="sm:col-span-2 border-t border-slate-100 dark:border-slate-800/40 pt-3 mt-1">
+                                        <div className="sm:col-span-2 border-t border-border/40 pt-3 mt-1">
                                             <DetailRow label="Address / Dirección" value={selectedTask.result_summary.address || 'N/A'} />
                                         </div>
                                     </div>
 
                                     {/* Clinical Diagnoses */}
                                     {selectedTask.result_summary.diagnoses && (
-                                        <div className="space-y-2.5">
-                                            <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest pl-1">
-                                                {language === 'es' ? "Diagnósticos Clínicos Detectados (ICD-10)" : "Clinical Diagnoses Found (ICD-10)"}
+                                        <div className="space-y-2">
+                                            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                                                {language === 'es' ? "Diagnósticos Clínicos (ICD-10)" : "Clinical Diagnoses (ICD-10)"}
                                             </h4>
-                                            <div className="p-4 bg-slate-50/30 dark:bg-slate-950/20 rounded-2xl border border-slate-200/50 dark:border-slate-800 text-xs leading-relaxed whitespace-pre-wrap font-bold text-slate-850 dark:text-slate-300">
+                                            <div className="p-4 bg-muted/30 rounded-2xl border border-border/60 text-xs leading-relaxed whitespace-pre-wrap font-medium text-foreground">
                                                 {selectedTask.result_summary.diagnoses}
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Psychiatric Medications Scraped */}
+                                    {/* Psychiatric Medications */}
                                     {selectedTask.result_summary.psych_medications && (
-                                        <div className="space-y-2.5">
-                                            <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest pl-1">
-                                                {language === 'es' ? "Historial de Medicamentos y Análisis Clínico" : "Scraped Psychiatric Medications & Analysis"}
+                                        <div className="space-y-2">
+                                            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                                                {language === 'es' ? "Medicamentos Psiquiátricos y Análisis Clínico" : "Psychiatric Medications & Clinical History"}
                                             </h4>
-                                            <div className="p-4 bg-indigo-500/5 rounded-2xl border border-indigo-150 dark:border-indigo-900/30 text-xs leading-relaxed whitespace-pre-wrap font-semibold text-slate-800 dark:text-slate-300">
+                                            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 text-xs leading-relaxed whitespace-pre-wrap font-medium text-foreground">
                                                 {selectedTask.result_summary.psych_medications}
                                             </div>
                                         </div>
@@ -868,10 +1042,24 @@ export function SyncPortal() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                        <div className="flex items-center justify-between p-4 px-6 border-t border-border/60 bg-muted/20">
+                            {selectedTask.status === 'failed' ? (
+                                <button
+                                    onClick={() => {
+                                        const id = selectedTask.id;
+                                        setSelectedTask(null);
+                                        handleRetryTask(id);
+                                    }}
+                                    className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                >
+                                    <RotateCcw size={13} />
+                                    <span>{language === 'es' ? "Reintentar Tarea" : "Retry Task"}</span>
+                                </button>
+                            ) : <div />}
+
                             <button
                                 onClick={() => setSelectedTask(null)}
-                                className="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-250 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-750 dark:text-slate-300 text-xs font-bold transition-all"
+                                className="px-5 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-bold transition-all cursor-pointer"
                             >
                                 {language === 'es' ? "Cerrar" : "Close"}
                             </button>
@@ -883,13 +1071,120 @@ export function SyncPortal() {
     );
 }
 
-// Inline input field helper to keep this file self-contained
+// Connection Status Pill with glowing indicator
+function ConnectionStatusPill({ 
+    status, 
+    language,
+    compact = false 
+}: { 
+    status: 'not_connected' | 'awaiting_2fa' | 'connected' | 'expired' | 'processing';
+    language: string;
+    compact?: boolean;
+}) {
+    if (status === 'connected') {
+        return (
+            <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)] ${
+                compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
+            }`}>
+                <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                </span>
+                <span>{language === 'es' ? "Conectado" : "Connected"}</span>
+            </span>
+        );
+    }
+
+    if (status === 'awaiting_2fa') {
+        return (
+            <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)] animate-pulse ${
+                compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
+            }`}>
+                <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                </span>
+                <span>{language === 'es' ? "Esperando 2FA" : "Awaiting 2FA"}</span>
+            </span>
+        );
+    }
+
+    if (status === 'processing') {
+        return (
+            <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.15)] ${
+                compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
+            }`}>
+                <RefreshCw size={11} className="animate-spin text-blue-500" />
+                <span>{language === 'es' ? "Verificando..." : "Verifying..."}</span>
+            </span>
+        );
+    }
+
+    if (status === 'expired') {
+        return (
+            <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 ${
+                compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
+            }`}>
+                <AlertTriangle size={11} className="text-rose-500" />
+                <span>{language === 'es' ? "Sesión Expirada" : "Expired"}</span>
+            </span>
+        );
+    }
+
+    return (
+        <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-muted text-muted-foreground border border-border/80 ${
+            compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
+        }`}>
+            <span className="h-2 w-2 rounded-full bg-muted-foreground/60"></span>
+            <span>{language === 'es' ? "Desconectado" : "Disconnected"}</span>
+        </span>
+    );
+}
+
+// Task Status Badges for Pending, Processing, Completed, Failed
+function TaskStatusBadge({ status, language }: { status: string; language: string }) {
+    if (status === 'completed') {
+        return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
+                <CheckCircle2 size={11} className="text-emerald-500" />
+                <span>{language === 'es' ? "Completado" : "Completed"}</span>
+            </span>
+        );
+    }
+
+    if (status === 'processing') {
+        return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase tracking-wider animate-pulse">
+                <RefreshCw size={10} className="animate-spin text-blue-500" />
+                <span>{language === 'es' ? "Procesando" : "Processing"}</span>
+            </span>
+        );
+    }
+
+    if (status === 'failed') {
+        return (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 uppercase tracking-wider">
+                <AlertCircle size={11} className="text-rose-500" />
+                <span>{language === 'es' ? "Fallido" : "Failed"}</span>
+            </span>
+        );
+    }
+
+    return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wider">
+            <Clock size={11} className="text-amber-500" />
+            <span>{language === 'es' ? "Pendiente" : "Pending"}</span>
+        </span>
+    );
+}
+
+// Inline input field helper
 function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text", disabled = false }: any) {
     return (
         <div className="group space-y-2">
-            <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest pl-1 group-focus-within:text-[#6366f1] transition-colors">
+            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1 group-focus-within:text-primary transition-colors">
                 <span className="flex items-center gap-2">
-                    {Icon && <Icon size={12} className="text-slate-400 group-focus-within:text-[#6366f1] transition-colors" />}
+                    {Icon && <Icon size={12} className="text-muted-foreground group-focus-within:text-primary transition-colors" />}
                     {label}
                 </span>
             </label>
@@ -898,7 +1193,7 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
                 disabled={disabled}
-                className="w-full h-11 px-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-xs font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-[#6366f1]/60 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-11 px-4 rounded-xl border border-border/80 bg-background/80 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder={placeholder}
             />
         </div>
@@ -909,8 +1204,8 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
 function DetailRow({ label, value }: { label: string, value: string }) {
     return (
         <div className="space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
-            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">{value}</p>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
+            <p className="text-xs font-semibold text-foreground break-words">{value}</p>
         </div>
     );
 }
@@ -933,10 +1228,10 @@ function getFriendlyErrorMessage(errorMsg: string | null, lang: string) {
             : "Timeout exceeded waiting for the patient search field. Amexzone might be slow or your session has expired.";
     }
 
-    if (msg.includes("tiempo de espera agotado") || msg.includes("timeout") && msg.includes("sms")) {
+    if (msg.includes("tiempo de espera agotado") || (msg.includes("timeout") && msg.includes("sms"))) {
         return lang === 'es'
-            ? "El código SMS de verificación no se ingresó a tiempo (límite de 5 minutos excedido)."
-            : "The SMS verification code was not entered in time (5-minute limit exceeded).";
+            ? "El código de verificación no se ingresó a tiempo (límite de tiempo excedido)."
+            : "The verification code was not entered in time (time limit exceeded).";
     }
 
     if (msg.includes("conexión cancelada por el usuario") || msg.includes("canceled by the user")) {

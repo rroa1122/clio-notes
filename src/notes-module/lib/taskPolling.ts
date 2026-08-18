@@ -44,7 +44,7 @@ const waitForNextAttempt = (delayMs: number, signal?: AbortSignal) =>
 export const pollTaskUntilTerminal = async <T extends PollableTask>({
     fetchTask,
     intervalMs = 2000,
-    maxAttempts = 30,
+    maxAttempts = 90,
     signal,
     onPollError,
 }: PollTaskOptions<T>): Promise<TaskPollingResult<T>> => {
