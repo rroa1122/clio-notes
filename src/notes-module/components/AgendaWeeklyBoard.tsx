@@ -577,80 +577,99 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                     const isPlan = String(note.template_id || '').includes('plan');
                                     const isMhv = String(note.subTemplate || '').toLowerCase().includes('mhv');
 
-                                    const leftBorderClass = isAssessment 
-                                        ? 'bg-gradient-to-b from-emerald-400 to-teal-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                                    const themeColors = isAssessment 
+                                        ? {
+                                            bg: 'bg-emerald-950/25 hover:bg-emerald-950/40 border-emerald-500/30 hover:border-emerald-500/60',
+                                            bar: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]',
+                                            timeText: 'text-emerald-400',
+                                            clockIcon: 'text-emerald-400',
+                                            tagText: 'text-emerald-300/80',
+                                            glow: 'from-emerald-500/10'
+                                          }
                                         : isPlan
-                                        ? 'bg-gradient-to-b from-amber-400 to-orange-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                                        ? {
+                                            bg: 'bg-amber-950/25 hover:bg-amber-950/40 border-amber-500/30 hover:border-amber-500/60',
+                                            bar: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]',
+                                            timeText: 'text-amber-400',
+                                            clockIcon: 'text-amber-400',
+                                            tagText: 'text-amber-300/80',
+                                            glow: 'from-amber-500/10'
+                                          }
                                         : isMhv
-                                        ? 'bg-gradient-to-b from-sky-400 to-blue-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]'
-                                        : 'bg-gradient-to-b from-indigo-400 to-violet-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]';
+                                        ? {
+                                            bg: 'bg-sky-950/25 hover:bg-sky-950/40 border-sky-500/30 hover:border-sky-500/60',
+                                            bar: 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]',
+                                            timeText: 'text-sky-400',
+                                            clockIcon: 'text-sky-400',
+                                            tagText: 'text-sky-300/80',
+                                            glow: 'from-sky-500/10'
+                                          }
+                                        : {
+                                            bg: 'bg-indigo-950/30 hover:bg-indigo-950/45 border-indigo-500/35 hover:border-indigo-500/70',
+                                            bar: 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]',
+                                            timeText: 'text-indigo-300',
+                                            clockIcon: 'text-indigo-400',
+                                            tagText: 'text-indigo-200/80',
+                                            glow: 'from-indigo-500/10'
+                                          };
 
                                     return (
                                         <TiltCard key={note.id || i} intensity={3} scale={1.01}>
                                             <div 
                                                 onClick={() => onSelectNote(note)}
                                                 className={cn(
-                                                    "relative overflow-hidden rounded-xl p-2.5 bg-slate-900/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-800/80 transition-all duration-200 cursor-pointer group/card",
-                                                    "shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:border-indigo-500/50 hover:bg-slate-850/90",
-                                                    isPending && "border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-transparent to-transparent",
-                                                    isSigned && "border-emerald-500/25"
+                                                    "relative overflow-hidden rounded-xl p-2.5 transition-all duration-200 cursor-pointer group/card",
+                                                    "backdrop-blur-md border shadow-sm hover:-translate-y-0.5 hover:shadow-md",
+                                                    themeColors.bg
                                                 )}
                                             >
                                                 {/* Left vertical accent indicator */}
-                                                <div className={cn("absolute left-0 top-0 bottom-0 w-[3px]", leftBorderClass)} />
+                                                <div className={cn("absolute left-0 top-0 bottom-0 w-[3px]", themeColors.bar)} />
 
                                                 <div className="flex flex-col gap-1 pl-1 relative z-10 w-full min-w-0">
-                                                    {/* Top row: Time + Duration & Status Badge */}
-                                                    <div className="flex items-center justify-between w-full gap-1.5">
-                                                        <div className="flex items-center gap-1 min-w-0">
-                                                            <Clock className="w-2.5 h-2.5 text-indigo-400/80 shrink-0" />
-                                                            <span className="font-semibold text-[9.5px] text-slate-300 dark:text-slate-300 tracking-tight truncate">
-                                                                {timeStr}
-                                                            </span>
-                                                            {rawD && (
-                                                                <span className="text-[8.5px] px-1 py-0.2 rounded bg-slate-800/80 text-slate-400 font-medium shrink-0">
-                                                                    {rawD}m
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="shrink-0 flex items-center gap-1">
-                                                            {isSigned ? (
-                                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
-                                                                    <Check className="w-2.5 h-2.5" />
-                                                                </span>
-                                                            ) : isPending ? (
-                                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8.5px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25">
-                                                                    <span className="size-1 rounded-full bg-amber-400 animate-ping" />
-                                                                </span>
-                                                            ) : (
-                                                                <span className="size-1.5 rounded-full bg-slate-600/60" />
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {/* Middle row: Avatar initials + Patient Name */}
-                                                    <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
-                                                        <div className="size-5 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-300 text-[8.5px] font-black flex items-center justify-center shrink-0">
-                                                            {getInitials(pName)}
-                                                        </div>
+                                                    {/* Line 1: Patient Name + Status Badge */}
+                                                    <div className="flex items-center justify-between w-full gap-1.5 min-w-0">
                                                         <h3 
-                                                            className="font-bold text-slate-100 dark:text-slate-100 text-[11.5px] tracking-tight leading-tight group-hover/card:text-indigo-300 transition-colors truncate"
+                                                            className="font-bold text-slate-100 text-xs tracking-tight leading-tight group-hover/card:text-white transition-colors truncate"
                                                             title={pName}
                                                         >
                                                             {pName}
                                                         </h3>
+
+                                                        <div className="shrink-0 flex items-center gap-1">
+                                                            {isSigned ? (
+                                                                <span className="size-4 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                                                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                                                </span>
+                                                            ) : isPending ? (
+                                                                <span className="relative flex size-2">
+                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                                                    <span className="relative inline-flex rounded-full size-2 bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]"></span>
+                                                                </span>
+                                                            ) : (
+                                                                <span className="size-1.5 rounded-full bg-slate-500/40" />
+                                                            )}
+                                                        </div>
                                                     </div>
 
-                                                    {/* Bottom row: Micro-badge for service type */}
-                                                    <div className="flex items-center gap-1 min-w-0 mt-0.5 pl-0.5">
-                                                        <span className="text-[9px] font-medium text-slate-400 dark:text-slate-400 truncate capitalize">
+                                                    {/* Line 2: Time & Service Type */}
+                                                    <div className="flex items-center gap-1.5 text-[10.5px] font-medium min-w-0">
+                                                        <div className="flex items-center gap-1 shrink-0">
+                                                            <Clock className={cn("w-3 h-3 shrink-0", themeColors.clockIcon)} />
+                                                            <span className={cn("font-semibold tracking-tight", themeColors.timeText)}>
+                                                                {start || timeStr}
+                                                            </span>
+                                                        </div>
+
+                                                        <span className="size-0.5 rounded-full bg-slate-600 shrink-0" />
+
+                                                        <span className={cn("truncate capitalize", themeColors.tagText)} title={serviceTitle}>
                                                             {serviceTitle}
                                                         </span>
                                                     </div>
                                                 </div>
 
-                                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 pointer-events-none" />
+                                                <div className={cn("absolute inset-0 bg-gradient-to-r to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 pointer-events-none", themeColors.glow)} />
                                             </div>
                                         </TiltCard>
                                     );
