@@ -81,6 +81,19 @@ export function formatSyncError(rawError?: string | null): FormattedSyncError {
         };
     }
 
+    // 4.5. Autorización vencida / Sin unidades aprobadas
+    if (lower.includes('unidades aprobadas') || lower.includes('no approved units') || lower.includes('autorización') || lower.includes('autorizacion') || lower.includes('non-billable') || lower.includes('no facturable')) {
+        return {
+            category: 'billing',
+            categoryLabel: 'Validación de Seguro',
+            title: 'Autorización Vencida o Sin Unidades en Amexzone',
+            description: 'Amexzone indica que el paciente no cuenta con unidades aprobadas de seguro para la fecha seleccionada.',
+            actionHint: 'Selecciona una fecha dentro del período activo de la autorización o registra el servicio como No Facturable.',
+            isRetryable: true,
+            rawError: errorStr
+        };
+    }
+
     // 5. Cita / Encuentro duplicado o conflicto explícito de horario
     if (lower.includes('already exist') || lower.includes('ya existe') || lower.includes('conflicto de horario') || lower.includes('cita duplicada') || lower.includes('overlapping appointment')) {
         return {
