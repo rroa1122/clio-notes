@@ -544,7 +544,24 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                 {dayNotes.map((note: any, i) => {
                                     const pName = note.meta?.patientName || note.patient?.full_name || 'Anonymous';
                                     
-                                    const formatTime = (t: string) => t.replace(':00', '').replace(' AM', 'am').replace(' PM', 'pm');
+                                    const formatTime = (t: string) => {
+                                        if (!t) return '';
+                                        const clean = t.trim();
+                                        const match = clean.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/i);
+                                        if (match) {
+                                            let [_, h, m, meridiem] = match;
+                                            let hour = parseInt(h, 10);
+                                            if (!meridiem) {
+                                                meridiem = hour >= 12 ? 'PM' : 'AM';
+                                                hour = hour % 12 || 12;
+                                            } else {
+                                                meridiem = meridiem.toUpperCase();
+                                            }
+                                            return `${hour}:${m} ${meridiem}`;
+                                        }
+                                        return clean.replace(/([ap]m)/i, (m) => ` ${m.toUpperCase()}`).trim();
+                                    };
+
                                     const rawStart = note.encounter?.time_in || note.appointment?.start_time || '';
                                     const rawEnd = note.encounter?.time_out || note.appointment?.end_time || '';
                                     const start = rawStart ? formatTime(rawStart) : '';
@@ -555,13 +572,6 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                     
                                     const isSigned = note.signature || (note as any).sign_off?.status === 'signed' || note.signature_status === 'signed';
                                     const isPending = (note as any).sign_off?.status === 'pending' || note.signature_status === 'pending';
-
-                                    const getInitials = (name: string) => {
-                                        if (!name || name === 'Anonymous' || name === 'Desconocido') return 'PT';
-                                        const parts = name.trim().split(/\s+/);
-                                        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-                                        return name.slice(0, 2).toUpperCase();
-                                    };
 
                                     const serviceTitle = (
                                         note.subTemplate || 
@@ -577,77 +587,51 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                     const isPlan = String(note.template_id || '').includes('plan');
                                     const isMhv = String(note.subTemplate || '').toLowerCase().includes('mhv');
 
-                                    const theme = isAssessment 
-                                        ? {
-                                            card: 'bg-gradient-to-b from-[#09221b] to-[#061410] border-emerald-500/50 hover:border-emerald-400 shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:shadow-[0_6px_25px_rgba(16,185,129,0.3)]',
-                                            timeColor: 'text-emerald-300 font-bold',
-                                            timeIcon: 'text-emerald-400',
-                                            badge: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]',
-                                            dot: 'bg-emerald-400 shadow-[0_0_6px_rgba(16,185,129,0.8)]',
-                                            topGlow: 'from-emerald-500/30'
-                                          }
+                                    const accentBar = isAssessment
+                                        ? 'bg-emerald-500'
                                         : isPlan
-                                        ? {
-                                            card: 'bg-gradient-to-b from-[#241708] to-[#140d04] border-amber-500/50 hover:border-amber-400 shadow-[0_4px_20px_rgba(245,158,11,0.15)] hover:shadow-[0_6px_25px_rgba(245,158,11,0.3)]',
-                                            timeColor: 'text-amber-300 font-bold',
-                                            timeIcon: 'text-amber-400',
-                                            badge: 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]',
-                                            dot: 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)]',
-                                            topGlow: 'from-amber-500/30'
-                                          }
+                                        ? 'bg-amber-500'
                                         : isMhv
-                                        ? {
-                                            card: 'bg-gradient-to-b from-[#081b2b] to-[#040f1a] border-sky-500/50 hover:border-sky-400 shadow-[0_4px_20px_rgba(14,165,233,0.15)] hover:shadow-[0_6px_25px_rgba(14,165,233,0.3)]',
-                                            timeColor: 'text-sky-300 font-bold',
-                                            timeIcon: 'text-sky-400',
-                                            badge: 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-[0_0_10px_rgba(14,165,233,0.2)]',
-                                            dot: 'bg-sky-400 shadow-[0_0_6px_rgba(14,165,233,0.8)]',
-                                            topGlow: 'from-sky-500/30'
-                                          }
-                                        : {
-                                            card: 'bg-gradient-to-b from-[#111633] to-[#090b1e] border-indigo-500/55 hover:border-indigo-400 shadow-[0_4px_20px_rgba(99,102,241,0.2)] hover:shadow-[0_6px_28px_rgba(99,102,241,0.35)]',
-                                            timeColor: 'text-indigo-300 font-bold',
-                                            timeIcon: 'text-indigo-400',
-                                            badge: 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/40 shadow-[0_0_10px_rgba(99,102,241,0.25)]',
-                                            dot: 'bg-indigo-400 shadow-[0_0_6px_rgba(99,102,241,0.8)]',
-                                            topGlow: 'from-indigo-500/30'
-                                          };
+                                        ? 'bg-sky-500'
+                                        : 'bg-indigo-500';
+
+                                    const categoryDot = isAssessment
+                                        ? 'bg-emerald-400'
+                                        : isPlan
+                                        ? 'bg-amber-400'
+                                        : isMhv
+                                        ? 'bg-sky-400'
+                                        : 'bg-indigo-400';
 
                                     return (
                                         <div 
                                             key={note.id || i}
                                             onClick={() => onSelectNote(note)}
-                                            className={cn(
-                                                "relative overflow-hidden rounded-2xl p-3 border transition-all duration-200 cursor-pointer group/card",
-                                                "hover:-translate-y-1 hover:scale-[1.01]",
-                                                theme.card
-                                            )}
+                                            className="relative overflow-hidden rounded-xl p-3 bg-[#0d1222] hover:bg-[#141b30] border border-slate-800 hover:border-slate-700/80 transition-all duration-150 cursor-pointer group/card shadow-sm"
                                         >
-                                            {/* Subtle top glow line */}
-                                            <div className={cn("absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r via-current to-transparent opacity-60", theme.topGlow)} />
+                                            {/* Subtle left vertical accent bar */}
+                                            <div className={cn("absolute left-0 top-0 bottom-0 w-[3px]", accentBar)} />
 
-                                            <div className="flex flex-col gap-2 relative z-10 w-full min-w-0">
+                                            <div className="flex flex-col gap-1.5 pl-1.5 relative z-10 w-full min-w-0">
                                                 {/* Top row: Time + Status */}
                                                 <div className="flex items-center justify-between w-full gap-1">
-                                                    <div className="flex items-center gap-1.5 min-w-0">
-                                                        <Clock className={cn("w-3.5 h-3.5 shrink-0", theme.timeIcon)} />
-                                                        <span className={cn("text-[11.5px] tracking-tight truncate", theme.timeColor)}>
-                                                            {timeStr}
-                                                        </span>
+                                                    <div className="flex items-center gap-1.5 text-slate-400 font-medium text-[11px] min-w-0">
+                                                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                        <span className="truncate">{timeStr}</span>
                                                     </div>
 
                                                     <div className="shrink-0 flex items-center">
                                                         {isSigned ? (
-                                                            <span className="size-4.5 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.5)]">
-                                                                <Check className="w-3 h-3 stroke-[3]" />
+                                                            <span className="size-4 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400" title="Firmado">
+                                                                <Check className="w-2.5 h-2.5 stroke-[2.5]" />
                                                             </span>
                                                         ) : isPending ? (
-                                                            <span className="relative flex size-2.5">
+                                                            <span className="relative flex size-2" title="Pendiente">
                                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                                <span className="relative inline-flex rounded-full size-2.5 bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+                                                                <span className="relative inline-flex rounded-full size-2 bg-amber-500"></span>
                                                             </span>
                                                         ) : (
-                                                            <span className="size-2 rounded-full bg-slate-500/50" />
+                                                            <span className="size-1.5 rounded-full bg-slate-600" title="Borrador" />
                                                         )}
                                                     </div>
                                                 </div>
@@ -655,22 +639,17 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                 {/* Middle row: Patient Name */}
                                                 <div className="w-full min-w-0">
                                                     <h3 
-                                                        className="font-black text-white text-[13px] tracking-tight leading-snug group-hover/card:text-indigo-100 transition-colors"
+                                                        className="font-bold text-slate-100 text-[13px] tracking-tight leading-snug group-hover/card:text-white transition-colors line-clamp-2"
                                                         title={pName}
                                                     >
                                                         {pName}
                                                     </h3>
                                                 </div>
 
-                                                {/* Bottom row: Neon Pill Badge */}
-                                                <div className="flex items-center min-w-0 pt-0.5">
-                                                    <span className={cn(
-                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9.5px] font-bold tracking-wider uppercase truncate max-w-full",
-                                                        theme.badge
-                                                    )}>
-                                                        <span className={cn("size-1.5 rounded-full shrink-0", theme.dot)} />
-                                                        <span className="truncate">{serviceTitle}</span>
-                                                    </span>
+                                                {/* Bottom row: Subtitle of clinical note */}
+                                                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium min-w-0 pt-0.5">
+                                                    <span className={cn("size-1.5 rounded-full shrink-0", categoryDot)} />
+                                                    <span className="truncate capitalize">{serviceTitle}</span>
                                                 </div>
                                             </div>
                                         </div>
