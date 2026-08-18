@@ -607,18 +607,14 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                         <div 
                                             key={note.id || i}
                                             onClick={() => onSelectNote(note)}
-                                            className="relative overflow-hidden rounded-xl p-3 bg-[#0d1222] hover:bg-[#141b30] border border-slate-800 hover:border-slate-700/80 transition-all duration-150 cursor-pointer group/card shadow-sm"
+                                            className="relative rounded-xl p-3 bg-[#0d1222] hover:bg-[#13192f] border border-slate-800/90 hover:border-slate-700 transition-all duration-150 cursor-pointer group/card shadow-sm"
                                         >
-                                            {/* Subtle left vertical accent bar */}
-                                            <div className={cn("absolute left-0 top-0 bottom-0 w-[3px]", accentBar)} />
-
-                                            <div className="flex flex-col gap-1.5 pl-1.5 relative z-10 w-full min-w-0">
-                                                {/* Top row: Time + Status */}
+                                            <div className="flex flex-col gap-1.5 relative z-10 w-full min-w-0">
+                                                {/* Row 1: Clean Time (No Clock Icon) + Status */}
                                                 <div className="flex items-center justify-between w-full gap-1">
-                                                    <div className="flex items-center gap-1.5 text-slate-400 font-medium text-[11px] min-w-0">
-                                                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                                        <span className="truncate">{timeStr}</span>
-                                                    </div>
+                                                    <span className="font-semibold text-slate-400 text-[11px] tracking-tight truncate">
+                                                        {timeStr}
+                                                    </span>
 
                                                     <div className="shrink-0 flex items-center">
                                                         {isSigned ? (
@@ -636,7 +632,7 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                     </div>
                                                 </div>
 
-                                                {/* Middle row: Patient Name */}
+                                                {/* Row 2: Patient Name */}
                                                 <div className="w-full min-w-0">
                                                     <h3 
                                                         className="font-bold text-slate-100 text-[13px] tracking-tight leading-snug group-hover/card:text-white transition-colors line-clamp-2"
@@ -646,8 +642,8 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                                     </h3>
                                                 </div>
 
-                                                {/* Bottom row: Subtitle of clinical note */}
-                                                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium min-w-0 pt-0.5">
+                                                {/* Row 3: Subtitle of clinical note */}
+                                                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium min-w-0">
                                                     <span className={cn("size-1.5 rounded-full shrink-0", categoryDot)} />
                                                     <span className="truncate capitalize">{serviceTitle}</span>
                                                 </div>
