@@ -1940,85 +1940,70 @@ const Record: React.FC = () => {
                                         </div>
                                         <div className="flex flex-col items-center justify-center flex-1 gap-3 xl:gap-4 w-full py-1">
                                             <div className="relative group w-fit flex items-center justify-center">
-                                                {/* Continuous vector-sharp breathing aura */}
-                                                {status === 'idle' && !audioBlob && (
-                                                    <div className="absolute size-34 md:size-38 xl:size-42 animate-aura-breathing rounded-full pointer-events-none z-0" />
-                                                )}
+                                                {/* Soft Diffused Ambient Glow */}
+                                                <div className={cn(
+                                                    "absolute rounded-full blur-2xl pointer-events-none transition-all duration-700 -inset-3",
+                                                    status === 'recording'
+                                                        ? "bg-rose-500/25 animate-pulse"
+                                                        : audioBlob
+                                                            ? "bg-emerald-500/20"
+                                                            : "bg-primary/15 group-hover:bg-primary/25"
+                                                )} />
 
                                                 <button
                                                     onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
                                                     disabled={!!audioBlob}
                                                     className={cn(
-                                                        "relative size-23 md:size-25 xl:size-28 rounded-full flex items-center justify-center transition-all duration-355 ease-out transform-gpu will-change-transform z-10 border shadow-sm group/mic-btn overflow-hidden",
+                                                        "relative size-22 md:size-24 xl:size-26 rounded-full flex items-center justify-center transition-all duration-300 ease-out transform-gpu will-change-transform z-10 shadow-lg cursor-pointer active:scale-95",
                                                         audioBlob 
-                                                            ? "metallic-btn-emerald text-emerald-600 cursor-default" 
+                                                            ? "bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 cursor-default shadow-emerald-500/10" 
                                                             : status === 'recording'
-                                                                ? "bg-gradient-to-tr from-rose-600 to-red-500 border-rose-500 text-white cursor-pointer hover:from-rose-700 hover:to-red-600 active:scale-95 animate-red-ring-pulse"
-                                                                : "metallic-btn text-indigo-500/80 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:scale-105 cursor-pointer active:scale-95 hover:shadow-[0_12px_30px_-4px_rgba(99,102,241,0.22)] hover:border-indigo-400/50 dark:hover:border-indigo-400/30"
+                                                                ? "bg-rose-600 hover:bg-rose-700 text-white border-2 border-rose-400 shadow-rose-600/30"
+                                                                : "bg-card hover:bg-card/90 text-primary border border-border/80 hover:border-primary/40 hover:scale-105 shadow-primary/5"
                                                     )}
+                                                    title={status === 'recording' ? (language === 'es' ? 'Detener Grabación' : 'Stop Recording') : (audioBlob ? (language === 'es' ? 'Audio Capturado' : 'Audio Captured') : (language === 'es' ? 'Iniciar Grabación' : 'Start Recording'))}
                                                 >
-                                                    <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-transparent via-white/80 to-transparent pointer-events-none animate-shimmer-sweep" />
-
                                                     {status === 'recording' ? (
-                                                        <div className="size-7 xl:size-8 rounded-md xl:rounded-lg bg-white shadow-md flex items-center justify-center animate-[zoom-in-50_0.2s_ease-out]">
-                                                            <div className="size-3 xl:size-3.5 bg-rose-600 rounded-sm" />
+                                                        <div className="size-7 rounded-lg bg-white shadow-sm flex items-center justify-center">
+                                                            <div className="size-3 bg-rose-600 rounded-xs" />
                                                         </div>
                                                     ) : (
-                                                        <div className="relative z-10 transition-all duration-300 ease-in-out flex items-center justify-center">
-                                                            <Mic size={34} strokeWidth={1.5} className={cn(
-                                                                "transition-colors duration-300 relative z-10 xl:hidden",
-                                                                audioBlob ? "text-emerald-500" : "text-indigo-500/70 dark:text-slate-400 group-hover/mic-btn:text-indigo-600 group-hover/mic-btn:scale-105"
-                                                            )} />
-                                                            <Mic size={38} strokeWidth={1.5} className={cn(
-                                                                "transition-colors duration-300 relative z-10 hidden xl:block",
-                                                                audioBlob ? "text-emerald-500" : "text-indigo-500/70 dark:text-slate-400 group-hover/mic-btn:text-indigo-600 group-hover/mic-btn:scale-105"
-                                                            )} />
-                                                        </div>
+                                                        <Mic size={32} strokeWidth={1.75} className={cn(
+                                                            "transition-transform duration-300",
+                                                            audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-primary group-hover:scale-110"
+                                                        )} />
                                                     )}
                                                 </button>
 
                                                 {audioBlob && (
-                                                    <div className="absolute -top-1.5 -right-1.5 size-8 xl:size-9 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-xl animate-in zoom-in-50 duration-500 z-20">
-                                                        <Check size={16} strokeWidth={3} />
+                                                    <div className="absolute -top-1 -right-1 size-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-300 z-20">
+                                                        <Check size={14} strokeWidth={3} />
                                                     </div>
                                                 )}
                                             </div>
 
-                                            <div className="flex flex-col items-center gap-1 min-h-[38px] justify-start mt-1">
+                                            <div className="flex flex-col items-center gap-1 min-h-[36px] justify-start mt-0.5">
                                                 {status === 'recording' ? (
-                                                    <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-500">
-                                                        <span className="text-xl xl:text-2xl font-bold tabular-nums tracking-tighter text-rose-500 dark:text-rose-400">
+                                                    <div className="flex flex-col items-center gap-1 animate-in fade-in duration-300">
+                                                        <span className="font-mono text-xl xl:text-2xl font-bold tabular-nums text-rose-600 dark:text-rose-400 leading-tight">
                                                             {formatTime(timer)}
                                                         </span>
-                                                        <div className="flex items-center gap-1 h-4 justify-center w-20 xl:w-24">
-                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-1" />
-                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-2" />
-                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-3" />
-                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-4" />
-                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-2" />
-                                                            <span className="w-1 bg-rose-500 dark:bg-rose-400 rounded-full animate-sound-bar-1" />
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5 opacity-50">
-                                                            <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-slate-600 dark:text-slate-400">
-                                                                {t('record.recording', 'Recording...')}
-                                                            </p>
+                                                        <div className="flex items-center gap-1 h-3.5 justify-center w-16">
+                                                            <span className="w-1 bg-rose-500 rounded-full animate-sound-bar-1" />
+                                                            <span className="w-1 bg-rose-500 rounded-full animate-sound-bar-2" />
+                                                            <span className="w-1 bg-rose-500 rounded-full animate-sound-bar-3" />
+                                                            <span className="w-1 bg-rose-500 rounded-full animate-sound-bar-2" />
+                                                            <span className="w-1 bg-rose-500 rounded-full animate-sound-bar-1" />
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex flex-col items-center gap-0.5 animate-in fade-in duration-500">
+                                                    <div className="flex flex-col items-center gap-0.5 animate-in fade-in duration-300">
                                                         <p className={cn(
-                                                            "text-[10px] xl:text-[11px] font-bold uppercase tracking-[0.25em] transition-all duration-300",
-                                                            audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400/70 dark:text-slate-500"
+                                                            "text-[10px] font-bold uppercase tracking-widest transition-colors duration-300",
+                                                            audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/70"
                                                         )}>
                                                             {audioBlob ? t('record.session_finalized', 'Session Finalized') : t('record.system_standby', 'System Standby')}
                                                         </p>
-                                                        {!audioBlob && (
-                                                            <div className="h-3.5 flex items-center">
-                                                                <p className="text-[10px] font-semibold text-indigo-500/60 dark:text-indigo-400/60 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-0.5 group-hover:translate-y-0">
-                                                                    {t('record.ready_to_record', 'Ready to record')}
-                                                                </p>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 )}
                                             </div>
