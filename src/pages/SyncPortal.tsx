@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -16,6 +16,7 @@ import {
     AlertTriangle,
     Search,
     Eye,
+    EyeOff,
     X,
     Info,
     Trash2,
@@ -29,7 +30,9 @@ import {
     Mail,
     RotateCcw,
     Sparkles,
-    Calendar
+    Calendar,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { formatSyncError } from '../lib/services/syncErrorFormatter';
 
@@ -54,39 +57,55 @@ export function SyncPortal() {
     
     // Filter & Search states
     const [tasks, setTasks] = useState<any[]>([]);
+    const [tasksCurrentPage, setTasksCurrentPage] = useState(1);
+    const tasksPageSize = 10;
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'failed' | 'pending' | 'processing'>('all');
     const [retryingTaskId, setRetryingTaskId] = useState<string | null>(null);
     
     // Selected task for detailed report view
     const [selectedTask, setSelectedTask] = useState<any | null>(null);
+    const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
+    const [isDisconnecting, setIsDisconnecting] = useState(false);
 
     // Fetch Integration credentials and status
     useEffect(() => {
         const fetchIntegration = async () => {
             if (!user?.id) return;
             try {
-                const { data, error } = await supabase
-                    .from('provider_integrations')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .maybeSingle();
+                // Fetch decrypted integration credentials
+                const { data: decryptedData, error: rpcError } = await supabase.rpc('get_decrypted_integration', {
+                    target_user_id: user.id,
+                    secret_key: 'clio_bot_secret_decryption_token_9823472'
+                });
 
-                if (error) throw error;
+                const data = Array.isArray(decryptedData) ? decryptedData[0] : decryptedData;
 
-                if (data) {
+                if (data && !rpcError) {
                     setEmail(data.amexzone_email || '');
-                    const storedPassword = data.amexzone_password || '';
-                    if (storedPassword.startsWith('ENCRYPTED:')) {
-                        setPassword('••••••••••••');
-                        setSavedPassword(storedPassword);
-                    } else {
-                        setPassword(storedPassword);
-                        setSavedPassword(storedPassword);
-                    }
+                    setPassword(data.amexzone_password || '');
+                    setSavedPassword(data.amexzone_password || '');
                     setPin(data.amexzone_pin || '1206');
                     setMfaStatus(data.mfa_status || 'not_connected');
                     setMfaChannel(data.mfa_channel || 'sms');
+                } else {
+                    // Fallback to regular table select if RPC fails
+                    const { data: rawData, error } = await supabase
+                        .from('provider_integrations')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .maybeSingle();
+
+                    if (error) throw error;
+
+                    if (rawData) {
+                        setEmail(rawData.amexzone_email || '');
+                        setPassword(rawData.amexzone_password || '');
+                        setSavedPassword(rawData.amexzone_password || '');
+                        setPin(rawData.amexzone_pin || '1206');
+                        setMfaStatus(rawData.mfa_status || 'not_connected');
+                        setMfaChannel(rawData.mfa_channel || 'sms');
+                    }
                 }
             } catch (err) {
                 console.error("Error fetching integration:", err);
@@ -98,7 +117,7 @@ export function SyncPortal() {
         fetchIntegration();
     }, [user?.id]);
 
-    // Fetch Logged Tasks
+    // Fetch Logged Clinical Tasks (Excluding internal bot connection tasks)
     const fetchTasks = async () => {
         if (!user?.id) return;
         setLoadingTasks(true);
@@ -107,6 +126,7 @@ export function SyncPortal() {
                 .from('amexzone_note_tasks')
                 .select('*')
                 .eq('user_id', user.id)
+                .neq('note_text', '[CONNECT]')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -171,8 +191,11 @@ export function SyncPortal() {
                         toast.success(language === 'es' ? "¡Conexión establecida con éxito!" : "Amexzone connected successfully!");
                         setMfaCode('');
                         fetchTasks(); // Refresh tasks list
+                    } else if (data.mfa_status === 'awaiting_2fa') {
+                        setMfaCode('');
                     } else if (data.mfa_status === 'expired' || data.mfa_status === 'not_connected') {
-                        toast.error(language === 'es' ? "Fallo en la conexión. Revisa las credenciales e intenta de nuevo." : "Connection failed. Please check credentials and try again.");
+                        setMfaCode('');
+                        toast.error(language === 'es' ? "Fallo en la conexión o código expirado. Intenta de nuevo." : "Connection failed or code expired. Please try again.");
                     }
                 }
             } finally {
@@ -190,27 +213,76 @@ export function SyncPortal() {
         };
     }, [mfaStatus, user?.id, language]);
 
-    // Disconnect / Reset Integration
-    const handleDisconnect = async () => {
-        if (window.confirm(language === 'es' ? "¿Estás seguro de cancelar la conexión actual?" : "Are you sure you want to cancel the current connection?")) {
-            try {
-                const { error } = await supabase
-                    .from('provider_integrations')
-                    .update({
-                        mfa_status: 'not_connected',
-                        mfa_code: null,
-                        session_cookies: null
-                    })
-                    .eq('user_id', user?.id);
+    // OTP Input Refs and Handlers
+    const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-                if (error) throw error;
-
-                setMfaStatus('not_connected');
-                toast.info(language === 'es' ? "Conexión desvinculada." : "Connection reset.");
-            } catch (err: any) {
-                console.error("Error resetting integration:", err);
-                toast.error(err.message || "Failed to reset connection");
+    const handleOtpChange = (index: number, val: string) => {
+        const numericVal = val.replace(/\D/g, '');
+        
+        // Handle Paste of multiple digits
+        if (numericVal.length > 1) {
+            const pasted = numericVal.slice(0, 6);
+            setMfaCode(pasted);
+            const focusIdx = Math.min(pasted.length, 5);
+            otpRefs.current[focusIdx]?.focus();
+            if (pasted.length === 6) {
+                handleSubmitMfaCode(pasted);
             }
+            return;
+        }
+
+        const chars = mfaCode.padEnd(6, ' ').split('').slice(0, 6);
+        chars[index] = numericVal || '';
+        const nextCode = chars.join('').trim();
+        setMfaCode(nextCode);
+
+        // Auto-advance to next slot
+        if (numericVal && index < 5) {
+            otpRefs.current[index + 1]?.focus();
+        }
+
+        // Auto-submit when all 6 digits are typed
+        if (nextCode.length === 6 && !nextCode.includes(' ')) {
+            handleSubmitMfaCode(nextCode);
+        }
+    };
+
+    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace') {
+            if (!mfaCode[index] && index > 0) {
+                otpRefs.current[index - 1]?.focus();
+            }
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            otpRefs.current[index - 1]?.focus();
+        } else if (e.key === 'ArrowRight' && index < 5) {
+            otpRefs.current[index + 1]?.focus();
+        }
+    };
+
+    // Disconnect / Reset Integration
+    const confirmDisconnect = async () => {
+        setIsDisconnecting(true);
+        try {
+            const { error } = await supabase
+                .from('provider_integrations')
+                .update({
+                    mfa_status: 'not_connected',
+                    mfa_code: null,
+                    session_cookies: null
+                })
+                .eq('user_id', user?.id);
+
+            if (error) throw error;
+
+            setMfaStatus('not_connected');
+            setMfaCode('');
+            setIsDisconnectModalOpen(false);
+            toast.info(language === 'es' ? "Conexión desvinculada exitosamente." : "Connection reset successfully.");
+        } catch (err: any) {
+            console.error("Error resetting integration:", err);
+            toast.error(err.message || "Failed to reset connection");
+        } finally {
+            setIsDisconnecting(false);
         }
     };
 
@@ -222,6 +294,7 @@ export function SyncPortal() {
         }
 
         setSaving(true);
+        setMfaCode('');
         try {
             const passwordToSend = password === '••••••••••••' ? savedPassword : password;
             // Upsert credentials
@@ -272,8 +345,9 @@ export function SyncPortal() {
     };
 
     // Submit MFA Code to Bot
-    const handleSubmitMfaCode = async () => {
-        if (!mfaCode || mfaCode.length < 4) {
+    const handleSubmitMfaCode = async (codeOverride?: string) => {
+        const code = (typeof codeOverride === 'string' ? codeOverride : mfaCode).trim();
+        if (!code || code.length < 4) {
             toast.error(language === 'es' ? "Ingresa un código de verificación válido" : "Please enter a valid verification code");
             return;
         }
@@ -283,15 +357,37 @@ export function SyncPortal() {
             const { error } = await supabase
                 .from('provider_integrations')
                 .update({
-                    mfa_code: mfaCode,
-                    mfa_status: 'processing'
+                    mfa_code: code,
+                    mfa_status: 'processing',
+                    updated_at: new Date().toISOString()
                 })
                 .eq('user_id', user?.id);
 
             if (error) throw error;
 
+            // Ensure an active [CONNECT] task exists for the worker to process
+            const { data: existingTasks } = await supabase
+                .from('amexzone_note_tasks')
+                .select('id, status')
+                .eq('user_id', user?.id)
+                .eq('note_text', '[CONNECT]')
+                .in('status', ['pending', 'processing'])
+                .limit(1);
+
+            if (!existingTasks || existingTasks.length === 0) {
+                await supabase
+                    .from('amexzone_note_tasks')
+                    .insert({
+                        user_id: user?.id,
+                        patient_name: 'Connection Setup Verification',
+                        note_text: '[CONNECT]',
+                        status: 'pending'
+                    });
+            }
+
             setMfaStatus('processing');
-            toast.success(language === 'es' ? "Código enviado. Verificando..." : "Code submitted. Verifying...");
+            toast.success(language === 'es' ? "Código enviado. Verificando con Amexzone..." : "Code submitted. Verifying with Amexzone...");
+            setTimeout(() => fetchTasks(), 1500);
         } catch (err: any) {
             console.error("Error submitting MFA code:", err);
             toast.error(err.message || "Failed to submit code");
@@ -372,22 +468,20 @@ export function SyncPortal() {
     }
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-3 sm:px-6 pt-1 pb-16 space-y-8">
+        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-16 space-y-8">
 
             {/* Main Frosted Glass Connection Card */}
             <div className="backdrop-blur-2xl bg-card/95 border border-border/60 shadow-elevated rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-all duration-300">
                 {/* Subtle Ambient Radial Glow */}
                 <div 
-                    className={`pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl opacity-15 transition-colors duration-700 ${
+                    className={`pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl opacity-10 transition-colors duration-700 ${
                         mfaStatus === 'connected' 
                             ? 'bg-emerald-500' 
-                            : mfaStatus === 'awaiting_2fa' 
-                            ? 'bg-amber-500' 
                             : mfaStatus === 'processing' 
-                            ? 'bg-blue-500' 
+                            ? 'bg-indigo-500' 
                             : mfaStatus === 'expired' 
                             ? 'bg-rose-500' 
-                            : 'bg-primary'
+                            : 'bg-indigo-500'
                     }`} 
                 />
 
@@ -439,18 +533,18 @@ export function SyncPortal() {
 
                                 {/* MFA Channel Selection */}
                                 <div className="flex flex-col space-y-2">
-                                    <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">
+                                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-muted-foreground uppercase tracking-wider pl-1">
                                         {language === 'es' ? "Canal 2FA" : "2FA Channel"}
                                     </label>
-                                    <div className="h-11 rounded-xl border border-border/80 bg-background/80 flex p-1 gap-1">
+                                    <div className="h-11 rounded-xl border border-slate-200 dark:border-border/80 bg-slate-100 dark:bg-slate-950/60 flex p-1 gap-1">
                                         <button
                                             type="button"
                                             onClick={() => setMfaChannel('sms')}
                                             disabled={mfaStatus !== 'not_connected'}
                                             className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                                                 mfaChannel === 'sms'
-                                                    ? "bg-card text-primary shadow-sm border border-border/60"
-                                                    : "text-muted-foreground hover:text-foreground"
+                                                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80 font-bold"
+                                                    : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
                                             }`}
                                         >
                                             <Phone size={13} />
@@ -462,8 +556,8 @@ export function SyncPortal() {
                                             disabled={mfaStatus !== 'not_connected'}
                                             className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                                                 mfaChannel === 'email'
-                                                    ? "bg-card text-primary shadow-sm border border-border/60"
-                                                    : "text-muted-foreground hover:text-foreground"
+                                                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80 font-bold"
+                                                    : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
                                             }`}
                                         >
                                             <Mail size={13} />
@@ -487,9 +581,9 @@ export function SyncPortal() {
                             </div>
 
                             {/* Session status banner message */}
-                            <div className="p-3 rounded-xl bg-background/60 border border-border/60 flex items-start gap-2.5">
-                                <Info size={15} className="text-primary shrink-0 mt-0.5" />
-                                <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 flex items-start gap-2.5">
+                                <Info size={15} className="text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
+                                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
                                     {mfaStatus === 'connected' && (language === 'es' 
                                         ? "La sesión está activa y verificada. Las notas se sincronizarán automáticamente con Amexzone al ser firmadas." 
                                         : "Session is verified and active. Signed notes are automatically dispatched and synced to Amexzone.")}
@@ -523,17 +617,17 @@ export function SyncPortal() {
                                 <button
                                     onClick={handleConnect}
                                     disabled={saving}
-                                    className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-bold transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-md hover:shadow-lg active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                                    className="w-full h-13 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider shadow-md shadow-indigo-950/50 border border-indigo-500 active:translate-y-[1px] disabled:opacity-40 cursor-pointer select-none"
                                 >
                                     {saving ? (
                                         <>
-                                            <RefreshCw size={16} className="animate-spin" />
-                                            {language === 'es' ? "Estableciendo conexión..." : "Initiating connection..."}
+                                            <RefreshCw size={16} className="animate-spin text-white" />
+                                            <span>{language === 'es' ? "Estableciendo conexión..." : "Initiating connection..."}</span>
                                         </>
                                     ) : (
                                         <>
-                                            <Play size={16} />
-                                            {language === 'es' ? "Conectar e Iniciar Login" : "Connect & Verify Account"}
+                                            <Play size={16} className="text-white fill-white" />
+                                            <span>{language === 'es' ? "Conectar e Iniciar Login" : "Connect & Verify Account"}</span>
                                         </>
                                     )}
                                 </button>
@@ -541,11 +635,11 @@ export function SyncPortal() {
 
                             {(mfaStatus === 'connected' || mfaStatus === 'awaiting_2fa' || mfaStatus === 'processing' || mfaStatus === 'expired') && (
                                 <button
-                                    onClick={handleDisconnect}
-                                    className="w-full h-12 bg-muted/80 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 border border-border/80 text-foreground rounded-2xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm active:scale-[0.99] cursor-pointer"
+                                    onClick={() => setIsDisconnectModalOpen(true)}
+                                    className="w-full h-13 py-3.5 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-500/50 hover:text-rose-600 dark:hover:text-rose-200 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider active:translate-y-[1px] cursor-pointer select-none"
                                 >
                                     <Trash2 size={15} />
-                                    {language === 'es' ? "Desconectar y Modificar Credenciales" : "Disconnect & Edit Credentials"}
+                                    <span>{language === 'es' ? "Desconectar y Modificar Credenciales" : "Disconnect & Edit Credentials"}</span>
                                 </button>
                             )}
                         </div>
@@ -554,122 +648,188 @@ export function SyncPortal() {
                     {/* Right Column: 2FA Input Card or Active Status Showcase */}
                     <div className="lg:col-span-5 flex flex-col">
                         {mfaStatus === 'awaiting_2fa' ? (
-                            <div className="bg-gradient-to-b from-amber-500/10 via-amber-500/5 to-transparent dark:from-amber-950/30 dark:via-amber-950/10 dark:to-transparent p-6 sm:p-7 rounded-2xl border border-amber-500/30 shadow-soft flex flex-col justify-between h-full space-y-6 animate-in slide-in-from-top-4 duration-300">
-                                <div className="space-y-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                                            <ShieldCheck size={22} />
-                                        </div>
-                                        <div>
-                                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-700 dark:text-amber-400 mb-1">
-                                                <span>PASO 2 DE 3</span>
-                                            </div>
-                                            <h4 className="text-sm font-bold text-amber-900 dark:text-amber-300 tracking-tight">
-                                                {language === 'es' ? "SMS Enviado a tu Teléfono" : "SMS Sent to Your Phone"}
-                                            </h4>
-                                            <p className="text-xs text-muted-foreground font-medium leading-relaxed mt-1">
-                                                {mfaChannel === 'email' ? (
-                                                    language === 'es'
-                                                        ? "Ingresa el código enviado a tu correo electrónico para autorizar la sesión del bot."
-                                                        : "Enter the code sent to your email to authenticate the synchronization bot."
-                                                ) : (
-                                                    language === 'es'
-                                                        ? "Amexzone acaba de enviar el código por SMS. Ingrésalo a continuación para autorizar el dispositivo por 90 días."
-                                                        : "Amexzone just dispatched the SMS code. Enter it below to trust this device for 90 days."
-                                                )}
-                                            </p>
-                                        </div>
+                            <div className="bg-slate-900/90 dark:bg-slate-900/95 p-6 sm:p-7 rounded-2xl border border-indigo-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col justify-between h-full space-y-6 animate-in slide-in-from-top-4 duration-300">
+                                <div className="text-center space-y-3">
+                                    {/* Centered Shield Badge with Ambient Glow */}
+                                    <div className="mx-auto w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.15)]">
+                                        <ShieldCheck size={24} />
                                     </div>
 
-                                    <div className="space-y-3 pt-2">
-                                        <label className="block text-[11px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider text-center">
-                                            {language === 'es' ? "Código de Seguridad (6 dígitos)" : "Security Code (6 digits)"}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={mfaCode}
-                                            onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').substring(0, 6))}
-                                            className="w-full h-14 px-4 rounded-2xl border-2 border-amber-500/40 bg-background/90 focus:outline-none focus:ring-4 focus:ring-amber-500/20 text-center tracking-[0.3em] font-mono text-2xl font-bold text-foreground transition-all shadow-inner"
-                                            placeholder="123456"
-                                            disabled={submittingMfa}
-                                            autoFocus
-                                        />
+                                    <div>
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-300 mb-1.5 uppercase tracking-wider">
+                                            <span>{language === 'es' ? "Paso 2 de 3 • Verificación 2FA" : "Step 2 of 3 • 2FA Verification"}</span>
+                                        </div>
+                                        <h4 className="text-base font-bold text-white tracking-tight">
+                                            {language === 'es' 
+                                                ? (mfaChannel === 'email' ? "Introduce el Código de tu Correo" : "Introduce el Código SMS") 
+                                                : (mfaChannel === 'email' ? "Enter Email Security Code" : "Enter SMS Security Code")}
+                                        </h4>
+                                        <p className="text-xs text-slate-400 font-normal leading-relaxed mt-1 max-w-xs mx-auto">
+                                            {language === 'es'
+                                                ? `Amexzone envió un código de 6 dígitos a tu ${mfaChannel === 'email' ? 'correo' : 'teléfono'}.`
+                                                : `Amexzone sent a 6-digit security code to your ${mfaChannel === 'email' ? 'email' : 'phone'}.`}
+                                        </p>
+                                    </div>
+
+                                    {/* 6-Box Segmented OTP Inputs */}
+                                    <div className="pt-2 pb-1">
+                                        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                                            {[0, 1, 2, 3, 4, 5].map((idx) => {
+                                                const digit = mfaCode[idx] || '';
+                                                return (
+                                                    <Fragment key={idx}>
+                                                        {idx === 3 && (
+                                                            <span className="text-slate-600 font-bold text-sm px-0.5 select-none">-</span>
+                                                        )}
+                                                        <input
+                                                            ref={(el) => { otpRefs.current[idx] = el; }}
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            pattern="[0-9]*"
+                                                            maxLength={idx === 0 ? 6 : 1}
+                                                            value={digit}
+                                                            onChange={(e) => handleOtpChange(idx, e.target.value)}
+                                                            onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                                                            disabled={submittingMfa}
+                                                            autoFocus={idx === 0}
+                                                            className={`w-9 h-12 sm:w-11 sm:h-13 rounded-xl text-center text-xl sm:text-2xl font-black font-mono transition-all duration-200 bg-slate-950/90 border focus:outline-none select-none ${
+                                                                digit
+                                                                    ? "border-indigo-500 text-white bg-indigo-950/30 shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+                                                                    : "border-slate-800 text-slate-200 hover:border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                                                            }`}
+                                                        />
+                                                    </Fragment>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={handleSubmitMfaCode}
-                                    disabled={submittingMfa || mfaCode.length < 4}
-                                    className="w-full h-12 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold rounded-2xl text-xs uppercase tracking-wider transition-all duration-200 disabled:opacity-50 shadow-md shadow-amber-500/20 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
-                                >
-                                    {submittingMfa ? (
-                                        <>
-                                            <RefreshCw size={15} className="animate-spin" />
-                                            {language === 'es' ? "Verificando código..." : "Verifying code..."}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Check size={15} />
-                                            {language === 'es' ? "Verificar y Enlazar Cuenta (90 Días)" : "Verify & Link Account (90 Days)"}
-                                        </>
-                                    )}
-                                </button>
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={() => handleSubmitMfaCode()}
+                                        disabled={submittingMfa || mfaCode.length < 6}
+                                        className={`w-full h-12 sm:h-13 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 select-none ${
+                                            mfaCode.length === 6 && !submittingMfa
+                                                ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-950/50 border border-indigo-500 active:translate-y-[1px] cursor-pointer"
+                                                : "bg-slate-800/80 text-slate-500 border border-slate-700/60 cursor-not-allowed shadow-none"
+                                        }`}
+                                    >
+                                        {submittingMfa ? (
+                                            <>
+                                                <RefreshCw size={16} className="animate-spin text-white" />
+                                                <span>{language === 'es' ? "Verificando código..." : "Verifying code..."}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check size={16} className={mfaCode.length === 6 ? "text-white stroke-[3]" : "text-slate-500"} />
+                                                <span>{language === 'es' ? "Verificar y Vincular (90 días)" : "Verify & Link Account (90 Days)"}</span>
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* Resend / Request New Code Action */}
+                                    <div className="text-center">
+                                        <button
+                                            type="button"
+                                            onClick={handleConnect}
+                                            disabled={saving || submittingMfa}
+                                            className="text-[11px] text-slate-400 hover:text-indigo-300 font-semibold underline underline-offset-4 transition-colors cursor-pointer disabled:opacity-50"
+                                        >
+                                            {language === 'es' ? "¿No recibiste el código? Solicitar uno nuevo" : "Didn't receive the code? Request a new one"}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ) : mfaStatus === 'processing' ? (
-                            <div className="bg-gradient-to-b from-blue-500/10 via-blue-500/5 to-transparent dark:from-blue-950/30 dark:via-blue-950/10 dark:to-transparent p-6 sm:p-7 rounded-2xl border border-blue-500/30 shadow-soft flex flex-col justify-between h-full space-y-6 animate-in slide-in-from-top-4 duration-300">
-                                <div className="space-y-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                                            <RefreshCw size={22} className="animate-spin" />
-                                        </div>
-                                        <div>
-                                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold text-blue-700 dark:text-blue-400 mb-1">
-                                                <span>{mfaCode ? "PASO 3 DE 3" : "PASO 1 DE 3"}</span>
-                                            </div>
-                                            <h4 className="text-sm font-bold text-blue-900 dark:text-blue-300 tracking-tight">
-                                                {mfaCode 
-                                                    ? (language === 'es' ? "Validando Código 2FA y Guardando Sesión..." : "Validating 2FA Code & Saving Session...") 
-                                                    : (language === 'es' ? "Conectando con Amexzone..." : "Connecting to Amexzone...")}
-                                            </h4>
-                                            <p className="text-xs text-muted-foreground font-medium leading-relaxed mt-1">
-                                                {mfaCode 
-                                                    ? (language === 'es' 
-                                                        ? "El bot está validando tu código en Amexzone y autorizando este dispositivo por 90 días." 
-                                                        : "The bot is verifying your code with Amexzone and trusting this device for 90 days.") 
-                                                    : (language === 'es' 
-                                                        ? "Iniciando sesión de forma segura y solicitando el código de verificación por SMS..." 
-                                                        : "Securely logging in and requesting the 2FA SMS verification code...")}
-                                            </p>
-                                        </div>
+                            <div className="bg-slate-900/90 dark:bg-slate-900/95 p-6 sm:p-7 rounded-2xl border border-indigo-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col justify-between h-full space-y-6 animate-in slide-in-from-top-4 duration-300">
+                                <div className="text-center space-y-3">
+                                    {/* Pulse Radar Loader */}
+                                    <div className="mx-auto w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                                        <RefreshCw size={22} className="animate-spin text-indigo-400" />
                                     </div>
 
-                                    <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 flex items-center gap-3">
-                                        <div className="size-2.5 rounded-full bg-blue-500 animate-ping" />
-                                        <span className="text-xs font-semibold text-blue-800 dark:text-blue-300">
+                                    <div>
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-300 mb-1.5 uppercase tracking-wider">
+                                            <span>{language === 'es' ? (mfaCode ? "Paso 3 de 3 • Guardando Sesión" : "Paso 1 de 3 • Estableciendo Conexión") : (mfaCode ? "Step 3 of 3 • Saving Session" : "Step 1 of 3 • Connecting")}</span>
+                                        </div>
+                                        <h4 className="text-base font-bold text-white tracking-tight">
                                             {mfaCode 
-                                                ? (language === 'es' ? "Estableciendo sesión de 90 días..." : "Establishing 90-day session...")
-                                                : (language === 'es' ? "Esperando que Amexzone despache el SMS..." : "Waiting for Amexzone SMS dispatch...")}
-                                        </span>
+                                                ? (language === 'es' ? "Validando Código y Guardando Sesión..." : "Validating Code & Saving Session...") 
+                                                : (language === 'es' ? "Conectando con Amexzone..." : "Connecting to Amexzone...")}
+                                        </h4>
+                                        <p className="text-xs text-slate-400 font-normal leading-relaxed mt-1 max-w-xs mx-auto">
+                                            {mfaCode 
+                                                ? (language === 'es' 
+                                                    ? "El bot está confirmando el código en Amexzone para autorizar este dispositivo por 90 días." 
+                                                    : "The bot is confirming the code with Amexzone to trust this device for 90 days.") 
+                                                : (language === 'es' 
+                                                    ? `Iniciando sesión segura y solicitando código por ${mfaChannel === 'email' ? 'correo' : 'SMS'}...`
+                                                    : `Initiating secure login and requesting code via ${mfaChannel === 'email' ? 'email' : 'SMS'}...`)}
+                                        </p>
                                     </div>
+
+                                    {/* 3-Step Visual Progress Timeline */}
+                                    <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2.5 text-left text-xs">
+                                        <div className="flex items-center gap-2.5">
+                                            <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                                            <span className="text-slate-300 font-medium">
+                                                {language === 'es' ? "Credenciales verificadas" : "Credentials verified"}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2.5">
+                                            {mfaCode ? (
+                                                <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                                            ) : (
+                                                <RefreshCw size={14} className="text-indigo-400 animate-spin shrink-0" />
+                                            )}
+                                            <span className={mfaCode ? "text-slate-300 font-medium" : "text-indigo-300 font-bold"}>
+                                                {language === 'es' 
+                                                    ? (mfaChannel === 'email' ? "Solicitando código por Correo..." : "Solicitando código por SMS...") 
+                                                    : (mfaChannel === 'email' ? "Requesting code via Email..." : "Requesting code via SMS...")}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2.5">
+                                            {mfaCode ? (
+                                                <RefreshCw size={14} className="text-indigo-400 animate-spin shrink-0" />
+                                            ) : (
+                                                <Clock size={14} className="text-slate-600 shrink-0" />
+                                            )}
+                                            <span className={mfaCode ? "text-indigo-300 font-bold" : "text-slate-500 font-medium"}>
+                                                {language === 'es' ? "Autorizando dispositivo (90 días)..." : "Trusting device (90 days)..."}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Cancel / Abort Action */}
+                                <div className="text-center">
+                                    <button
+                                        type="button"
+                                        onClick={confirmDisconnect}
+                                        className="text-[11px] text-slate-500 hover:text-rose-400 font-medium transition-colors cursor-pointer"
+                                    >
+                                        {language === 'es' ? "Cancelar proceso de conexión" : "Cancel connection process"}
+                                    </button>
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-muted/30 dark:bg-slate-900/40 p-6 sm:p-7 rounded-2xl border border-border/60 flex flex-col items-center justify-center text-center h-full space-y-5">
+                            <div className="bg-slate-50 dark:bg-slate-900/60 p-6 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col items-center justify-center text-center h-full space-y-5">
                                 <div className={`size-16 rounded-2xl flex items-center justify-center border transition-all duration-300 ${
                                     mfaStatus === 'connected'
-                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
-                                        : 'bg-primary/10 text-primary border-primary/20'
+                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.15)]'
+                                        : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
                                 }`}>
                                     {mfaStatus === 'connected' ? <ShieldCheck size={32} /> : <Shield size={32} />}
                                 </div>
                                 
                                 <div className="space-y-1.5 max-w-xs">
-                                    <h4 className="text-sm font-bold text-foreground">
+                                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                                         {mfaStatus === 'connected' 
                                             ? (language === 'es' ? "Conexión EMR Segura Activa" : "Secure EMR Link Active")
                                             : (language === 'es' ? "Integración Amexzone" : "Amexzone Bot Integration")}
                                     </h4>
-                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
                                         {mfaStatus === 'connected'
                                             ? (language === 'es' 
                                                 ? "El bot local está completamente sincronizado y autorizado por 90 días para procesar tus notas clínicas."
@@ -682,7 +842,7 @@ export function SyncPortal() {
 
                                 {mfaStatus === 'connected' && (
                                     <div className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-[11px] uppercase tracking-wider bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20 shadow-sm">
-                                        <Sparkles size={13} className="text-emerald-500" />
+                                        <Sparkles size={13} className="text-emerald-500 dark:text-emerald-400" />
                                         <span>{language === 'es' ? "PUENTE LISTO PARA SINCRONIZAR" : "READY FOR NOTE DISPATCH"}</span>
                                     </div>
                                 )}
@@ -694,197 +854,189 @@ export function SyncPortal() {
             </div>
 
             {/* Bottom Section: Bot logs and execution history */}
-            <div className="space-y-6">
-                
-                {/* Section Title & Controls Bar */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    
-                    {/* Status Filter Tabs */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        {(['all', 'completed', 'failed', 'processing', 'pending'] as const).map((tab) => {
-                            const count = tasks.filter(t => tab === 'all' || t.status === tab).length;
-                            const label = tab === 'all' ? (language === 'es' ? 'Todos' : 'All') :
-                                          tab === 'completed' ? (language === 'es' ? 'Completados' : 'Completed') :
-                                          tab === 'failed' ? (language === 'es' ? 'Fallidos' : 'Failed') :
-                                          tab === 'processing' ? (language === 'es' ? 'Procesando' : 'Processing') :
-                                          (language === 'es' ? 'Pendientes' : 'Pending');
-                                          
-                            const isActive = statusFilter === tab;
-                            return (
-                                <button
-                                    key={tab}
-                                    onClick={() => setStatusFilter(tab)}
-                                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center gap-2 cursor-pointer ${
-                                        isActive
-                                            ? 'bg-primary text-primary-foreground shadow-sm'
-                                            : 'bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60'
-                                    }`}
-                                >
-                                    <span>{label}</span>
-                                    <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
-                                        isActive 
-                                            ? 'bg-primary-foreground/20 text-primary-foreground' 
-                                            : 'bg-muted text-muted-foreground'
-                                    }`}>
-                                        {count}
-                                    </span>
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Search & Refresh Bar */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                        {/* Search Input */}
-                        <div className="flex items-center border border-border/80 bg-card rounded-full pl-3.5 pr-3 h-10 shadow-sm relative group focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all w-full sm:w-64">
-                            <Search className="w-4 h-4 text-muted-foreground mr-2 shrink-0 pointer-events-none" />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="h-full w-full bg-transparent border-0 p-0 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
-                                placeholder={language === 'es' ? "Buscar paciente o nota..." : "Search patient or note..."}
-                            />
-                            {searchTerm && (
-                                <button 
-                                    onClick={() => setSearchTerm('')} 
-                                    className="p-1 text-muted-foreground hover:text-foreground rounded-full"
-                                >
-                                    <X size={12} />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Refresh Button */}
-                        <button 
-                            onClick={fetchTasks}
-                            disabled={loadingTasks}
-                            className="size-10 bg-card hover:bg-muted rounded-full border border-border/80 text-muted-foreground hover:text-foreground transition-all flex items-center justify-center shadow-sm cursor-pointer active:scale-95 disabled:opacity-50"
-                            title={language === 'es' ? "Actualizar registros" : "Refresh logs"}
-                        >
-                            <RefreshCw size={14} className={loadingTasks ? "animate-spin text-primary" : ""} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Tasks Table / Card List */}
+            <div className="space-y-4">
+                {/* Tasks Table - Unified Minimalist Container */}
                 {loadingTasks ? (
-                    <div className="py-20 flex flex-col items-center justify-center gap-3 backdrop-blur-sm bg-card/40 border border-border/50 rounded-3xl">
-                        <RefreshCw size={28} className="animate-spin text-primary" />
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            {language === 'es' ? "Cargando historial de sincronización..." : "Loading task records..."}
+                    <div className="py-20 flex flex-col items-center justify-center gap-3 bg-white dark:bg-[#0b111e]/80 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
+                        <RefreshCw size={24} className="animate-spin text-indigo-500 dark:text-indigo-400" />
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wide">
+                            {language === 'es' ? "Cargando historial de sincronización..." : "Loading clinical sync records..."}
                         </p>
                     </div>
-                ) : filteredTasks.length === 0 ? (
-                    <div className="py-20 text-center backdrop-blur-sm bg-card/40 border border-border/50 rounded-3xl p-8 space-y-2">
-                        <ClipboardList size={32} className="mx-auto text-muted-foreground/50" />
-                        <p className="text-sm font-semibold text-foreground">
-                            {language === 'es' ? "No se encontraron tareas" : "No task logs found"}
+                ) : tasks.length === 0 ? (
+                    <div className="py-20 text-center bg-white dark:bg-[#0b111e]/80 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-8 space-y-2 shadow-sm">
+                        <ClipboardList size={32} className="mx-auto text-slate-400 dark:text-slate-600" />
+                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                            {language === 'es' ? "No hay notas sincronizadas aún" : "No synced notes yet"}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                            {language === 'es' ? "No hay registros que coincidan con los filtros seleccionados." : "There are no records matching your current filter criteria."}
+                        <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                            {language === 'es' 
+                                ? "Cuando firmes una nota de progreso o importes un paciente, el bot la registrará y sincronizará automáticamente aquí." 
+                                : "When you sign a progress note or import a patient, the bot will automatically process and log it here."}
                         </p>
                     </div>
                 ) : (
-                    <div className="space-y-3">
-                        {/* Table Header (Desktop) */}
-                        <div className="hidden lg:grid grid-cols-12 gap-4 px-6 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50">
-                            <div className="col-span-3">{language === 'es' ? "Tipo / Acción" : "Action Type"}</div>
-                            <div className="col-span-3">{language === 'es' ? "Paciente / Detalle" : "Patient Detail"}</div>
-                            <div className="col-span-1">{language === 'es' ? "Visita" : "Visit"}</div>
-                            <div className="col-span-2">{language === 'es' ? "Fecha Creación" : "Created At"}</div>
-                            <div className="col-span-1 text-center">{language === 'es' ? "Estado" : "Status"}</div>
-                            <div className="col-span-2 text-right">{language === 'es' ? "Acciones" : "Actions"}</div>
+                    <div className="bg-white dark:bg-[#0b111e]/90 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
+                        {/* Solid Minimalist Table Header (Desktop) */}
+                        <div className="hidden lg:grid grid-cols-12 gap-4 px-5 py-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-[#131d31]">
+                            <div className="col-span-4">{language === 'es' ? "Paciente" : "Patient"}</div>
+                            <div className="col-span-4">{language === 'es' ? "Nota Clínica / Servicio" : "Clinical Note / Service"}</div>
+                            <div className="col-span-2">{language === 'es' ? "Fecha" : "Date"}</div>
+                            <div className="col-span-2 text-right">{language === 'es' ? "Estado Amexzone" : "Amexzone Status"}</div>
                         </div>
 
-                        {/* Task Rows */}
-                        {filteredTasks.map((task) => {
-                            const details = getTaskActionType(task);
-                            const taskDate = new Date(task.created_at).toLocaleString(language === 'es' ? 'es-ES' : 'en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            });
+                        {/* Continuous Task Rows */}
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                            {(() => {
+                                const totalTaskPages = Math.ceil(tasks.length / tasksPageSize);
+                                const paginatedTasks = tasks.slice((tasksCurrentPage - 1) * tasksPageSize, tasksCurrentPage * tasksPageSize);
 
-                            return (
-                                <div
-                                    key={task.id}
-                                    className="backdrop-blur-sm bg-card/70 hover:bg-card border border-border/50 hover:border-primary/40 hover:shadow-md transition-all duration-200 rounded-2xl px-5 py-3.5 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 items-start lg:items-center group"
-                                >
-                                    {/* Action Type */}
-                                    <div className="lg:col-span-3 flex items-center gap-3 w-full min-w-0">
-                                        <span className={`size-9 rounded-xl flex items-center justify-center text-sm ${details.color} shrink-0 shadow-sm border border-border/40`}>
-                                            {details.icon}
-                                        </span>
-                                        <div className="min-w-0 flex-1">
-                                            <span className="font-bold text-foreground text-xs block truncate">
-                                                {details.name}
-                                            </span>
-                                            <span className="text-[10px] text-muted-foreground font-mono block truncate">
-                                                ID: {task.id.substring(0, 8)}
-                                            </span>
-                                        </div>
-                                    </div>
+                                return (
+                                    <>
+                                        {paginatedTasks.map((task) => {
+                                            const details = getTaskActionType(task);
+                                            const taskDate = new Date(task.created_at).toLocaleString(language === 'es' ? 'es-ES' : 'en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            });
+                                            const hasSummary = (task.status === 'completed' && task.result_summary) || (task.status === 'failed' && task.error_message);
 
-                                    {/* Patient Detail */}
-                                    <div className="lg:col-span-3 w-full min-w-0">
-                                        <div className="space-y-0.5">
-                                            <p className="font-semibold text-foreground text-xs truncate">{task.patient_name || 'N/A'}</p>
-                                            {task.patient_dob && (
-                                                <p className="text-[10px] text-muted-foreground font-medium">DOB: {task.patient_dob}</p>
-                                            )}
-                                        </div>
-                                    </div>
+                                            return (
+                                                <div
+                                                    key={task.id}
+                                                    onClick={() => { if (hasSummary) setSelectedTask(task); }}
+                                                    className={`px-5 py-3.5 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 items-start lg:items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-150 group ${
+                                                        hasSummary ? 'cursor-pointer' : ''
+                                                    }`}
+                                                >
+                                                    {/* Patient Column */}
+                                                    <div className="lg:col-span-4 flex items-center gap-3 w-full min-w-0">
+                                                        <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 flex items-center justify-center text-xs font-bold shrink-0">
+                                                            {task.patient_name ? task.patient_name.charAt(0).toUpperCase() : <User size={13} />}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-semibold text-slate-800 dark:text-slate-100 text-xs truncate">
+                                                                {task.patient_name || (language === 'es' ? 'Paciente sin nombre' : 'Unnamed Patient')}
+                                                            </p>
+                                                            {task.patient_dob && (
+                                                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">DOB: {task.patient_dob}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
 
-                                    {/* Visit Date */}
-                                    <div className="lg:col-span-1 text-xs font-medium text-muted-foreground flex items-center gap-1.5 truncate">
-                                        <Calendar size={13} className="text-muted-foreground/70 shrink-0" />
-                                        <span className="truncate">{task.visit_date || '—'}</span>
-                                    </div>
+                                                    {/* Clinical Note / Service Column */}
+                                                    <div className="lg:col-span-4 flex items-center gap-2.5 w-full min-w-0">
+                                                        <span className={`size-7 rounded-lg flex items-center justify-center text-xs ${details.color} shrink-0 border border-slate-200 dark:border-slate-800`}>
+                                                            {details.icon}
+                                                        </span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <span className="font-medium text-slate-800 dark:text-slate-200 text-xs block truncate">
+                                                                {details.name}
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block truncate">
+                                                                ID: {task.id.substring(0, 8)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
 
-                                    {/* Created At */}
-                                    <div className="lg:col-span-2 text-xs font-medium text-muted-foreground flex items-center gap-1.5 truncate">
-                                        <Clock size={13} className="text-muted-foreground/70 shrink-0" />
-                                        <span className="truncate">{taskDate}</span>
-                                    </div>
+                                                    {/* Date Column */}
+                                                    <div className="lg:col-span-2 text-xs font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                                                        <Clock size={12} className="text-slate-400 dark:text-slate-500 shrink-0" />
+                                                        <span className="truncate">{taskDate}</span>
+                                                    </div>
 
-                                    {/* Status Badge */}
-                                    <div className="lg:col-span-1 flex items-center lg:justify-center shrink-0">
-                                        <TaskStatusBadge status={task.status} language={language} />
-                                    </div>
+                                                    {/* Amexzone Status Column */}
+                                                    <div className="lg:col-span-2 w-full flex items-center justify-end gap-2 shrink-0">
+                                                        {task.status === 'failed' && (
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleRetryTask(task.id); }}
+                                                                disabled={retryingTaskId === task.id}
+                                                                className="h-7 px-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30 transition-all flex items-center gap-1 text-[11px] font-medium cursor-pointer disabled:opacity-50 shrink-0"
+                                                                title={language === 'es' ? "Reintentar sincronización" : "Retry sync"}
+                                                            >
+                                                                <RotateCcw size={11} className={retryingTaskId === task.id ? "animate-spin" : ""} />
+                                                                <span>{language === 'es' ? "Reintentar" : "Retry"}</span>
+                                                            </button>
+                                                        )}
+                                                        <TaskStatusBadge status={task.status} language={language} />
+                                                    </div>
 
-                                    {/* Actions */}
-                                    <div className="lg:col-span-2 w-full flex items-center justify-end gap-1.5 shrink-0">
-                                        {/* Retry Button if failed */}
-                                        {task.status === 'failed' && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleRetryTask(task.id); }}
-                                                disabled={retryingTaskId === task.id}
-                                                className="h-8 px-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white border border-rose-500/20 transition-all flex items-center gap-1 text-[11px] font-semibold shadow-sm cursor-pointer disabled:opacity-50 shrink-0"
-                                                title={language === 'es' ? "Reintentar tarea" : "Retry task"}
-                                            >
-                                                <RotateCcw size={12} className={retryingTaskId === task.id ? "animate-spin" : ""} />
-                                                <span>{language === 'es' ? "Reintentar" : "Retry"}</span>
-                                            </button>
+                                                </div>
+                                            );
+                                        })}
+
+                                        {/* Pagination Footer */}
+                                        {totalTaskPages > 1 && (
+                                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-slate-200/80 dark:border-slate-850 bg-slate-50/50 dark:bg-[#131d31]/40">
+                                                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                                    {language === 'es'
+                                                        ? `Mostrando ${((tasksCurrentPage - 1) * tasksPageSize) + 1} - ${Math.min(tasksCurrentPage * tasksPageSize, tasks.length)} de ${tasks.length.toLocaleString()} notas sincronizadas`
+                                                        : `Showing ${((tasksCurrentPage - 1) * tasksPageSize) + 1} - ${Math.min(tasksCurrentPage * tasksPageSize, tasks.length)} of ${tasks.length.toLocaleString()} synced notes`}
+                                                </span>
+
+                                                <div className="flex items-center gap-1.5">
+                                                    <button
+                                                        onClick={() => setTasksCurrentPage(prev => Math.max(prev - 1, 1))}
+                                                        disabled={tasksCurrentPage === 1}
+                                                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:opacity-30 disabled:hover:bg-white dark:disabled:hover:bg-slate-900 transition-all cursor-pointer shadow-2xs"
+                                                        title={language === 'es' ? "Página anterior" : "Previous page"}
+                                                    >
+                                                        <ChevronLeft size={14} />
+                                                    </button>
+                                                    
+                                                    {Array.from({ length: Math.min(5, totalTaskPages) }).map((_, idx) => {
+                                                        let pageNum = idx + 1;
+                                                        if (tasksCurrentPage > 3) {
+                                                            pageNum = tasksCurrentPage - 3 + idx;
+                                                        }
+                                                        if (pageNum > totalTaskPages) return null;
+
+                                                        const isCurrent = tasksCurrentPage === pageNum;
+                                                        return (
+                                                            <button
+                                                                key={pageNum}
+                                                                onClick={() => setTasksCurrentPage(pageNum)}
+                                                                className={`size-8 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                                                                    isCurrent
+                                                                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                                                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs'
+                                                                }`}
+                                                            >
+                                                                {pageNum}
+                                                            </button>
+                                                        );
+                                                    })}
+
+                                                    {totalTaskPages > 5 && tasksCurrentPage < totalTaskPages - 2 && (
+                                                        <>
+                                                            <span className="text-slate-400 px-1 font-semibold text-xs">...</span>
+                                                            <button
+                                                                onClick={() => setTasksCurrentPage(totalTaskPages)}
+                                                                className="size-8 text-xs font-semibold rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
+                                                            >
+                                                                {totalTaskPages}
+                                                            </button>
+                                                        </>
+                                                    )}
+
+                                                    <button
+                                                        onClick={() => setTasksCurrentPage(prev => Math.min(prev + 1, totalTaskPages))}
+                                                        disabled={tasksCurrentPage === totalTaskPages}
+                                                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:opacity-30 disabled:hover:bg-white dark:disabled:hover:bg-slate-900 transition-all cursor-pointer shadow-2xs"
+                                                        title={language === 'es' ? "Página siguiente" : "Next page"}
+                                                    >
+                                                        <ChevronRight size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
                                         )}
-
-                                        {/* View Result Summary Button */}
-                                        {((task.status === 'completed' && task.result_summary) || (task.status === 'failed' && task.error_message)) && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); setSelectedTask(task); }}
-                                                className="h-8 px-3 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/20 transition-all flex items-center gap-1.5 text-[11px] font-semibold shadow-sm cursor-pointer shrink-0"
-                                            >
-                                                <Eye size={13} />
-                                                <span>{language === 'es' ? "Resumen" : "Summary"}</span>
-                                            </button>
-                                        )}
-                                    </div>
-
-                                </div>
-                            );
-                        })}
+                                    </>
+                                );
+                            })()}
+                        </div>
                     </div>
                 )}
             </div>
@@ -1067,6 +1219,56 @@ export function SyncPortal() {
                     </div>
                 </div>
             )}
+
+            {/* Disconnect Confirmation Modal */}
+            {isDisconnectModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-card w-full max-w-md rounded-3xl border border-border/80 shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200">
+                        <div className="flex flex-col items-center text-center space-y-3">
+                            <div className="size-14 rounded-2xl bg-destructive/10 text-destructive border border-destructive/20 flex items-center justify-center shadow-inner">
+                                <AlertTriangle size={28} className="text-destructive animate-pulse" />
+                            </div>
+                            <h3 className="text-lg font-bold tracking-tight text-foreground">
+                                {language === 'es' ? "¿Desconectar cuenta de Amexzone?" : "Disconnect Amexzone Account?"}
+                            </h3>
+                            <p className="text-xs text-muted-foreground leading-relaxed max-w-xs font-medium">
+                                {language === 'es'
+                                    ? "Se borrará la sesión de 90 días autorizada y las credenciales activas del bot. Deberás volver a autenticarte con 2FA para reconectar."
+                                    : "This will clear your 90-day authorization session and reset bot credentials. You will need to re-authenticate with 2FA to reconnect."}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-3 pt-4 border-t border-border/60">
+                            <button
+                                type="button"
+                                onClick={() => setIsDisconnectModalOpen(false)}
+                                disabled={isDisconnecting}
+                                className="flex-1 h-11 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs transition-all active:scale-[0.98] border border-border/80 cursor-pointer"
+                            >
+                                {language === 'es' ? "Cancelar" : "Cancel"}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmDisconnect}
+                                disabled={isDisconnecting}
+                                className="flex-1 h-11 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs transition-all active:scale-[0.98] shadow-md shadow-destructive/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                            >
+                                {isDisconnecting ? (
+                                    <>
+                                        <RefreshCw size={14} className="animate-spin" />
+                                        {language === 'es' ? "Desconectando..." : "Disconnecting..."}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 size={14} />
+                                        {language === 'es' ? "Desconectar Cuenta" : "Disconnect Account"}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -1083,13 +1285,10 @@ function ConnectionStatusPill({
 }) {
     if (status === 'connected') {
         return (
-            <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)] ${
+            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 ${
                 compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
             }`}>
-                <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                </span>
+                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
                 <span>{language === 'es' ? "Conectado" : "Connected"}</span>
             </span>
         );
@@ -1097,13 +1296,10 @@ function ConnectionStatusPill({
 
     if (status === 'awaiting_2fa') {
         return (
-            <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)] animate-pulse ${
+            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 ${
                 compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
             }`}>
-                <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                </span>
+                <span className="h-2 w-2 rounded-full bg-indigo-400"></span>
                 <span>{language === 'es' ? "Esperando 2FA" : "Awaiting 2FA"}</span>
             </span>
         );
@@ -1111,10 +1307,10 @@ function ConnectionStatusPill({
 
     if (status === 'processing') {
         return (
-            <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.15)] ${
+            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 ${
                 compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
             }`}>
-                <RefreshCw size={11} className="animate-spin text-blue-500" />
+                <RefreshCw size={11} className="animate-spin text-indigo-400" />
                 <span>{language === 'es' ? "Verificando..." : "Verifying..."}</span>
             </span>
         );
@@ -1122,20 +1318,20 @@ function ConnectionStatusPill({
 
     if (status === 'expired') {
         return (
-            <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 ${
+            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/30 ${
                 compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
             }`}>
-                <AlertTriangle size={11} className="text-rose-500" />
+                <AlertTriangle size={11} className="text-rose-400" />
                 <span>{language === 'es' ? "Sesión Expirada" : "Expired"}</span>
             </span>
         );
     }
 
     return (
-        <span className={`inline-flex items-center gap-2 font-bold uppercase tracking-wider rounded-full bg-muted text-muted-foreground border border-border/80 ${
+        <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-slate-800/80 text-slate-400 border border-slate-700/80 ${
             compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
         }`}>
-            <span className="h-2 w-2 rounded-full bg-muted-foreground/60"></span>
+            <span className="h-2 w-2 rounded-full bg-slate-500"></span>
             <span>{language === 'es' ? "Desconectado" : "Disconnected"}</span>
         </span>
     );
@@ -1180,6 +1376,10 @@ function TaskStatusBadge({ status, language }: { status: string; language: strin
 
 // Inline input field helper
 function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text", disabled = false }: any) {
+    const [showPasswordText, setShowPasswordText] = useState(false);
+    const isPasswordField = type === "password";
+    const currentInputType = isPasswordField ? (showPasswordText ? "text" : "password") : type;
+
     return (
         <div className="group space-y-2">
             <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1 group-focus-within:text-primary transition-colors">
@@ -1188,14 +1388,27 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                     {label}
                 </span>
             </label>
-            <input
-                type={type}
-                value={value || ''}
-                onChange={(e) => onChange(e.target.value)}
-                disabled={disabled}
-                className="w-full h-11 px-4 rounded-xl border border-border/80 bg-background/80 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder={placeholder}
-            />
+            <div className="relative flex items-center">
+                <input
+                    type={currentInputType}
+                    value={value || ''}
+                    onChange={(e) => onChange(e.target.value)}
+                    disabled={disabled}
+                    className={`w-full h-11 px-4 ${isPasswordField ? 'pr-10' : ''} rounded-xl border border-border/80 bg-background/80 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                    placeholder={placeholder}
+                />
+                {isPasswordField && (
+                    <button
+                        type="button"
+                        onClick={() => setShowPasswordText(!showPasswordText)}
+                        tabIndex={-1}
+                        className="absolute right-3 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        title={showPasswordText ? "Hide" : "Show"}
+                    >
+                        {showPasswordText ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                )}
+            </div>
         </div>
     );
 }

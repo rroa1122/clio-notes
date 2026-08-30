@@ -320,17 +320,22 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField, parentT
 
     // Exactly one domain checked: Hurricane -> #12, OTC -> #2, STS -> #10, otherwise -> #1
     let isChecked = false;
-    if (isHurricaneNote) {
-        isChecked = domain.path === 'services.domains_selected.12_other';
-    } else if (isOtcNote || isVaccinationAssistanceNote) {
+    const domainKey = domain.path.split('.').pop() || '';
+
+    // 1. First priority: explicit domain assignment from n8n / DB / state
+    if (mergedNote.services?.domains_selected && typeof mergedNote.services.domains_selected[domainKey] === 'boolean') {
+        isChecked = mergedNote.services.domains_selected[domainKey];
+    } else if (Array.isArray(mergedNote.domains) && mergedNote.domains.length > 0) {
+        isChecked = mergedNote.domains.includes(domainKey);
+    } else if (isVaccinationAssistanceNote || isOtcNote) {
         isChecked = domain.path === 'services.domains_selected.2_physical_health_medical_dental';
+    } else if (isHurricaneNote) {
+        isChecked = domain.path === 'services.domains_selected.12_other';
     } else if (isStsNote || isDppNote) {
         isChecked = domain.path === 'services.domains_selected.10_transportation';
     } else if (isMhvNote) {
-        const domainKey = domain.path.split('.').pop() || '';
         isChecked = domainKey === '1_mental_health_substance_abuse' || Boolean(mergedNote.services?.domains_selected?.[domainKey]);
     } else if (isLtcNote) {
-        const domainKey = domain.path.split('.').pop() || '';
         isChecked = domainKey === '1_mental_health_substance_abuse' || domainKey === '6_activities_of_daily_living' || Boolean(mergedNote.services?.domains_selected?.[domainKey]);
     } else if (isDonationObtainNote) {
         isChecked = domain.path === 'services.domains_selected.9_basic_needs';
@@ -375,41 +380,41 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField, parentT
     return (
         <div className="flex flex-col gap-1 w-full">
             <div
-                className={`flex items-center gap-2.5 py-1.5 px-2.5 transition-all group border border-transparent ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-950/30 border-indigo-100/30 dark:border-indigo-900/30 rounded-lg' : 'rounded-lg'} cursor-default`}
+                className="flex items-center gap-2.5 py-1 px-1.5 transition-all group rounded-lg cursor-default"
             >
-                <div className={`size-4 flex items-center justify-center shrink-0 rounded-md border-2 transition-all ${isChecked ? 'bg-indigo-600 border-indigo-600 scale-105 shadow-sm shadow-indigo-100' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'}`}>
-                    {isChecked && <Check size={10} className="text-white stroke-[4]" />}
+                <div className={`size-4 flex items-center justify-center shrink-0 rounded border transition-all ${isChecked ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm' : 'bg-transparent border-slate-300 dark:border-slate-700/80 text-transparent'}`}>
+                    {isChecked && <Check size={10} className="text-white stroke-[3.5]" />}
                 </div>
-                <span className={`text-[10px] font-bold select-none transition-colors ${isChecked ? 'text-indigo-900 dark:text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>
+                <span className={`text-[10.5px] select-none transition-colors ${isChecked ? 'text-slate-900 dark:text-slate-100 font-bold' : 'text-slate-600 dark:text-slate-400 font-medium'}`}>
                     {domain.label}
                 </span>
             </div>
-            {isChecked && domain.path === 'services.domains_selected.2_physical_health_medical_dental' && (
+            {isChecked && isOtcNote && domain.path === 'services.domains_selected.2_physical_health_medical_dental' && (
                 <div className="pl-6 flex items-center gap-2 py-0.5 select-none">
-                    <div className="size-3.5 flex items-center justify-center rounded border-2 border-indigo-600 bg-indigo-600 text-white">
-                        <Check size={8} className="stroke-[4]" />
+                    <div className="size-3.5 flex items-center justify-center rounded border border-indigo-500 bg-indigo-600 text-white">
+                        <Check size={8} className="stroke-[3.5]" />
                     </div>
-                    <span className="text-[9px] font-bold text-indigo-900 dark:text-indigo-250">
+                    <span className="text-[9.5px] font-semibold text-indigo-600 dark:text-indigo-300">
                         Over the counter (OTC) medications.
                     </span>
                 </div>
             )}
-            {isChecked && domain.path === 'services.domains_selected.10_transportation' && isStsNote && (
+            {isChecked && isStsNote && domain.path === 'services.domains_selected.10_transportation' && (
                 <div className="pl-6 flex items-center gap-2 py-0.5 select-none">
-                    <div className="size-3.5 flex items-center justify-center rounded border-2 border-indigo-600 bg-indigo-600 text-white">
-                        <Check size={8} className="stroke-[4]" />
+                    <div className="size-3.5 flex items-center justify-center rounded border border-indigo-500 bg-indigo-600 text-white">
+                        <Check size={8} className="stroke-[3.5]" />
                     </div>
-                    <span className="text-[9px] font-bold text-indigo-900 dark:text-indigo-250">
+                    <span className="text-[9.5px] font-semibold text-indigo-600 dark:text-indigo-300">
                         Special Transportation Services (STS).
                     </span>
                 </div>
             )}
-            {isChecked && domain.path === 'services.domains_selected.10_transportation' && isDppNote && (
+            {isChecked && isDppNote && domain.path === 'services.domains_selected.10_transportation' && (
                 <div className="pl-6 flex items-center gap-2 py-0.5 select-none">
-                    <div className="size-3.5 flex items-center justify-center rounded border-2 border-indigo-600 bg-indigo-600 text-white">
-                        <Check size={8} className="stroke-[4]" />
+                    <div className="size-3.5 flex items-center justify-center rounded border border-indigo-500 bg-indigo-600 text-white">
+                        <Check size={8} className="stroke-[3.5]" />
                     </div>
-                    <span className="text-[9px] font-bold text-indigo-900 dark:text-indigo-250">
+                    <span className="text-[9.5px] font-medium text-indigo-300 dark:text-indigo-300">
                         Disabled Parking Permit (DPP).
                     </span>
                 </div>
@@ -571,7 +576,7 @@ const GhostInput = ({
                     onFocus={(e) => e.target.select()}
                     onBlur={onBlur}
                     placeholder={placeholder}
-                    className={`w-full transition-all duration-300 bg-slate-50 border border-slate-100 rounded-full px-4 py-2 text-[13px] font-bold text-indigo-900 placeholder:text-slate-300 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-200 outline-none shadow-sm ${className}`}
+                    className={`w-full transition-all duration-200 bg-slate-900/40 border border-slate-700/60 rounded-lg px-2.5 py-1 text-[12px] font-semibold text-slate-100 placeholder:text-slate-500 focus:bg-slate-900/80 focus:border-indigo-500/70 focus:ring-1 focus:ring-indigo-500/30 outline-none ${className}`}
                 />
             ) : (
                 <span className={`inline-block break-words ${className}`}>
@@ -749,16 +754,26 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     const [noteOverrides, setNoteOverrides] = useState<any>({});
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
+    const [lastSavedId, setLastSavedId] = useState<string | null>(
+        (note as any)?.id || (note as any)?._id || (note as any)?.noteId || null
+    );
+    const [isSaved, setIsSaved] = useState(
+        !!((note as any)?.id || (note as any)?._id || (note as any)?.noteId)
+    );
     const [clinicSettings, setClinicSettings] = useState<ClinicSettings | null>(null);
 
     const [cmSignatureImg, setCmSignatureImg] = useState<string | null>(null);
     const [supSignatureImg, setSupSignatureImg] = useState<string | null>(null);
     const [activeSigType, setActiveSigType] = useState<'cm' | 'sup' | null>(null);
     const [copyingSection, setCopyingSection] = useState<string | null>(null);
-    const [lastSavedId, setLastSavedId] = useState<string | null>(
-        (note as any)?.id || (note as any)?._id || (note as any)?.noteId || null
-    );
+
+    useEffect(() => {
+        const currentId = (note as any)?.id || (note as any)?._id || (note as any)?.noteId;
+        if (currentId) {
+            setLastSavedId(currentId);
+            setIsSaved(true);
+        }
+    }, [(note as any)?.id, (note as any)?._id, (note as any)?.noteId]);
 
     // Signature Request States
     const [isRequestSignatureModalOpen, setIsRequestSignatureModalOpen] = useState(false);
@@ -772,13 +787,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     const [syncTask, setSyncTask] = useState<{ status: string; error_message: string | null } | null>(null);
     const [isSyncErrorModalOpen, setIsSyncErrorModalOpen] = useState(false);
 
+    const lastNotifiedTaskRef = React.useRef<string | null>(null);
+
     const loadSyncStatus = React.useCallback(async () => {
         const noteIdToSync = note?.id || lastSavedId;
         if (!noteIdToSync) return;
         try {
             const { data, error } = await supabase
                 .from('amexzone_note_tasks')
-                .select('status, error_message')
+                .select('id, status, error_message, result_summary')
                 .eq('note_id', noteIdToSync)
                 .order('created_at', { ascending: false })
                 .limit(1)
@@ -786,6 +803,54 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             if (error) throw error;
             setSyncTask(data || null);
+
+            // Parse result_summary JSON if available
+            let parsedSummary: any = null;
+            if (data?.result_summary) {
+                try {
+                    parsedSummary = typeof data.result_summary === 'string' ? JSON.parse(data.result_summary) : data.result_summary;
+                } catch (e) {}
+            }
+
+            // If task just completed and adjusted times were saved, sync state back into Clio
+            if (data && data.status === 'completed' && parsedSummary?.time_adjusted && lastNotifiedTaskRef.current !== data.id) {
+                lastNotifiedTaskRef.current = data.id;
+                
+                const { data: updatedDbNote } = await supabase
+                    .from('notes')
+                    .select('content')
+                    .eq('id', noteIdToSync)
+                    .maybeSingle();
+
+                if (updatedDbNote && updatedDbNote.content) {
+                    const freshContent = updatedDbNote.content;
+                    const jointSvcs = freshContent.joint_services || [];
+                    setNoteOverrides((prev: any) => {
+                        const next = {
+                            ...prev,
+                            encounter: freshContent.encounter,
+                            joint_services: jointSvcs
+                        };
+                        jointSvcs.forEach((js: any, idx: number) => {
+                            next[`joint_services.${idx}.encounter.time_in`] = js.encounter?.time_in;
+                            next[`joint_services.${idx}.encounter.time_out`] = js.encounter?.time_out;
+                            next[`joint_services.${idx}.encounter.time_range`] = js.encounter?.time_range;
+                        });
+                        if (freshContent.encounter) {
+                            next['encounter.time_in'] = freshContent.encounter.time_in;
+                            next['encounter.time_out'] = freshContent.encounter.time_out;
+                            next['encounter.time_range'] = freshContent.encounter.time_range;
+                        }
+                        return next;
+                    });
+
+                    const actualSvcs = parsedSummary.actual_services || [];
+                    const summaryTimes = actualSvcs.map((s: any) => `${s.nombre || `Servicio #${s.servicio_num}`}: ${s.hora_inicio?.slice(0, 5)} - ${s.hora_fin?.slice(0, 5)}`).join(', ');
+                    toast.info(`🕒 Horarios actualizados en Clio para coincidir con Amexzone${summaryTimes ? ` (${summaryTimes})` : ''}`, {
+                        duration: 7000
+                    });
+                }
+            }
         } catch (err) {
             console.error('Error loading note sync status:', err);
         }
@@ -1045,6 +1110,23 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         setNoteOverrides((prev: any) => {
             const next = { ...prev, [path]: newValue };
             
+            // Synchronize DOS / Visit Date across note when updated
+            const isDosUpdate = path === 'encounter.dos_date' || path === 'meta.visitDate' || path === 'meta.dos_date' || /^joint_services\.\d+\.encounter\.dos_date$/.test(path);
+            if (isDosUpdate) {
+                next['encounter.dos_date'] = newValue;
+                next['meta.dos_date'] = newValue;
+                next['meta.visitDate'] = newValue;
+                
+                // If editing primary, top-level, or first visit date, cascade date to all joint services
+                if (path === 'encounter.dos_date' || path === 'meta.visitDate' || path === 'joint_services.0.encounter.dos_date') {
+                    if (mergedNote.joint_services && Array.isArray(mergedNote.joint_services)) {
+                        mergedNote.joint_services.forEach((_: any, idx: number) => {
+                            next[`joint_services.${idx}.encounter.dos_date`] = newValue;
+                        });
+                    }
+                }
+            }
+
             // Auto-calculate duration and units when time range changes
             const match = path.match(/^(?:(.*?\.)|)encounter\.(time_in|time_out)$/);
             if (match) {
@@ -1198,9 +1280,149 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         }
     };
 
-    const handleSyncWithEhr = async () => {
-        const note = mergedNote as any;
-        const noteIdToSync = note.id || lastSavedId;
+    const handleApplySuggestedTimeAndRetry = async (suggestedTime: string) => {
+        try {
+            const errorMsg = syncTask?.error_message || '';
+            const currentJointServices = mergedNote?.joint_services || [];
+            
+            // 1. Identify which service suffered the collision
+            let targetServiceIndex = 0;
+            const idxMatch = errorMsg.match(/\[SERVICE_INDEX:(\d+)\]/i);
+            const numMatch = errorMsg.match(/Servicio\s*#(\d+)/i);
+            
+            if (idxMatch) {
+                targetServiceIndex = parseInt(idxMatch[1], 10);
+            } else if (numMatch) {
+                targetServiceIndex = Math.max(0, parseInt(numMatch[1], 10) - 1);
+            } else if (currentJointServices.length > 1) {
+                // Check if any specific joint service time is referenced in the error message
+                const matchedIdx = currentJointServices.findIndex((js: any) => {
+                    const jsIn = js.encounter?.time_in || js.appointment?.start_time;
+                    return jsIn && errorMsg.includes(jsIn);
+                });
+                if (matchedIdx !== -1) {
+                    targetServiceIndex = matchedIdx;
+                }
+            }
+
+            // 2. Get duration for the target service
+            const targetSvc = (currentJointServices.length > targetServiceIndex)
+                ? currentJointServices[targetServiceIndex]
+                : mergedNote;
+            const currentEncounter = targetSvc?.encounter || mergedNote?.encounter || {};
+            const dur = parseInt(currentEncounter.duration || '60', 10) || 60;
+            
+            // 3. Calculate time_out from suggestedTime + duration
+            let tOut = '';
+            const match = suggestedTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+            if (match) {
+                let h = parseInt(match[1], 10);
+                const m = parseInt(match[2], 10);
+                const mer = (match[3] || 'AM').toUpperCase();
+                if (mer === 'PM' && h < 12) h += 12;
+                if (mer === 'AM' && h === 12) h = 0;
+                const totalMins = h * 60 + m + dur;
+                let endH = Math.floor(totalMins / 60) % 24;
+                const endM = totalMins % 60;
+                const endMer = endH >= 12 ? 'PM' : 'AM';
+                let endH12 = endH % 12;
+                if (endH12 === 0) endH12 = 12;
+                tOut = `${String(endH12).padStart(2, '0')}:${String(endM).padStart(2, '0')} ${endMer}`;
+            }
+
+            const timeRangeStr = tOut ? `${suggestedTime} - ${tOut}` : suggestedTime;
+
+            let updatedEncounter: any = mergedNote?.encounter || {};
+            if (targetServiceIndex === 0) {
+                updatedEncounter = {
+                    ...updatedEncounter,
+                    time_in: suggestedTime,
+                    time_out: tOut || updatedEncounter.time_out,
+                    time_range: timeRangeStr
+                };
+            }
+
+            const updatedJointServices = currentJointServices.map((js: any, idx: number) => {
+                if (idx === targetServiceIndex) {
+                    return {
+                        ...js,
+                        encounter: {
+                            ...(js.encounter || {}),
+                            time_in: suggestedTime,
+                            time_out: tOut || js.encounter?.time_out,
+                            time_range: timeRangeStr
+                        }
+                    };
+                }
+                return js;
+            });
+
+            const targetId = lastSavedId || (note as any)?.id;
+            const updatedNote = {
+                ...mergedNote,
+                id: targetId,
+                encounter: updatedEncounter,
+                joint_services: updatedJointServices
+            };
+
+            setNoteOverrides((prev: any) => {
+                const next = {
+                    ...prev,
+                    encounter: updatedEncounter,
+                    joint_services: updatedJointServices,
+                    [`joint_services.${targetServiceIndex}.encounter.time_in`]: suggestedTime,
+                    [`joint_services.${targetServiceIndex}.encounter.time_out`]: tOut,
+                    [`joint_services.${targetServiceIndex}.encounter.time_range`]: timeRangeStr,
+                };
+                if (targetServiceIndex === 0) {
+                    next['encounter.time_in'] = suggestedTime;
+                    next['encounter.time_out'] = tOut;
+                    next['encounter.time_range'] = timeRangeStr;
+                }
+                return next;
+            });
+
+            try {
+                const saved = await storage.saveAnalyzedNote(updatedNote);
+                if (saved && saved.id) {
+                    setLastSavedId(saved.id);
+                }
+            } catch (saveErr) {
+                console.error("Error saving updated note to storage:", saveErr);
+            }
+
+            const svcLabel = currentJointServices.length > 1 ? `Servicio #${targetServiceIndex + 1}` : 'Encuentro';
+            toast.success(`Horario de ${svcLabel} actualizado a ${timeRangeStr}. Sincronizando con Amexzone...`);
+            
+            await handleSyncWithEhr(updatedNote);
+        } catch (e) {
+            console.error('Error applying suggested time:', e);
+            handleSyncWithEhr();
+        }
+    };
+
+    const handleSyncWithEhr = async (overrideNote?: any) => {
+        // Disregard React MouseEvent or non-note objects passed by button onClick handlers
+        const isEvent = overrideNote && (overrideNote.nativeEvent || overrideNote.target || typeof overrideNote.preventDefault === 'function');
+        const effectiveOverride = (isEvent || !overrideNote || typeof overrideNote !== 'object') ? null : overrideNote;
+        const note = (effectiveOverride || mergedNote) as any;
+        let noteIdToSync = note.id || lastSavedId;
+
+        // Auto-save using duplicate-safe saveAnalyzedNote if no ID is present yet
+        if (!noteIdToSync) {
+            try {
+                const autoSaved = await storage.saveAnalyzedNote(note);
+                if (autoSaved && autoSaved.id) {
+                    noteIdToSync = autoSaved.id;
+                    setLastSavedId(autoSaved.id);
+                    setIsSaved(true);
+                    if (onSaveComplete) onSaveComplete(true);
+                }
+            } catch (autoErr) {
+                console.error("Auto-save before sync error:", autoErr);
+            }
+        }
+
         if (!noteIdToSync) {
             toast.error("Please save the note before exporting to EHR.");
             return;
@@ -1243,9 +1465,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 (note.services?.service_focus_title || "").toLowerCase().includes("hurricane")
             );
             const isStsNote = (
+                templateId === 'tcm_sts_obtain_note' ||
                 templateId === 'tcm_sts_complete_note' ||
-                templateId === 'tcm_sts_collect_note' ||
-                templateId === 'tcm_sts_submit_note' ||
+                templateId === 'tcm_sts_submit_pcp_note' ||
                 (note.subTemplate || "").toLowerCase().includes("sts") ||
                 (note._frontend_service_title || "").toLowerCase().includes("sts") ||
                 (note.encounter?.primary_service_provided || "").toLowerCase().includes("sts") ||
@@ -1364,90 +1586,242 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         isChecked = wantsTrans;
                     }
                 } else if (isUscisAssistanceNote) {
-                    const narrLower = (note.narrative?.summary_notes || "").toLowerCase();
-                    const wantsAdl = narrLower.includes("form") || narrLower.includes("paperwork") || narrLower.includes("document") || narrLower.includes("organize") || narrLower.includes("residency");
-                    const wantsPsych = narrLower.includes("anxiety") || narrLower.includes("anxious") || narrLower.includes("emotional support") || narrLower.includes("reassurance");
-                    
-                    if (domain.path === 'services.domains_selected.11_legal_immigration') {
-                        isChecked = true;
-                    } else if (domain.path === 'services.domains_selected.6_activities_of_daily_living') {
-                        isChecked = wantsAdl;
-                    } else if (domain.path === 'services.domains_selected.1_mental_health_substance_abuse') {
-                        isChecked = wantsPsych;
-                    }
+                    isChecked = domain.path === 'services.domains_selected.11_legal_immigration';
                 } else if (isHousingAssistanceNote) {
                     isChecked = domain.path === 'services.domains_selected.7_housing_shelter';
                 } else if (isSnapRecertificationNote) {
                     isChecked = domain.path === 'services.domains_selected.8_economic_financial';
                 } else {
-                    isChecked = domain.path === 'services.domains_selected.1_mental_health_substance_abuse';
+                    const domainKey = domain.path.split('.').pop() || '';
+                    isChecked = Boolean(note.services?.domains_selected?.[domainKey]);
                 }
 
                 if (isChecked) {
-                    activeDomains.push(domain.path.split('.').pop()!);
+                    const domainKey = domain.path.split('.').pop() || '';
+                    activeDomains.push(domainKey);
                 }
             });
 
-            const isJoint = !!(mergedNote.joint_services && mergedNote.joint_services.length > 0);
-            const servicesToSync = (isJoint ? mergedNote.joint_services : [mergedNote]) || [];
+            // If no domains selected via rules, fallback to checking raw domains_selected object
+            if (activeDomains.length === 0 && note.services?.domains_selected) {
+                Object.entries(note.services.domains_selected).forEach(([key, val]) => {
+                    if (val) activeDomains.push(key);
+                });
+            }
+
+            // Default fallback if still empty
+            if (activeDomains.length === 0) {
+                activeDomains.push('1_mental_health_substance_abuse');
+            }
+
+            const extractSummaryNotes = (svc: any): string => {
+                if (!svc) return "";
+                if (svc.narrative?.summary_notes && typeof svc.narrative.summary_notes === 'string' && svc.narrative.summary_notes.trim()) {
+                    return svc.narrative.summary_notes.trim();
+                }
+                if (svc.narrative?.clinical_narrative && typeof svc.narrative.clinical_narrative === 'string' && svc.narrative.clinical_narrative.trim()) {
+                    return svc.narrative.clinical_narrative.trim();
+                }
+                if (svc.narrative?.summary && typeof svc.narrative.summary === 'string' && svc.narrative.summary.trim()) {
+                    return svc.narrative.summary.trim();
+                }
+                if (svc.summary_notes && typeof svc.summary_notes === 'string' && svc.summary_notes.trim()) {
+                    return svc.summary_notes.trim();
+                }
+                if (svc.clinical_narrative && typeof svc.clinical_narrative === 'string' && svc.clinical_narrative.trim()) {
+                    return svc.clinical_narrative.trim();
+                }
+                if (svc.narratives?.assessment && typeof svc.narratives.assessment === 'string' && svc.narratives.assessment.trim()) {
+                    return svc.narratives.assessment.trim();
+                }
+                if (svc.narrative?.assessment && typeof svc.narrative.assessment === 'string' && svc.narrative.assessment.trim()) {
+                    return svc.narrative.assessment.trim();
+                }
+                if (svc.notes && typeof svc.notes === 'string' && svc.notes.trim()) {
+                    return svc.notes.trim();
+                }
+                if (svc.joint_services && Array.isArray(svc.joint_services) && svc.joint_services.length > 0) {
+                    const nestedTexts = svc.joint_services
+                        .map((sub: any) => extractSummaryNotes(sub))
+                        .filter((t: string) => Boolean(t.trim()));
+                    if (nestedTexts.length > 0) {
+                        return nestedTexts.join('\n\n');
+                    }
+                }
+                return "";
+            };
+
+            // Universal Service Flattening:
+            // Flatten nested joint_services so every clinical sub-service is dispatched with its exact title, times and narrative
+            const flattenedServicesList: any[] = [];
+            const rawServices = (note.joint_services && note.joint_services.length > 0)
+                ? note.joint_services
+                : [note];
+
+            rawServices.forEach((s: any) => {
+                if (s.joint_services && Array.isArray(s.joint_services) && s.joint_services.length > 0) {
+                    s.joint_services.forEach((sub: any) => {
+                        flattenedServicesList.push({
+                            ...sub,
+                            parentServiceTitle: s._frontend_service_title || s.services?.service_focus_title || s.subTemplate,
+                            parentTemplateId: s.template_id,
+                            narrative: {
+                                ...(sub.narrative || {}),
+                                summary_notes: extractSummaryNotes(sub) || extractSummaryNotes(s),
+                                outcome_of_services: sub.narrative?.outcome_of_services || s.narrative?.outcome_of_services || globalOutcomeText,
+                                next_steps: sub.narrative?.next_steps || s.narrative?.next_steps || globalNextStepsText
+                            }
+                        });
+                    });
+                } else {
+                    flattenedServicesList.push({
+                        ...s,
+                        narrative: {
+                            ...(s.narrative || {}),
+                            summary_notes: extractSummaryNotes(s),
+                            outcome_of_services: s.narrative?.outcome_of_services || globalOutcomeText,
+                            next_steps: s.narrative?.next_steps || globalNextStepsText
+                        }
+                    });
+                }
+            });
 
             const todayDateStr = new Date().toISOString().split('T')[0];
-            for (const svc of servicesToSync) {
-                const effectiveVisitDate = svc.encounter?.dos_date 
-                    || (svc as any).service_date 
-                    || (svc as any).date_of_service 
-                    || mergedNote.encounter?.dos_date 
-                    || (mergedNote as any).service_date 
-                    || (mergedNote as any).date_of_service 
-                    || (mergedNote as any).meta?.dos_date 
-                    || (mergedNote as any).meta?.service_date 
-                    || (mergedNote as any).meta?.visitDate 
-                    || note.encounter?.dos_date 
-                    || note.meta?.visitDate 
-                    || todayDateStr;
+            const primaryVisitDate = note.joint_services?.[0]?.encounter?.dos_date
+                || note.encounter?.dos_date 
+                || note.service_date 
+                || note.date_of_service 
+                || note.meta?.dos_date 
+                || note.meta?.service_date 
+                || note.meta?.visitDate 
+                || todayDateStr;
 
-                const patAny = (mergedNote.patient as any) || (note.patient as any) || {};
+            const patAny = (note.patient as any) || {};
 
-                // Construct JSON payload for this specific service block
-                const payload = {
-                    patient_emr_id: patAny.emr_id || patAny.id || patAny.account_number || (patAny.emr ? patAny.emr.replace(/\D/g, '') : '') || "",
-                    amexzone_id: patAny.amexzone_id || patAny.id_amexzone || "",
-                    patient_id: patAny.id || "",
-                    patient_name: patAny.full_name || "",
-                    patient_dob: patAny.dob || "",
-                    visit_date: effectiveVisitDate,
+            const calculateEndTime = (timeInStr: string, durationMin: number): string => {
+                if (!timeInStr) return "10:15 AM";
+                const match = timeInStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+                if (!match) return "10:15 AM";
+                let h = parseInt(match[1], 10);
+                const m = parseInt(match[2], 10);
+                const mer = (match[3] || 'AM').toUpperCase();
+                if (mer === 'PM' && h < 12) h += 12;
+                if (mer === 'AM' && h === 12) h = 0;
+                
+                const totalMinutes = h * 60 + m + (durationMin > 0 ? durationMin : 15);
+                let outH = Math.floor(totalMinutes / 60) % 24;
+                const outM = totalMinutes % 60;
+                const outMer = outH >= 12 ? 'PM' : 'AM';
+                outH = outH % 12;
+                if (outH === 0) outH = 12;
+                return `${String(outH).padStart(2, '0')}:${String(outM).padStart(2, '0')} ${outMer}`;
+            };
+
+            const compiledServices = flattenedServicesList.map((svc: any) => {
+                let svcDomains = activeDomains;
+                if (svc.services?.domains_selected) {
+                    const customDomains: string[] = [];
+                    TCM_DOMAINS.forEach(domain => {
+                        const directKey = domain.path.split('.').pop()!;
+                        if (svc.services?.domains_selected?.[directKey]) {
+                            customDomains.push(directKey);
+                        }
+                    });
+                    if (customDomains.length > 0) {
+                        svcDomains = customDomains;
+                    }
+                } else if (Array.isArray(svc.domains) && svc.domains.length > 0) {
+                    svcDomains = svc.domains;
+                }
+
+                const svcTitle = svc.services?.service_focus_title 
+                    || svc.subTemplate 
+                    || svc.encounter?.sub_template 
+                    || svc._frontend_service_title 
+                    || svc.parentServiceTitle
+                    || svc.encounter?.primary_service_provided 
+                    || (svc === mergedNote ? (mergedNote.services?.service_focus_title || mergedNote.subTemplate) : "")
+                    || "TCM Progress Note";
+
+                const svcTimeIn = svc.encounter?.time_in || svc.appointment?.start_time || svc.encounter?.start_time || "10:00 AM";
+                const svcDur = svc.encounter?.duration_minutes || svc.encounter?.duration || "15";
+                let svcTimeOut = svc.encounter?.time_out || svc.appointment?.end_time || svc.encounter?.end_time || "";
+                if (!svcTimeOut) {
+                    svcTimeOut = calculateEndTime(svcTimeIn, parseInt(String(svcDur), 10) || 15);
+                }
+                const svcUnits = svc.encounter?.billing_units || svc.encounter?.units || String(Math.max(1, Math.round((parseInt(String(svcDur), 10) || 15) / 15)));
+                const svcPos = svc.encounter?.pos || "11 - Office";
+
+                const summaryNotes = extractSummaryNotes(svc);
+
+                return {
+                    service_type: svcTitle,
                     encounter: {
-                        dos_date: effectiveVisitDate,
-                        time_in: svc.encounter?.time_in || mergedNote.encounter?.time_in || "",
-                        time_out: svc.encounter?.time_out || mergedNote.encounter?.time_out || "",
-                        duration: svc.encounter?.duration_minutes || svc.encounter?.duration || mergedNote.encounter?.duration_minutes || mergedNote.encounter?.duration || "",
-                        units: svc.encounter?.units || mergedNote.encounter?.units || "",
-                        pos: svc.encounter?.pos || mergedNote.encounter?.pos || ""
+                        dos_date: svc.encounter?.dos_date || primaryVisitDate,
+                        time_in: svcTimeIn,
+                        time_out: svcTimeOut,
+                        duration: svcDur,
+                        units: svcUnits,
+                        pos: svcPos
                     },
                     narrative: {
-                        summary_notes: svc.narrative?.summary_notes || mergedNote.narrative?.summary_notes || "",
-                        outcome_of_services: svc.narrative?.outcome_of_services || mergedNote.narrative?.outcome_of_services || "",
-                        next_steps: svc.narrative?.next_steps || mergedNote.narrative?.next_steps || ""
+                        summary_notes: summaryNotes,
+                        outcome_of_services: svc.narrative?.outcome_of_services || svc.outcome_of_services || globalOutcomeText || "",
+                        next_steps: svc.narrative?.next_steps || svc.next_steps || globalNextStepsText || ""
                     },
-                    domains: activeDomains,
-                    service_type: svc.subTemplate || svc.services?.service_focus_title || mergedNote.subTemplate || mergedNote.services?.service_focus_title || ""
+                    domains: svcDomains
                 };
+            });
 
-                const { error: insertError } = await supabase
-                    .from('amexzone_note_tasks')
-                    .insert({
-                        note_id: noteIdToSync,
-                        user_id: user?.id,
-                        clinic_id: user?.clinic_id || clinicSettings?.id || null,
-                        patient_name: mergedNote.patient?.full_name || note.patient?.full_name || 'Desconocido',
-                        patient_dob: mergedNote.patient?.dob || note.patient?.dob || null,
-                        visit_date: effectiveVisitDate,
-                        note_text: '[TCM_PROGRESS_NOTE]\n' + JSON.stringify(payload),
-                        status: 'pending'
-                    });
-
-                if (insertError) throw insertError;
+            // Pre-Sync Safety Validation:
+            const totalTextLength = compiledServices.reduce((acc: number, s: any) => acc + (s.narrative?.summary_notes?.length || 0), 0);
+            if (totalTextLength === 0) {
+                toast.error(
+                    language === 'es'
+                        ? 'La nota no contiene texto en la narrativa clínica (Summary Notes). Por favor completa el contenido antes de sincronizar.'
+                        : 'The note contains no clinical narrative text. Please complete the content before synchronizing.',
+                    { duration: 6000 }
+                );
+                return;
             }
+
+            // Construct single unified payload with all services
+            const payload = {
+                patient_emr_id: patAny.emr_id || patAny.id || patAny.account_number || (patAny.emr ? patAny.emr.replace(/\D/g, '') : '') || "",
+                amexzone_id: patAny.amexzone_id || patAny.id_amexzone || "",
+                patient_id: patAny.id || "",
+                patient_name: patAny.full_name || "",
+                patient_dob: patAny.dob || "",
+                visit_date: primaryVisitDate,
+                services: compiledServices,
+                outcome_of_services: globalOutcomeText,
+                next_steps: globalNextStepsText,
+                // Top-level fallbacks for backward compatibility
+                encounter: compiledServices[0]?.encounter || {},
+                narrative: {
+                    ...(compiledServices[0]?.narrative || {}),
+                    summary_notes: compiledServices[0]?.narrative?.summary_notes || "",
+                    outcome_of_services: globalOutcomeText,
+                    next_steps: globalNextStepsText
+                },
+                domains: compiledServices[0]?.domains || activeDomains,
+                service_type: compiledServices[0]?.service_type || ""
+            };
+
+            const { error: insertError } = await supabase
+                .from('amexzone_note_tasks')
+                .insert({
+                    note_id: noteIdToSync,
+                    user_id: user?.id,
+                    clinic_id: user?.clinic_id || clinicSettings?.id || null,
+                    patient_name: mergedNote.patient?.full_name || note.patient?.full_name || 'Desconocido',
+                    patient_dob: mergedNote.patient?.dob || note.patient?.dob || null,
+                    visit_date: primaryVisitDate,
+                    note_text: '[TCM_PROGRESS_NOTE]\n' + JSON.stringify(payload),
+                    status: 'pending'
+                });
+
+            if (insertError) throw insertError;
 
             toast.success("Progress Note queued for synchronization!");
             loadSyncStatus();
@@ -1483,8 +1857,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             {/* FLOATING TOOLBAR - MODERN CLINICAL HUD */}
             {!hideToolbar && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] no-print max-w-[95vw]">
-                    <div className="flex items-center gap-1.5 p-2 bg-card/95 dark:bg-card/90 backdrop-blur-2xl border border-border/80 shadow-2xl shadow-primary/10 dark:shadow-black/50 rounded-full ring-1 ring-primary/10 transition-all duration-300">
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] no-print max-w-[95vw]">
+                    <div className="flex items-center gap-1.5 p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-700 shadow-2xl shadow-black/40 rounded-full transition-all duration-300">
                         <button
                             disabled={isSigned}
                             onClick={() => setIsEditMode(!isEditMode)}
@@ -1512,63 +1886,73 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                         <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
 
-                        <div className="flex items-center gap-2">
-                            <button
-                                disabled={isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing'}
-                                onClick={handleSyncWithEhr}
-                                className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-cyan-500 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group disabled:opacity-50"
-                            >
-                                {isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing' ? (
-                                    <RefreshCw size={15} className="animate-spin text-cyan-500" />
-                                ) : (
+                        {(() => {
+                            const isPending = syncTask?.status === 'pending';
+                            const isProcessing = isSyncing || syncTask?.status === 'processing';
+                            const isCompleted = syncTask?.status === 'completed';
+                            const isFailed = syncTask?.status === 'failed';
+
+                            if (isFailed) {
+                                return (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSyncErrorModalOpen(true)}
+                                        className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-rose-500/20 active:scale-95 cursor-pointer shadow-sm"
+                                        title="Click to view error reason and retry"
+                                    >
+                                        <AlertCircle size={15} className="text-rose-500 animate-pulse" />
+                                        <span>Sync Failed (Details)</span>
+                                    </button>
+                                );
+                            }
+
+                            if (isCompleted) {
+                                return (
+                                    <button
+                                        onClick={handleSyncWithEhr}
+                                        className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-emerald-500/20 active:scale-95 cursor-pointer group"
+                                        title="Note synchronized with Amexzone. Click to re-sync."
+                                    >
+                                        <CheckCircle2 size={15} className="text-emerald-500" />
+                                        <span>Synced</span>
+                                    </button>
+                                );
+                            }
+
+                            if (isPending) {
+                                return (
+                                    <button
+                                        disabled
+                                        className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-amber-500/20 opacity-90 cursor-not-allowed animate-pulse"
+                                    >
+                                        <RefreshCw size={15} className="animate-spin text-amber-500" />
+                                        <span>In Queue...</span>
+                                    </button>
+                                );
+                            }
+
+                            if (isProcessing) {
+                                return (
+                                    <button
+                                        disabled
+                                        className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-cyan-500/20 opacity-90 cursor-not-allowed animate-pulse"
+                                    >
+                                        <RefreshCw size={15} className="animate-spin text-cyan-500" />
+                                        <span>Syncing...</span>
+                                    </button>
+                                );
+                            }
+
+                            return (
+                                <button
+                                    onClick={handleSyncWithEhr}
+                                    className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-cyan-500 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group"
+                                >
                                     <Cpu size={15} className="group-hover:scale-110 transition-transform text-cyan-500" />
-                                )}
-                                <span>{isSyncing || syncTask?.status === 'pending' || syncTask?.status === 'processing' ? 'Syncing' : 'Sync'}</span>
-                            </button>
-                            {(() => {
-                                if (!syncTask) return null;
-                                switch (syncTask.status) {
-                                    case 'pending':
-                                        return (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse">
-                                                <span className="size-1.5 rounded-full bg-amber-500" />
-                                                Queued
-                                            </span>
-                                        );
-                                    case 'processing':
-                                        return (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 animate-pulse">
-                                                <span className="size-1.5 rounded-full bg-cyan-500" />
-                                                Syncing...
-                                            </span>
-                                        );
-                                    case 'completed':
-                                        return (
-                                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                                <span className="size-1.5 rounded-full bg-emerald-500" />
-                                                Synced
-                                            </span>
-                                        );
-                                    case 'failed': {
-                                        const formatted = formatSyncError(syncTask.error_message);
-                                        return (
-                                            <button 
-                                                type="button"
-                                                onClick={() => setIsSyncErrorModalOpen(true)}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 transition-all cursor-pointer group/syncerr active:scale-95 shadow-sm"
-                                                title="Haz clic para ver el motivo y cómo resolverlo"
-                                            >
-                                                <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                                <span className="max-w-[140px] truncate">{formatted.title}</span>
-                                                <span className="underline ml-0.5 opacity-80 group-hover/syncerr:opacity-100 text-[9px]">Detalles</span>
-                                            </button>
-                                        );
-                                    }
-                                    default:
-                                        return null;
-                                }
-                            })()}
-                        </div>
+                                    <span>Sync</span>
+                                </button>
+                            );
+                        })()}
  
                         {!isSigned && (
                             <>
@@ -1611,25 +1995,14 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Inter:wght@100..900&display=swap');
 
                 .document-canvas-wrapper { 
-                    background: #f8fafc;
-                    padding: 1.5rem 2rem 2rem 2rem; 
+                    background: transparent !important;
+                    padding: 0 !important; 
                     display: flex; 
                     flex-direction: column; 
                     align-items: center; 
-                    min-height: 100vh;
-                    border-radius: 24px;
+                    min-height: auto;
+                    border-radius: 0;
                 }
-
-                /* CUSTOM SCROLLBAR */
-                .document-canvas-wrapper::-webkit-scrollbar { width: 6px; }
-                .document-canvas-wrapper::-webkit-scrollbar-track { background: transparent; }
-                .document-canvas-wrapper::-webkit-scrollbar-thumb { 
-                    background: #e2e8f0; 
-                    border-radius: 10px;
-                    border: 2px solid transparent;
-                    background-clip: content-box;
-                }
-                .document-canvas-wrapper::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 
                 .document-page { 
                     background-color: white; 
@@ -1637,27 +2010,29 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     max-width: 100%; 
                     min-height: 11in; 
 
-                    padding: 0.4in 0.5in; 
-                    box-shadow: 0 50px 100px -20px rgba(0,0,0,0.05), 0 0 1px rgba(0,0,0,0.1);
-                    border: none; 
-                    border-radius: 48px;
+                    padding: 0.5in 0.6in; 
+                    box-shadow: 0 20px 45px -15px rgba(0,0,0,0.06);
+                    border: 1px solid #e2e8f0; 
+                    border-radius: 2rem;
                     position: relative; 
                     margin-bottom: 4rem; 
                     /* PREMIUM TYPOGRAPHY */
                     font-family: 'Inter', sans-serif !important;
                     color: #1e293b;
                     line-height: 1.6;
-                    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                    transition: all 0.3s ease;
                 }
 
                 /* ON-SCREEN DARK MODE PREVIEW - FORCES WHITE BACKGROUND ONLY WHEN PRINTING */
                 .dark .document-canvas-wrapper {
-                    background: #090d16 !important;
+                    background: transparent !important;
                 }
                 .dark .document-page { 
-                    background-color: #0f172a !important; 
+                    background-color: #070c18 !important; 
                     color: #cbd5e1 !important; 
-                    box-shadow: 0 50px 100px -20px rgba(0,0,0,0.3), 0 0 1px rgba(255,255,255,0.05) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+                    border-radius: 1.5rem !important;
                 }
                 .dark .document-page .text-slate-900,
                 .dark .document-page h1,
@@ -1687,11 +2062,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 .dark .document-page .gradient-divider {
                     background: linear-gradient(to right, transparent, #1e293b 10%, #1e293b 90%, transparent) !important;
                 }
-                .dark .document-page .border-slate-100 {
-                    border-color: #1e293b !important;
-                }
-                .dark .document-page .border-slate-200 {
-                    border-color: #334155 !important;
+                .dark .document-page .border-slate-50,
+                .dark .document-page .border-slate-100,
+                .dark .document-page .border-slate-200,
+                .dark .document-page .border-slate-300 {
+                    border-color: rgba(51, 65, 85, 0.5) !important;
                 }
                 .dark .document-page div[class*="bg-slate-50"] {
                     background-color: rgba(2, 6, 23, 0.55) !important;
@@ -1991,10 +2366,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
 
 
-            {/* Time Conflict Warning Banner outside the canvas, on the white background above the grey */}
+            {/* Time Conflict Warning Banner */}
             {!isConflictLoading && (confidence === 'low' || conflicts.length > 0) && (
-                <div className="no-print w-full px-8 pt-0 pb-2.5 bg-white dark:bg-slate-950 flex items-center justify-center -mt-2 md:-mt-4">
-                    <div className="w-full max-w-[950px]">
+                <div className="no-print w-full pb-4 flex items-center justify-center">
+                    <div className="w-full max-w-[1050px]">
                         <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
                     </div>
                 </div>
@@ -2013,7 +2388,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     Progress Note
                                 </h1>
                                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    DOS: {formatDosDate(mergedNote.encounter?.dos_date || (mergedNote as any).meta?.dos_date || (mergedNote as any).meta?.visitDate)}
+                                    DOS: {formatDosDate(mergedNote.joint_services?.[0]?.encounter?.dos_date || mergedNote.encounter?.dos_date || (mergedNote as any).meta?.dos_date || (mergedNote as any).meta?.visitDate || (mergedNote as any).appointment?.date_of_service)}
                                 </span>
                             </div>
                             {clinicSettings?.logoUrl && (
@@ -2044,87 +2419,85 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     <User size={11} className="text-indigo-400" />
                                     CLIENT IDENTITY
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 dark:text-white mb-0.5 leading-none uppercase tracking-tight flex items-center gap-2 h-5 w-full">
-                                    <GhostInput
-                                        value={mergedNote.patient?.full_name}
-                                        isEditMode={isEditMode}
-                                        onChange={(val) => handleUpdateField('patient.full_name', val)}
-                                        placeholder="Patient Name"
-                                        className="!px-0 !bg-transparent !border-0 !shadow-none !text-[14px] !font-black !text-slate-900 dark:!text-white !uppercase !tracking-tight !h-auto !py-0"
-                                    />
-                                </div>
-                                <div className="space-y-[2px] mt-1 w-full">
-                                    <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Case No:</span>
+                                {isEditMode ? (
+                                    <div className="w-full bg-slate-900/50 border border-slate-700/60 rounded-xl p-2.5 space-y-2 mt-0.5">
                                         <div className="flex items-center">
-                                            {isEditMode ? (
-                                                <GhostInput
-                                                    value={mergedNote.patient?.account_number || mergedNote.patient?.case_no}
-                                                    isEditMode={true}
-                                                    onChange={(val) => handleUpdateField('patient.account_number', val)}
-                                                    placeholder="—"
-                                                    className="!px-2 !py-0.5 !text-[12px] !h-6"
-                                                />
-                                            ) : (
-                                                <span className="font-semibold text-slate-800 leading-none">{mergedNote.patient?.account_number || mergedNote.patient?.case_no || "—"}</span>
-                                            )}
+                                            <input
+                                                type="text"
+                                                value={mergedNote.patient?.full_name || ''}
+                                                onChange={(e) => handleUpdateField('patient.full_name', e.target.value)}
+                                                placeholder="Patient Full Name"
+                                                className="w-full bg-transparent border-0 border-b border-slate-700/60 focus:border-indigo-400 pb-1 text-[13px] font-black text-slate-100 uppercase tracking-tight outline-none placeholder:text-slate-500"
+                                            />
                                         </div>
-                                    </div>
- 
-                                    <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Sex:</span>
-                                        <div className="flex items-center">
-                                            {isEditMode ? (
-                                                <GhostInput
-                                                    value={mergedNote.patient?.sex_at_birth}
-                                                    isEditMode={true}
-                                                    onChange={(val) => handleUpdateField('patient.sex_at_birth', val)}
+                                        <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-0.5">
+                                            <div className="flex items-center gap-1.5 text-[11px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] min-w-[50px]">Case No:</span>
+                                                <input
+                                                    type="text"
+                                                    value={mergedNote.patient?.account_number || mergedNote.patient?.case_no || ''}
+                                                    onChange={(e) => handleUpdateField('patient.account_number', e.target.value)}
                                                     placeholder="—"
-                                                    className="!px-2 !py-0.5 !text-[12px] !h-6"
+                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
                                                 />
-                                            ) : (
-                                                <span className="font-semibold text-slate-800 leading-none">{mergedNote.patient?.sex_at_birth || "—"}</span>
-                                            )}
-                                        </div>
-                                    </div>
- 
-                                    <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Mobile:</span>
-                                        <div className="flex items-center">
-                                            {isEditMode ? (
-                                                <GhostInput
-                                                    value={mergedNote.patient?.phone || mergedNote.patient?.mobile}
-                                                    isEditMode={true}
-                                                    onChange={(val) => handleUpdateField('patient.phone', val)}
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[11px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] min-w-[32px]">Sex:</span>
+                                                <input
+                                                    type="text"
+                                                    value={mergedNote.patient?.sex_at_birth || ''}
+                                                    onChange={(e) => handleUpdateField('patient.sex_at_birth', e.target.value)}
                                                     placeholder="—"
-                                                    className="!px-2 !py-0.5 !text-[12px] !h-6"
+                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
                                                 />
-                                            ) : (
-                                                <span className="font-semibold text-slate-800 leading-none">{mergedNote.patient?.phone || mergedNote.patient?.mobile || "—"}</span>
-                                            )}
-                                        </div>
-                                    </div>
- 
-                                    <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">DOB:</span>
-                                        <div className="flex items-center gap-1">
-                                            {isEditMode ? (
-                                                <GhostInput
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[11px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] min-w-[50px]">Mobile:</span>
+                                                <input
+                                                    type="text"
+                                                    value={mergedNote.patient?.phone || mergedNote.patient?.mobile || ''}
+                                                    onChange={(e) => handleUpdateField('patient.phone', e.target.value)}
+                                                    placeholder="—"
+                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[11px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] min-w-[32px]">DOB:</span>
+                                                <input
                                                     type="date"
                                                     value={mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toISOString().split('T')[0] : ''}
-                                                    onChange={(val) => handleUpdateField('patient.dob', val)}
-                                                    isEditMode={true}
-                                                    className="!px-2 !py-0.5 !text-[12px] !h-6"
+                                                    onChange={(e) => handleUpdateField('patient.dob', e.target.value)}
+                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
                                                 />
-                                            ) : (
-                                                <>
-                                                    <span className="font-semibold text-slate-800 leading-none">{mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "—"}</span>
-                                                    <span className="text-slate-400 font-semibold text-[10px] ml-1 leading-none">({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"} years old)</span>
-                                                </>
-                                            )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <>
+                                        <div className="text-[14px] font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight flex items-center w-full mb-0.5 h-5">
+                                            <span>{mergedNote.patient?.full_name || '—'}</span>
+                                        </div>
+                                        <div className="w-full space-y-[2px] mt-1">
+                                            <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Case No:</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{mergedNote.patient?.account_number || mergedNote.patient?.case_no || "—"}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Sex:</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{mergedNote.patient?.sex_at_birth || "—"}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Mobile:</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{mergedNote.patient?.phone || mergedNote.patient?.mobile || "—"}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">DOB:</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "—"}</span>
+                                                <span className="text-slate-400 font-semibold text-[10px] ml-1 leading-none">({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"} years old)</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
  
                             {/* Right: Facility Info */}
@@ -2133,25 +2506,25 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     FACILITY INFO
                                     <MapPin size={12} className="text-indigo-400" />
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 mb-0.5 leading-none uppercase tracking-tight flex items-center justify-end h-5 w-full">
+                                <div className="text-[14px] font-black text-slate-900 dark:text-white mb-0.5 leading-none uppercase tracking-tight flex items-center justify-end h-5 w-full">
                                     {clinicSettings?.clinicName || "Independent Practice"}
                                 </div>
                                 <div className="space-y-[2px] mt-1 w-full">
                                     <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Fax:</span>
-                                        <span className="font-semibold text-slate-800 leading-none">{clinicSettings?.fax || "—"}</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{clinicSettings?.fax || "—"}</span>
                                     </div>
                                     <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Phone:</span>
-                                        <span className="font-semibold text-slate-800 leading-none">{clinicSettings?.phone || "—"}</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{clinicSettings?.phone || "—"}</span>
                                     </div>
                                     <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Email:</span>
-                                        <span className="font-semibold text-slate-800 leading-none lowercase">{clinicSettings?.email || "—"}</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none lowercase">{clinicSettings?.email || "—"}</span>
                                     </div>
-                                    <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Address:</span>
-                                        <span className="font-semibold text-slate-800 leading-none max-w-[200px] truncate">{clinicSettings?.address || "—"}</span>
+                                    <div className="flex items-start justify-end gap-x-1.5 min-h-[16px] text-[11px]">
+                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">Address:</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-tight text-right">{clinicSettings?.address || "—"}</span>
                                     </div>
                                 </div>
                             </div>
@@ -2164,10 +2537,30 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         {/* Title Sections & Summaries - Dynamic Mapping for Joint Notes */}
                         {(() => {
                             const isJoint = !!(mergedNote.joint_services && mergedNote.joint_services.length > 0);
-                            const servicesToRender = (isJoint ? mergedNote.joint_services : [mergedNote]) || [];
+                            const rawServices = (isJoint ? mergedNote.joint_services : [mergedNote]) || [];
+                            
+                            // Flatten any nested joint_services so every step renders its own clinical narrative and details
+                            const servicesToRender: any[] = [];
+                            rawServices.forEach((s: any) => {
+                                if (s.joint_services && Array.isArray(s.joint_services) && s.joint_services.length > 0) {
+                                    s.joint_services.forEach((sub: any) => {
+                                        servicesToRender.push({
+                                            ...sub,
+                                            patient: sub.patient || s.patient || mergedNote.patient,
+                                            facility: sub.facility || s.facility || mergedNote.facility,
+                                            staff: sub.staff || s.staff || mergedNote.staff,
+                                            signatures: sub.signatures || s.signatures || mergedNote.signatures,
+                                            template_id: sub.template_id || s.template_id || mergedNote.template_id,
+                                            diagnoses: sub.diagnoses || s.diagnoses || mergedNote.diagnoses
+                                        });
+                                    });
+                                } else {
+                                    servicesToRender.push(s);
+                                }
+                            });
 
                             return servicesToRender.map((svc: any, svcIndex: number) => {
-                                const svcSummary = svc.narrative?.summary_notes || svc.narrative?.clinical_narrative || svc.narrative?.summary || svc.narrative?.narrative || svc.summary_notes || svc.summary || svc.clinical_narrative || svc.raw_model_text || "";
+                                const svcSummary = svc.narrative?.summary_notes || svc.narrative?.clinical_narrative || svc.narrative?.summary || svc.narrative?.narrative || svc.summary_notes || svc.summary || svc.clinical_narrative || svc.raw_model_text || svc.text || "";
                                 const pathPrefix = isJoint ? `joint_services.${svcIndex}.` : "";
 
                                 return (
@@ -2190,7 +2583,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                             type="date"
                                                                             value={svc.encounter?.dos_date || (svc as any).meta?.visitDate || ''}
                                                                             onChange={(e) => handleUpdateField(`${pathPrefix}encounter.dos_date`, e.target.value)}
-                                                                            className="bg-slate-50 border border-slate-100 px-2 py-0.5 text-[11px] font-bold text-indigo-900 rounded-lg hover:bg-white hover:border-indigo-200 transition-all outline-none w-[110px]"
+                                                                            className="bg-slate-900/50 border border-slate-700/60 px-3 py-1 text-[11px] font-bold text-slate-200 rounded-full hover:border-slate-500 focus:border-indigo-400 transition-all outline-none w-[115px]"
                                                                         />
                                                                     ) : (
                                                                         <span className="font-bold">{formatDosDate(svc.encounter?.dos_date || (svc as any).meta?.visitDate)}</span>
@@ -2204,7 +2597,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                         value={svc.encounter?.location_name || (svc.encounter as any)?.place_of_service_name || (((svc.subTemplate || svc._frontend_service_title || mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")) ? "11 - Office" : "12 - Home")}
                                                                         isEditMode={isEditMode}
                                                                         onChange={(val) => handleUpdateField(`${pathPrefix}encounter.location_name`, val)}
-                                                                        className="text-center"
+                                                                        className="text-center !rounded-full"
                                                                     />
                                                                 </div>
                                                             </div>
@@ -2212,16 +2605,16 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                 <span className="label-small !mb-0 text-[9px]">Time Range</span>
                                                                 <div className="value-text whitespace-nowrap text-[12px] flex items-center justify-center">
                                                                     {isEditMode ? (
-                                                                        <div className="flex items-center gap-1 no-print">
+                                                                        <div className="flex items-center gap-1.5 no-print">
                                                                             <Popover>
                                                                                 <PopoverTrigger asChild>
-                                                                                    <button className="text-center px-2 py-1 text-[11px] font-bold w-[85px] bg-slate-50 border border-slate-100 rounded-full hover:bg-slate-100 transition-colors text-indigo-900">
+                                                                                    <button className="text-center px-3 py-1 text-[11px] font-bold min-w-[75px] bg-slate-900/50 border border-slate-700/60 rounded-full hover:bg-slate-800 transition-colors text-indigo-300">
                                                                                         {svcTimeStart || "Start"}
                                                                                     </button>
                                                                                 </PopoverTrigger>
-                                                                                <PopoverContent className="w-[300px] p-0 rounded-[2rem] overflow-hidden border-0 shadow-xl bg-white/95 backdrop-blur-md" side="bottom" align="center">
-                                                                                    <div className="p-4 bg-slate-50/50 border-b border-slate-100 text-center">
-                                                                                        <span className="text-[12px] font-bold text-slate-500 uppercase tracking-widest">Encounter Start</span>
+                                                                                <PopoverContent className="w-[300px] p-0 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900/95 backdrop-blur-md" side="bottom" align="center">
+                                                                                    <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 text-center">
+                                                                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Encounter Start</span>
                                                                                     </div>
                                                                                     <div className="p-4">
                                                                                         <TimeSpinner 
@@ -2235,17 +2628,17 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                                 </PopoverContent>
                                                                             </Popover>
 
-                                                                            <span className="text-slate-400 font-bold">-</span>
+                                                                            <span className="text-slate-500 font-bold">-</span>
 
                                                                             <Popover>
                                                                                 <PopoverTrigger asChild>
-                                                                                    <button className="text-center px-2 py-1 text-[11px] font-bold w-[85px] bg-slate-50 border border-slate-100 rounded-full hover:bg-slate-100 transition-colors text-indigo-900">
+                                                                                    <button className="text-center px-3 py-1 text-[11px] font-bold min-w-[75px] bg-slate-900/50 border border-slate-700/60 rounded-full hover:bg-slate-800 transition-colors text-indigo-300">
                                                                                         {svcTimeEnd || "End"}
                                                                                     </button>
                                                                                 </PopoverTrigger>
-                                                                                <PopoverContent className="w-[300px] p-0 rounded-[2rem] overflow-hidden border-0 shadow-xl bg-white/95 backdrop-blur-md" side="bottom" align="center">
-                                                                                    <div className="p-4 bg-slate-50/50 border-b border-slate-100 text-center">
-                                                                                        <span className="text-[12px] font-bold text-slate-500 uppercase tracking-widest">Encounter End</span>
+                                                                                <PopoverContent className="w-[300px] p-0 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900/95 backdrop-blur-md" side="bottom" align="center">
+                                                                                    <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 text-center">
+                                                                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Encounter End</span>
                                                                                     </div>
                                                                                     <div className="p-4">
                                                                                         <TimeSpinner 
@@ -2271,7 +2664,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                         value={svc.encounter?.duration}
                                                                         isEditMode={isEditMode}
                                                                         onChange={(val) => handleUpdateField(`${pathPrefix}encounter.duration`, val)}
-                                                                        className="text-center !px-2 !py-0.5 !h-6 !text-[12px] w-12"
+                                                                        className="text-center !rounded-full !px-2 !py-0.5 !text-[12px] w-14"
                                                                         placeholder="min"
                                                                     />
                                                                     {!isEditMode && <span className="text-[10px] text-slate-400 font-bold">min</span>}
@@ -2288,33 +2681,50 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                                 handleUpdateField(`${pathPrefix}encounter.billing_units`, val);
                                                                                 handleUpdateField(`${pathPrefix}encounter.units`, val);
                                                                             }}
-                                                                            className="text-center !px-2 !py-0.5 !h-6 !text-[11px] w-12"
+                                                                            className="text-center !rounded-full !px-2 !py-0.5 !text-[11px] w-14"
                                                                             placeholder="0"
                                                                         />
                                                                     ) : (
-                                                                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[11px] font-black border border-indigo-100">
+                                                                        <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-full text-[11px] font-black border border-indigo-100 dark:border-indigo-800">
                                                                             {svc.encounter?.billing_units || svc.encounter?.units || 0}
                                                                         </span>
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <div className="col-span-5 mt-3 pt-3 border-t border-slate-100/60">
-                                                                <div className="value-text !text-[16px] font-black text-indigo-950 dark:text-white tracking-tight leading-tight">
-                                                                    <GhostInput
-                                                                        value={(() => {
-                                                                            const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
-                                                                            const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
-                                                                            if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
-                                                                            if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
-                                                                            if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
-                                                                            if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
-                                                                            return rawTitle || "TCM Progress Note";
-                                                                        })()}
-                                                                        isEditMode={isEditMode}
-                                                                        onChange={(val) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, val)}
-                                                                        placeholder="Enter encounter subject..."
-                                                                        className="!px-0 !bg-transparent !border-0 !shadow-none !text-[16px] !font-black !text-indigo-950 dark:!text-white"
-                                                                    />
+                                                            <div className="col-span-5 my-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                                                                <div className="value-text !text-[15px] font-black text-indigo-950 dark:text-white tracking-tight leading-tight">
+                                                                    {isEditMode ? (
+                                                                        <div className="flex items-center gap-2.5 bg-slate-900/50 border border-slate-700/60 hover:border-slate-600 focus-within:border-indigo-500/80 focus-within:ring-1 focus-within:ring-indigo-500/30 rounded-full px-4 py-2 transition-all">
+                                                                            <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase whitespace-nowrap">Service Focus:</span>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={(() => {
+                                                                                    const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
+                                                                                    const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
+                                                                                    if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
+                                                                                    if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
+                                                                                    if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
+                                                                                    if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
+                                                                                    return rawTitle || "TCM Progress Note";
+                                                                                })()}
+                                                                                onChange={(e) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, e.target.value)}
+                                                                                placeholder="Enter encounter subject..."
+                                                                                className="w-full bg-transparent border-0 outline-none text-[14px] font-bold text-slate-100 placeholder:text-slate-500 focus:ring-0 focus:outline-none"
+                                                                            />
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="inline-block py-1">
+                                                                            {(() => {
+                                                                                const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
+                                                                                const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
+                                                                                if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
+                                                                                if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
+                                                                                if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
+                                                                                if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
+                                                                                return rawTitle || "TCM Progress Note";
+                                                                            })()}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -2387,7 +2797,22 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                 />
                                                 <div className="mt-1 p-3 bg-slate-50/30 dark:!bg-slate-950/40 rounded-xl border border-slate-100/50 dark:!border-slate-800/80">
                                                     <GhostTextarea
-                                                        value={mergedNote.narrative?.outcome_of_services}
+                                                        value={(() => {
+                                                            const raw = mergedNote.narrative?.outcome_of_services || "";
+                                                            if (isEditMode) return raw;
+                                                            // Deduplicate identical paragraphs
+                                                            const parts = raw.split(/\n\s*\n/).map((p: string) => p.trim()).filter(Boolean);
+                                                            const seen = new Set<string>();
+                                                            const unique: string[] = [];
+                                                            parts.forEach((p: string) => {
+                                                                const key = p.toLowerCase().replace(/\s+/g, ' ');
+                                                                if (!seen.has(key)) {
+                                                                    seen.add(key);
+                                                                    unique.push(p);
+                                                                }
+                                                            });
+                                                            return unique.join('\n\n');
+                                                        })()}
                                                         isEditMode={isEditMode}
                                                         onChange={(val) => handleUpdateField('narrative.outcome_of_services', val)}
                                                         placeholder="Enter outcome..."
@@ -2406,7 +2831,22 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                 />
                                                 <div className="mt-1 p-3 bg-slate-50/30 dark:!bg-slate-950/40 rounded-xl border border-slate-100/50 dark:!border-slate-800/80">
                                                     <GhostTextarea
-                                                        value={mergedNote.narrative?.next_steps}
+                                                        value={(() => {
+                                                            const raw = mergedNote.narrative?.next_steps || "";
+                                                            if (isEditMode) return raw;
+                                                            // Deduplicate identical paragraphs
+                                                            const parts = raw.split(/\n\s*\n/).map((p: string) => p.trim()).filter(Boolean);
+                                                            const seen = new Set<string>();
+                                                            const unique: string[] = [];
+                                                            parts.forEach((p: string) => {
+                                                                const key = p.toLowerCase().replace(/\s+/g, ' ');
+                                                                if (!seen.has(key)) {
+                                                                    seen.add(key);
+                                                                    unique.push(p);
+                                                                }
+                                                            });
+                                                            return unique.join('\n\n');
+                                                        })()}
                                                         isEditMode={isEditMode}
                                                         onChange={(val) => handleUpdateField('narrative.next_steps', val)}
                                                         placeholder="Enter next steps..."
@@ -2421,7 +2861,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         })()}
 
                         <section className="print-section mt-2 mb-1 group/diagnoses relative print-avoid">
-                            <div className="flex justify-between items-center border-b border-slate-50 pb-0.5">
+                            <div className="flex justify-between items-center border-b border-slate-100/40 dark:border-slate-800/60 pb-0.5">
                                 <h2 className="text-[9px] font-black text-slate-900 tracking-[0.25em] uppercase leading-none">Diagnoses</h2>
                             </div>
                             <div className="mt-1 p-2 bg-slate-50/30 dark:!bg-slate-950/40 rounded-xl border border-slate-100/50 dark:!border-slate-800/80">
@@ -2659,9 +3099,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 onClose={() => setIsSyncErrorModalOpen(false)}
                 errorMessage={syncTask?.error_message}
                 onRetry={handleSyncWithEhr}
+                onApplySuggestedTimeAndRetry={handleApplySuggestedTimeAndRetry}
                 isRetrying={isSyncing}
                 patientName={mergedNote?.patient?.full_name || (mergedNote as any)?.meta?.patientName}
-                visitDate={mergedNote?.encounter?.dos_date || (mergedNote as any)?.date_of_service}
+                visitDate={mergedNote?.joint_services?.[0]?.encounter?.dos_date || mergedNote?.encounter?.dos_date || (mergedNote as any)?.meta?.dos_date || (mergedNote as any)?.meta?.visitDate || (mergedNote as any)?.date_of_service}
             />
         </div>
     );

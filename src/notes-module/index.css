@@ -3733,6 +3733,27 @@ input.medical-input {
   background: rgba(255, 255, 255, 0.25);
 }
 
+/* Ultra slim custom-scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25) !important;
+  border-radius: 9999px !important;
+  border: none !important;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45) !important;
+}
+
 /* 2. Fluid Section Headers (Modern Pill Shape) */
 .doc-section h2 {
   background: linear-gradient(90deg, rgba(0, 137, 123, 0.08) 0%, transparent 100%);

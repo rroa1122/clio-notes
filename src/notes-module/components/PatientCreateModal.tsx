@@ -52,18 +52,18 @@ import { cn } from "@/lib/utils";
 import { supabase } from '../../lib/supabaseClient';
 
 const SOCIAL_DOMAINS = [
-    { id: "domain_mental_health", label: "Salud Mental / Mental Health" },
-    { id: "domain_physical_health", label: "Salud Física / Physical Health" },
-    { id: "domain_vocational", label: "Vocacional / Employment" },
-    { id: "domain_education", label: "Educación / Education" },
-    { id: "domain_recreational", label: "Apoyo Social / Social Support" },
-    { id: "domain_daily_living", label: "Actividades de la Vida Diaria / ADLs" },
-    { id: "domain_housing", label: "Vivienda / Housing & Shelter" },
-    { id: "domain_financial", label: "Financiero / Financial & Economic" },
-    { id: "domain_basic_needs", label: "Necesidades Básicas / Basic Needs" },
-    { id: "domain_transportation", label: "Transporte / Transportation" },
-    { id: "domain_legal", label: "Legal / Immigration" },
-    { id: "domain_other", label: "Otros / Other" }
+    { id: "domain_mental_health", label: "Mental Health / Substance Abuse" },
+    { id: "domain_physical_health", label: "Physical Health / Medical" },
+    { id: "domain_vocational", label: "Vocational / Employment" },
+    { id: "domain_education", label: "Educational / School" },
+    { id: "domain_recreational", label: "Social Support / Recreational" },
+    { id: "domain_daily_living", label: "Activities of Daily Living (ADLs)" },
+    { id: "domain_housing", label: "Housing & Shelter" },
+    { id: "domain_financial", label: "Financial & Economic" },
+    { id: "domain_basic_needs", label: "Basic Needs" },
+    { id: "domain_transportation", label: "Transportation" },
+    { id: "domain_legal", label: "Legal & Immigration" },
+    { id: "domain_other", label: "Other" }
 ];
 
 interface PatientCreateModalProps {
@@ -140,6 +140,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
     };
     const isMobile = false; // dummy or check existing variables if any
     const [isAmexSearching, setIsAmexSearching] = useState(false);
+    const [amexLookupStage, setAmexLookupStage] = useState<'idle' | 'queued' | 'searching' | 'ai' | 'success'>('idle');
     const amexLookupAbortRef = useRef<AbortController | null>(null);
     const isMountedRef = useRef(true);
 
@@ -162,11 +163,13 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
         amexLookupAbortRef.current?.abort();
         amexLookupAbortRef.current = controller;
         setIsAmexSearching(true);
+        setAmexLookupStage('queued');
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 toast.error("You must be logged in to search Amexzone.");
                 setIsAmexSearching(false);
+                setAmexLookupStage('idle');
                 return;
             }
 
@@ -190,7 +193,7 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                 throw new Error('Unable to queue the Amexzone search task.');
             }
 
-            toast.info("Search task queued. Waiting for local bot to execute...", { duration: 5000 });
+            toast.info("Search task queued. Waiting for local bot to execute...", { duration: 4000 });
 
             const pollingResult = await pollTaskUntilTerminal({
                 signal: controller.signal,
@@ -203,6 +206,9 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                         .single();
 
                     if (pollError || !data) throw new Error('Task status is temporarily unavailable.');
+                    if (data.status === 'in_progress' || data.status === 'processing') {
+                        setAmexLookupStage('searching');
+                    }
                     return data;
                 },
                 onPollError: () => console.warn('Amexzone task status is temporarily unavailable.'),
@@ -210,23 +216,31 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
 
             if (!isMountedRef.current) return;
             if (pollingResult.state === 'failed') {
+                setAmexLookupStage('idle');
                 toast.error('The Amexzone search failed. Check the bot status and try again.');
                 return;
             }
             if (pollingResult.state === 'timeout') {
+                setAmexLookupStage('idle');
                 toast.error('Search timed out. Make sure the Amexzone bot is running.');
                 return;
             }
 
             const data = pollingResult.task.result_summary;
             if (!data || typeof data !== 'object') {
+                setAmexLookupStage('idle');
                 toast.error('The Amexzone task completed without patient data. Nothing was imported.');
                 return;
             }
 
-            toast.info("Processing patient data with AI...", { icon: "🧠" });
+            setAmexLookupStage('ai');
+            toast.info("Synthesizing clinical data with AI...", { icon: "🧠" });
             const processed = await processAmexzoneWithN8nAI(data, formData);
-            toast.success("Patient demographics imported & synthesized successfully!", { icon: "✨" });
+            setAmexLookupStage('success');
+            toast.success("Patient demographics & clinical record imported successfully!", { icon: "✨" });
+            setTimeout(() => {
+                if (isMountedRef.current) setAmexLookupStage('idle');
+            }, 4000);
             setFormData(prev => {
                 const newState = {
                     ...prev,
@@ -341,14 +355,14 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
             setFormData(updatedData);
 
             if (!updatedData.first_name || !updatedData.last_name) {
-                toast.warning("Datos extraídos, pero faltan el nombre o apellido. Por favor completa el formulario.");
+                toast.warning("Data extracted, but first or last name is missing. Please complete the form.");
                 return;
             }
 
             const newPatient = await storage.upsertPatient(updatedData as Patient);
             
             if (newPatient) {
-                toast.success("Paciente creado automáticamente", { icon: "✨" });
+                toast.success("Patient created automatically", { icon: "✨" });
                 onCreated(newPatient);
                 onClose();
                 // Reset form
@@ -390,11 +404,11 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                     presenting_problems: ''
                 });
             } else {
-                toast.error("Error al guardar el paciente");
+                toast.error("Error saving patient");
             }
         } catch (error) {
             console.error("Extraction error:", error);
-            toast.error("Error al extraer datos del documento");
+            toast.error("Error extracting document data");
         } finally {
             setIsExtracting(false);
         }
@@ -652,12 +666,31 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                                             : "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:scale-[1.01]"
                                                     )}
                                                 >
-                                                    {isAmexSearching ? (
+                                                    {amexLookupStage === 'queued' && (
                                                         <>
-                                                            <Loader2 size={14} className="animate-spin" />
-                                                            <span>Searching Amexzone...</span>
+                                                            <Loader2 size={14} className="animate-spin text-amber-400" />
+                                                            <span className="text-amber-300 dark:text-amber-300">In Queue...</span>
                                                         </>
-                                                    ) : (
+                                                    )}
+                                                    {amexLookupStage === 'searching' && (
+                                                        <>
+                                                            <Loader2 size={14} className="animate-spin text-sky-400" />
+                                                            <span className="text-sky-200 dark:text-sky-200">Searching Amexzone...</span>
+                                                        </>
+                                                    )}
+                                                    {amexLookupStage === 'ai' && (
+                                                        <>
+                                                            <Brain size={14} className="animate-pulse text-purple-300" />
+                                                            <span className="text-purple-200 dark:text-purple-200">Synthesizing with AI...</span>
+                                                        </>
+                                                    )}
+                                                    {amexLookupStage === 'success' && (
+                                                        <>
+                                                            <CheckSquare size={14} className="text-emerald-400" />
+                                                            <span className="text-emerald-300 dark:text-emerald-300">Import Complete!</span>
+                                                        </>
+                                                    )}
+                                                    {amexLookupStage === 'idle' && (
                                                         <>
                                                             <UserCheck size={14} />
                                                             <span>Search & Import</span>
@@ -889,16 +922,16 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                                                 </h4>
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                                <TcmModalCheckbox label="SSI Recipient (Recibe SSI)" field="ssi_recipient" value={formData.tcm_social_needs?.ssi_recipient} onChange={handleSocialNeedsChange} />
+                                                <TcmModalCheckbox label="SSI Recipient" field="ssi_recipient" value={formData.tcm_social_needs?.ssi_recipient} onChange={handleSocialNeedsChange} />
                                                 <TcmModalCheckbox label="SNAP Recipient (Food Stamps)" field="snap_recipient" value={formData.tcm_social_needs?.snap_recipient} onChange={handleSocialNeedsChange} />
                                                 <TcmModalCheckbox label="Medicaid Recipient" field="medicaid_recipient" value={formData.tcm_social_needs?.medicaid_recipient} onChange={handleSocialNeedsChange} />
                                                 <TcmModalCheckbox label="Medicare Recipient" field="medicare_recipient" value={formData.tcm_social_needs?.medicare_recipient} onChange={handleSocialNeedsChange} />
-                                                <TcmModalCheckbox label="LIHEAP Needed (Ayuda de Luz)" field="liheap_needed" value={formData.tcm_social_needs?.liheap_needed} onChange={handleSocialNeedsChange} />
+                                                <TcmModalCheckbox label="LIHEAP Needed (Utility Assistance)" field="liheap_needed" value={formData.tcm_social_needs?.liheap_needed} onChange={handleSocialNeedsChange} />
                                                 <TcmModalCheckbox label="Lifeline Free Phone Needed" field="lifeline_needed" value={formData.tcm_social_needs?.lifeline_needed} onChange={handleSocialNeedsChange} />
-                                                <TcmModalCheckbox label="Section 8 / Voucher Needed" field="housing_voucher" value={formData.tcm_social_needs?.housing_voucher} onChange={handleSocialNeedsChange} />
-                                                <TcmModalCheckbox label="Regular Rent / Pago Regular de Renta" field="regular_rent" value={formData.tcm_social_needs?.regular_rent} onChange={handleSocialNeedsChange} />
+                                                <TcmModalCheckbox label="Section 8 / Housing Voucher Needed" field="housing_voucher" value={formData.tcm_social_needs?.housing_voucher} onChange={handleSocialNeedsChange} />
+                                                <TcmModalCheckbox label="Regular Rent" field="regular_rent" value={formData.tcm_social_needs?.regular_rent} onChange={handleSocialNeedsChange} />
                                                 <TcmModalCheckbox label="Plan 8 / Section 8 (Current)" field="plan_8" value={formData.tcm_social_needs?.plan_8} onChange={handleSocialNeedsChange} />
-                                                <TcmModalCheckbox label="Low Income Housing (Current) / Bajo Recurso" field="low_income" value={formData.tcm_social_needs?.low_income} onChange={handleSocialNeedsChange} />
+                                                <TcmModalCheckbox label="Low Income Housing (Current)" field="low_income" value={formData.tcm_social_needs?.low_income} onChange={handleSocialNeedsChange} />
                                             </div>
                                         </div>
 

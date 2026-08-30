@@ -57,7 +57,7 @@ export const ClioNoteViewer: React.FC<ClioNoteViewerProps> = ({
     const isTcm = note.meta?.template_id?.startsWith('tcm_');
 
     return (
-        <div className="clinical-viewer-root max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20 px-4">
+        <div className="clinical-viewer-root max-w-5xl mx-auto pb-20 px-4">
             {isTcm ? (
                 <TcmNoteShell note={note} onSaveComplete={onSaveComplete} onPrint={onPrint} />
             ) : (

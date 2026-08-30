@@ -566,12 +566,10 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                     const rawEnd = note.encounter?.time_out || note.appointment?.end_time || '';
                                     const start = rawStart ? formatTime(rawStart) : '';
                                     const end = rawEnd ? formatTime(rawEnd) : '';
-                                    
-                                    const rawD = note.encounter?.duration_minutes || note.encounter?.duration;
+                                                                     const rawD = note.encounter?.duration_minutes || note.encounter?.duration;
                                     const timeStr = start ? (end ? `${start} - ${end}` : start) : (rawD ? `${rawD} mins` : (language === 'es' ? 'No programado' : 'Unscheduled'));
                                     
-                                    const isSigned = note.signature || (note as any).sign_off?.status === 'signed' || note.signature_status === 'signed';
-                                    const isPending = (note as any).sign_off?.status === 'pending' || note.signature_status === 'pending';
+                                    const syncStatus = (note as any).sync_status || (note as any).amexzone_status || (note.signature_status === 'signed' ? 'completed' : 'pending');
 
                                     const serviceTitle = (
                                         note.subTemplate || 
@@ -583,65 +581,43 @@ export function AgendaWeeklyBoard({ notes, onNewNoteForDate, onSelectNote, searc
                                         'TCM Service'
                                     );
 
-                                    const isAssessment = String(note.template_id || '').includes('assessment');
-                                    const isPlan = String(note.template_id || '').includes('plan');
-                                    const isMhv = String(note.subTemplate || '').toLowerCase().includes('mhv');
-
-                                    const accentBar = isAssessment
-                                        ? 'bg-emerald-500'
-                                        : isPlan
-                                        ? 'bg-amber-500'
-                                        : isMhv
-                                        ? 'bg-sky-500'
-                                        : 'bg-indigo-500';
-
-                                    const categoryDot = isAssessment
-                                        ? 'bg-emerald-400'
-                                        : isPlan
-                                        ? 'bg-amber-400'
-                                        : isMhv
-                                        ? 'bg-sky-400'
-                                        : 'bg-indigo-400';
+                                    // Subtle, elegant tint depending on sync status
+                                    const cardSyncStyles = 
+                                        syncStatus === 'completed' || syncStatus === 'synced'
+                                            ? "bg-emerald-50/80 hover:bg-emerald-100/90 dark:bg-emerald-950/20 dark:hover:bg-emerald-950/30 border-emerald-200/90 dark:border-emerald-500/25 hover:border-emerald-300 dark:hover:border-emerald-500/40"
+                                            : syncStatus === 'failed' || syncStatus === 'error'
+                                            ? "bg-rose-50/80 hover:bg-rose-100/90 dark:bg-rose-950/25 dark:hover:bg-rose-950/35 border-rose-200/90 dark:border-rose-500/30 hover:border-rose-300 dark:hover:border-rose-500/50"
+                                            : "bg-amber-50/80 hover:bg-amber-100/90 dark:bg-amber-950/15 dark:hover:bg-amber-950/25 border-amber-200/90 dark:border-amber-500/20 hover:border-amber-300 dark:hover:border-amber-500/35";
 
                                     return (
                                         <div 
                                             key={note.id || i}
                                             onClick={() => onSelectNote(note)}
-                                            className="relative rounded-xl p-3 bg-[#0d1222] hover:bg-[#13192f] border border-slate-800/90 hover:border-slate-700 transition-all duration-150 cursor-pointer group/card shadow-sm"
+                                            className={cn(
+                                                "relative rounded-xl p-3 border transition-all duration-150 cursor-pointer group/card shadow-sm",
+                                                cardSyncStyles
+                                            )}
                                         >
                                             <div className="flex flex-col gap-1.5 relative z-10 w-full min-w-0">
-                                                {/* Row 1: Clean Time (No Clock Icon) + Colored Status Dot */}
+                                                {/* Row 1: Clean Time (No Dot) */}
                                                 <div className="flex items-center justify-between w-full gap-1">
-                                                    <span className="font-semibold text-slate-400 text-[11px] tracking-tight truncate">
+                                                    <span className="font-semibold text-slate-500 dark:text-slate-400 text-[11px] tracking-tight truncate">
                                                         {timeStr}
                                                     </span>
-
-                                                    <div className="shrink-0 flex items-center">
-                                                        {isSigned ? (
-                                                            <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" title={language === 'es' ? "Firmado / Sincronizado" : "Signed / Synced"} />
-                                                        ) : isPending ? (
-                                                            <span className="relative flex size-2" title={language === 'es' ? "Pendiente de firma" : "Pending Signature"}>
-                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                                                <span className="relative inline-flex rounded-full size-2 bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]"></span>
-                                                            </span>
-                                                        ) : (
-                                                            <span className="size-2 rounded-full bg-indigo-400/80 shadow-[0_0_6px_rgba(129,140,248,0.5)]" title={language === 'es' ? "Borrador" : "Draft"} />
-                                                        )}
-                                                    </div>
                                                 </div>
 
                                                 {/* Row 2: Patient Name */}
                                                 <div className="w-full min-w-0">
                                                     <h3 
-                                                        className="font-bold text-slate-100 text-[13px] tracking-tight leading-snug group-hover/card:text-white transition-colors line-clamp-2"
+                                                        className="font-bold text-slate-900 dark:text-slate-100 text-[13px] tracking-tight leading-snug group-hover/card:text-indigo-600 dark:group-hover/card:text-white transition-colors line-clamp-2"
                                                         title={pName}
                                                     >
                                                         {pName}
                                                     </h3>
                                                 </div>
 
-                                                {/* Row 3: Subtitle of clinical note (No dot) */}
-                                                <div className="text-[11px] text-slate-400 font-medium min-w-0 truncate capitalize">
+                                                {/* Row 3: Subtitle of clinical note */}
+                                                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium min-w-0 truncate capitalize">
                                                     {serviceTitle}
                                                 </div>
                                             </div>

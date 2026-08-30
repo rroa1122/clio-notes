@@ -180,6 +180,30 @@ export const storage = {
 
             if (error) throw error;
 
+            // Fetch latest sync tasks for these notes
+            const noteIds = (data || []).map((row: any) => row.id).filter(Boolean);
+            const taskMap: Record<string, { status: string; error_message?: string }> = {};
+
+            if (noteIds.length > 0) {
+                try {
+                    const { data: tasks } = await supabase
+                        .from('amexzone_note_tasks')
+                        .select('note_id, status, error_message, created_at')
+                        .in('note_id', noteIds)
+                        .order('created_at', { ascending: true });
+
+                    if (tasks) {
+                        tasks.forEach((t: any) => {
+                            if (t.note_id) {
+                                taskMap[t.note_id] = { status: t.status, error_message: t.error_message };
+                            }
+                        });
+                    }
+                } catch (taskErr) {
+                    console.warn('Could not load sync tasks:', taskErr);
+                }
+            }
+
             // Map database columns back to our Note interface
             // Content column stores the entire JSON structure
             return data.map((row: any) => ({
@@ -189,7 +213,9 @@ export const storage = {
                 created_at: row.created_at, // Include for History fallback
                 signature_status: row.signature_status,
                 signature_data: row.signature_data,
-                supervisor_email: row.supervisor_email
+                supervisor_email: row.supervisor_email,
+                sync_status: taskMap[row.id]?.status || row.content?.sync_status || (row.signature_status === 'signed' ? 'completed' : 'pending'),
+                sync_error: taskMap[row.id]?.error_message || row.content?.sync_error
             })) || [];
         } catch (e) {
             console.error('Supabase fetch exception:', e);
@@ -319,7 +345,39 @@ export const storage = {
 
             const fingerprint = await computeFingerprint(noteData);
 
-            const noteId = noteData.id || crypto.randomUUID();
+            let noteId = noteData.id;
+            const patientId = noteData.patient_id || noteData.patient?.id;
+            const dosDate = noteData.encounter?.dos_date || noteData.joint_services?.[0]?.encounter?.dos_date || noteData.meta?.visitDate;
+
+            // If no explicit ID is provided, look for an existing note matching patient + dos_date + user to prevent duplicates
+            if (!noteId && patientId && dosDate && userId) {
+                try {
+                    const { data: existingRows } = await supabase
+                        .from('notes')
+                        .select('id, content')
+                        .eq('user_id', userId)
+                        .eq('patient_id', patientId)
+                        .order('created_at', { ascending: false })
+                        .limit(5);
+
+                    if (existingRows && existingRows.length > 0) {
+                        for (const row of existingRows) {
+                            const existingDos = row.content?.encounter?.dos_date || row.content?.joint_services?.[0]?.encounter?.dos_date || row.content?.meta?.visitDate;
+                            if (existingDos === dosDate) {
+                                noteId = row.id;
+                                break;
+                            }
+                        }
+                    }
+                } catch (findErr) {
+                    console.error('Error finding existing note to prevent duplication:', findErr);
+                }
+            }
+
+            if (!noteId) {
+                noteId = crypto.randomUUID();
+            }
+
             noteData.id = noteId;
             const { error } = await supabase
                 .from('notes')
@@ -328,7 +386,7 @@ export const storage = {
                     user_id: userId,
                     clinic_id: clinicId,
                     content: noteData,
-                    patient_id: noteData.patient_id,
+                    patient_id: patientId || null,
                     fingerprint: fingerprint,
                     updated_at: new Date().toISOString()
                 }, {

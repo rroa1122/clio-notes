@@ -356,6 +356,45 @@ export const normalizeClioNote = (rawResponse: any): ClioNote | null => {
 };
 
 /**
+ * Maps subtemplate titles to their respective template IDs.
+ */
+export const getTemplateIdFromSubTemplate = (subTemplate: string): string => {
+    const s = (subTemplate || "").trim();
+    if (s === 'TCM Initial Assessment & Certification' || s === 'Assessment' || s === 'Adult Certification') return 'tcm_assessment_note';
+    if (s === 'TCM Service Plan Development' || s === 'Service Plan Development') return 'tcm_service_plan_note';
+    if (s === 'TCM Service Plan Discussion' || s === 'Service Plan Discussion') return 'tcm_service_plan_discussion';
+    if (s === 'TCM Initial Home Visit' || s === 'Initial Home Visit') return 'tcm_initial_home_visit_note';
+    if (s === 'TCM Collateral & Contact Note' || s === 'Collateral & Contact Note') return 'tcm_collateral_note';
+    if (s === 'TCM Gather PCP Record' || s.includes('Gather PCP Record')) return 'tcm_gather_pcp_note';
+    if (s === 'TCM Gather PSY Record' || s.includes('Gather PSY Record')) return 'tcm_gather_psy_note';
+    if (s === 'TCM PC Emergency Contact' || s.includes('PC Emergency Contact')) return 'tcm_pc_emergency_contact_note';
+    if (s === 'TCM Hurricane Addendum: Develop Plan' || s === 'TCM Hurricane Season: Addendum') return 'tcm_hurricane_addendum_note';
+    if (s === 'TCM Hurricane Addendum: Discuss & Sign') return 'tcm_hurricane_addendum_discuss_note';
+    if (s === 'TCM Hurricane Update: Develop Plan' || s === 'TCM Hurricane Season: Update') return 'tcm_hurricane_update_note';
+    if (s === 'TCM Hurricane Update: Discuss & Sign') return 'tcm_hurricane_update_discuss_note';
+    if (s === 'TCM Complete STS Application') return 'tcm_sts_complete_note';
+    if (s === 'TCM Collect STS from PCP') return 'tcm_sts_collect_note';
+    if (s === 'TCM Submit STS') return 'tcm_sts_submit_note';
+    if (s === 'TCM Obtain Disabled Parking Permit') return 'tcm_dpp_obtain_note';
+    if (s === 'TCM Complete Disabled Parking Permit') return 'tcm_dpp_complete_note';
+    if (s === 'TCM Submit DPP to PCP') return 'tcm_dpp_submit_pcp_note';
+    if (s === 'TCM MHV + Provide Donation') return 'tcm_mhv_provide_donation_note';
+    if (s === 'Obtain Supply Donation' || s === 'TCM Obtain Supply Donation') return 'tcm_donation_obtain_note';
+    if (s === 'TCM Update Vaccine Record' || s === 'Update Vaccine Record') return 'tcm_vaccine_update_note';
+    if (s === 'TCM Coordinate Vaccine Appointment' || s === 'Coordinate Vaccine Appointment') return 'tcm_vaccine_coord_note';
+    if (s === 'TCM Assist Vaccine Administration' || s === 'Assist Vaccine Administration' || s === 'TCM Vaccination Assistance') return 'tcm_vaccine_assist_note';
+    if (s === 'TCM OTC Obtain Form' || s === 'OTC Obtain Form' || s === 'OTC Obt') return 'tcm_otc_obtain_note';
+    if (s === 'TCM OTC Complete Items' || s === 'OTC Complete Items' || s === 'OTC Comp') return 'tcm_otc_complete_note';
+    if (s === 'TCM OTC Submit Order' || s === 'OTC Submit Order' || s === 'OTC Sub') return 'tcm_otc_submit_note';
+    if (s === 'Provider Appointment Coordination' || s.includes('Appointment Coordination')) return 'tcm_provider_appt_coord_note';
+    if (s === 'USCIS / Immigration Process Assistance' || s.includes('USCIS') || s.includes('Immigration')) return 'tcm_uscis_assistance_note';
+    if (s === 'TCM Housing Application Assistance' || s.includes('Housing Application')) return 'tcm_housing_assistance_note';
+    if (s === 'TCM SNAP Recertification' || s.includes('SNAP')) return 'tcm_snap_recertification_note';
+    if (s === 'Monthly Home Visit' || s === 'MHV') return 'tcm_mhv_note';
+    return 'tcm_progress_note';
+};
+
+/**
  * Standardizes TCM notes into the expected schema for the TcmNoteShell renderer.
  */
 export const normalizeTcmNote = (raw: any): ClioNote => {
@@ -365,7 +404,11 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     const narrativeSource = raw.narrative ? 'narrative' : (raw.note ? 'note' : 'empty');
 
     const encounter = raw.encounter || raw.visit || {};
-    const narrative = raw.narrative || raw.note || {};
+    let narrative = raw.narrative || raw.note || {};
+    if (typeof narrative === 'string') {
+        narrative = { summary_notes: narrative };
+    }
+
     const patient = raw.patient || {};
     const services = raw.services || {};
     const staff = raw.staff || {};
@@ -380,13 +423,38 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         }
     }
 
-    // 2. String Safety & Narrative Cleanup
-    const narrativeFields = ['summary_notes', 'outcome_of_services', 'next_steps'];
-    narrativeFields.forEach(field => {
-        if (typeof narrative[field] !== 'string') {
-            narrative[field] = (narrative[field] || "").toString();
-        }
-    });
+    // 2. Comprehensive Fallbacks & Narrative Extraction
+    const extractedSummary =
+        narrative.summary_notes ||
+        narrative.clinical_narrative ||
+        narrative.summary ||
+        narrative.narrative ||
+        raw.summary_notes ||
+        raw.clinical_narrative ||
+        raw.summary ||
+        raw.raw_model_text ||
+        raw.text ||
+        raw.sections_by_title?.['CLINICAL NARRATIVE'] ||
+        raw.sections_by_title?.['Clinical Narrative'] ||
+        raw.sections_by_title?.['Summary'] ||
+        "";
+    narrative.summary_notes = typeof extractedSummary === 'string' ? extractedSummary : (extractedSummary || "").toString();
+
+    const extractedOutcome =
+        narrative.outcome_of_services ||
+        narrative.outcome ||
+        raw.outcome_of_services ||
+        raw.outcome ||
+        "";
+    narrative.outcome_of_services = typeof extractedOutcome === 'string' ? extractedOutcome : (extractedOutcome || "").toString();
+
+    const extractedNextSteps =
+        narrative.next_steps ||
+        narrative.plan ||
+        raw.next_steps ||
+        raw.plan ||
+        "";
+    narrative.next_steps = typeof extractedNextSteps === 'string' ? extractedNextSteps : (extractedNextSteps || "").toString();
 
     // Cleanup redundant headers in summary_notes
     if (narrative.summary_notes) {
@@ -542,6 +610,7 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         ];
     });
 
+    const narrativeFields = ['summary_notes', 'outcome_of_services', 'next_steps'];
     narrativeFields.forEach(field => {
         if (narrative[field]) {
             let text = narrative[field].trim();
@@ -679,31 +748,62 @@ export const mergeJointNotes = (notes: ClioNote[]): ClioNote => {
     // Clone the first note to serve as the master container
     const baseNote = JSON.parse(JSON.stringify(notes[0])) as ClioNote;
 
-    // Attach all original individual notes (including the first one) to joint_services
-    baseNote.joint_services = JSON.parse(JSON.stringify(notes));
+    // Flatten all service blocks into a clean array of individual services
+    const flattenedServices: any[] = [];
+    notes.forEach(note => {
+        if (note.joint_services && Array.isArray(note.joint_services) && note.joint_services.length > 0) {
+            note.joint_services.forEach(subSvc => {
+                flattenedServices.push({
+                    ...subSvc,
+                    patient: subSvc.patient || note.patient,
+                    facility: subSvc.facility || note.facility,
+                    staff: subSvc.staff || note.staff,
+                    signatures: subSvc.signatures || note.signatures,
+                    template_id: subSvc.template_id || note.template_id,
+                    diagnoses: subSvc.diagnoses || note.diagnoses,
+                    diagnosis: subSvc.diagnosis || note.diagnosis
+                });
+            });
+        } else {
+            flattenedServices.push(note);
+        }
+    });
+
+    baseNote.joint_services = flattenedServices;
 
     let totalDuration = 0;
+    let totalUnits = 0;
+    flattenedServices.forEach(svc => {
+        const dur = parseInt(svc.encounter?.duration_minutes?.toString() || svc.encounter?.duration?.toString() || "0", 10) || 0;
+        totalDuration += dur;
+        const bUnits = parseInt(svc.encounter?.billing_units?.toString() || svc.encounter?.units?.toString() || "0", 10);
+        if (bUnits > 0) {
+            totalUnits += bUnits;
+        } else {
+            totalUnits += Math.floor(dur / 15) + (dur % 15 >= 8 ? 1 : 0);
+        }
+    });
 
     let jointOutcome = `${baseNote.narrative?.outcome_of_services || ''}`;
     let jointNextSteps = `${baseNote.narrative?.next_steps || ''}`;
-    
-    totalDuration += parseInt(baseNote.encounter?.duration_minutes?.toString() || baseNote.encounter?.duration?.toString() || "0", 10) || 0;
 
     const existingDiagnoses = new Set((baseNote.diagnoses || []).map(d => d.name.toLowerCase()));
 
     for (let i = 1; i < notes.length; i++) {
         const note = notes[i];
         
-        // Accumulate time/units
-        const duration = parseInt(note.encounter?.duration_minutes?.toString() || note.encounter?.duration?.toString() || "0", 10) || 0;
-        totalDuration += duration;
-        
-        // Combine Outcome and Next Steps globally
+        // Combine Outcome and Next Steps globally (with smart deduplication)
         if (note.narrative?.outcome_of_services && note.narrative.outcome_of_services !== "—") {
-            jointOutcome += jointOutcome ? `\n\n${note.narrative.outcome_of_services}` : note.narrative.outcome_of_services;
+            const currentOutcome = note.narrative.outcome_of_services.trim();
+            if (currentOutcome && !jointOutcome.includes(currentOutcome)) {
+                jointOutcome += jointOutcome ? `\n\n${currentOutcome}` : currentOutcome;
+            }
         }
         if (note.narrative?.next_steps && note.narrative.next_steps !== "—") {
-            jointNextSteps += jointNextSteps ? `\n\n${note.narrative.next_steps}` : note.narrative.next_steps;
+            const currentNextSteps = note.narrative.next_steps.trim();
+            if (currentNextSteps && !jointNextSteps.includes(currentNextSteps)) {
+                jointNextSteps += jointNextSteps ? `\n\n${currentNextSteps}` : currentNextSteps;
+            }
         }
         
         // Merge diagnoses uniquely
@@ -721,13 +821,6 @@ export const mergeJointNotes = (notes: ClioNote[]): ClioNote => {
     if (!baseNote.encounter) baseNote.encounter = {} as any;
     baseNote.encounter.duration_minutes = totalDuration.toString();
     baseNote.encounter.duration = totalDuration.toString();
-    
-    // Recalculate units: compute each block independently, then sum
-    let totalUnits = 0;
-    notes.forEach(note => {
-        const dur = parseInt(note.encounter?.duration_minutes?.toString() || note.encounter?.duration?.toString() || "0", 10) || 0;
-        totalUnits += Math.floor(dur / 15) + (dur % 15 >= 8 ? 1 : 0);
-    });
     baseNote.encounter.units = totalUnits.toString();
 
     if (!baseNote.narrative) baseNote.narrative = {};

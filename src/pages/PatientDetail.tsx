@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
     ArrowLeft,
     Calendar,
@@ -267,7 +267,21 @@ export function PatientDetail() {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<Partial<StoragePatient>>({});
     const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState("client");
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tabFromUrl = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState(tabFromUrl || "client");
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab && tab !== activeTab) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
+
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        setSearchParams({ tab }, { replace: true });
+    };
     const [suggestions, setSuggestions] = useState<DiagnosisCode[]>([]);
     const [isExtracting, setIsExtracting] = useState(false);
     const [isSyncingToAmexzone, setIsSyncingToAmexzone] = useState(false);
@@ -1443,7 +1457,7 @@ export function PatientDetail() {
     }
 
     return (
-        <div className="max-w-[1440px] mx-auto p-4 lg:p-8 space-y-12 animate-in fade-in duration-1000">
+        <div className="max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-16 space-y-8 animate-in fade-in duration-500">
             <div className="space-y-4">
                 {/* Back Button */}
                 <div className="flex items-center">
@@ -1592,7 +1606,7 @@ export function PatientDetail() {
 
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-12 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-slate-800 relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)]">
             {/* Premium Unified Tabbed Interface */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md p-1 rounded-full border border-slate-200/50 dark:border-slate-800 shadow-sm w-full flex overflow-x-auto whitespace-nowrap h-12 mb-10 scrollbar-none justify-start lg:justify-around">
                     <PremiumTrigger value="client" icon={User} label={language === 'es' ? "Cliente" : "Client"} theme="indigo" />
                     <PremiumTrigger value="medical" icon={Stethoscope} label={language === 'es' ? "Médico" : "Medical"} theme="emerald" />
@@ -1768,12 +1782,12 @@ export function PatientDetail() {
                             />
 
                             {!isEditing && (
-                                <div className="space-y-1.5 px-0.5">
+                                <div className="mt-8 pt-7 border-t border-slate-200/40 dark:border-slate-800/60 space-y-4 px-0.5">
                                     <div className="flex items-center gap-2">
-                                        <Activity size={12} className="text-indigo-400" />
+                                        <Activity size={13} className="text-indigo-400" />
                                         <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">Diagnostic Registry</p>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {patient.diagnoses ? (
                                             patient.diagnoses.replace(/\\n/g, '\n').split('\n').filter(d => d.trim()).map((diag, i) => {
                                                 const isPsych = (() => {
@@ -2073,14 +2087,6 @@ export function PatientDetail() {
                     <TabsContent value="history" className="m-0 focus-visible:outline-none">
                         {activeTab === "history" && (
                             <div className="space-y-6 px-1">
-                            {timeline.length > 0 && !isEditing && (
-                                <div className="flex justify-end mb-2">
-                                    <Button variant="ghost" className="text-indigo-600 dark:text-indigo-400 font-semibold text-xs tracking-wide hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 px-3 h-8 rounded-full" onClick={() => navigate(`/notes?patientId=${patient.id}`)}>
-                                        View Ledger &rarr;
-                                    </Button>
-                                </div>
-                            )}
-
                             {timeline.length === 0 ? (
                                 <div className="py-24 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[40px] bg-slate-50/20 dark:bg-slate-900/20">
                                     <Clock className="mx-auto size-14 text-slate-200 dark:text-slate-700 mb-6 drop-shadow-sm" />
@@ -2094,7 +2100,7 @@ export function PatientDetail() {
                                             item={item}
                                             isLast={idx === timeline.length - 1}
                                             navigate={navigate}
-                                            onPreview={(note) => setSelectedNote(note)}
+                                            onPreview={(note) => navigate(`/notes/new?id=${note?.id || note?.note_id || item.id}&from=${encodeURIComponent(`/patients/${id}?tab=history`)}`)}
                                             onDelete={(item) => handleRequestDeleteNote(item)}
                                             disabled={isEditing}
                                         />
@@ -2113,77 +2119,11 @@ export function PatientDetail() {
                                 const socialNeeds = (isEditing ? editData.tcm_social_needs : patient?.tcm_social_needs) || {};
                                 return (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {/* Panel 1: Identificación Básica */}
-                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
-                                            <div>
-                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <User size={14} /> {language === 'es' ? '1. Identificación Básica' : '1. Basic Identification'}
-                                                </h4>
-                                            </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <PremiumGlassField
-                                                    icon={User}
-                                                    label="First Name"
-                                                    name="first_name"
-                                                    value={isEditing ? (editData.first_name || '') : (patient?.first_name || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={User}
-                                                    label="Last Name"
-                                                    name="last_name"
-                                                    value={isEditing ? (editData.last_name || '') : (patient?.last_name || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={Phone}
-                                                    label="Telephone"
-                                                    name="phone"
-                                                    value={isEditing ? (editData.phone || '') : (patient?.phone || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={Calendar}
-                                                    label="Date of Birth"
-                                                    name="dob"
-                                                    value={isEditing ? (editData.dob || '') : (patient?.dob ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM dd, yyyy', { locale: language === 'es' ? es : undefined }) : '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                    type="date"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={Fingerprint}
-                                                    label="Social Security"
-                                                    name="ssn"
-                                                    value={isEditing ? (editData.ssn || '') : (patient?.ssn || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={MapPin}
-                                                    label="Residential Address"
-                                                    name="address"
-                                                    value={isEditing ? (editData.address || '') : (patient?.address || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Panel 2: Ayudas de Gobierno */}
+                                        {/* Panel 1: Government Assistance */}
                                         <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <Coins size={14} /> {language === 'es' ? '2. Ayudas de Gobierno' : '2. Government Assistance'}
+                                                    <Coins size={14} /> 1. Government Assistance
                                                 </h4>
                                             </div>
                                             <div className="space-y-4">
@@ -2237,124 +2177,11 @@ export function PatientDetail() {
                                             </div>
                                         </div>
 
-                                        {/* Panel 3: Perfil Personal y Clínico */}
+                                        {/* Panel 2: Family & Cohabitation */}
                                         <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <Heart size={14} /> {language === 'es' ? '3. Perfil Personal y Clínico' : '3. Personal & Clinical Profile'}
-                                                </h4>
-                                            </div>
-                                            <div className="space-y-4">
-                                                <PremiumGlassField
-                                                    icon={ShieldAlert}
-                                                    label="Religious Beliefs"
-                                                    name="religion"
-                                                    value={socialNeeds.religion || ''}
-                                                    isEditing={isEditing}
-                                                    onChange={handleSocialNeedsTextChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={Activity}
-                                                    label="Psychiatric Diagnosis"
-                                                    name="psych_conditions"
-                                                    value={isEditing ? (editData.psych_conditions || '') : (patient?.psych_conditions || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    isTextarea
-                                                    theme="indigo"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Panel 4: Proveedores Médicos */}
-                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
-                                            <div>
-                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <Stethoscope size={14} /> {language === 'es' ? '4. Proveedores' : '4. Providers'}
-                                                </h4>
-                                            </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <PremiumGlassField
-                                                    icon={User}
-                                                    label="PCP Name"
-                                                    name="pcp_name"
-                                                    value={isEditing ? (editData.pcp_name || '') : (patient?.pcp_name || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={MapPin}
-                                                    label="PCP Address"
-                                                    name="pcp_address"
-                                                    value={isEditing ? (editData.pcp_address || '') : (patient?.pcp_address || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={Clock}
-                                                    label="Time at PCP Clinic"
-                                                    name="pcp_duration"
-                                                    value={socialNeeds.pcp_duration || ''}
-                                                    isEditing={isEditing}
-                                                    onChange={handleSocialNeedsTextChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={User}
-                                                    label="Psychiatrist Name"
-                                                    name="psych_name"
-                                                    value={isEditing ? (editData.psych_name || '') : (patient?.psych_name || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={MapPin}
-                                                    label="Psychiatrist Address"
-                                                    name="psych_address"
-                                                    value={isEditing ? (editData.psych_address || '') : (patient?.psych_address || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={Clock}
-                                                    label="Time with Psychiatrist"
-                                                    name="psych_duration"
-                                                    value={socialNeeds.psych_duration || ''}
-                                                    isEditing={isEditing}
-                                                    onChange={handleSocialNeedsTextChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={Store}
-                                                    label="Pharmacy Name"
-                                                    name="pharmacy_name"
-                                                    value={isEditing ? (editData.pharmacy_name || '') : (patient?.pharmacy_name || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                                <PremiumGlassField
-                                                    icon={MapPin}
-                                                    label="Pharmacy Address"
-                                                    name="pharmacy_address"
-                                                    value={isEditing ? (editData.pharmacy_address || '') : (patient?.pharmacy_address || '')}
-                                                    isEditing={isEditing}
-                                                    onChange={handleFieldChange}
-                                                    theme="indigo"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Panel 5: Convivencia y Familia */}
-                                        <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
-                                            <div>
-                                                <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <Users size={14} /> {language === 'es' ? '5. Educación, Estado Civil y Convivencia' : '5. Family & Cohabitation'}
+                                                    <Users size={14} /> 2. Family & Cohabitation
                                                 </h4>
                                             </div>
                                             <div className="space-y-4">
@@ -2408,14 +2235,23 @@ export function PatientDetail() {
                                                         theme="indigo"
                                                     />
                                                 </div>
+                                                <PremiumGlassField
+                                                    icon={ShieldAlert}
+                                                    label="Religious Beliefs"
+                                                    name="religion"
+                                                    value={socialNeeds.religion || ''}
+                                                    isEditing={isEditing}
+                                                    onChange={handleSocialNeedsTextChange}
+                                                    theme="indigo"
+                                                />
                                             </div>
                                         </div>
 
-                                        {/* Panel 6: Trabajo y Finanzas */}
+                                        {/* Panel 3: Employment & Financials */}
                                         <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <Briefcase size={14} /> {language === 'es' ? '6. Situación Laboral e Ingresos' : '6. Employment & Financials'}
+                                                    <Briefcase size={14} /> 3. Employment & Financials
                                                 </h4>
                                             </div>
                                             <div className="space-y-4">
@@ -2460,11 +2296,11 @@ export function PatientDetail() {
                                             </div>
                                         </div>
 
-                                        {/* Panel 7: Estatus Migratorio */}
+                                        {/* Panel 4: Origin & Immigration */}
                                         <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <Globe size={14} /> {language === 'es' ? '7. Origen y Estatus Migratorio' : '7. Origin & Immigration'}
+                                                    <Globe size={14} /> 4. Origin & Immigration
                                                 </h4>
                                             </div>
                                             <div className="space-y-4">
@@ -2479,7 +2315,7 @@ export function PatientDetail() {
                                                 />
                                                 <PremiumGlassField
                                                     icon={Calendar}
-                                                    label="US Entry Date"
+                                                    label="Date of Entry into US"
                                                     name="us_entry_date"
                                                     value={socialNeeds.us_entry_date || ''}
                                                     isEditing={isEditing}
@@ -2487,7 +2323,7 @@ export function PatientDetail() {
                                                     theme="indigo"
                                                 />
                                                 <PremiumGlassField
-                                                    icon={UserCheck}
+                                                    icon={Shield}
                                                     label="Citizen? (Include Year)"
                                                     name="citizenship_status"
                                                     value={socialNeeds.citizenship_status || ''}
@@ -2496,7 +2332,7 @@ export function PatientDetail() {
                                                     theme="indigo"
                                                 />
                                                 <PremiumGlassField
-                                                    icon={UserCheck}
+                                                    icon={Shield}
                                                     label="Resident?"
                                                     name="residence_status"
                                                     value={socialNeeds.residence_status || ''}
@@ -2545,11 +2381,11 @@ export function PatientDetail() {
                                             </div>
                                         </div>
 
-                                        {/* Panel 9: Vivienda */}
+                                        {/* Panel 5: Housing & Transport */}
                                         <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <Home size={14} /> {language === 'es' ? '9. Vivienda y Transporte' : '9. Housing & Transport'}
+                                                    <Home size={14} /> 5. Housing & Transportation
                                                 </h4>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -2564,7 +2400,7 @@ export function PatientDetail() {
                                                 />
                                                 <PremiumGlassField
                                                     icon={Car}
-                                                    label="Drives? / ¿Maneja?"
+                                                    label="Drives?"
                                                     name="drives"
                                                     value={socialNeeds.drives || ''}
                                                     isEditing={isEditing}
@@ -2609,11 +2445,11 @@ export function PatientDetail() {
                                             </div>
                                         </div>
 
-                                        {/* Panel 10: Servicios que Necesita (Checklist) */}
+                                        {/* Panel 6: Services Needed (Checklist) */}
                                         <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <CheckSquare size={14} /> {language === 'es' ? '10. Servicios que Necesita' : '10. Services Needed'}
+                                                    <CheckSquare size={14} /> 6. Services Needed (12 Domains)
                                                 </h4>
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -2632,11 +2468,11 @@ export function PatientDetail() {
                                             </div>
                                         </div>
 
-                                        {/* Panel 11: Otros Detalles */}
+                                        {/* Panel 7: Other Details & Surgeries */}
                                         <div className="bg-slate-50/70 dark:bg-slate-900/15 border border-slate-200/40 dark:border-slate-800/60 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.01)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] backdrop-blur-md hover:border-slate-200 dark:hover:border-slate-700/60 transition-all duration-500 p-6 md:p-8 flex flex-col gap-5 col-span-1 md:col-span-2">
                                             <div>
                                                 <h4 className="text-[11px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-2">
-                                                    <MoreHorizontal size={14} /> {language === 'es' ? '11. Otros Detalles y Cirugías' : '11. Other Details & Surgeries'}
+                                                    <MoreHorizontal size={14} /> 7. Other Details & Surgeries
                                                 </h4>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

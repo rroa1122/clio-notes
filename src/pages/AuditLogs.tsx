@@ -2,14 +2,21 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import {
-    Calendar,
     Search,
     User,
     RefreshCw,
     Download,
     ChevronLeft,
     ChevronRight,
-    Users
+    Clock,
+    Activity,
+    LogIn,
+    Eye,
+    PlusCircle,
+    Trash2,
+    FileCheck,
+    Printer,
+    X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '../context/LanguageContext';
@@ -82,9 +89,62 @@ const translateDescription = (desc: string, language: string): string => {
     return desc;
 };
 
+const getActionTypeInfo = (desc: string = '', action: string = '', language: string = 'es') => {
+    const lower = (desc + ' ' + action).toLowerCase();
+    
+    if (lower.includes('eliminó') || lower.includes('delete')) {
+        return {
+            label: language === 'es' ? 'Eliminación' : 'Deletion',
+            color: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+            icon: <Trash2 size={12} className="shrink-0" />
+        };
+    }
+    if (lower.includes('inició sesión') || lower.includes('cerró sesión') || lower.includes('login') || lower.includes('logout') || lower.includes('auth')) {
+        return {
+            label: language === 'es' ? 'Autenticación' : 'Auth',
+            color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
+            icon: <LogIn size={12} className="shrink-0" />
+        };
+    }
+    if (lower.includes('firma') || lower.includes('sign')) {
+        return {
+            label: language === 'es' ? 'Firma' : 'Signature',
+            color: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
+            icon: <FileCheck size={12} className="shrink-0" />
+        };
+    }
+    if (lower.includes('imprimió') || lower.includes('pdf') || lower.includes('export') || lower.includes('print')) {
+        return {
+            label: language === 'es' ? 'Exportación' : 'Export',
+            color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+            icon: <Printer size={12} className="shrink-0" />
+        };
+    }
+    if (lower.includes('creó') || lower.includes('generó') || lower.includes('guardó') || lower.includes('create') || lower.includes('save')) {
+        return {
+            label: language === 'es' ? 'Registro' : 'Record',
+            color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+            icon: <PlusCircle size={12} className="shrink-0" />
+        };
+    }
+    if (lower.includes('accedió') || lower.includes('access') || lower.includes('view') || lower.includes('read')) {
+        return {
+            label: language === 'es' ? 'Consulta' : 'View',
+            color: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+            icon: <Eye size={12} className="shrink-0" />
+        };
+    }
+
+    return {
+        label: language === 'es' ? 'Actividad' : 'Activity',
+        color: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
+        icon: <Activity size={12} className="shrink-0" />
+    };
+};
+
 export function AuditLogs() {
     const { user } = useAuth();
-    const { t, language } = useLanguage();
+    const { language } = useLanguage();
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [workers, setWorkers] = useState<WorkerProfile[]>([]);
     const [loading, setLoading] = useState(true);
@@ -99,7 +159,6 @@ export function AuditLogs() {
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 20;
 
-    const isAuthorized = true;
     const isAdmin = user?.role === 'admin' || user?.email === 'reinier.roa2.0@gmail.com';
 
     // Fetch Workers for the filter dropdown
@@ -135,7 +194,6 @@ export function AuditLogs() {
                     query = query.eq('user_id', selectedWorker);
                 }
             } else {
-                // Non-admins can only see their own logs
                 query = query.eq('user_id', user.id);
             }
             if (descriptionSearch.trim()) {
@@ -169,11 +227,11 @@ export function AuditLogs() {
             setTotalCount(count || 0);
         } catch (e: any) {
             console.error('Error fetching logs:', e);
-            toast.error('Failed to load audit logs.');
+            toast.error(language === 'es' ? 'Error al cargar los registros.' : 'Failed to load audit logs.');
         } finally {
             setLoading(false);
         }
-    }, [user?.clinic_id, user?.id, isAdmin, selectedWorker, descriptionSearch, datePreset, currentPage]);
+    }, [user?.clinic_id, user?.id, isAdmin, selectedWorker, descriptionSearch, datePreset, currentPage, language]);
 
     useEffect(() => {
         if (isAdmin) {
@@ -185,7 +243,6 @@ export function AuditLogs() {
         fetchLogs();
     }, [fetchLogs]);
 
-    // Reset page to 1 when filters change
     const handleFilterChange = () => {
         setCurrentPage(1);
     };
@@ -194,7 +251,7 @@ export function AuditLogs() {
     const handleExport = async () => {
         if (!user?.clinic_id) return;
         try {
-            toast.loading('Generating report...');
+            toast.loading(language === 'es' ? 'Generando reporte...' : 'Generating report...');
             let query = supabase
                 .from('audit_logs')
                 .select('created_at, user_name, user_email, action, description')
@@ -220,11 +277,10 @@ export function AuditLogs() {
             toast.dismiss();
             if (error) throw error;
             if (!data || data.length === 0) {
-                toast.info('No logs to export.');
+                toast.info(language === 'es' ? 'No hay registros para exportar.' : 'No logs to export.');
                 return;
             }
 
-            // Convert data to CSV format
             const headers = ['Date', 'Worker', 'Email', 'Action', 'Description'];
             const csvRows = [
                 headers.join(','),
@@ -245,14 +301,13 @@ export function AuditLogs() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            toast.success('CSV report downloaded successfully.');
+            toast.success(language === 'es' ? 'Reporte CSV descargado con éxito.' : 'CSV report downloaded successfully.');
         } catch (e) {
             console.error('Error exporting CSV:', e);
-            toast.error('Failed to export report.');
+            toast.error(language === 'es' ? 'Error al exportar reporte.' : 'Failed to export report.');
         }
     };
 
-    // Date formatting helper
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
         return date.toLocaleString(language === 'es' ? 'es-ES' : 'en-US', {
@@ -265,7 +320,6 @@ export function AuditLogs() {
         });
     };
 
-    // Get initials helper for avatar
     const getInitials = (name: string) => {
         if (!name) return 'U';
         return name
@@ -276,44 +330,83 @@ export function AuditLogs() {
             .toUpperCase();
     };
 
-
-
     const totalPages = Math.ceil(totalCount / pageSize);
 
     return (
-        <div className="space-y-6 max-w-[1600px] mx-auto text-slate-800 font-sans">
-            {/* Header Path */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-2">
-                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    {totalCount.toLocaleString()} <span className="text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest">{language === 'es' ? "Registros de Auditoría" : "Logs Registered"}</span>
-                </h1>
-                <button
-                    onClick={fetchLogs}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200"
-                >
-                    <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-                    {language === 'es' ? "Actualizar" : "Refresh"}
-                </button>
+        <div className="flex flex-col max-w-6xl mx-auto w-full px-4 sm:px-6 pt-4 lg:pt-8 pb-20 space-y-6 animate-in fade-in duration-300">
+            
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800/40">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                            {language === 'es' ? 'Registro de Auditoría' : 'Audit Logs'}
+                        </h1>
+                        <span className="text-[11px] font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/40 px-2.5 py-0.5 rounded-full">
+                            {totalCount.toLocaleString()} {language === 'es' ? 'registros' : 'logs'}
+                        </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {language === 'es' 
+                            ? 'Trazabilidad y registro inmutable de accesos y modificaciones en el sistema' 
+                            : 'Immutable traceability and activity log of system actions and chart accesses'}
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                    <button
+                        onClick={fetchLogs}
+                        disabled={loading}
+                        className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+                        title={language === 'es' ? 'Actualizar' : 'Refresh'}
+                    >
+                        <RefreshCw size={15} className={loading ? 'animate-spin text-indigo-500 dark:text-indigo-400' : ''} />
+                    </button>
+
+                    <button
+                        onClick={handleExport}
+                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+                    >
+                        <Download size={15} />
+                        <span>{language === 'es' ? 'Exportar CSV' : 'Export CSV'}</span>
+                    </button>
+                </div>
             </div>
 
-            {/* Main Filters and Table Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Unified Card */}
+            <div className="bg-white dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-800/60 rounded-2xl overflow-visible shadow-sm">
                 
-                    <div className="lg:col-span-1 bg-card border border-border/60 rounded-3xl p-6 space-y-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-indigo-600 border-b border-border/60 pb-3">
-                        <Users size={16} />
-                        {language === 'es' ? "Filtros de Auditoría" : "Audit Filters"}
-                    </div>
- 
-                    {/* Filter 1: Worker */}
-                    {isAdmin && (
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-400 px-1">{language === 'es' ? "Profesional" : "Worker"}</label>
-                            <div className="relative">
+                {/* Horizontal Integrated Filter Toolbar */}
+                <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800/50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5 bg-slate-50/50 dark:bg-slate-900/40">
+                    
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                        {/* Search Input */}
+                        <div className="relative flex-1 sm:max-w-xs">
+                            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                            <input
+                                type="text"
+                                placeholder={language === 'es' ? "Buscar acción, paciente o palabra..." : "Search action, patient or keyword..."}
+                                value={descriptionSearch}
+                                onChange={(e) => { setDescriptionSearch(e.target.value); handleFilterChange(); }}
+                                className="w-full pl-9 pr-8 py-2 text-xs bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors shadow-xs"
+                            />
+                            {descriptionSearch && (
+                                <button
+                                    onClick={() => { setDescriptionSearch(''); handleFilterChange(); }}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 text-xs p-1 cursor-pointer"
+                                >
+                                    <X size={12} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Worker Selector */}
+                        {isAdmin && (
+                            <div className="relative sm:w-56">
                                 <select
                                     value={selectedWorker}
                                     onChange={(e) => { setSelectedWorker(e.target.value); handleFilterChange(); }}
-                                    className="w-full h-11 pl-4 pr-10 rounded-xl bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-4 focus:ring-[#6366f1]/5 focus:border-[#6366f1]/60 transition-all appearance-none cursor-pointer font-semibold"
+                                    className="w-full pl-3 pr-8 py-2 text-xs bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors shadow-xs appearance-none cursor-pointer font-medium"
                                 >
                                     <option value="" className="dark:bg-slate-950">{language === 'es' ? "Todos los profesionales" : "All Workers"}</option>
                                     {workers.map(w => (
@@ -322,190 +415,192 @@ export function AuditLogs() {
                                         </option>
                                     ))}
                                 </select>
-                                <User className="absolute right-3.5 top-3.5 size-4 text-slate-400 pointer-events-none" />
+                                <User className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 pointer-events-none" />
                             </div>
-                        </div>
-                    )}
- 
-                    {/* Filter 2: Description */}
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-400 px-1">{language === 'es' ? "Descripción" : "Description"}</label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={descriptionSearch}
-                                onChange={(e) => { setDescriptionSearch(e.target.value); handleFilterChange(); }}
-                                placeholder={language === 'es' ? "Buscar acción o palabra clave..." : "Search action or keyword..."}
-                                className="w-full h-11 pl-4 pr-10 rounded-xl bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-4 focus:ring-[#6366f1]/5 focus:border-[#6366f1]/60 placeholder-slate-300 dark:placeholder-slate-600 transition-all font-semibold"
-                             />
-                            <Search className="absolute right-3.5 top-3.5 size-4 text-slate-400 pointer-events-none" />
-                        </div>
+                        )}
                     </div>
 
-                    {/* Filter 3: Time Range Presets */}
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-400 px-1">{language === 'es' ? "Período de Tiempo" : "Time Period"}</label>
-                        <div className="grid grid-cols-2 gap-2">
-                            {(['today', '7days', '30days', 'all'] as const).map((preset) => {
-                                const labels = {
-                                    today: language === 'es' ? 'Hoy' : 'Today',
-                                    '7days': language === 'es' ? 'Últimos 7 días' : 'Last 7 Days',
-                                    '30days': language === 'es' ? 'Últimos 30 días' : 'Last 30 Days',
-                                    all: language === 'es' ? 'Todo el historial' : 'All History'
-                                };
+                    {/* Date Preset Segmented Control */}
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
+                        {(['today', '7days', '30days', 'all'] as const).map((preset) => {
+                            const labels = {
+                                today: language === 'es' ? 'Hoy' : 'Today',
+                                '7days': language === 'es' ? '7 Días' : '7 Days',
+                                '30days': language === 'es' ? '30 Días' : '30 Days',
+                                all: language === 'es' ? 'Todo' : 'All'
+                            };
+                            const isSelected = datePreset === preset;
+                            return (
+                                <button
+                                    key={preset}
+                                    onClick={() => { setDatePreset(preset); handleFilterChange(); }}
+                                    className={`px-3 py-1.5 text-[11px] font-medium rounded-lg transition-all cursor-pointer ${
+                                        isSelected
+                                            ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-semibold'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                >
+                                    {labels[preset]}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                </div>
+
+                {/* Table Content */}
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-slate-200/80 dark:border-slate-800/60 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50/80 dark:bg-slate-900/50">
+                                <th className="py-3.5 px-6 w-1/4">{language === 'es' ? "Profesional" : "Worker"}</th>
+                                <th className="py-3.5 px-6 w-1/4">{language === 'es' ? "Fecha y Hora" : "Date & Time"}</th>
+                                <th className="py-3.5 px-6 w-2/4">{language === 'es' ? "Acción Realizada" : "Action & Description"}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 text-xs">
+                            {loading ? (
+                                Array.from({ length: 6 }).map((_, idx) => (
+                                    <tr key={idx} className="animate-pulse">
+                                        <td className="py-4 px-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="size-9 rounded-full bg-slate-100 dark:bg-slate-800" />
+                                                <div className="space-y-1">
+                                                    <div className="h-3 w-28 bg-slate-100 dark:bg-slate-800 rounded" />
+                                                    <div className="h-2 w-20 bg-slate-100 dark:bg-slate-800 rounded" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
+                                        </td>
+                                        <td className="py-4 px-6">
+                                            <div className="h-3 w-3/4 bg-slate-100 dark:bg-slate-800 rounded" />
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : logs.length === 0 ? (
+                                <tr>
+                                    <td colSpan={3} className="py-16 text-center text-slate-400 dark:text-slate-500 text-xs">
+                                        {language === 'es' ? "No se encontraron registros con los filtros seleccionados." : "No audit logs found with the selected filters."}
+                                    </td>
+                                </tr>
+                            ) : (
+                                logs.map((log) => {
+                                    const actionType = getActionTypeInfo(log.description, log.action, language);
+                                    return (
+                                        <tr key={log.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/20 transition-colors group">
+                                            {/* Worker */}
+                                            <td className="py-3.5 px-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center font-semibold text-xs shrink-0">
+                                                        {getInitials(log.user_name)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                                            {log.user_name || log.user_email?.split('@')[0]}
+                                                        </p>
+                                                        <p className="text-[10.5px] text-slate-400 dark:text-slate-500 truncate">
+                                                            {log.user_email}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            {/* Date */}
+                                            <td className="py-3.5 px-6">
+                                                <div className="flex items-center gap-1.5 text-xs font-mono text-slate-500 dark:text-slate-400">
+                                                    <Clock size={12} className="text-slate-400 dark:text-slate-500 shrink-0" />
+                                                    <span>{formatDate(log.created_at)}</span>
+                                                </div>
+                                            </td>
+
+                                            {/* Description with Action Pill */}
+                                            <td className="py-3.5 px-6">
+                                                <div className="flex items-start sm:items-center gap-2.5 flex-col sm:flex-row">
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold border shrink-0 ${actionType.color}`}>
+                                                        {actionType.icon}
+                                                        <span>{actionType.label}</span>
+                                                    </span>
+                                                    <span className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed text-xs">
+                                                        {translateDescription(log.description, language)}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Clean Minimal Pagination Bar */}
+                {totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-slate-200/80 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            {language === 'es'
+                                ? `Mostrando ${((currentPage - 1) * pageSize) + 1} - ${Math.min(currentPage * pageSize, totalCount)} de ${totalCount.toLocaleString()} registros`
+                                : `Showing ${((currentPage - 1) * pageSize) + 1} - ${Math.min(currentPage * pageSize, totalCount)} of ${totalCount.toLocaleString()} logs`}
+                        </span>
+
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:opacity-30 disabled:hover:bg-white dark:disabled:hover:bg-slate-900 transition-all cursor-pointer shadow-2xs"
+                                title={language === 'es' ? "Página anterior" : "Previous page"}
+                            >
+                                <ChevronLeft size={14} />
+                            </button>
+                            
+                            {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+                                let pageNum = idx + 1;
+                                if (currentPage > 3) {
+                                    pageNum = currentPage - 3 + idx;
+                                }
+                                if (pageNum > totalPages) return null;
+
+                                const isCurrent = currentPage === pageNum;
                                 return (
                                     <button
-                                        key={preset}
-                                        onClick={() => { setDatePreset(preset); handleFilterChange(); }}
-                                        className={`h-9 text-xs rounded-xl font-bold transition-all duration-200 border ${
-                                            datePreset === preset
-                                                ? 'bg-[#6366f1] border-[#6366f1] text-white shadow-md shadow-indigo-500/10 dark:shadow-none'
-                                                : 'bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-slate-850 hover:text-slate-800 dark:hover:text-slate-200'
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={`size-8 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                                            isCurrent
+                                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs'
                                         }`}
                                     >
-                                        {labels[preset]}
+                                        {pageNum}
                                     </button>
                                 );
                             })}
+
+                            {totalPages > 5 && currentPage < totalPages - 2 && (
+                                <>
+                                    <span className="text-slate-400 px-1 font-semibold text-xs">...</span>
+                                    <button
+                                        onClick={() => setCurrentPage(totalPages)}
+                                        className="size-8 text-xs font-semibold rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
+                                    >
+                                        {totalPages}
+                                    </button>
+                                </>
+                            )}
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:opacity-30 disabled:hover:bg-white dark:disabled:hover:bg-slate-900 transition-all cursor-pointer shadow-2xs"
+                                title={language === 'es' ? "Página siguiente" : "Next page"}
+                            >
+                                <ChevronRight size={14} />
+                            </button>
                         </div>
                     </div>
+                )}
 
-                    {/* Report Export Button */}
-                    <button
-                        onClick={handleExport}
-                        className="w-full h-12 flex items-center justify-center gap-2 border-2 border-dashed border-indigo-500/20 hover:border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20 hover:bg-indigo-50/70 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200"
-                    >
-                        <Download size={15} />
-                        {language === 'es' ? "Exportar Reporte" : "Export Report"}
-                    </button>
-                </div>
-
-                {/* Right Table Section */}
-                <div className="lg:col-span-3 bg-card border border-border/60 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between min-h-[500px]">
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 text-left">
-                                    <th className="pb-4 w-1/4">{language === 'es' ? "Profesional" : "Worker"}</th>
-                                    <th className="pb-4 w-1/4">{language === 'es' ? "Fecha" : "Date"}</th>
-                                    <th className="pb-4 w-2/4">{language === 'es' ? "Descripción" : "Description"}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800 text-sm text-slate-700 dark:text-slate-300">
-                                {loading ? (
-                                    // Skeleton loading states
-                                    Array.from({ length: 6 }).map((_, idx) => (
-                                        <tr key={idx} className="animate-pulse">
-                                            <td className="py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800" />
-                                                    <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded" />
-                                                </div>
-                                            </td>
-                                            <td className="py-4">
-                                                <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded" />
-                                            </td>
-                                            <td className="py-4">
-                                                <div className="h-4 w-3/4 bg-slate-100 dark:bg-slate-800 rounded" />
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : logs.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={3} className="py-12 text-center text-slate-400 text-sm italic font-medium">
-                                            {language === 'es' ? "No se encontraron registros de auditoría con los filtros seleccionados." : "No audit logs found with the selected filters."}
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    logs.map((log) => (
-                                        <tr key={log.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-900/30 transition-colors">
-                                            <td className="py-4 pr-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="size-8 rounded-full bg-indigo-50 dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-slate-800 flex items-center justify-center text-xs font-bold shrink-0">
-                                                        {getInitials(log.user_name)}
-                                                    </div>
-                                                    <div className="flex flex-col truncate">
-                                                        <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{log.user_name}</span>
-                                                        <span className="text-[10px] text-slate-400 dark:text-slate-400 truncate font-semibold">{log.user_email}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 pr-4 text-slate-500 dark:text-slate-300 text-xs font-mono font-medium">
-                                                {formatDate(log.created_at)}
-                                            </td>
-                                            <td className="py-4 text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
-                                                {translateDescription(log.description, language)}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-850 pt-6 mt-6">
-                            <span className="text-xs text-slate-400 font-bold">
-                                {language === 'es'
-                                    ? `Mostrando ${((currentPage - 1) * pageSize) + 1} - ${Math.min(currentPage * pageSize, totalCount)} de ${totalCount.toLocaleString()} Registros`
-                                    : `Showing ${((currentPage - 1) * pageSize) + 1} - ${Math.min(currentPage * pageSize, totalCount)} of ${totalCount.toLocaleString()} Logs`}
-                            </span>
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-2 rounded-lg border border-border/80 bg-card text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 disabled:opacity-30 disabled:hover:border-border/80 disabled:hover:bg-card transition-all cursor-pointer"
-                                >
-                                    <ChevronLeft size={16} />
-                                </button>
-                                
-                                {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
-                                    // Simple pagination sliding window
-                                    let pageNum = idx + 1;
-                                    if (currentPage > 3) {
-                                        pageNum = currentPage - 3 + idx;
-                                    }
-                                    if (pageNum > totalPages) return null;
- 
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => setCurrentPage(pageNum)}
-                                            className={`size-8 text-xs font-bold rounded-lg border transition-all ${
-                                                currentPage === pageNum
-                                                    ? 'bg-indigo-600 border-indigo-600 text-white'
-                                                    : 'bg-card border-border/80 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700'
-                                            }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
- 
-                                {totalPages > 5 && currentPage < totalPages - 2 && (
-                                    <>
-                                        <span className="text-slate-300 px-1 font-bold">...</span>
-                                        <button
-                                            onClick={() => setCurrentPage(totalPages)}
-                                            className="size-8 text-xs font-bold rounded-lg border bg-card border-border/80 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700"
-                                        >
-                                            {totalPages}
-                                        </button>
-                                    </>
-                                )}
- 
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                    className="p-2 rounded-lg border border-border/80 bg-card text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 disabled:opacity-30 disabled:hover:border-border/80 disabled:hover:bg-card transition-all cursor-pointer"
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );

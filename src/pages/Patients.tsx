@@ -120,7 +120,7 @@ export function Patients() {
     };
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 sm:px-4 pt-1 lg:pt-3 h-auto lg:h-[calc(100vh-6.5rem)] mb-2">
+        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 h-auto lg:h-[calc(100vh-8.5rem)] mb-2">
             <div className="flex flex-col lg:flex-1 bg-transparent md:bg-surface md:dark:bg-slate-900 rounded-[2rem] shadow-none md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 md:border border-border/60 overflow-visible lg:overflow-hidden relative h-auto lg:h-full">
                 {/* Card Header area matching the history timeline filters */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6 px-8 py-6 bg-surface border-b border-slate-105 dark:border-slate-800/80 z-20 shrink-0">

@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Mic, FileCheck, Loader2, AlertCircle, RefreshCw, Pause, Play, ChevronsUpDown, ChevronDown, User, Upload, CheckCircle2, Sparkles, FileText, ClipboardList, Check, Lock, Layers, Trash2, Plus, Calendar, Clock, Target, Compass, Edit2, Search, X } from 'lucide-react';
+import { ArrowLeft, Mic, FileCheck, Loader2, AlertCircle, RefreshCw, Pause, Play, ChevronsUpDown, ChevronDown, ChevronRight, User, Upload, CheckCircle2, Sparkles, FileText, ClipboardList, Check, Lock, Layers, Trash2, Plus, Calendar, Clock, Target, Compass, Edit2, Search, X, Syringe, Wind, Pill, Users, Car, Package, Building2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { format, parseISO, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -13,7 +13,7 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes } from '../lib/clioUtils';
+import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
@@ -83,75 +83,166 @@ const formatMinutesToTime = (minutes: number): string => {
     return `${padHours}:${padMins} ${period}`;
 };
 
-const TCM_SUB_TEMPLATES_BY_GROUP = [
+export interface HierarchicalServiceItem {
+    id: string;
+    name: string;
+    label: string;
+    desc: string;
+    pos: string;
+    stepBadge?: string;
+}
+
+export interface HierarchicalServiceGroup {
+    id: string;
+    category: string;
+    categoryEs: string;
+    iconName: string;
+    badge: string;
+    items: HierarchicalServiceItem[];
+}
+
+export const renderCategoryIcon = (id: string, className?: string) => {
+    switch (id) {
+        case 'vaccination':
+            return <Syringe className={cn("size-4 shrink-0", className)} />;
+        case 'hurricane':
+            return <Wind className={cn("size-4 shrink-0", className)} />;
+        case 'otc':
+            return <Pill className={cn("size-4 shrink-0", className)} />;
+        case 'collateral':
+            return <Users className={cn("size-4 shrink-0", className)} />;
+        case 'transportation':
+            return <Car className={cn("size-4 shrink-0", className)} />;
+        case 'core':
+            return <ClipboardList className={cn("size-4 shrink-0", className)} />;
+        case 'basic_needs':
+            return <Package className={cn("size-4 shrink-0", className)} />;
+        case 'housing_legal':
+            return <Building2 className={cn("size-4 shrink-0", className)} />;
+        case 'other':
+        default:
+            return <Sparkles className={cn("size-4 shrink-0", className)} />;
+    }
+};
+
+export const SERVICE_HIERARCHICAL_GROUPS: HierarchicalServiceGroup[] = [
     {
-        category: "Core Case Management",
+        id: "vaccination",
+        category: "Vaccination Assistance",
+        categoryEs: "Vaccination Assistance",
+        iconName: "Syringe",
+        badge: "3 steps",
         items: [
-            'TCM Initial Home Visit',
-            'TCM Collateral & Contact Note',
-            'TCM Initial Assessment & Certification',
-            'TCM Service Plan Development',
-            'TCM Service Plan Discussion',
-            'TCM Hurricane Season: Addendum',
-            'TCM Hurricane Season: Update'
+            { id: "vax-1", name: "TCM Update Vaccine Record", label: "Update Vaccine Record", desc: "Update immunization record and assess clinical need", pos: "11 - Office", stepBadge: "Step 1" },
+            { id: "vax-2", name: "TCM Coordinate Vaccine Appointment", label: "Coordinate Vaccine Appointment", desc: "Coordinate appointment with pharmacy provider", pos: "11 - Office", stepBadge: "Step 2" },
+            { id: "vax-3", name: "TCM Assist Vaccine Administration", label: "Assist Vaccine Administration", desc: "In-person assistance during vaccine administration", pos: "11 - Office", stepBadge: "Step 3" },
         ]
     },
     {
-        category: "Physical & Preventive Health",
+        id: "hurricane",
+        category: "Hurricane Preparedness",
+        categoryEs: "Hurricane Preparedness",
+        iconName: "Wind",
+        badge: "4 options",
         items: [
-            'TCM Vaccination Assistance',
-            'OTC Benefit Assistance'
+            { id: "hurr-1", name: "TCM Hurricane Addendum: Develop Plan", label: "Hurricane Addendum: Develop Plan", desc: "Develop disaster & hurricane emergency plan", pos: "11 - Office", stepBadge: "Addendum" },
+            { id: "hurr-2", name: "TCM Hurricane Addendum: Discuss & Sign", label: "Hurricane Addendum: Discuss & Sign", desc: "In-person plan review and patient signature", pos: "12 - Home", stepBadge: "Sign" },
+            { id: "hurr-3", name: "TCM Hurricane Update: Develop Plan", label: "Hurricane Update: Develop Plan", desc: "Annual update of emergency disaster plan", pos: "11 - Office", stepBadge: "Update" },
+            { id: "hurr-4", name: "TCM Hurricane Update: Discuss & Sign", label: "Hurricane Update: Discuss & Sign", desc: "In-home update review and patient signature", pos: "12 - Home", stepBadge: "Sign" },
         ]
     },
     {
-        category: "Basic Needs & Supplies",
+        id: "otc",
+        category: "OTC Benefit Assistance",
+        categoryEs: "OTC Benefit Assistance",
+        iconName: "Pill",
+        badge: "3 steps",
         items: [
-            'Obtain Supply Donation',
-            'TCM MHV + Provide Donation'
+            { id: "otc-1", name: "TCM OTC Obtain Form", label: "Obtain Catalog & Balance", desc: "Check OTC card balance and pharmacy catalog", pos: "11 - Office", stepBadge: "Step 1" },
+            { id: "otc-2", name: "TCM OTC Complete Items", label: "Complete Item Selection", desc: "Select health and hygiene items with patient", pos: "12 - Home", stepBadge: "Step 2" },
+            { id: "otc-3", name: "TCM OTC Submit Order", label: "Submit Order to Pharmacy", desc: "Submit finalized OTC order to pharmacy", pos: "11 - Office", stepBadge: "Step 3" },
         ]
     },
     {
+        id: "collateral",
+        category: "Collateral Records & Contacts",
+        categoryEs: "Collateral Records & Contacts",
+        iconName: "Users",
+        badge: "3 options",
+        items: [
+            { id: "col-1", name: "TCM Gather PCP Record", label: "Gather PCP Records", desc: "Request and obtain medical records from PCP", pos: "11 - Office", stepBadge: "PCP" },
+            { id: "col-2", name: "TCM Gather PSY Record", label: "Gather Psychiatrist Records", desc: "Request and obtain psychiatric records", pos: "11 - Office", stepBadge: "PSY" },
+            { id: "col-3", name: "TCM PC Emergency Contact", label: "Phone Contact: Emergency Contact", desc: "Coordination with patient emergency contact", pos: "11 - Office", stepBadge: "Contact" },
+        ]
+    },
+    {
+        id: "transportation",
         category: "Transportation & Mobility",
+        categoryEs: "Transportation & Mobility",
+        iconName: "Car",
+        badge: "7 options",
         items: [
-            'TCM Complete STS Application',
-            'TCM Collect STS from PCP',
-            'TCM Submit STS',
-            'TCM Obtain Disabled Parking Permit',
-            'TCM Complete Disabled Parking Permit',
-            'TCM Submit DPP to PCP',
-            'Coordinate Transportation'
+            { id: "sts-1", name: "TCM Complete STS Application", label: "Complete STS Application", desc: "Fill out Special Transportation Service form", pos: "11 - Office", stepBadge: "STS 1" },
+            { id: "sts-2", name: "TCM Collect STS from PCP", label: "Collect STS Certification", desc: "Retrieve signed medical certification from PCP", pos: "11 - Office", stepBadge: "STS 2" },
+            { id: "sts-3", name: "TCM Submit STS", label: "Submit STS Application", desc: "Submit completed STS package to transit office", pos: "11 - Office", stepBadge: "STS 3" },
+            { id: "dpp-1", name: "TCM Obtain Disabled Parking Permit", label: "Obtain Parking Permit Form", desc: "Obtain Disabled Parking Permit application", pos: "11 - Office", stepBadge: "DPP 1" },
+            { id: "dpp-2", name: "TCM Complete Disabled Parking Permit", label: "Complete Parking Permit Form", desc: "Complete patient section of DPP application", pos: "11 - Office", stepBadge: "DPP 2" },
+            { id: "dpp-3", name: "TCM Submit DPP to PCP", label: "Submit DPP Form to PCP", desc: "Deliver DPP form to physician for certification", pos: "11 - Office", stepBadge: "DPP 3" },
+            { id: "trans-gen", name: "Coordinate Transportation", label: "General Transportation Coordination", desc: "Coordinate non-emergency medical transportation", pos: "11 - Office", stepBadge: "General" },
         ]
     },
     {
-        category: "Housing & Shelter",
+        id: "core",
+        category: "Core Case Management",
+        categoryEs: "Core Case Management",
+        iconName: "ClipboardList",
+        badge: "5 options",
         items: [
-            'TCM Housing Application Assistance'
+            { id: "core-1", name: "TCM Initial Home Visit", label: "Initial Home Visit", desc: "Initial in-person face-to-face home visit", pos: "12 - Home", stepBadge: "Home" },
+            { id: "core-2", name: "TCM Initial Assessment & Certification", label: "Initial Assessment & Certification", desc: "Comprehensive TCM assessment & certification", pos: "11 - Office", stepBadge: "Office" },
+            { id: "core-3", name: "TCM Service Plan Development", label: "Service Plan Development", desc: "Develop individualized TCM service plan", pos: "11 - Office", stepBadge: "Plan" },
+            { id: "core-4", name: "TCM Service Plan Discussion", label: "Service Plan Discussion", desc: "Discuss and sign service plan with patient", pos: "12 - Home", stepBadge: "Sign" },
+            { id: "core-5", name: "Monthly Home Visit", label: "Monthly Home Visit (MHV)", desc: "Monthly face-to-face follow-up visit at home", pos: "12 - Home", stepBadge: "Monthly" },
         ]
     },
     {
-        category: "Legal & Immigration",
+        id: "basic_needs",
+        category: "Basic Needs & Donations",
+        categoryEs: "Basic Needs & Donations",
+        iconName: "Package",
+        badge: "2 options",
         items: [
-            'USCIS / Immigration Process Assistance'
+            { id: "bn-1", name: "Obtain Supply Donation", label: "Obtain Supply Donation", desc: "Coordinate & obtain basic supply donation", pos: "11 - Office", stepBadge: "Supplies" },
+            { id: "bn-2", name: "TCM MHV + Provide Donation", label: "MHV + Deliver Donation", desc: "In-home visit delivering donated supplies", pos: "12 - Home", stepBadge: "Delivery" },
         ]
     },
     {
-        category: "Supportive Coordination",
+        id: "housing_legal",
+        category: "Housing & Community Support",
+        categoryEs: "Housing & Community Support",
+        iconName: "Building2",
+        badge: "4 options",
         items: [
-            'Provider Appointment Coordination',
-            'PCP Coordination / Staffing (In-Person)',
-            'Update Information in the Community'
+            { id: "hl-1", name: "TCM Housing Application Assistance", label: "Housing Application Assistance", desc: "Assist with community housing application", pos: "11 - Office", stepBadge: "Housing" },
+            { id: "hl-2", name: "USCIS / Immigration Process Assistance", label: "USCIS / Immigration Assistance", desc: "Assist with legal and immigration forms", pos: "11 - Office", stepBadge: "Legal" },
+            { id: "hl-3", name: "TCM SNAP Recertification", label: "SNAP Recertification", desc: "Assist with food assistance renewal", pos: "11 - Office", stepBadge: "SNAP" },
+            { id: "hl-4", name: "Provider Appointment Coordination", label: "Provider Appointment Coordination", desc: "Coordinate clinical and specialty appointments", pos: "11 - Office", stepBadge: "Appt" },
         ]
     },
     {
-        category: "Other",
+        id: "other",
+        category: "Other Services",
+        categoryEs: "Other Services",
+        iconName: "Sparkles",
+        badge: "Custom",
         items: [
-            'Custom Template',
-            'Other'
+            { id: "oth-1", name: "Custom Template", label: "Custom Template", desc: "Freeform clinical documentation template", pos: "Custom", stepBadge: "Custom" },
+            { id: "oth-2", name: "Other", label: "Other Clinical Encounter", desc: "Any other clinical TCM service not listed", pos: "Custom", stepBadge: "Other" },
         ]
     }
 ];
 
-const TCM_SUB_TEMPLATES = TCM_SUB_TEMPLATES_BY_GROUP.flatMap(g => g.items);
+const TCM_SUB_TEMPLATES = SERVICE_HIERARCHICAL_GROUPS.flatMap(g => g.items.map(i => i.name));
 
 const formatTimeInput = (val: string): string => {
     let v = val.trim().toLowerCase();
@@ -226,7 +317,7 @@ const Record: React.FC = () => {
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [timer, setTimer] = useState(0);
-    const [recordedServices, setRecordedServices] = useState<Array<{ id: string, audioBlob: Blob | null, subTemplate: string, duration: number, manualText?: string, customTemplateText?: string, serviceDate?: string, timeIn?: string, timeOut?: string, units?: string }>>([]);
+    const [recordedServices, setRecordedServices] = useState<Array<{ id: string, audioBlob: Blob | null, subTemplate: string, templateId?: string, duration: number, manualText?: string, customTemplateText?: string, serviceDate?: string, timeIn?: string, timeOut?: string, units?: string }>>([]);
 
     // Process State
     const [status, setStatus] = useState<'idle' | 'recording' | 'uploading' | 'processing' | 'done'>('idle');
@@ -264,20 +355,45 @@ const Record: React.FC = () => {
     const [isMobileTimeOutOpen, setIsMobileTimeOutOpen] = useState(false);
 
     const [subTemplateSearchQuery, setSubTemplateSearchQuery] = useState('');
+    const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>(["vaccination"]);
 
-    const filteredSubTemplatesByGroup = useMemo(() => {
-        if (!subTemplateSearchQuery.trim()) return TCM_SUB_TEMPLATES_BY_GROUP;
-        const query = subTemplateSearchQuery.toLowerCase();
-        return TCM_SUB_TEMPLATES_BY_GROUP.map(group => {
-            const filteredItems = group.items.filter(item => 
-                item.toLowerCase().includes(query) || 
-                group.category.toLowerCase().includes(query)
+    useEffect(() => {
+        if (selectedSubTemplate) {
+            const foundGroup = SERVICE_HIERARCHICAL_GROUPS.find(g => 
+                g.items.some(i => i.name === selectedSubTemplate)
             );
-            return {
-                ...group,
-                items: filteredItems
-            };
-        }).filter(group => group.items.length > 0);
+            if (foundGroup) {
+                setExpandedCategoryIds(prev => Array.from(new Set([...prev, foundGroup.id])));
+            }
+        }
+    }, [selectedSubTemplate]);
+
+    const toggleCategory = (categoryId: string) => {
+        setExpandedCategoryIds(prev => 
+            prev.includes(categoryId) 
+                ? prev.filter(id => id !== categoryId) 
+                : [...prev, categoryId]
+        );
+    };
+
+    const matchingItemsFromSearch = useMemo(() => {
+        if (!subTemplateSearchQuery.trim()) return [];
+        const query = subTemplateSearchQuery.toLowerCase();
+        const results: { group: HierarchicalServiceGroup; item: HierarchicalServiceItem }[] = [];
+        SERVICE_HIERARCHICAL_GROUPS.forEach(g => {
+            g.items.forEach(item => {
+                if (
+                    item.name.toLowerCase().includes(query) ||
+                    item.label.toLowerCase().includes(query) ||
+                    item.desc.toLowerCase().includes(query) ||
+                    g.category.toLowerCase().includes(query) ||
+                    g.categoryEs.toLowerCase().includes(query)
+                ) {
+                    results.push({ group: g, item });
+                }
+            });
+        });
+        return results;
     }, [subTemplateSearchQuery]);
 
     useEffect(() => {
@@ -297,10 +413,10 @@ const Record: React.FC = () => {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (
-                (subTemplateDropdownRef.current && !subTemplateDropdownRef.current.contains(event.target as Node)) &&
-                (mobileSubTemplateDropdownRef.current && !mobileSubTemplateDropdownRef.current.contains(event.target as Node))
-            ) {
+            const target = event.target as Node;
+            const inDesktop = subTemplateDropdownRef.current && subTemplateDropdownRef.current.contains(target);
+            const inMobile = mobileSubTemplateDropdownRef.current && mobileSubTemplateDropdownRef.current.contains(target);
+            if (!inDesktop && !inMobile) {
                 setIsDropdownOpen(false);
             }
         };
@@ -840,6 +956,7 @@ const Record: React.FC = () => {
                 id: Date.now().toString(),
                 audioBlob: file,
                 subTemplate: selectedSubTemplate,
+                templateId: getTemplateIdFromSubTemplate(selectedSubTemplate),
                 duration: 0,
                 serviceDate: serviceDate,
                 timeIn: timeIn,
@@ -923,52 +1040,6 @@ const Record: React.FC = () => {
             return;
         }
 
-        if (selectedSubTemplate === 'OTC Benefit Assistance') {
-            // Add three independent services: OTC Obt, OTC Comp, OTC Sub
-            setRecordedServices(prev => [
-                ...prev,
-                {
-                    id: 'manual-obt-' + Date.now().toString(),
-                    audioBlob: null,
-                    subTemplate: 'OTC Obt',
-                    duration: 42 * 60, // 42 minutes in seconds
-                    manualText: 'The Targeted Case Manager (TCM) will assist the patient in obtaining the OTC benefit form from the pharmacy.',
-                    customTemplateText: '',
-                    serviceDate: serviceDate,
-                    timeIn: '09:38 AM',
-                    timeOut: '10:20 AM',
-                    units: '3'
-                },
-                {
-                    id: 'manual-comp-' + (Date.now() + 1).toString(),
-                    audioBlob: null,
-                    subTemplate: 'OTC Comp',
-                    duration: 43 * 60, // 43 minutes
-                    manualText: 'The Targeted Case Manager (TCM) will assist the patient in completing the OTC items catalog selection.',
-                    customTemplateText: '',
-                    serviceDate: serviceDate,
-                    timeIn: '12:50 PM',
-                    timeOut: '01:33 PM',
-                    units: '3'
-                },
-                {
-                    id: 'manual-sub-' + (Date.now() + 2).toString(),
-                    audioBlob: null,
-                    subTemplate: 'OTC Sub',
-                    duration: 44 * 60, // 44 minutes
-                    manualText: 'The Targeted Case Manager (TCM) will assist the patient in submitting the OTC catalog order.',
-                    customTemplateText: '',
-                    serviceDate: serviceDate,
-                    timeIn: '04:15 PM',
-                    timeOut: '04:59 PM',
-                    units: '3'
-                }
-            ]);
-            setSelectedSubTemplate('');
-            toast.success(language === 'es' ? 'Se agregaron los 3 bloques de servicio OTC' : 'Added all 3 OTC service blocks');
-            return;
-        }
-        
         const hasAudio = !!audioBlob;
 
         if (selectedSubTemplate === 'Custom Template' && (!patientInfo.customTemplateText || patientInfo.customTemplateText.trim() === '')) {
@@ -976,11 +1047,14 @@ const Record: React.FC = () => {
             return;
         }
 
+        const svcTemplateId = getTemplateIdFromSubTemplate(selectedSubTemplate);
+
         if (editingServiceId) {
             setRecordedServices(prev => prev.map(s => s.id === editingServiceId ? {
                 ...s,
                 audioBlob: audioBlob,
                 subTemplate: selectedSubTemplate,
+                templateId: svcTemplateId,
                 duration: timer,
                 manualText: patientInfo.context,
                 customTemplateText: patientInfo.customTemplateText,
@@ -996,6 +1070,7 @@ const Record: React.FC = () => {
                 id: (hasAudio ? 'audio-' : 'manual-') + Date.now().toString(),
                 audioBlob: audioBlob,
                 subTemplate: selectedSubTemplate,
+                templateId: svcTemplateId,
                 duration: timer,
                 manualText: patientInfo.context,
                 customTemplateText: patientInfo.customTemplateText,
@@ -1062,6 +1137,7 @@ const Record: React.FC = () => {
                 id: 'text-only',
                 audioBlob: null,
                 subTemplate: selectedSubTemplate,
+                templateId: getTemplateIdFromSubTemplate(selectedSubTemplate),
                 duration: 0,
                 serviceDate: serviceDate,
                 timeIn: timeIn,
@@ -1075,6 +1151,8 @@ const Record: React.FC = () => {
         try {
             for (let i = 0; i < allServicesToProcess.length; i++) {
                 const svc = allServicesToProcess[i];
+                const svcTemplateId = svc.templateId || getTemplateIdFromSubTemplate(svc.subTemplate);
+                const isSvcTcm = svcTemplateId.startsWith('tcm_');
                 const svcDate = (svc as any).serviceDate || serviceDate;
                 const svcTimeIn = (svc as any).timeIn || timeIn;
                 const svcTimeOut = (svc as any).timeOut || timeOut;
@@ -1083,7 +1161,7 @@ const Record: React.FC = () => {
                 toast.loading(`Processing service ${i + 1} of ${allServicesToProcess.length}...`, { id: 'joint-progress' });
 
                 const formData = new FormData();
-                const audioFieldName = isTcm ? 'audio' : 'text';
+                const audioFieldName = isSvcTcm ? 'audio' : 'text';
                 
                 // If there's no audio, we send a tiny silent audio placeholder (100 bytes) 
                 // to satisfy n8n binary nodes that might fail on a truly empty 0-byte file.
@@ -1153,8 +1231,8 @@ const Record: React.FC = () => {
                     uniqueServiceTitle = `${svc.subTemplate} (Part ${sameTypeBefore + 1})`;
                 }
 
-                if (isTcm) {
-                    formData.append('template_id', selectedTemplateId);
+                if (isSvcTcm) {
+                    formData.append('template_id', svcTemplateId);
                     formData.append('service_date', svcDate);
                     formData.append('time_in', svcTimeIn);
                     formData.append('time_out', svcTimeOut);
@@ -1167,7 +1245,7 @@ const Record: React.FC = () => {
                         context: patientInfo.context,
                         custom_template_text: svc.customTemplateText,
                         template_text: currentTemplate.content,
-                        template_id: currentTemplate.id,
+                        template_id: svcTemplateId,
                         template_version: currentTemplate.version,
                         provider_name: user?.name,
                         patient_id: selectedPatient?.id,
@@ -1191,7 +1269,7 @@ const Record: React.FC = () => {
                     result = await PDFService.generatePDF(
                         formData,
                         {
-                            template_id: selectedTemplateId,
+                            template_id: svcTemplateId,
                             patient_id: selectedPatient?.id
                         },
                         controller.signal
@@ -1208,19 +1286,15 @@ const Record: React.FC = () => {
                     throw new Error(`Service ${i + 1} (${svc.subTemplate}) returned an empty response. Verify n8n logs.`);
                 }
 
-                if (isTcm && result.data.template_id && result.data.template_id !== selectedTemplateId) {
-                    console.warn('Template mismatch:', result.data.template_id);
-                    // We allow it to continue if it's 'Other' but log the warning
-                    if (svc.subTemplate !== 'Other') {
-                        throw new Error(`Template mismatch for ${svc.subTemplate}: expected ${selectedTemplateId}`);
-                    }
+                if (isSvcTcm && result.data.template_id && result.data.template_id !== svcTemplateId) {
+                    console.warn('Template mismatch:', result.data.template_id, 'expected:', svcTemplateId);
                 }
 
                 lastPdfResult = result;
                 const normalized = normalizeClioNote(result.data);
                 if (normalized && typeof normalized === 'object') {
                     if (!normalized.meta) (normalized as any).meta = {};
-                    normalized.meta.template_id = selectedTemplateId;
+                    normalized.meta.template_id = svcTemplateId;
                     normalized.patient_id = selectedPatient?.id;
                     
                     (normalized as any)._frontend_service_title = svc.subTemplate;
@@ -1341,6 +1415,7 @@ const Record: React.FC = () => {
                 
                 setClioNote(unifiedNote);
                 setStatus('done');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 if (lastPdfResult.data?.id) {
                     setSearchParams({ id: lastPdfResult.data.id });
                 }
@@ -1408,6 +1483,11 @@ const Record: React.FC = () => {
     };
 
     const handleBack = () => {
+        const fromParam = searchParams.get('from');
+        if (fromParam) {
+            navigate(fromParam);
+            return;
+        }
         const idParam = searchParams.get('id');
         if (idParam) {
             navigate(-1);
@@ -1460,38 +1540,42 @@ const Record: React.FC = () => {
 
     if (isLoadingFromHistory) {
         return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6">
-                <div className="size-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-sm">
-                    <Loader2 className="animate-spin text-primary/60" size={24} />
+            <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 animate-in fade-in duration-300">
+                <div className="size-14 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center justify-center shadow-lg shadow-black/10 backdrop-blur-md">
+                    <Loader2 className="animate-spin text-indigo-500" size={24} />
                 </div>
-                <p className="text-sm font-semibold tracking-tight text-slate-600">Synchronizing clinical record...</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                    {language === 'es' ? 'Cargando nota clínica...' : 'Loading clinical note...'}
+                </p>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col items-center max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-12 animate-in fade-in duration-500">
+        <div className="flex flex-col items-center max-w-7xl mx-auto w-full px-2 lg:px-4 pt-1 lg:pt-3 pb-12 animate-in fade-in duration-300">
             {status === 'done' && pdfResponse ? (
-                <div className="max-w-6xl w-full space-y-4 animate-in fade-in duration-500">
-                    {/* Back Button */}
-                    <div className="flex items-center no-print">
-                        <button
-                            onClick={handleBack}
-                            className="group flex items-center gap-2 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors font-black text-[10px] uppercase tracking-widest active:scale-[0.98] bg-transparent border-none p-0 outline-none cursor-pointer"
-                        >
-                            <ArrowLeft size={13} className="text-indigo-400" />
-                            Back
-                        </button>
-                    </div>
+                <div className="max-w-5xl w-full animate-in fade-in duration-300">
+                    <div className="w-full bg-white dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 rounded-[2.5rem] p-4 sm:p-5 md:p-6 shadow-2xl space-y-2">
+                        
+                        {/* Canvas Header Bar with minimal Back button */}
+                        <div className="flex items-center no-print px-1 pt-1">
+                            <button
+                                onClick={handleBack}
+                                className="group flex items-center gap-2 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors font-black text-[10px] uppercase tracking-widest active:scale-[0.98] bg-transparent border-none p-0 outline-none cursor-pointer"
+                            >
+                                <ArrowLeft size={13} className="text-indigo-400 group-hover:-translate-x-0.5 transition-transform" />
+                                Back
+                            </button>
+                        </div>
 
-                    <div id="review-workspace-root" className="clio-notes-new w-full bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] rounded-[2.5rem] p-6 md:p-10 relative">
-                        {isTemplatesLoading && (
-                            <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-[2.5rem]">
-                                <Loader2 className="animate-spin text-primary" size={32} />
-                            </div>
-                        )}
-                        {clioNote ? (
-                            <div className="pt-0 pb-4 px-2 md:px-0">
+                        {/* Document Content */}
+                        <div id="review-workspace-root" className="w-full relative pt-1">
+                            {isTemplatesLoading && (
+                                <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-3xl">
+                                    <Loader2 className="animate-spin text-primary" size={32} />
+                                </div>
+                            )}
+                            {clioNote ? (
                                 <ClioNoteViewer
                                     note={clioNote}
                                     onSaveComplete={(saved) => {
@@ -1500,18 +1584,18 @@ const Record: React.FC = () => {
                                         }
                                     }}
                                 />
-                            </div>
-                        ) : (
-                            <NotePrintPreview
-                                data={pdfResponse.data}
-                                pdfUrl={pdfResponse.url}
-                                onRegenerate={handleRegenerate}
-                            />
-                        )}
+                            ) : (
+                                <NotePrintPreview
+                                    data={pdfResponse.data}
+                                    pdfUrl={pdfResponse.url}
+                                    onRegenerate={handleRegenerate}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             ) : (
-                <Card className="w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[1540px] bg-transparent md:bg-surface border-0 md:border border-border/60 shadow-none md:shadow-soft rounded-2xl md:rounded-3xl xl:rounded-[2rem] 2xl:rounded-[2.5rem] overflow-visible md:overflow-hidden relative group transition-all duration-300">
+                <Card className="w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[1540px] bg-transparent md:bg-surface border-0 md:border border-border/60 shadow-none md:shadow-soft rounded-2xl md:rounded-3xl xl:rounded-[2rem] 2xl:rounded-[2.5rem] overflow-visible md:overflow-visible relative group transition-all duration-300">
                     <CardContent className="p-3 sm:p-4 md:p-5 lg:p-6 xl:p-7 2xl:p-8 space-y-3 sm:space-y-4 md:space-y-4 xl:space-y-5">
                         {showGuide && (
                             <div className="bg-gradient-to-r from-indigo-50/60 via-violet-50/40 to-slate-50 dark:from-indigo-950/10 dark:via-violet-950/5 dark:to-slate-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl p-6 relative animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm hidden md:flex flex-row items-center justify-between gap-6">
@@ -1843,13 +1927,12 @@ const Record: React.FC = () => {
                                     </div>
                                     <div ref={subTemplateDropdownRef} className="relative mt-1">
                                         <div 
-                                            onClick={() => setIsDropdownOpen(true)}
                                             className={cn(
-                                                "w-full h-11 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm cursor-text transition-all hover:border-slate-350 dark:hover:border-slate-700 hover:bg-indigo-50/5 dark:hover:bg-indigo-950/5",
+                                                "w-full h-11 flex items-center justify-between pl-5 pr-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 hover:bg-indigo-50/5 dark:hover:bg-indigo-950/5",
                                                 isDropdownOpen ? "border-indigo-500/40 ring-4 ring-indigo-500/5" : ""
                                             )}
                                         >
-                                            <div className="flex items-center gap-3 flex-1">
+                                            <div className="flex items-center gap-3 flex-1 h-full cursor-text" onClick={() => setIsDropdownOpen(true)}>
                                                 <input
                                                     type="text"
                                                     style={{ border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent' }}
@@ -1863,62 +1946,195 @@ const Record: React.FC = () => {
                                                     onFocus={() => setIsDropdownOpen(true)}
                                                 />
                                             </div>
-                                            <div className="flex items-center gap-2 shrink-0">
+                                            <div className="flex items-center gap-1 shrink-0">
                                                 {selectedSubTemplate && isDropdownOpen && (
                                                     <button
                                                         type="button"
-                                                        onClick={(e) => {
+                                                        onMouseDown={(e) => {
+                                                            e.preventDefault();
                                                             e.stopPropagation();
                                                             setSelectedSubTemplate('');
                                                             setSubTemplateSearchQuery('');
                                                         }}
-                                                        className="text-slate-450 hover:text-slate-650 dark:hover:text-slate-350 transition-colors"
+                                                        className="p-1.5 text-slate-450 hover:text-slate-650 dark:hover:text-slate-350 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                                                        title="Clear selection"
                                                     >
                                                         <X size={14} />
                                                     </button>
                                                 )}
-                                                <ChevronDown className={cn("size-4 text-slate-400 transition-transform duration-300", isDropdownOpen && "rotate-180")} />
+                                                <button
+                                                    type="button"
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setIsDropdownOpen(prev => !prev);
+                                                    }}
+                                                    className="size-8 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center"
+                                                    title={isDropdownOpen ? "Close menu" : "Open menu"}
+                                                    aria-label={isDropdownOpen ? "Close menu" : "Open menu"}
+                                                >
+                                                    <ChevronDown className={cn("size-4 transition-transform duration-300", isDropdownOpen && "rotate-180")} />
+                                                </button>
                                             </div>
                                         </div>
 
                                         {isDropdownOpen && (
-                                            <div className="absolute top-full left-0 right-0 mt-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800 rounded-[2.5rem] shadow-[0_15px_40px_-10px_rgba(0,0,0,0.08)] p-2.5 z-50 animate-in fade-in slide-in-from-top-2 duration-500 ease-out">
-                                                <div className="flex flex-col gap-1.5 max-h-[450px] overflow-y-auto custom-scrollbar pr-1">
-                                                    {filteredSubTemplatesByGroup.length === 0 ? (
-                                                        <div className="text-center py-8 text-slate-400 text-xs font-medium">
-                                                            {language === 'es' ? 'No se encontraron servicios' : 'No services found'}
+                                            <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/98 dark:bg-slate-950/98 backdrop-blur-xl border border-slate-700/80 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 text-slate-100">
+                                                {/* Search View */}   {/* Search View */}
+                                                {subTemplateSearchQuery.trim().length > 0 ? (
+                                                    <div className="flex flex-col gap-1.5 max-h-[360px] overflow-y-auto custom-scrollbar p-1">
+                                                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 flex items-center justify-between border-b border-slate-800/80 pb-1.5 mb-1">
+                                                            <span>Results</span>
+                                                            <span className="text-indigo-400 font-bold">{matchingItemsFromSearch.length} found</span>
                                                         </div>
-                                                    ) : (
-                                                        filteredSubTemplatesByGroup.map((group) => (
-                                                            <div key={group.category} className="mb-2.5 last:mb-0">
-                                                                <div className="text-[9px] font-extrabold text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-widest px-4 py-1.5 select-none mb-1 border-b border-slate-100/50 dark:border-slate-800/50 pb-0.5">
-                                                                    {group.category}
-                                                                </div>
-                                                                <div className="flex flex-col gap-1">
-                                                                    {group.items.map((t) => {
-                                                                        const isActive = selectedSubTemplate === t;
-                                                                        return (
-                                                                            <button
-                                                                                key={t}
-                                                                                onClick={() => {
-                                                                                    setSelectedSubTemplate(t);
-                                                                                    setIsDropdownOpen(false);
-                                                                                }}
-                                                                                className={cn(
-                                                                                    "w-full justify-between items-center h-10 px-5 text-xs font-semibold rounded-full transition-colors flex group/item",
-                                                                                    isActive ? 'bg-primary/5 text-primary hover:bg-primary/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'
-                                                                                )}
-                                                                            >
-                                                                                <span className="tracking-tight">{t}</span>
-                                                                                {isActive && <Check size={14} strokeWidth={3} className="animate-in zoom-in" />}
-                                                                            </button>
-                                                                        );
-                                                                    })}
-                                                                </div>
+                                                        {matchingItemsFromSearch.length === 0 ? (
+                                                            <div className="text-center py-8 text-slate-400 text-xs font-medium">
+                                                                No services found
                                                             </div>
-                                                        ))
-                                                    )}
-                                                </div>
+                                                        ) : (
+                                                            matchingItemsFromSearch.map(({ group, item }) => {
+                                                                const isActive = selectedSubTemplate === item.name;
+                                                                return (
+                                                                    <button
+                                                                        key={item.id}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setSelectedSubTemplate(item.name);
+                                                                            setIsDropdownOpen(false);
+                                                                        }}
+                                                                        className={cn(
+                                                                            "w-full text-left p-2.5 rounded-xl transition-all flex flex-col gap-1 border group/item cursor-pointer",
+                                                                            isActive 
+                                                                                ? "bg-indigo-950/60 border-indigo-500/80 text-indigo-200" 
+                                                                                : "bg-slate-800/40 border-slate-800/80 hover:bg-slate-800 hover:border-slate-700 text-slate-300"
+                                                                        )}
+                                                                    >
+                                                                        {/* Top row: Icon + Step Badge at Left, POS Badge at Right */}
+                                                                        <div className="flex items-center justify-between gap-2 w-full">
+                                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                                <div className="size-5 rounded-md bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                                                                                    {renderCategoryIcon(group.id, "size-3")}
+                                                                                </div>
+                                                                                {item.stepBadge && (
+                                                                                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-indigo-900/70 text-indigo-300 border border-indigo-700/50">
+                                                                                        {item.stepBadge}
+                                                                                    </span>
+                                                                                )}
+                                                                                <span className="text-[10px] text-slate-400 truncate">{group.category}</span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/60">
+                                                                                    {item.pos}
+                                                                                </span>
+                                                                                {isActive && <Check size={14} strokeWidth={3} className="text-indigo-400" />}
+                                                                            </div>
+                                                                        </div>
+                                                                        <span className="text-[12px] font-semibold text-slate-300 leading-tight">{item.label}</span>
+                                                                        <span className="text-[10px] text-slate-400 leading-tight">{item.desc}</span>
+                                                                    </button>
+                                                                );
+                                                            })
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    /* Compact Accordion Categories */
+                                                    <div className="flex flex-col gap-1 max-h-[420px] overflow-y-auto custom-scrollbar p-0.5">
+                                                        {SERVICE_HIERARCHICAL_GROUPS.map((group) => {
+                                                            const isExpanded = expandedCategoryIds.includes(group.id);
+                                                            const hasActiveItem = group.items.some(i => i.name === selectedSubTemplate);
+                                                            return (
+                                                                <div key={group.id} className="rounded-xl overflow-hidden border border-slate-800/80 bg-slate-900/90 shrink-0 transition-all">
+                                                                    {/* Category Accordion Header */}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => toggleCategory(group.id)}
+                                                                        className={cn(
+                                                                            "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-2 cursor-pointer group/cat",
+                                                                            isExpanded 
+                                                                                ? "bg-slate-800/90 text-slate-200" 
+                                                                                : "bg-transparent text-slate-300 hover:bg-slate-800/60 hover:text-slate-200"
+                                                                        )}
+                                                                    >
+                                                                        <div className="flex items-center gap-2.5 min-w-0">
+                                                                            <div className={cn(
+                                                                                "size-5 rounded-md flex items-center justify-center shrink-0 transition-colors",
+                                                                                isExpanded ? "bg-indigo-500/20 text-indigo-300" : "bg-slate-800 text-slate-400 group-hover/cat:text-indigo-400"
+                                                                            )}>
+                                                                                {renderCategoryIcon(group.id, "size-3")}
+                                                                            </div>
+                                                                            <span className="text-[12px] font-semibold text-slate-300 tracking-tight">{group.category}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 shrink-0">
+                                                                            {hasActiveItem && (
+                                                                                <div className="size-2 rounded-full bg-emerald-400 shadow-xs" />
+                                                                            )}
+                                                                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/50">
+                                                                                {group.items.length}
+                                                                            </span>
+                                                                            <ChevronDown size={13} className={cn("transition-transform duration-200 text-slate-400", isExpanded && "rotate-180 text-indigo-400")} />
+                                                                        </div>
+                                                                    </button>
+
+                                                                    {/* Expanded Items */}
+                                                                    {isExpanded && (
+                                                                        <div className="ml-2.5 pl-2.5 my-1 mr-1.5 border-l-2 border-indigo-500/40 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                                            {group.items.map((item) => {
+                                                                                const isActive = selectedSubTemplate === item.name;
+                                                                                return (
+                                                                                    <button
+                                                                                        key={item.id}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setSelectedSubTemplate(item.name);
+                                                                                            setIsDropdownOpen(false);
+                                                                                        }}
+                                                                                        className={cn(
+                                                                                            "w-full text-left px-2.5 py-2 rounded-lg text-xs transition-all flex flex-col gap-1 border cursor-pointer group/item",
+                                                                                            isActive 
+                                                                                                ? "bg-indigo-950/70 border-indigo-500/70 text-indigo-200 shadow-xs" 
+                                                                                                : "bg-slate-800/40 border-slate-800/80 hover:bg-slate-800 hover:border-slate-700 text-slate-300"
+                                                                                        )}
+                                                                                    >
+                                                                                        {/* Top Row: Left Step Badge + Right POS Tag (same level) */}
+                                                                                        <div className="flex items-center justify-between gap-2 w-full">
+                                                                                            {item.stepBadge ? (
+                                                                                                <span className={cn(
+                                                                                                    "text-[9px] font-black px-1.5 py-0.2 rounded shrink-0",
+                                                                                                    isActive ? "bg-indigo-900/80 text-indigo-200 border border-indigo-600/50" : "bg-indigo-950 text-indigo-400 border border-indigo-800/60"
+                                                                                                )}>
+                                                                                                    {item.stepBadge}
+                                                                                                </span>
+                                                                                            ) : <span />}
+                                                                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                                                                <span className={cn(
+                                                                                                    "text-[9px] font-bold px-1.5 py-0.2 rounded",
+                                                                                                    isActive ? "bg-indigo-900/60 text-indigo-200 border border-indigo-700/50" : "bg-slate-800 text-slate-400 border border-slate-700/60"
+                                                                                                )}>
+                                                                                                    {item.pos}
+                                                                                                </span>
+                                                                                                {isActive && <Check size={13} strokeWidth={3} className="text-indigo-300 shrink-0" />}
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        {/* Service Title */}
+                                                                                        <span className={cn("text-[12px] font-semibold leading-tight", isActive ? "text-indigo-200 font-bold" : "text-slate-300")}>
+                                                                                            {item.label}
+                                                                                        </span>
+
+                                                                                        {/* Service Subtitle */}
+                                                                                        <span className={cn("text-[10px] leading-tight", isActive ? "text-indigo-300/80" : "text-slate-400")}>
+                                                                                            {item.desc}
+                                                                                        </span>
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -2177,17 +2393,18 @@ const Record: React.FC = () => {
                                             <>
                                                 <Button
                                                     onClick={handleAddService}
-                                                    disabled={!canAdd}
+                                                    disabled={!canAdd || status === 'uploading' || status === 'processing'}
+                                                    variant="ghost"
                                                     className={cn(
-                                                        "h-10 md:h-10.5 xl:h-11 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] gap-1.5 transition-all duration-300 shadow-sm border cursor-pointer",
+                                                        "h-11 xl:h-12 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] gap-2 transition-all duration-200 border cursor-pointer select-none",
                                                         canAdd 
                                                             ? (editingServiceId 
-                                                                ? "bg-primary text-primary-foreground hover:bg-primary/90 border-transparent shadow-md shadow-primary/20 active:scale-95"
-                                                                : "bg-card text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/50 shadow-primary/5 active:scale-95") 
-                                                            : "bg-muted/40 text-muted-foreground/60 border-border/40 shadow-none cursor-not-allowed"
+                                                                ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/80 shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] active:translate-y-[1px]"
+                                                                : "bg-indigo-600 hover:bg-indigo-500 dark:bg-[#172033] dark:hover:bg-[#1e293b] text-white dark:text-indigo-200 dark:hover:text-white border border-indigo-500 dark:border-slate-700/80 shadow-md shadow-indigo-500/20 active:translate-y-[1px]") 
+                                                            : "bg-slate-100 dark:bg-[#0f172a]/90 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 cursor-not-allowed"
                                                     )}
                                                 >
-                                                    {editingServiceId ? <Check size={13} strokeWidth={3} /> : <Plus size={13} strokeWidth={3} />}
+                                                    {editingServiceId ? <Check size={14} strokeWidth={2.5} className="text-white" /> : <Plus size={14} strokeWidth={2.5} className={canAdd ? "text-white dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"} />}
                                                     <span>
                                                         {editingServiceId 
                                                             ? (language === 'es' ? "Guardar Cambios" : "Save Changes") 
@@ -2204,7 +2421,7 @@ const Record: React.FC = () => {
                                                     <Button
                                                         onClick={handleCancelEdit}
                                                         variant="outline"
-                                                        className="h-10 md:h-10.5 xl:h-11 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground border border-border/80 bg-transparent hover:bg-secondary cursor-pointer active:scale-95"
+                                                        className="h-11 xl:h-12 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground border border-border/80 bg-transparent hover:bg-secondary cursor-pointer active:translate-y-[1px] shadow-none select-none"
                                                     >
                                                         {language === 'es' ? "Cancelar" : "Cancel"}
                                                     </Button>
@@ -2217,28 +2434,36 @@ const Record: React.FC = () => {
                                         <Button
                                             onClick={sendToGenerate}
                                             disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
+                                            variant="ghost"
                                             className={cn(
-                                                "h-10 md:h-10.5 xl:h-11 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] gap-1.5 transition-all duration-300 active:scale-95 shadow-md cursor-pointer",
-                                                recordedServices.length > 0
-                                                    ? "bg-foreground text-background hover:bg-foreground/90 shadow-foreground/10"
-                                                    : "bg-muted/40 text-muted-foreground/60 pointer-events-none border border-border/40"
+                                                "h-11 xl:h-12 flex-1 rounded-full font-bold text-[11px] xl:text-xs uppercase tracking-[0.14em] gap-2 transition-all duration-200 active:translate-y-[1px] cursor-pointer select-none border",
+                                                status === 'processing' || status === 'uploading'
+                                                    ? "bg-gradient-to-b from-[#3730a3] to-[#1e1b4b] text-white border-indigo-500/40 shadow-md animate-pulse cursor-wait"
+                                                    : (recordedServices.length > 0
+                                                        ? "bg-indigo-600 hover:bg-indigo-700 dark:bg-gradient-to-b dark:from-[#4338ca] dark:via-[#3730a3] dark:to-[#2e2680] text-white border border-indigo-500 shadow-md shadow-indigo-500/20"
+                                                        : "bg-slate-100 dark:bg-[#0f172a]/90 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 pointer-events-none")
                                             )}
                                         >
                                             {status === 'processing' || status === 'uploading' ? (
                                                 <>
-                                                    <Loader2 className="animate-spin" size={13} />
-                                                    <span>{language === 'es' ? "Procesando..." : "Processing..."}</span>
+                                                    <Loader2 className="animate-spin text-white" size={15} />
+                                                    <span>{language === 'es' ? "Generando Nota con IA..." : "Generating AI Note..."}</span>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <FileCheck size={13} />
-                                                    <span>{language === 'es' ? "Finalizar" : "Finalize"} ({recordedServices.length})</span>
+                                                    <FileCheck size={15} className={recordedServices.length > 0 ? "text-indigo-200" : "text-slate-500"} />
+                                                    <span>{language === 'es' ? "Finalizar" : "Finalize"}</span>
+                                                    {recordedServices.length > 0 && (
+                                                        <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-[#1e1b4b]/90 text-indigo-200 border border-indigo-400/30 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+                                                            {recordedServices.length}
+                                                        </span>
+                                                    )}
                                                 </>
                                             )}
                                         </Button>
                                     )}
                                 </div>
-                                {(!selectedPatient && !patientInfo.name.trim()) || !selectedSubTemplate ? (
+                                {recordedServices.length === 0 && ((!selectedPatient && !patientInfo.name.trim()) || !selectedSubTemplate) ? (
                                     <p className="text-center text-[9px] xl:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.14em] animate-pulse transition-opacity duration-1000 mt-0.5">
                                         {t('record.fill_fields_to_enable', 'Fill patient & service fields to enable')}
                                     </p>

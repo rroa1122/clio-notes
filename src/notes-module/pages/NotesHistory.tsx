@@ -102,7 +102,7 @@ const NotesHistory = () => {
       sessionStorage.setItem('clio_agenda_active_date', dateStr);
     }
     // Navigate to note detail or edit screen
-    navigate(`/notes/new?id=${note.id}`, { state: { fromHistory: true, returnDate: dateStr } });
+    navigate(`/notes/new?id=${note.id}&from=/history`, { state: { fromHistory: true, returnDate: dateStr } });
   };
 
   return (

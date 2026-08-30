@@ -115,7 +115,10 @@ export function Header() {
                             </g>
                         </svg>
                     </div>
-                    <span className="text-base font-black tracking-[0.25em] bg-gradient-to-r from-slate-900 via-indigo-950 to-[#6366f1] bg-clip-text text-transparent hidden sm:block transition-all duration-300 hover:tracking-[0.3em]">CLIO NOTES</span>
+                    <div className="flex items-center gap-1.5 font-black text-[15px] tracking-[0.22em] uppercase hidden sm:flex select-none">
+                        <span className="text-slate-900 dark:text-white transition-colors">CLIO</span>
+                        <span className="bg-gradient-to-r from-indigo-400 via-indigo-300 to-violet-400 bg-clip-text text-transparent drop-shadow-sm">NOTES</span>
+                    </div>
                 </Link>
 
                 {/* 2. Desktop Navigation (Center) */}
@@ -184,6 +187,7 @@ export function Header() {
                                     <p className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{fullName}</p>
                                     <p className="text-[11px] text-slate-500 dark:text-slate-300 truncate">{user?.email}</p>
                                 </div>
+
                                 <div className="p-1.5 space-y-0.5">
                                     {user?.email === 'reinier.roa2.0@gmail.com' && (
                                         <NavLink
