@@ -3,6 +3,7 @@ import type { ClioNote, Template } from '../types';
 import { storage } from '../lib/storage';
 import { DEFAULT_TEMPLATES, TCM_DOMAINS } from '../lib/constants';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { supabase } from '../../lib/supabaseClient';
 import { toast } from 'sonner';
 import { 
@@ -748,6 +749,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     onPrint
 }) => {
     const { user } = useAuth();
+    const { language } = useLanguage();
     const navigate = useNavigate();
     const [templates, setTemplates] = useState<Template[]>([]);
     const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
@@ -1650,6 +1652,26 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 }
                 return "";
             };
+
+            const globalOutcomeText = (
+                (mergedNote as any)?.narrative?.outcome_of_services ||
+                (mergedNote as any)?.outcome_of_services ||
+                (mergedNote as any)?.narrative?.outcome ||
+                (note as any)?.narrative?.outcome_of_services ||
+                (note as any)?.outcome_of_services ||
+                (note as any)?.narrative?.outcome ||
+                ""
+            );
+
+            const globalNextStepsText = (
+                (mergedNote as any)?.narrative?.next_steps ||
+                (mergedNote as any)?.next_steps ||
+                (mergedNote as any)?.narrative?.plan ||
+                (note as any)?.narrative?.next_steps ||
+                (note as any)?.next_steps ||
+                (note as any)?.narrative?.plan ||
+                ""
+            );
 
             // Universal Service Flattening:
             // Flatten nested joint_services so every clinical sub-service is dispatched with its exact title, times and narrative
