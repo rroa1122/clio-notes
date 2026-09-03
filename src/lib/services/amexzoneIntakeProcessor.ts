@@ -320,8 +320,10 @@ export function decodeSocialNeeds(data: RawAmexzoneData, narrativeText: string =
 
     // 5. Special accommodation decoding
     let specialAccom = data.special_accommodation ?? prevSocial.special_accommodation;
-    if (specialAccom === 27 || specialAccom === '27') {
-        specialAccom = 'Mobility Assistance / Special Accommodation Required';
+    if (specialAccom === 27 || specialAccom === '27' || specialAccom === 'No') {
+        specialAccom = 'No';
+    } else if (specialAccom === 28 || specialAccom === '28') {
+        specialAccom = data.special_accommodation_description || 'Yes';
     }
 
     // 6. Narrative text extraction for missing fields (origin_country, children_count, children_location, co_habitants)
