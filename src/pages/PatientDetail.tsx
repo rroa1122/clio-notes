@@ -1925,8 +1925,22 @@ export function PatientDetail() {
                                         <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">Diagnostic Registry</p>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {patient.diagnoses ? (
-                                            patient.diagnoses.replace(/\\n/g, '\n').split('\n').filter(d => d.trim()).map((diag, i) => {
+                                        {(() => {
+                                            const raw = patient.diagnoses || '';
+                                            let lines = raw.replace(/\\n/g, '\n').split('\n').map(d => d.trim()).filter(Boolean);
+                                            if (lines.length <= 1 && patient.psych_conditions && (patient.psych_conditions.includes('(') || patient.psych_conditions.includes(','))) {
+                                                const matches: string[] = [];
+                                                const regex = /([A-Za-z\s,-]+?)\s*\(([A-Z]\d{1,3}(?:\.[A-Z0-9]+)?)\)/g;
+                                                let m;
+                                                while ((m = regex.exec(patient.psych_conditions)) !== null) {
+                                                    const desc = m[1].replace(/^[,\s;]+|[,\s;]+$/g, '').trim();
+                                                    const code = m[2].trim();
+                                                    if (desc && code) matches.push(`(${code}) ${desc}`);
+                                                }
+                                                if (matches.length > 1) lines = matches;
+                                            }
+                                            if (lines.length === 0) return null;
+                                            return lines.map((diag, i) => {
                                                 const isPsych = (() => {
                                                     const trimmed = diag.trim().toUpperCase();
                                                     if (/^[F]\d/i.test(trimmed)) return true;
@@ -1982,8 +1996,8 @@ export function PatientDetail() {
                                                         </span>
                                                     </div>
                                                 );
-                                            })
-                                        ) : (
+                                            });
+                                        })() || (
                                             <p className="text-[14px] font-medium text-slate-400 italic bg-gray-50/20 h-[46px] flex items-center justify-center rounded-xl border border-dashed border-gray-200/80 w-full col-span-2">No active diagnoses found.</p>
                                         )}
                                     </div>
@@ -3532,7 +3546,12 @@ export function PatientDetail() {
                                                                 </thead>
                                                                 <tbody>
                                                                     {(() => {
-                                                                        const list = socialNeeds.psych_hospitalizations || [];
+                                                                        const rawPsychList = socialNeeds.psych_hospitalizations || [];
+                                                                        const list = rawPsychList.map((row: any) => ({
+                                                                            facility: row.facility || row.name || '',
+                                                                            date: row.date || row.value_col_1 || '',
+                                                                            reason: row.reason || row.value_col_2 || row.value_col_3 || ''
+                                                                        })).filter((row: any) => (row.facility || '').trim().length > 0);
                                                                         if (list.length === 0) {
                                                                             return (
                                                                                 <tr>
@@ -3735,7 +3754,15 @@ export function PatientDetail() {
                                                                                 comments: ''
                                                                             }));
                                                                         };
-                                                                        const list = socialNeeds.chronic_conditions || parseConditions(patient.pcp_conditions || '');
+                                                                        const rawList = (socialNeeds.chronic_conditions && socialNeeds.chronic_conditions.length > 0)
+                                                                            ? socialNeeds.chronic_conditions
+                                                                            : parseConditions(patient.pcp_conditions || '');
+                                                                        const list = rawList.map((row: any) => ({
+                                                                            condition: row.condition || row.name || '',
+                                                                            client_has: row.client_has !== undefined ? row.client_has : (row.value_col_1 === 1 || row.value_col_1 === '1' || row.value_col_1 === true),
+                                                                            family_has: row.family_has !== undefined ? row.family_has : (row.value_col_2 === 1 || row.value_col_2 === '1' || row.value_col_2 === true),
+                                                                            comments: row.comments || row.value_col_3 || ''
+                                                                        })).filter((row: any) => (row.condition || '').trim().length > 0);
                                                                         if (list.length === 0) {
                                                                             return (
                                                                                 <tr>
@@ -3745,7 +3772,7 @@ export function PatientDetail() {
                                                                                 </tr>
                                                                             );
                                                                         }
-                                                                        return list.map((row, idx) => (
+                                                                        return list.map((row: any, idx: number) => (
                                                                             <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3">
                                                                                     {isEditing ? (
@@ -3768,7 +3795,7 @@ export function PatientDetail() {
                                                                                     <input
                                                                                         type="checkbox"
                                                                                         disabled={!isEditing}
-                                                                                        checked={row.client_has !== false}
+                                                                                        checked={row.client_has === true}
                                                                                         onChange={(e) => {
                                                                                             const updated = [...list];
                                                                                             updated[idx] = { ...updated[idx], client_has: e.target.checked };
@@ -3866,8 +3893,15 @@ export function PatientDetail() {
                                                                             { exam_type: 'Mammogram', date: 'N/A', provider_comments: '' },
                                                                             { exam_type: 'Colon Screening', date: 'None reported', provider_comments: '' }
                                                                         ];
-                                                                        const list = socialNeeds.preventive_care_grid || defaultRows;
-                                                                        return list.map((row, idx) => (
+                                                                        const rawPreventiveList = (socialNeeds.preventive_care_grid && socialNeeds.preventive_care_grid.length > 0)
+                                                                            ? socialNeeds.preventive_care_grid
+                                                                            : defaultRows;
+                                                                        const list = rawPreventiveList.map((row: any) => ({
+                                                                            exam_type: row.exam_type || row.name || '',
+                                                                            date: row.date || row.value_col_1 || '',
+                                                                            provider_comments: row.provider_comments || row.value_col_2 || row.value_col_3 || ''
+                                                                        })).filter((row: any) => (row.exam_type || '').trim().length > 0);
+                                                                        return list.map((row: any, idx: number) => (
                                                                             <tr key={idx} className="border-b border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition-all font-medium text-slate-750 dark:text-slate-300">
                                                                                 <td className="p-3 font-bold text-slate-850 dark:text-slate-250">{row.exam_type}</td>
                                                                                 <td className="p-3">

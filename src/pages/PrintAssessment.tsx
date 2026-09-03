@@ -828,12 +828,12 @@ const PrintAssessment: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {needs.psych_hospitalizations && needs.psych_hospitalizations.length > 0 ? (
-                                    needs.psych_hospitalizations.map((h: any, idx: number) => (
+                                {needs.psych_hospitalizations && needs.psych_hospitalizations.filter((h: any) => (h.facility || h.name || '').trim().length > 0).length > 0 ? (
+                                    needs.psych_hospitalizations.filter((h: any) => (h.facility || h.name || '').trim().length > 0).map((h: any, idx: number) => (
                                         <tr key={idx} className="font-medium text-slate-700">
-                                            <td className="border border-slate-300 p-2">{h.facility}</td>
-                                            <td className="border border-slate-300 p-2">{h.date}</td>
-                                            <td className="border border-slate-300 p-2">{h.reason}</td>
+                                            <td className="border border-slate-300 p-2">{h.facility || h.name}</td>
+                                            <td className="border border-slate-300 p-2">{h.date || h.value_col_1 || 'N/A'}</td>
+                                            <td className="border border-slate-300 p-2">{h.reason || h.value_col_2 || h.value_col_3 || 'N/A'}</td>
                                         </tr>
                                     ))
                                 ) : (
@@ -942,15 +942,21 @@ const PrintAssessment: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {needs.chronic_conditions && needs.chronic_conditions.length > 0 ? (
-                                    needs.chronic_conditions.map((c: any, idx: number) => (
-                                        <tr key={idx} className="font-medium text-slate-700 text-[10px]">
-                                            <td className="border border-slate-300 p-2 font-bold">{c.condition}</td>
-                                            <td className="border border-slate-300 p-2 text-center text-indigo-650 font-black">{c.client_has ? '\u2713' : '-'}</td>
-                                            <td className="border border-slate-300 p-2 text-center text-indigo-650 font-black">{c.family_has ? '\u2713' : '-'}</td>
-                                            <td className="border border-slate-300 p-2">{c.comments || 'N/A'}</td>
-                                        </tr>
-                                    ))
+                                {needs.chronic_conditions && needs.chronic_conditions.filter((c: any) => (c.condition || c.name || '').trim().length > 0).length > 0 ? (
+                                    needs.chronic_conditions.filter((c: any) => (c.condition || c.name || '').trim().length > 0).map((c: any, idx: number) => {
+                                        const condName = c.condition || c.name || '';
+                                        const clientHas = c.client_has !== undefined ? c.client_has : (c.value_col_1 === 1 || c.value_col_1 === '1' || c.value_col_1 === true);
+                                        const familyHas = c.family_has !== undefined ? c.family_has : (c.value_col_2 === 1 || c.value_col_2 === '1' || c.value_col_2 === true);
+                                        const comments = c.comments || c.value_col_3 || 'N/A';
+                                        return (
+                                            <tr key={idx} className="font-medium text-slate-700 text-[10px]">
+                                                <td className="border border-slate-300 p-2 font-bold">{condName}</td>
+                                                <td className="border border-slate-300 p-2 text-center text-indigo-650 font-black">{clientHas ? '\u2713' : '-'}</td>
+                                                <td className="border border-slate-300 p-2 text-center text-indigo-650 font-black">{familyHas ? '\u2713' : '-'}</td>
+                                                <td className="border border-slate-300 p-2">{comments}</td>
+                                            </tr>
+                                        );
+                                    })
                                 ) : (
                                     patient.pcp_conditions?.split(',').map((cond: string, idx: number) => (
                                         <tr key={idx} className="font-medium text-slate-700 text-[10px]">
