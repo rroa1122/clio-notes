@@ -1552,7 +1552,7 @@ const Record: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col items-center max-w-7xl mx-auto w-full px-2 lg:px-4 pt-1 lg:pt-3 pb-12 animate-in fade-in duration-300">
+        <div className="flex flex-col items-center max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-12 animate-in fade-in duration-300">
             {status === 'done' && pdfResponse ? (
                 <div className="max-w-5xl w-full animate-in fade-in duration-300">
                     <div className="w-full bg-white dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 rounded-[2.5rem] p-4 sm:p-5 md:p-6 shadow-2xl space-y-2">
@@ -1598,16 +1598,17 @@ const Record: React.FC = () => {
                 <Card className="w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[1540px] bg-transparent md:bg-surface border-0 md:border border-border/60 shadow-none md:shadow-soft rounded-2xl md:rounded-3xl xl:rounded-[2rem] 2xl:rounded-[2.5rem] overflow-visible md:overflow-visible relative group transition-all duration-300">
                     <CardContent className="p-3 sm:p-4 md:p-5 lg:p-6 xl:p-7 2xl:p-8 space-y-3 sm:space-y-4 md:space-y-4 xl:space-y-5">
                         {showGuide && (
-                            <div className="bg-gradient-to-r from-indigo-50/60 via-violet-50/40 to-slate-50 dark:from-indigo-950/10 dark:via-violet-950/5 dark:to-slate-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl p-6 relative animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm hidden md:flex flex-row items-center justify-between gap-6">
+                            <div className="bg-gradient-to-r from-indigo-50/60 via-violet-50/40 to-slate-50 dark:from-indigo-950/10 dark:via-violet-950/5 dark:to-slate-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl p-5 md:p-6 pr-14 md:pr-16 relative animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm hidden md:flex flex-row items-center justify-between gap-6">
                                 <button 
                                     onClick={() => {
                                         localStorage.setItem('clio_hide_guide', 'true');
                                         setShowGuide(false);
                                     }}
-                                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors text-lg font-bold leading-none p-1"
-                                    title="Hide tutorial guide"
+                                    className="absolute top-4 right-4 size-8 rounded-full bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm hover:shadow hover:scale-105 active:scale-95 z-30 group"
+                                    title={language === 'es' ? "Ocultar guía de inicio" : "Hide tutorial guide"}
+                                    aria-label={language === 'es' ? "Ocultar guía" : "Close guide"}
                                 >
-                                    &times;
+                                    <X size={15} className="group-hover:rotate-90 transition-transform duration-200" />
                                 </button>
                                 <div className="space-y-1">
                                     <h4 className="text-[13px] font-black tracking-wider text-indigo-950 dark:text-indigo-200 uppercase flex items-center gap-2">

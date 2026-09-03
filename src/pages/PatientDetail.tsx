@@ -29,6 +29,7 @@ import {
     CheckCircle2,
     Store,
     UploadCloud,
+    DownloadCloud,
     Loader2,
     Fingerprint,
     Coins,
@@ -285,6 +286,7 @@ export function PatientDetail() {
     const [suggestions, setSuggestions] = useState<DiagnosisCode[]>([]);
     const [isExtracting, setIsExtracting] = useState(false);
     const [isSyncingToAmexzone, setIsSyncingToAmexzone] = useState(false);
+    const [isImportingFromAmexzone, setIsImportingFromAmexzone] = useState(false);
     const [assessmentSyncTask, setAssessmentSyncTask] = useState<{status: string, error_message: string | null} | null>(null);
     const [servicePlanSyncTask, setServicePlanSyncTask] = useState<{status: string, error_message: string | null} | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1123,6 +1125,141 @@ export function PatientDetail() {
             toast.error(language === 'es' ? 'Error al encolar la sincronización.' : 'Error queueing sync.');
         } finally {
             setIsSyncingToAmexzone(false);
+        }
+    };
+
+    const handleImportFromAmexzone = async () => {
+        if (!patient) return;
+        setIsImportingFromAmexzone(true);
+        try {
+            const { data: integration, error: integrationErr } = await supabase
+                .from('provider_integrations')
+                .select('*')
+                .eq('user_id', user?.id)
+                .maybeSingle();
+
+            if (integrationErr) throw integrationErr;
+            if (!integration || integration.mfa_status !== 'connected') {
+                if (integration && integration.mfa_status === 'expired') {
+                    toast.error(
+                        language === 'es'
+                            ? 'Tu sesión de Amexzone ha expirado. Abre la extensión "Clio Sync" y presiona "Sincronizar Sesión Activa".'
+                            : 'Your Amexzone session has expired. Please open the "Clio Sync" extension and click "Sync Active Session".'
+                    );
+                } else {
+                    toast.error(
+                        language === 'es' 
+                            ? 'Por favor, conecta tus credenciales de Amexzone en Configuración antes de importar.' 
+                            : 'Please connect your Amexzone credentials in Settings before importing.'
+                    );
+                }
+                setIsImportingFromAmexzone(false);
+                return;
+            }
+
+            toast.info(
+                language === 'es'
+                    ? 'Encolando búsqueda de documentación en Amexzone...'
+                    : 'Queueing Amexzone documentation search...',
+                { duration: 3000 }
+            );
+
+            const payload = {
+                type: 'IMPORT_PATIENT',
+                patient_id: patient.id,
+                patient_emr_id: patient.amexzone_id || patient.emr_id,
+                amexzone_id: patient.amexzone_id || '',
+                patient_name: patient.full_name,
+                patient_dob: patient.dob
+            };
+
+            const { data: task, error: insertErr } = await supabase
+                .from('amexzone_note_tasks')
+                .insert({
+                    note_id: null,
+                    user_id: user?.id,
+                    clinic_id: user?.clinic_id || null,
+                    patient_name: patient.full_name,
+                    patient_dob: patient.dob,
+                    visit_date: new Date().toISOString().split('T')[0],
+                    note_text: `[IMPORT_PATIENT] ${patient.full_name}\n${JSON.stringify(payload)}`,
+                    status: 'pending'
+                })
+                .select()
+                .single();
+
+            if (insertErr || !task) throw (insertErr || new Error('No se pudo crear la tarea de importación.'));
+
+            toast.info(
+                language === 'es'
+                    ? 'Extrayendo Assessment y Service Plan con el bot local...'
+                    : 'Extracting Assessment & Service Plan with local bot...',
+                { duration: 5000 }
+            );
+
+            let attempts = 0;
+            const maxAttempts = 90;
+            const interval = setInterval(async () => {
+                attempts++;
+                try {
+                    const { data: pollTask } = await supabase
+                        .from('amexzone_note_tasks')
+                        .select('status, result_summary, error_message')
+                        .eq('id', task.id)
+                        .single();
+
+                    if (pollTask?.status === 'completed') {
+                        clearInterval(interval);
+                        setIsImportingFromAmexzone(false);
+                        const res = pollTask.result_summary;
+                        if (res && (res.tcm_social_needs || res.assessment_data || res.service_plan_data)) {
+                            const mergedNeeds = {
+                                ...(patient.tcm_social_needs || {}),
+                                ...(res.tcm_social_needs || {}),
+                                ...(res.assessment_data || {}),
+                                ...(res.service_plan_data || {})
+                            };
+                            setPatient(prev => prev ? {
+                                ...prev,
+                                tcm_social_needs: mergedNeeds,
+                                amexzone_id: res.amexzone_id || prev.amexzone_id,
+                                case_number: res.case_number || res.assessment_data?.case_number || prev.case_number,
+                                ssn: res.ssn || res.assessment_data?.ssn || prev.ssn
+                            } : prev);
+                        } else {
+                            await loadData();
+                        }
+                        toast.success(
+                            language === 'es'
+                                ? '¡Assessment y Service Plan importados desde Amexzone con éxito!'
+                                : 'Assessment & Service Plan imported from Amexzone successfully!'
+                        );
+                    } else if (pollTask?.status === 'failed') {
+                        clearInterval(interval);
+                        setIsImportingFromAmexzone(false);
+                        toast.error(
+                            language === 'es'
+                                ? `Error al importar de Amexzone: ${pollTask.error_message || 'Fallo desconocido'}`
+                                : `Error importing from Amexzone: ${pollTask.error_message || 'Unknown error'}`
+                        );
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(interval);
+                        setIsImportingFromAmexzone(false);
+                        toast.error(
+                            language === 'es'
+                                ? 'Tiempo de espera agotado. Asegúrate de que el Bot esté corriendo en tu PC.'
+                                : 'Import timed out. Make sure the local Bot is running.'
+                        );
+                    }
+                } catch (e) {
+                    console.error("Polling error:", e);
+                }
+            }, 3000);
+
+        } catch (err: any) {
+            console.error('Error queueing Amexzone import:', err);
+            toast.error(err.message || 'Error al iniciar importación.');
+            setIsImportingFromAmexzone(false);
         }
     };
 
@@ -2536,6 +2673,16 @@ export function PatientDetail() {
                                 >
                                     {isExtracting ? <Loader2 className="animate-spin text-slate-400" size={14} /> : <Brain size={14} className="text-slate-400" />}
                                     {language === 'es' ? "Auto-llenar con IA" : "Autofill with AI"}
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={isImportingFromAmexzone}
+                                    onClick={handleImportFromAmexzone}
+                                    className="px-3.5 py-2 rounded-xl bg-indigo-50/90 hover:bg-indigo-100/80 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                                    title={language === 'es' ? "Extraer Assessment y Service Plan directamente desde Amexzone" : "Import Assessment and Service Plan from Amexzone"}
+                                >
+                                    {isImportingFromAmexzone ? <Loader2 className="animate-spin text-indigo-500" size={14} /> : <DownloadCloud size={14} className="text-indigo-500" />}
+                                    {language === 'es' ? "Importar de Amexzone" : "Import from Amexzone"}
                                 </button>
                                 <SyncToAmexzoneButton
                                     task={assessmentSyncTask}
@@ -4069,6 +4216,16 @@ export function PatientDetail() {
                                 >
                                     {isExtracting ? <Loader2 className="animate-spin text-slate-400" size={14} /> : <Brain size={14} className="text-slate-400" />}
                                     {language === 'es' ? "Auto-llenar con IA" : "Autofill with AI"}
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={isImportingFromAmexzone}
+                                    onClick={handleImportFromAmexzone}
+                                    className="px-3.5 py-2 rounded-xl bg-indigo-50/90 hover:bg-indigo-100/80 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                                    title={language === 'es' ? "Extraer Assessment y Service Plan directamente desde Amexzone" : "Import Assessment and Service Plan from Amexzone"}
+                                >
+                                    {isImportingFromAmexzone ? <Loader2 className="animate-spin text-indigo-500" size={14} /> : <DownloadCloud size={14} className="text-indigo-500" />}
+                                    {language === 'es' ? "Importar de Amexzone" : "Import from Amexzone"}
                                 </button>
                                 <SyncToAmexzoneButton
                                     task={servicePlanSyncTask}

@@ -237,7 +237,15 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
             toast.info("Synthesizing clinical data with AI...", { icon: "🧠" });
             const processed = await processAmexzoneWithN8nAI(data, formData);
             setAmexLookupStage('success');
-            toast.success("Patient demographics & clinical record imported successfully!", { icon: "✨" });
+            if (data.assessment_data && data.service_plan_data) {
+                toast.success("Demográficos, Assessment y Service Plan importados exitosamente!", { icon: "📋" });
+            } else if (data.assessment_data) {
+                toast.success("Demográficos y Assessment importados exitosamente!", { icon: "📋" });
+            } else if (data.service_plan_data) {
+                toast.success("Demográficos y Service Plan importados exitosamente!", { icon: "📋" });
+            } else {
+                toast.success("Patient demographics & clinical record imported successfully!", { icon: "✨" });
+            }
             setTimeout(() => {
                 if (isMountedRef.current) setAmexLookupStage('idle');
             }, 4000);
@@ -245,9 +253,15 @@ export function PatientCreateModal({ isOpen, onClose, onCreated, context = 'enco
                 const newState = {
                     ...prev,
                     ...processed,
+                    case_number: data.case_number || data.assessment_data?.case_number || prev.case_number || '',
+                    ssn: data.ssn || data.assessment_data?.ssn || prev.ssn || '',
                     amexzone_id: data.amexzone_id || prev.amexzone_id || '',
                     tcm_social_needs: {
                         ...(prev.tcm_social_needs || {}),
+                        ...(data.tcm_social_needs || {}),
+                        ...(data.assessment_data || {}),
+                        ...(data.service_plan_data || {}),
+                        ...(processed.tcm_social_needs || {}),
                                     marital_status: data.marital_status || (prev.tcm_social_needs && prev.tcm_social_needs.marital_status) || '',
                                     education_level: data.education_level || (prev.tcm_social_needs && prev.tcm_social_needs.education_level) || '',
                                     ssi_details: data.ssi_details || (prev.tcm_social_needs && prev.tcm_social_needs.ssi_details) || '',

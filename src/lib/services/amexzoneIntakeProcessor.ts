@@ -50,6 +50,9 @@ interface RawAmexzoneData {
     primary_case_narrative?: string;
     chief_complaint?: string;
     subjective?: { chief_complaint?: string };
+    assessment_data?: Record<string, any>;
+    service_plan_data?: Record<string, any>;
+    tcm_social_needs?: Record<string, any>;
     [key: string]: any;
 }
 
@@ -345,6 +348,9 @@ export function decodeSocialNeeds(data: RawAmexzoneData, narrativeText: string =
 
     return {
         ...prevSocial,
+        ...(data.tcm_social_needs || {}),
+        ...(data.assessment_data || {}),
+        ...(data.service_plan_data || {}),
         marital_status: data.marital_status || prevSocial.marital_status || 'Married',
         education_level: data.education_level || prevSocial.education_level || 'Middle or High School',
         ssi_details: data.ssi_details || prevSocial.ssi_details || 'SSI',
