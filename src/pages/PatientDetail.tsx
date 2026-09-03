@@ -675,15 +675,15 @@ export function PatientDetail() {
             Object.keys(DOMAIN_DEFAULTS).forEach(key => {
                 if (updatedSocialNeeds[key] === true) {
                     updatedSocialNeeds[`service_plan_date_${key}`] = updatedSocialNeeds[`service_plan_date_${key}`] || updatedSocialNeeds.service_plan_date || '';
-                    updatedSocialNeeds[`service_plan_description_${key}`] = updatedSocialNeeds[`service_plan_description_${key}`] || '';
+                    updatedSocialNeeds[`service_plan_description_${key}`] = updatedSocialNeeds[`service_plan_description_${key}`] || (DOMAIN_DEFAULTS[key]?.label ? `DESCRIPTION: ${DOMAIN_DEFAULTS[key].label} services / Coordinate appointments.` : '');
                     updatedSocialNeeds[`service_plan_needs_${key}`] = updatedSocialNeeds[`service_plan_needs_${key}`] || updatedSocialNeeds[`${key}_needs`] || '';
                     updatedSocialNeeds[`service_plan_status_${key}`] = updatedSocialNeeds[`service_plan_status_${key}`] || 'New';
-                    updatedSocialNeeds[`service_plan_goal_${key}`] = updatedSocialNeeds[`service_plan_goal_${key}`] || '';
-                    updatedSocialNeeds[`service_plan_obj1_${key}`] = updatedSocialNeeds[`service_plan_obj1_${key}`] || '';
+                    updatedSocialNeeds[`service_plan_goal_${key}`] = updatedSocialNeeds[`service_plan_goal_${key}`] || DOMAIN_DEFAULTS[key]?.goal || '';
+                    updatedSocialNeeds[`service_plan_obj1_${key}`] = updatedSocialNeeds[`service_plan_obj1_${key}`] || DOMAIN_DEFAULTS[key]?.obj1 || '';
                     updatedSocialNeeds[`service_plan_obj1_date_${key}`] = updatedSocialNeeds[`service_plan_obj1_date_${key}`] || updatedSocialNeeds.service_plan_target_date || '';
-                    updatedSocialNeeds[`service_plan_obj2_${key}`] = updatedSocialNeeds[`service_plan_obj2_${key}`] || '';
+                    updatedSocialNeeds[`service_plan_obj2_${key}`] = updatedSocialNeeds[`service_plan_obj2_${key}`] || DOMAIN_DEFAULTS[key]?.obj2 || '';
                     updatedSocialNeeds[`service_plan_obj2_date_${key}`] = updatedSocialNeeds[`service_plan_obj2_date_${key}`] || updatedSocialNeeds.service_plan_target_date || '';
-                    updatedSocialNeeds[`service_plan_obj3_${key}`] = updatedSocialNeeds[`service_plan_obj3_${key}`] || '';
+                    updatedSocialNeeds[`service_plan_obj3_${key}`] = updatedSocialNeeds[`service_plan_obj3_${key}`] || DOMAIN_DEFAULTS[key]?.obj3 || '';
                     updatedSocialNeeds[`service_plan_obj3_date_${key}`] = updatedSocialNeeds[`service_plan_obj3_date_${key}`] || updatedSocialNeeds.service_plan_target_date || '';
                 }
             });
@@ -1592,6 +1592,15 @@ export function PatientDetail() {
             </div>
         );
     }
+    const formatDob = (dobStr?: string | null) => {
+        if (!dobStr) return 'N/A';
+        const parts = dobStr.split('-');
+        if (parts.length === 3) {
+            const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 12, 0, 0);
+            return format(d, language === 'es' ? "d 'de' MMM, yyyy" : 'MMM dd, yyyy', { locale: language === 'es' ? es : undefined });
+        }
+        return format(new Date(dobStr), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM dd, yyyy', { locale: language === 'es' ? es : undefined });
+    };
 
     return (
         <div className="max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-16 space-y-8 animate-in fade-in duration-500">
@@ -1638,7 +1647,7 @@ export function PatientDetail() {
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 shadow-sm transition-all hover:border-indigo-100 dark:hover:border-indigo-900 group/meta">
                                 <Calendar size={13} className="text-indigo-400 group-hover/meta:scale-110 transition-transform" />
                                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                    {patient.dob ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM dd, yyyy', { locale: language === 'es' ? es : undefined }) : 'N/A'}
+                                    {formatDob(patient.dob)}
                                 </span>
                             </div>
                             {patient.emr_id && (
@@ -1798,7 +1807,7 @@ export function PatientDetail() {
                                     icon={Calendar}
                                     label="Date of Birth"
                                     name="dob"
-                                    value={isEditing ? editData.dob : (patient.dob ? format(new Date(patient.dob), language === 'es' ? "d 'de' MMM, yyyy" : 'MMM dd, yyyy', { locale: language === 'es' ? es : undefined }) : 'N/A')}
+                                    value={isEditing ? editData.dob : formatDob(patient.dob)}
                                     isEditing={isEditing}
                                     onChange={handleFieldChange}
                                     theme="indigo"
@@ -1844,7 +1853,7 @@ export function PatientDetail() {
                                     icon={CreditCard}
                                     label="Member ID"
                                     name="insurance_id"
-                                    value={isEditing ? editData.insurance_id : patient.insurance_id}
+                                    value={isEditing ? editData.insurance_id : (patient.insurance_id || (patient as any).medicaid_id || (patient as any).preference_insurance_member)}
                                     isEditing={isEditing}
                                     onChange={handleFieldChange}
                                     theme="indigo"
@@ -4423,19 +4432,67 @@ export function PatientDetail() {
                                                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
                                                                 <tr>
                                                                     <td className="p-3 text-slate-700 dark:text-slate-300">Intake</td>
-                                                                    <td className="p-3 text-slate-800 dark:text-slate-200 font-bold">{socialNeeds.service_plan_intake_date || defaultIntakeDate}</td>
+                                                                    <td className="p-3 text-slate-800 dark:text-slate-200 font-bold">
+                                                                        {isEditing ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editData.tcm_social_needs?.service_plan_intake_date ?? socialNeeds.service_plan_intake_date ?? ''}
+                                                                                onChange={(e) => handleSocialNeedsTextChange('service_plan_intake_date', e.target.value)}
+                                                                                placeholder="MM/DD/YYYY"
+                                                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-900 dark:text-slate-100"
+                                                                            />
+                                                                        ) : (
+                                                                            socialNeeds.service_plan_intake_date || defaultIntakeDate || '—'
+                                                                        )}
+                                                                    </td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td className="p-3 text-slate-700 dark:text-slate-300">Gather of Medical Records</td>
-                                                                    <td className="p-3 text-slate-800 dark:text-slate-200 font-bold">{socialNeeds.service_plan_records_date || defaultRecordsDate}</td>
+                                                                    <td className="p-3 text-slate-800 dark:text-slate-200 font-bold">
+                                                                        {isEditing ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editData.tcm_social_needs?.service_plan_records_date ?? socialNeeds.service_plan_records_date ?? ''}
+                                                                                onChange={(e) => handleSocialNeedsTextChange('service_plan_records_date', e.target.value)}
+                                                                                placeholder="MM/DD/YYYY"
+                                                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-900 dark:text-slate-100"
+                                                                            />
+                                                                        ) : (
+                                                                            socialNeeds.service_plan_records_date || defaultRecordsDate || '—'
+                                                                        )}
+                                                                    </td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td className="p-3 text-slate-700 dark:text-slate-300">CM Assessment</td>
-                                                                    <td className="p-3 text-slate-800 dark:text-slate-200 font-bold">{socialNeeds.service_plan_assessment_date || defaultAssessmentDate}</td>
+                                                                    <td className="p-3 text-slate-800 dark:text-slate-200 font-bold">
+                                                                        {isEditing ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editData.tcm_social_needs?.service_plan_assessment_date ?? socialNeeds.service_plan_assessment_date ?? ''}
+                                                                                onChange={(e) => handleSocialNeedsTextChange('service_plan_assessment_date', e.target.value)}
+                                                                                placeholder="MM/DD/YYYY"
+                                                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-900 dark:text-slate-100"
+                                                                            />
+                                                                        ) : (
+                                                                            socialNeeds.service_plan_assessment_date || defaultAssessmentDate || '—'
+                                                                        )}
+                                                                    </td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td className="p-3 text-slate-700 dark:text-slate-300">CM Certification</td>
-                                                                    <td className="p-3 text-slate-800 dark:text-slate-200 font-bold">{socialNeeds.service_plan_certification_date || defaultCertDate}</td>
+                                                                    <td className="p-3 text-slate-800 dark:text-slate-200 font-bold">
+                                                                        {isEditing ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={editData.tcm_social_needs?.service_plan_certification_date ?? socialNeeds.service_plan_certification_date ?? ''}
+                                                                                onChange={(e) => handleSocialNeedsTextChange('service_plan_certification_date', e.target.value)}
+                                                                                placeholder="MM/DD/YYYY"
+                                                                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-900 dark:text-slate-100"
+                                                                            />
+                                                                        ) : (
+                                                                            socialNeeds.service_plan_certification_date || defaultCertDate || '—'
+                                                                        )}
+                                                                    </td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -4624,7 +4681,7 @@ export function PatientDetail() {
                                                                                     icon={Brain} 
                                                                                     label="Long Term Goal" 
                                                                                     name={`service_plan_goal_${sub.key}`} 
-                                                                                    value={customGoal || ''} 
+                                                                                    value={isEditing ? (customGoal || '') : (customGoal || sub.defaultGoal)} 
                                                                                     placeholder={sub.defaultGoal}
                                                                                     isEditing={isEditing} 
                                                                                     onChange={handleSocialNeedsTextChange} 
@@ -4644,7 +4701,7 @@ export function PatientDetail() {
                                                                                             icon={CheckSquare} 
                                                                                             label="Objective 1" 
                                                                                             name={`service_plan_obj1_${sub.key}`} 
-                                                                                            value={customObj1 || ''} 
+                                                                                            value={isEditing ? (customObj1 || '') : (customObj1 || sub.defaultObj1)} 
                                                                                             placeholder={sub.defaultObj1}
                                                                                             isEditing={isEditing} 
                                                                                             onChange={handleSocialNeedsTextChange} 
@@ -4668,7 +4725,7 @@ export function PatientDetail() {
                                                                                             icon={CheckSquare} 
                                                                                             label="Objective 2" 
                                                                                             name={`service_plan_obj2_${sub.key}`} 
-                                                                                            value={customObj2 || ''} 
+                                                                                            value={isEditing ? (customObj2 || '') : (customObj2 || sub.defaultObj2)} 
                                                                                             placeholder={sub.defaultObj2}
                                                                                             isEditing={isEditing} 
                                                                                             onChange={handleSocialNeedsTextChange} 
@@ -4692,7 +4749,7 @@ export function PatientDetail() {
                                                                                             icon={CheckSquare} 
                                                                                             label="Objective 3" 
                                                                                             name={`service_plan_obj3_${sub.key}`} 
-                                                                                            value={customObj3 || ''} 
+                                                                                            value={isEditing ? (customObj3 || '') : (customObj3 || sub.defaultObj3)} 
                                                                                             placeholder={sub.defaultObj3}
                                                                                             isEditing={isEditing} 
                                                                                             onChange={handleSocialNeedsTextChange} 
