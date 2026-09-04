@@ -837,6 +837,7 @@ export const storage = {
                     id: targetId, // Use existing ID if found, or undefined (DB will generate)
                     user_id: userId,
                     clinic_id: clinicId,
+                    deleted_at: null,
                     updated_at: new Date().toISOString()
                 })
                 .select()
