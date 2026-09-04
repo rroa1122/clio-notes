@@ -89,7 +89,7 @@ export function MainLayout() {
                 </div>
             )}
 
-            <main className="flex-1 p-4 sm:p-6 md:p-8 lg:p-10 pb-24 md:pb-8 space-y-6 md:space-y-8 max-w-7xl mx-auto w-full overflow-x-hidden">
+            <main className="flex-1 p-2 sm:p-6 md:p-8 lg:p-10 pb-4 md:pb-8 space-y-4 md:space-y-8 max-w-7xl mx-auto w-full overflow-x-hidden">
                 <Outlet />
             </main>
         </div>

@@ -106,7 +106,7 @@ const NotesHistory = () => {
   };
 
   return (
-    <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)]">
+    <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-1 sm:px-2 lg:px-4 pt-1 lg:pt-8 h-[calc(100vh-5.5rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-9rem)]">
       {isLoading ? (
         <div className="flex items-center justify-center flex-1 h-full">
             <div className="flex flex-col items-center gap-4 opacity-50">
@@ -115,8 +115,8 @@ const NotesHistory = () => {
             </div>
         </div>
       ) : (
-        <div className="flex flex-1 overflow-hidden mt-2 mb-4">
-          <div className="flex-1 min-w-0 h-full overflow-hidden rounded-[2rem]">
+        <div className="flex flex-1 overflow-hidden mt-1 sm:mt-2 mb-1 sm:mb-4">
+          <div className="flex-1 min-w-0 h-full overflow-hidden rounded-2xl md:rounded-[2rem]">
              <AgendaWeeklyBoard 
                notes={filteredNotes}
                onNewNoteForDate={handleNewNoteForDate}
