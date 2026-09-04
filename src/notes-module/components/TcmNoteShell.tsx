@@ -1879,12 +1879,12 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             {/* FLOATING TOOLBAR - MODERN CLINICAL HUD */}
             {!hideToolbar && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] no-print max-w-[95vw]">
-                    <div className="flex items-center gap-1.5 p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-700 shadow-2xl shadow-black/40 rounded-full transition-all duration-300">
+                <div className="fixed bottom-3 sm:bottom-8 left-1/2 -translate-x-1/2 z-[100] no-print max-w-[98vw] sm:max-w-[95vw]">
+                    <div className="flex items-center gap-1 sm:gap-1.5 p-1.5 sm:p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-700 shadow-2xl shadow-black/40 rounded-full transition-all duration-300 max-w-full overflow-x-auto no-scrollbar">
                         <button
                             disabled={isSigned}
                             onClick={() => setIsEditMode(!isEditMode)}
-                            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                            className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                                 isSigned
                                 ? 'bg-muted text-muted-foreground/60 cursor-not-allowed border border-border/40'
                                 : isEditMode 
@@ -1892,21 +1892,21 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 : 'bg-transparent text-foreground hover:bg-secondary border border-transparent hover:border-border/60 active:scale-95'
                             }`}
                         >
-                            {isSigned ? <Lock size={15} /> : (isEditMode ? <Check size={15} /> : <Edit3 size={15} />)}
+                            {isSigned ? <Lock size={14} /> : (isEditMode ? <Check size={14} /> : <Edit3 size={14} />)}
                             <span>{isSigned ? 'Locked' : (isEditMode ? 'Done' : 'Edit')}</span>
                         </button>
  
-                        <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
+                        <div className="w-[1px] h-5 sm:h-6 bg-border/80 mx-0.5" />
  
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-primary font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group"
+                            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-primary font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group"
                         >
-                            <Printer size={15} className="group-hover:scale-110 transition-transform" />
+                            <Printer size={14} className="group-hover:scale-110 transition-transform" />
                             <span>Print</span>
                         </button>
 
-                        <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
+                        <div className="w-[1px] h-5 sm:h-6 bg-border/80 mx-0.5" />
 
                         {(() => {
                             const isPending = syncTask?.status === 'pending';
@@ -1919,10 +1919,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => setIsSyncErrorModalOpen(true)}
-                                        className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-rose-500/20 active:scale-95 cursor-pointer shadow-sm"
+                                        className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-rose-500/20 active:scale-95 cursor-pointer shadow-sm"
                                         title="Click to view error reason and retry"
                                     >
-                                        <AlertCircle size={15} className="text-rose-500 animate-pulse" />
+                                        <AlertCircle size={14} className="text-rose-500 animate-pulse" />
                                         <span>Sync Failed (Details)</span>
                                     </button>
                                 );
@@ -1932,10 +1932,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 return (
                                     <button
                                         onClick={handleSyncWithEhr}
-                                        className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-emerald-500/20 active:scale-95 cursor-pointer group"
+                                        className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-emerald-500/20 active:scale-95 cursor-pointer group"
                                         title="Note synchronized with Amexzone. Click to re-sync."
                                     >
-                                        <CheckCircle2 size={15} className="text-emerald-500" />
+                                        <CheckCircle2 size={14} className="text-emerald-500" />
                                         <span>Synced</span>
                                     </button>
                                 );
@@ -1945,9 +1945,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 return (
                                     <button
                                         disabled
-                                        className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-amber-500/20 opacity-90 cursor-not-allowed animate-pulse"
+                                        className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-amber-500/20 opacity-90 cursor-not-allowed animate-pulse"
                                     >
-                                        <RefreshCw size={15} className="animate-spin text-amber-500" />
+                                        <RefreshCw size={14} className="animate-spin text-amber-500" />
                                         <span>In Queue...</span>
                                     </button>
                                 );
@@ -1957,9 +1957,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 return (
                                     <button
                                         disabled
-                                        className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-cyan-500/20 opacity-90 cursor-not-allowed animate-pulse"
+                                        className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-cyan-500/20 opacity-90 cursor-not-allowed animate-pulse"
                                     >
-                                        <RefreshCw size={15} className="animate-spin text-cyan-500" />
+                                        <RefreshCw size={14} className="animate-spin text-cyan-500" />
                                         <span>Syncing...</span>
                                     </button>
                                 );
@@ -1968,9 +1968,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             return (
                                 <button
                                     onClick={handleSyncWithEhr}
-                                    className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-cyan-500 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group"
+                                    className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-cyan-500 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group"
                                 >
-                                    <Cpu size={15} className="group-hover:scale-110 transition-transform text-cyan-500" />
+                                    <Cpu size={14} className="group-hover:scale-110 transition-transform text-cyan-500" />
                                     <span>Sync</span>
                                 </button>
                             );
@@ -1978,34 +1978,34 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
  
                         {!isSigned && (
                             <>
-                                <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
+                                <div className="w-[1px] h-5 sm:h-6 bg-border/80 mx-0.5" />
  
                                 <button
                                     onClick={handleSaveNote}
                                     disabled={isSaving}
-                                    className={`flex items-center gap-2 px-6 py-2.5 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer ${
+                                    className={`flex items-center gap-1 sm:gap-2 px-3.5 sm:px-6 py-1.5 sm:py-2.5 rounded-full font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer ${
                                         isSaved 
                                         ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' 
                                         : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 hover:-translate-y-0.5'
                                     } disabled:opacity-50`}
                                 >
                                     {isSaving ? (
-                                        <div className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                     ) : isSaved ? (
-                                        <CheckCircle size={15} />
+                                        <CheckCircle size={14} />
                                     ) : (
-                                        <Save size={15} />
+                                        <Save size={14} />
                                     )}
                                     <span>{isSaving ? 'Saving' : (isSaved ? 'Saved' : 'Save')}</span>
                                 </button>
  
-                                <div className="w-[1px] h-6 bg-border/80 mx-0.5" />
+                                <div className="w-[1px] h-5 sm:h-6 bg-border/80 mx-0.5" />
  
                                 <button
                                     onClick={() => setIsRequestSignatureModalOpen(true)}
-                                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
+                                    className="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
                                 >
-                                    <PenTool size={15} />
+                                    <PenTool size={14} />
                                     <span>Sign</span>
                                 </button>
                             </>
@@ -2043,6 +2043,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     color: #1e293b;
                     line-height: 1.6;
                     transition: all 0.3s ease;
+                }
+
+                @media screen and (max-width: 640px) {
+                    .document-page {
+                        padding: 1.25rem 0.875rem !important;
+                        border-radius: 1.25rem !important;
+                        margin-bottom: 2rem !important;
+                        min-height: auto !important;
+                    }
                 }
 
                 /* ON-SCREEN DARK MODE PREVIEW - FORCES WHITE BACKGROUND ONLY WHEN PRINTING */
@@ -2404,28 +2413,28 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             <td>
                                 <div className="space-y-6">
                         {/* Header with Title and Logo */}
-                        <div className="flex justify-between items-end w-full border-b border-slate-100 pb-4 mb-2">
+                        <div className="flex justify-between items-end w-full border-b border-slate-100 pb-3 sm:pb-4 mb-2">
                             <div className="flex flex-col gap-1">
-                                <h1 className="text-[26px] font-black text-slate-900 tracking-tight leading-none uppercase font-sans">
+                                <h1 className="text-[20px] sm:text-[26px] font-black text-slate-900 tracking-tight leading-none uppercase font-sans">
                                     Progress Note
                                 </h1>
-                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                     DOS: {formatDosDate(mergedNote.joint_services?.[0]?.encounter?.dos_date || mergedNote.encounter?.dos_date || (mergedNote as any).meta?.dos_date || (mergedNote as any).meta?.visitDate || (mergedNote as any).appointment?.date_of_service)}
                                 </span>
                             </div>
                             {clinicSettings?.logoUrl && (
-                                <div className="h-12 flex items-center justify-end">
+                                <div className="h-10 sm:h-12 flex items-center justify-end">
                                     <img
                                         src={clinicSettings.logoUrl}
                                         alt="Clinic Logo"
-                                        className="max-h-full max-w-[180px] object-contain"
+                                        className="max-h-full max-w-[120px] sm:max-w-[180px] object-contain"
                                     />
                                 </div>
                             )}
                         </div>
 
                         {/* Patient & Facility Grid - TIGHTER & ALIGNED */}
-                        <div className="grid grid-cols-2 gap-x-8 mb-2 items-start">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-x-8 mb-2 items-start">
                             {/* Left: Patient Info */}
                             <div className="flex flex-col items-start group/patient relative w-full">
                                 <div className="absolute -top-6 right-0 no-print opacity-0 group-hover/patient:opacity-100 transition-opacity">
@@ -2523,30 +2532,30 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             </div>
  
                             {/* Right: Facility Info */}
-                            <div className="flex flex-col items-end text-right group/facility relative w-full">
-                                <div className="label-small text-slate-400 mb-1 justify-end flex items-center h-4">
+                            <div className="flex flex-col items-start sm:items-end text-left sm:text-right group/facility relative w-full pt-3 sm:pt-0 border-t border-slate-100 sm:border-0 dark:border-slate-800/60">
+                                <div className="label-small text-slate-400 mb-1 justify-start sm:justify-end flex items-center h-4">
                                     FACILITY INFO
-                                    <MapPin size={12} className="text-indigo-400" />
+                                    <MapPin size={12} className="text-indigo-400 ml-1" />
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 dark:text-white mb-0.5 leading-none uppercase tracking-tight flex items-center justify-end h-5 w-full">
+                                <div className="text-[14px] font-black text-slate-900 dark:text-white mb-0.5 leading-none uppercase tracking-tight flex items-center justify-start sm:justify-end h-5 w-full">
                                     {clinicSettings?.clinicName || "Independent Practice"}
                                 </div>
                                 <div className="space-y-[2px] mt-1 w-full">
-                                    <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
+                                    <div className="flex items-center justify-start sm:justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Fax:</span>
                                         <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{clinicSettings?.fax || "—"}</span>
                                     </div>
-                                    <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
+                                    <div className="flex items-center justify-start sm:justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Phone:</span>
                                         <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{clinicSettings?.phone || "—"}</span>
                                     </div>
-                                    <div className="flex items-center justify-end gap-x-1.5 h-[16px] text-[11px]">
+                                    <div className="flex items-center justify-start sm:justify-end gap-x-1.5 h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Email:</span>
-                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none lowercase">{clinicSettings?.email || "—"}</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none lowercase break-all">{clinicSettings?.email || "—"}</span>
                                     </div>
-                                    <div className="flex items-start justify-end gap-x-1.5 min-h-[16px] text-[11px]">
+                                    <div className="flex items-start justify-start sm:justify-end gap-x-1.5 min-h-[16px] text-[11px]">
                                         <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">Address:</span>
-                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-tight text-right">{clinicSettings?.address || "—"}</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-tight text-left sm:text-right">{clinicSettings?.address || "—"}</span>
                                     </div>
                                 </div>
                             </div>
@@ -2596,7 +2605,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                 <>
                                                     <section className="print-section print-avoid">
                                                         <SectionHeader title="VISIT DETAILS" icon={Stethoscope} />
-                                                        <div className="grid grid-cols-5 gap-4">
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
                                                             <div className="flex flex-col gap-0.5 items-center text-center">
                                                                 <span className="label-small !mb-0 text-[9px]">Date</span>
                                                                 <div className="value-text text-[12px] flex items-center justify-center">
@@ -2623,7 +2632,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                     />
                                                                 </div>
                                                             </div>
-                                                            <div className="flex flex-col gap-0.5 items-center text-center">
+                                                            <div className="col-span-2 sm:col-span-1 flex flex-col gap-0.5 items-center text-center">
                                                                 <span className="label-small !mb-0 text-[9px]">Time Range</span>
                                                                 <div className="value-text whitespace-nowrap text-[12px] flex items-center justify-center">
                                                                     {isEditMode ? (
@@ -2713,7 +2722,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <div className="col-span-5 my-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                                                            <div className="col-span-2 sm:col-span-3 md:col-span-5 my-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
                                                                 <div className="value-text !text-[15px] font-black text-indigo-950 dark:text-white tracking-tight leading-tight">
                                                                     {isEditMode ? (
                                                                         <div className="flex items-center gap-2.5 bg-slate-900/50 border border-slate-700/60 hover:border-slate-600 focus-within:border-indigo-500/80 focus-within:ring-1 focus-within:ring-indigo-500/30 rounded-full px-4 py-2 transition-all">
@@ -2755,7 +2764,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                     <section className="print-section mt-4 print-avoid">
                                                         <SectionHeader title="INFORMATION & DOMAINS" icon={ListTodo} />
                                                         <div className="mt-0.5 px-0.5">
-                                                            <div className="grid grid-cols-3 gap-x-2 gap-y-0.5">
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1.5 sm:gap-x-2 sm:gap-y-0.5">
                                                                 {TCM_DOMAINS.map((domain) => (
                                                                     <DomainItem
                                                                         key={domain.path}
@@ -2808,7 +2817,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                             return (
                                 <section className="print-section mb-0 print-avoid">
-                                    <div className="grid grid-cols-2 gap-2 items-start">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-2 items-start">
                                         {showOutcome && (
                                             <div className="group/section relative">
                                                 <SectionHeader
@@ -2972,7 +2981,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     </p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-16 mt-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-16 mt-6">
                                 {/* Case Manager */}
                                 <div className="space-y-1">
                                     <div

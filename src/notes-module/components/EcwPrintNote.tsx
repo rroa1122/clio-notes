@@ -696,7 +696,8 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
  
                 .document-page {
                     background-color: white;
-                    width: 8.5in;
+                    width: 100%;
+                    max-width: 8.5in;
                     min-height: 11in;
                     padding: 0.6in;
                     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
@@ -705,6 +706,17 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                     margin-bottom: 2rem;
                     box-sizing: border-box;
                     font-family: 'Inter', system-ui, sans-serif !important;
+                }
+
+                @media screen and (max-width: 640px) {
+                    .document-canvas-wrapper {
+                        padding: 1rem 0.25rem !important;
+                    }
+                    .document-page {
+                        padding: 1.25rem 0.875rem !important;
+                        border-radius: 1.25rem !important;
+                        min-height: auto !important;
+                    }
                 }
             `}} />
 
@@ -723,7 +735,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                 <td>
                                     <div className="mb-0 print-section">
                                         {/* A) HEADER (2-column) */}
-                                        <div className="grid grid-cols-2 gap-12 border-b-2 border-slate-900 pb-8 mb-8">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 border-b-2 border-slate-900 pb-6 sm:pb-8 mb-6 sm:mb-8">
                                             {/* Column 1: Patient Information */}
                                             <div className="space-y-4 group/patient relative">
                                                 <div className="absolute -top-6 right-0 no-print opacity-0 group-hover/patient:opacity-100 transition-opacity">
@@ -910,7 +922,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                                         </div>
 
                                         {/* C) VISIT META BLOCK */}
-                                        <div className="grid grid-cols-4 gap-4 mb-8 pb-8 border-b border-slate-100 group/encounter relative">
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 pb-8 border-b border-slate-100 group/encounter relative">
                                             <div className="absolute -top-4 right-0 no-print opacity-0 group-hover/encounter:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={() => handleCopy((mergedNote as any).services?.service_focus_title || (mergedNote as any).meta?.service_focus_title || "Routine Patient Encounter / Progress Evaluation", "encounter")}
@@ -1026,7 +1038,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                         </section>
 
                         {/* F) OUTCOME + NEXT STEPS (2-column) */}
-                        <div className="grid grid-cols-2 gap-12 print-section break-inside-avoid">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 print-section break-inside-avoid">
                             <section>
                                 <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-800 border-b border-slate-200 pb-1 mb-4">Outcome of Service(s)</h2>
                                 <div className="text-[13px] leading-relaxed">
@@ -1106,7 +1118,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                         </section>
 
                         {/* H) SIGNATURES */}
-                        <div className="mt-20 grid grid-cols-2 gap-16 print-section break-inside-avoid">
+                        <div className="mt-12 sm:mt-20 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-16 print-section break-inside-avoid">
                             {/* Case Manager Signature */}
                             <div className="space-y-4">
                                 <div className="border-b-[1.5px] border-slate-900 w-full h-24 relative flex items-end pb-2 overflow-hidden transition-colors hover:bg-slate-50 cursor-pointer no-print-hover" onClick={() => handleSignatureClick('cm')}>
