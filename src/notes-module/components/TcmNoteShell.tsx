@@ -1879,12 +1879,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             {/* FLOATING TOOLBAR - MODERN CLINICAL HUD */}
             {!hideToolbar && (
-                <div className="fixed bottom-3 sm:bottom-8 left-1/2 -translate-x-1/2 z-[100] no-print max-w-[98vw] sm:max-w-[95vw]">
-                    <div className="flex items-center gap-1 sm:gap-1.5 p-1.5 sm:p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-700 shadow-2xl shadow-black/40 rounded-full transition-all duration-300 max-w-full overflow-x-auto no-scrollbar">
+                <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-[100] no-print max-w-[95vw]">
+                    <div className="flex items-center gap-1 sm:gap-1.5 p-1.5 sm:p-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-700 shadow-2xl shadow-black/40 rounded-full transition-all duration-300">
                         <button
                             disabled={isSigned}
                             onClick={() => setIsEditMode(!isEditMode)}
-                            className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                            title={isSigned ? 'Note is Locked' : (isEditMode ? 'Done Editing' : 'Edit Note')}
+                            className={`size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 cursor-pointer shrink-0 ${
                                 isSigned
                                 ? 'bg-muted text-muted-foreground/60 cursor-not-allowed border border-border/40'
                                 : isEditMode 
@@ -1892,21 +1893,22 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 : 'bg-transparent text-foreground hover:bg-secondary border border-transparent hover:border-border/60 active:scale-95'
                             }`}
                         >
-                            {isSigned ? <Lock size={14} /> : (isEditMode ? <Check size={14} /> : <Edit3 size={14} />)}
-                            <span>{isSigned ? 'Locked' : (isEditMode ? 'Done' : 'Edit')}</span>
+                            {isSigned ? <Lock size={15} /> : (isEditMode ? <Check size={15} /> : <Edit3 size={15} />)}
+                            <span className="hidden sm:inline">{isSigned ? 'Locked' : (isEditMode ? 'Done' : 'Edit')}</span>
                         </button>
  
-                        <div className="w-[1px] h-5 sm:h-6 bg-border/80 mx-0.5" />
+                        <div className="w-[1px] h-4 sm:h-5 bg-border/80 mx-0.5" />
  
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-primary font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group"
+                            title="Print Note"
+                            className="size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-primary font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group shrink-0"
                         >
-                            <Printer size={14} className="group-hover:scale-110 transition-transform" />
-                            <span>Print</span>
+                            <Printer size={15} className="group-hover:scale-110 transition-transform" />
+                            <span className="hidden sm:inline">Print</span>
                         </button>
 
-                        <div className="w-[1px] h-5 sm:h-6 bg-border/80 mx-0.5" />
+                        <div className="w-[1px] h-4 sm:h-5 bg-border/80 mx-0.5" />
 
                         {(() => {
                             const isPending = syncTask?.status === 'pending';
@@ -1919,11 +1921,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => setIsSyncErrorModalOpen(true)}
-                                        className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-rose-500/20 active:scale-95 cursor-pointer shadow-sm"
-                                        title="Click to view error reason and retry"
+                                        title="Sync Failed - Click for details"
+                                        className="size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-rose-500/20 active:scale-95 cursor-pointer shadow-sm shrink-0"
                                     >
-                                        <AlertCircle size={14} className="text-rose-500 animate-pulse" />
-                                        <span>Sync Failed (Details)</span>
+                                        <AlertCircle size={15} className="text-rose-500 animate-pulse" />
+                                        <span className="hidden sm:inline">Sync Failed (Details)</span>
                                     </button>
                                 );
                             }
@@ -1932,11 +1934,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 return (
                                     <button
                                         onClick={handleSyncWithEhr}
-                                        className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-emerald-500/20 active:scale-95 cursor-pointer group"
                                         title="Note synchronized with Amexzone. Click to re-sync."
+                                        className="size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-emerald-500/20 active:scale-95 cursor-pointer group shrink-0"
                                     >
-                                        <CheckCircle2 size={14} className="text-emerald-500" />
-                                        <span>Synced</span>
+                                        <CheckCircle2 size={15} className="text-emerald-500" />
+                                        <span className="hidden sm:inline">Synced</span>
                                     </button>
                                 );
                             }
@@ -1945,10 +1947,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 return (
                                     <button
                                         disabled
-                                        className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-amber-500/20 opacity-90 cursor-not-allowed animate-pulse"
+                                        title="In Queue..."
+                                        className="size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-amber-500/20 opacity-90 cursor-not-allowed animate-pulse shrink-0"
                                     >
-                                        <RefreshCw size={14} className="animate-spin text-amber-500" />
-                                        <span>In Queue...</span>
+                                        <RefreshCw size={15} className="animate-spin text-amber-500" />
+                                        <span className="hidden sm:inline">In Queue...</span>
                                     </button>
                                 );
                             }
@@ -1957,10 +1960,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 return (
                                     <button
                                         disabled
-                                        className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-cyan-500/20 opacity-90 cursor-not-allowed animate-pulse"
+                                        title="Syncing with EHR..."
+                                        className="size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-cyan-500/20 opacity-90 cursor-not-allowed animate-pulse shrink-0"
                                     >
-                                        <RefreshCw size={14} className="animate-spin text-cyan-500" />
-                                        <span>Syncing...</span>
+                                        <RefreshCw size={15} className="animate-spin text-cyan-500" />
+                                        <span className="hidden sm:inline">Syncing...</span>
                                     </button>
                                 );
                             }
@@ -1968,45 +1972,48 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             return (
                                 <button
                                     onClick={handleSyncWithEhr}
-                                    className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-cyan-500 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group"
+                                    title="Sync with EHR"
+                                    className="size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-cyan-500 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group shrink-0"
                                 >
-                                    <Cpu size={14} className="group-hover:scale-110 transition-transform text-cyan-500" />
-                                    <span>Sync</span>
+                                    <Cpu size={15} className="group-hover:scale-110 transition-transform text-cyan-500" />
+                                    <span className="hidden sm:inline">Sync</span>
                                 </button>
                             );
                         })()}
  
                         {!isSigned && (
                             <>
-                                <div className="w-[1px] h-5 sm:h-6 bg-border/80 mx-0.5" />
+                                <div className="w-[1px] h-4 sm:h-5 bg-border/80 mx-0.5" />
  
                                 <button
                                     onClick={handleSaveNote}
                                     disabled={isSaving}
-                                    className={`flex items-center gap-1 sm:gap-2 px-3.5 sm:px-6 py-1.5 sm:py-2.5 rounded-full font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer ${
+                                    title={isSaving ? 'Saving...' : (isSaved ? 'Saved' : 'Save Note')}
+                                    className={`size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-5 sm:py-2 rounded-full font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 active:scale-95 cursor-pointer shrink-0 ${
                                         isSaved 
                                         ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20' 
                                         : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 hover:-translate-y-0.5'
                                     } disabled:opacity-50`}
                                 >
                                     {isSaving ? (
-                                        <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <div className="size-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                     ) : isSaved ? (
-                                        <CheckCircle size={14} />
+                                        <CheckCircle size={15} />
                                     ) : (
-                                        <Save size={14} />
+                                        <Save size={15} />
                                     )}
-                                    <span>{isSaving ? 'Saving' : (isSaved ? 'Saved' : 'Save')}</span>
+                                    <span className="hidden sm:inline">{isSaving ? 'Saving' : (isSaved ? 'Saved' : 'Save')}</span>
                                 </button>
  
-                                <div className="w-[1px] h-5 sm:h-6 bg-border/80 mx-0.5" />
+                                <div className="w-[1px] h-4 sm:h-5 bg-border/80 mx-0.5" />
  
                                 <button
                                     onClick={() => setIsRequestSignatureModalOpen(true)}
-                                    className="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 font-bold whitespace-nowrap text-[10px] sm:text-[11px] uppercase tracking-wider shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
+                                    title="Sign Note"
+                                    className="size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white dark:bg-indigo-500 dark:hover:bg-indigo-600 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider shadow-md shadow-indigo-500/20 transition-all duration-200 active:scale-95 cursor-pointer shrink-0"
                                 >
-                                    <PenTool size={14} />
-                                    <span>Sign</span>
+                                    <PenTool size={15} />
+                                    <span className="hidden sm:inline">Sign</span>
                                 </button>
                             </>
                         )}
@@ -2613,157 +2620,211 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                 <>
                                                     <section className="print-section print-avoid">
                                                         <SectionHeader title="VISIT DETAILS" icon={Stethoscope} />
-                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
-                                                            <div className="flex flex-col gap-0.5 items-center text-center">
-                                                                <span className="label-small !mb-0 text-[9px]">Date</span>
-                                                                <div className="value-text text-[12px] flex items-center justify-center">
-                                                                    {isEditMode ? (
-                                                                        <input
-                                                                            type="date"
-                                                                            value={svc.encounter?.dos_date || (svc as any).meta?.visitDate || ''}
-                                                                            onChange={(e) => handleUpdateField(`${pathPrefix}encounter.dos_date`, e.target.value)}
-                                                                            className="bg-slate-900/50 border border-slate-700/60 px-3 py-1 text-[11px] font-bold text-slate-200 rounded-full hover:border-slate-500 focus:border-indigo-400 transition-all outline-none w-[115px]"
-                                                                        />
-                                                                    ) : (
-                                                                        <span className="font-bold">{formatDosDate(svc.encounter?.dos_date || (svc as any).meta?.visitDate)}</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex flex-col gap-0.5 items-center text-center">
-                                                                <span className="label-small !mb-0 text-[9px]">POS</span>
-                                                                <div className="value-text text-[12px]">
-                                                                    <GhostInput
-                                                                        value={svc.encounter?.location_name || (svc.encounter as any)?.place_of_service_name || (((svc.subTemplate || svc._frontend_service_title || mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")) ? "11 - Office" : "12 - Home")}
-                                                                        isEditMode={isEditMode}
-                                                                        onChange={(val) => handleUpdateField(`${pathPrefix}encounter.location_name`, val)}
-                                                                        className="text-center !rounded-full"
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                            <div className="col-span-2 sm:col-span-1 flex flex-col gap-0.5 items-center text-center">
-                                                                <span className="label-small !mb-0 text-[9px]">Time Range</span>
-                                                                <div className="value-text whitespace-nowrap text-[12px] flex items-center justify-center">
-                                                                    {isEditMode ? (
-                                                                        <div className="flex items-center gap-1.5 no-print">
-                                                                            <Popover>
-                                                                                <PopoverTrigger asChild>
-                                                                                    <button className="text-center px-3 py-1 text-[11px] font-bold min-w-[75px] bg-slate-900/50 border border-slate-700/60 rounded-full hover:bg-slate-800 transition-colors text-indigo-300">
-                                                                                        {svcTimeStart || "Start"}
-                                                                                    </button>
-                                                                                </PopoverTrigger>
-                                                                                <PopoverContent className="w-[300px] p-0 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900/95 backdrop-blur-md" side="bottom" align="center">
-                                                                                    <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 text-center">
-                                                                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Encounter Start</span>
-                                                                                    </div>
-                                                                                    <div className="p-4">
-                                                                                        <TimeSpinner 
-                                                                                            initialTimeStr={svcTimeStart}
-                                                                                            onConfirm={(val) => {
-                                                                                                handleTimeChange(val, `${pathPrefix}encounter.time_in`, svcTimeStart);
-                                                                                                handleTimeBlur(`${pathPrefix}encounter.time_in`, val);
-                                                                                            }}
-                                                                                        />
-                                                                                    </div>
-                                                                                </PopoverContent>
-                                                                            </Popover>
-
-                                                                            <span className="text-slate-500 font-bold">-</span>
-
-                                                                            <Popover>
-                                                                                <PopoverTrigger asChild>
-                                                                                    <button className="text-center px-3 py-1 text-[11px] font-bold min-w-[75px] bg-slate-900/50 border border-slate-700/60 rounded-full hover:bg-slate-800 transition-colors text-indigo-300">
-                                                                                        {svcTimeEnd || "End"}
-                                                                                    </button>
-                                                                                </PopoverTrigger>
-                                                                                <PopoverContent className="w-[300px] p-0 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900/95 backdrop-blur-md" side="bottom" align="center">
-                                                                                    <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 text-center">
-                                                                                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Encounter End</span>
-                                                                                    </div>
-                                                                                    <div className="p-4">
-                                                                                        <TimeSpinner 
-                                                                                            initialTimeStr={svcTimeEnd}
-                                                                                            onConfirm={(val) => {
-                                                                                                handleTimeChange(val, `${pathPrefix}encounter.time_out`, svcTimeEnd);
-                                                                                                handleTimeBlur(`${pathPrefix}encounter.time_out`, val);
-                                                                                            }}
-                                                                                        />
-                                                                                    </div>
-                                                                                </PopoverContent>
-                                                                            </Popover>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="font-bold">{svcTimeRange}</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex flex-col gap-0.5 items-center text-center">
-                                                                <span className="label-small !mb-0 text-[9px]">Duration</span>
-                                                                <div className="value-text text-[12px] flex items-center justify-center gap-1">
-                                                                    <GhostInput
-                                                                        value={svc.encounter?.duration}
-                                                                        isEditMode={isEditMode}
-                                                                        onChange={(val) => handleUpdateField(`${pathPrefix}encounter.duration`, val)}
-                                                                        className="text-center !rounded-full !px-2 !py-0.5 !text-[12px] w-14"
-                                                                        placeholder="min"
-                                                                    />
-                                                                    {!isEditMode && <span className="text-[10px] text-slate-400 font-bold">min</span>}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex flex-col gap-0.5 items-center text-center">
-                                                                <span className="label-small !mb-0 text-[9px]">Units</span>
-                                                                <div className="value-text">
-                                                                    {isEditMode ? (
-                                                                        <GhostInput
-                                                                            value={svc.encounter?.billing_units || svc.encounter?.units || ''}
-                                                                            isEditMode={true}
-                                                                            onChange={(val) => {
-                                                                                handleUpdateField(`${pathPrefix}encounter.billing_units`, val);
-                                                                                handleUpdateField(`${pathPrefix}encounter.units`, val);
-                                                                            }}
-                                                                            className="text-center !rounded-full !px-2 !py-0.5 !text-[11px] w-14"
-                                                                            placeholder="0"
-                                                                        />
-                                                                    ) : (
-                                                                        <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-full text-[11px] font-black border border-indigo-100 dark:border-indigo-800">
-                                                                            {svc.encounter?.billing_units || svc.encounter?.units || 0}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="col-span-2 sm:col-span-3 md:col-span-5 my-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
-                                                                <div className="value-text !text-[15px] font-black text-indigo-950 dark:text-white tracking-tight leading-tight">
-                                                                    {isEditMode ? (
-                                                                        <div className="flex items-center gap-2.5 bg-slate-900/50 border border-slate-700/60 hover:border-slate-600 focus-within:border-indigo-500/80 focus-within:ring-1 focus-within:ring-indigo-500/30 rounded-full px-4 py-2 transition-all">
-                                                                            <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase whitespace-nowrap">Service Focus:</span>
+                                                        <div className="mt-1 bg-slate-50/50 dark:!bg-slate-950/40 border border-slate-200/70 dark:!border-slate-800/80 rounded-2xl p-2.5 sm:p-3.5 print:bg-transparent print:border-0 print:p-0">
+                                                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 items-center">
+                                                                {/* 1. Date */}
+                                                                <div className="flex flex-col gap-0.5 items-center text-center">
+                                                                    <span className="label-small !mb-0 text-[9px]">Date</span>
+                                                                    <div className="value-text text-[12px] flex items-center justify-center">
+                                                                        {isEditMode ? (
                                                                             <input
-                                                                                type="text"
-                                                                                value={(() => {
-                                                                                    const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
-                                                                                    const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
-                                                                                    if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
-                                                                                    if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
-                                                                                    if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
-                                                                                    if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
-                                                                                    return rawTitle || "TCM Progress Note";
-                                                                                })()}
-                                                                                onChange={(e) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, e.target.value)}
-                                                                                placeholder="Enter encounter subject..."
-                                                                                className="w-full bg-transparent border-0 outline-none text-[14px] font-bold text-slate-100 placeholder:text-slate-500 focus:ring-0 focus:outline-none"
+                                                                                type="date"
+                                                                                value={svc.encounter?.dos_date || (svc as any).meta?.visitDate || ''}
+                                                                                onChange={(e) => handleUpdateField(`${pathPrefix}encounter.dos_date`, e.target.value)}
+                                                                                className="bg-slate-900/50 border border-slate-700/60 px-2.5 py-1 text-[11px] font-bold text-slate-200 rounded-full hover:border-slate-500 focus:border-indigo-400 transition-all outline-none w-[110px]"
                                                                             />
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="inline-block py-1">
-                                                                            {(() => {
-                                                                                const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
-                                                                                const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
-                                                                                if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
-                                                                                if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
-                                                                                if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
-                                                                                if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
-                                                                                return rawTitle || "TCM Progress Note";
-                                                                            })()}
-                                                                        </span>
-                                                                    )}
+                                                                        ) : (
+                                                                            <span className="font-bold">{formatDosDate(svc.encounter?.dos_date || (svc as any).meta?.visitDate)}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 2. Time Range */}
+                                                                <div className="flex flex-col gap-0.5 items-center text-center">
+                                                                    <span className="label-small !mb-0 text-[9px]">Time Range</span>
+                                                                    <div className="value-text whitespace-nowrap text-[12px] flex items-center justify-center">
+                                                                        {isEditMode ? (
+                                                                            <div className="flex items-center gap-1.5 no-print">
+                                                                                <Popover>
+                                                                                    <PopoverTrigger asChild>
+                                                                                        <button className="text-center px-2.5 py-0.5 text-[10.5px] font-bold min-w-[58px] sm:min-w-[70px] bg-slate-900/50 border border-slate-700/60 rounded-full hover:bg-slate-800 transition-colors text-indigo-300">
+                                                                                            {svcTimeStart || "Start"}
+                                                                                        </button>
+                                                                                    </PopoverTrigger>
+                                                                                    <PopoverContent className="w-[300px] p-0 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900/95 backdrop-blur-md" side="bottom" align="center">
+                                                                                        <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 text-center">
+                                                                                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Encounter Start</span>
+                                                                                        </div>
+                                                                                        <div className="p-4">
+                                                                                            <TimeSpinner 
+                                                                                                initialTimeStr={svcTimeStart}
+                                                                                                onConfirm={(val) => {
+                                                                                                    handleTimeChange(val, `${pathPrefix}encounter.time_in`, svcTimeStart);
+                                                                                                    handleTimeBlur(`${pathPrefix}encounter.time_in`, val);
+                                                                                                }}
+                                                                                            />
+                                                                                        </div>
+                                                                                    </PopoverContent>
+                                                                                </Popover>
+
+                                                                                <span className="text-slate-500 font-bold">-</span>
+
+                                                                                <Popover>
+                                                                                    <PopoverTrigger asChild>
+                                                                                        <button className="text-center px-2.5 py-0.5 text-[10.5px] font-bold min-w-[58px] sm:min-w-[70px] bg-slate-900/50 border border-slate-700/60 rounded-full hover:bg-slate-800 transition-colors text-indigo-300">
+                                                                                            {svcTimeEnd || "End"}
+                                                                                        </button>
+                                                                                    </PopoverTrigger>
+                                                                                    <PopoverContent className="w-[300px] p-0 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900/95 backdrop-blur-md" side="bottom" align="center">
+                                                                                        <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 text-center">
+                                                                                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Encounter End</span>
+                                                                                        </div>
+                                                                                        <div className="p-4">
+                                                                                            <TimeSpinner 
+                                                                                                initialTimeStr={svcTimeEnd}
+                                                                                                onConfirm={(val) => {
+                                                                                                    handleTimeChange(val, `${pathPrefix}encounter.time_out`, svcTimeEnd);
+                                                                                                    handleTimeBlur(`${pathPrefix}encounter.time_out`, val);
+                                                                                                }}
+                                                                                            />
+                                                                                        </div>
+                                                                                    </PopoverContent>
+                                                                                </Popover>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="font-bold">{svcTimeRange}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 3. POS */}
+                                                                <div className="flex flex-col gap-0.5 items-center text-center">
+                                                                    <span className="label-small !mb-0 text-[9px]">POS</span>
+                                                                    <div className="value-text text-[12px]">
+                                                                        <GhostInput
+                                                                            value={svc.encounter?.location_name || (svc.encounter as any)?.place_of_service_name || (((svc.subTemplate || svc._frontend_service_title || mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")) ? "11 - Office" : "12 - Home")}
+                                                                            isEditMode={isEditMode}
+                                                                            onChange={(val) => handleUpdateField(`${pathPrefix}encounter.location_name`, val)}
+                                                                            className="text-center !rounded-full"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 4. Combined Duration & Units - Mobile only */}
+                                                                <div className="flex sm:hidden flex-col gap-0.5 items-center text-center">
+                                                                    <span className="label-small !mb-0 text-[9px]">Duration · Units</span>
+                                                                    <div className="value-text text-[12px] flex items-center justify-center gap-1.5 font-bold">
+                                                                        {isEditMode ? (
+                                                                            <div className="flex items-center gap-1">
+                                                                                <GhostInput
+                                                                                    value={svc.encounter?.duration}
+                                                                                    isEditMode={true}
+                                                                                    onChange={(val) => handleUpdateField(`${pathPrefix}encounter.duration`, val)}
+                                                                                    className="text-center !rounded-full !px-1.5 !py-0.5 !text-[11px] w-12"
+                                                                                    placeholder="min"
+                                                                                />
+                                                                                <span className="text-[10px] text-slate-400 font-bold">m ·</span>
+                                                                                <GhostInput
+                                                                                    value={svc.encounter?.billing_units || svc.encounter?.units || ''}
+                                                                                    isEditMode={true}
+                                                                                    onChange={(val) => {
+                                                                                        handleUpdateField(`${pathPrefix}encounter.billing_units`, val);
+                                                                                        handleUpdateField(`${pathPrefix}encounter.units`, val);
+                                                                                    }}
+                                                                                    className="text-center !rounded-full !px-1.5 !py-0.5 !text-[11px] w-10"
+                                                                                    placeholder="0"
+                                                                                />
+                                                                                <span className="text-[10px] text-slate-400 font-bold">u</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <>
+                                                                                <span>{svc.encounter?.duration || 0} min</span>
+                                                                                <span className="text-slate-300 dark:text-slate-600 font-normal">·</span>
+                                                                                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-full text-[11px] font-black border border-indigo-100 dark:border-indigo-800">
+                                                                                    {svc.encounter?.billing_units || svc.encounter?.units || 0}u
+                                                                                </span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 5. Duration - Desktop only */}
+                                                                <div className="hidden sm:flex flex-col gap-0.5 items-center text-center">
+                                                                    <span className="label-small !mb-0 text-[9px]">Duration</span>
+                                                                    <div className="value-text text-[12px] flex items-center justify-center gap-1">
+                                                                        <GhostInput
+                                                                            value={svc.encounter?.duration}
+                                                                            isEditMode={isEditMode}
+                                                                            onChange={(val) => handleUpdateField(`${pathPrefix}encounter.duration`, val)}
+                                                                            className="text-center !rounded-full !px-2 !py-0.5 !text-[12px] w-14"
+                                                                            placeholder="min"
+                                                                        />
+                                                                        {!isEditMode && <span className="text-[10px] text-slate-400 font-bold">min</span>}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 6. Units - Desktop only */}
+                                                                <div className="hidden sm:flex flex-col gap-0.5 items-center text-center">
+                                                                    <span className="label-small !mb-0 text-[9px]">Units</span>
+                                                                    <div className="value-text">
+                                                                        {isEditMode ? (
+                                                                            <GhostInput
+                                                                                value={svc.encounter?.billing_units || svc.encounter?.units || ''}
+                                                                                isEditMode={true}
+                                                                                onChange={(val) => {
+                                                                                    handleUpdateField(`${pathPrefix}encounter.billing_units`, val);
+                                                                                    handleUpdateField(`${pathPrefix}encounter.units`, val);
+                                                                                }}
+                                                                                className="text-center !rounded-full !px-2 !py-0.5 !text-[11px] w-14"
+                                                                                placeholder="0"
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-full text-[11px] font-black border border-indigo-100 dark:border-indigo-800">
+                                                                                {svc.encounter?.billing_units || svc.encounter?.units || 0}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 7. Service Focus - Spans full width */}
+                                                                <div className="col-span-2 sm:col-span-5 mt-1 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+                                                                    <div className="value-text !text-[13.5px] sm:!text-[15px] font-black text-indigo-950 dark:text-white tracking-tight leading-tight">
+                                                                        {isEditMode ? (
+                                                                            <div className="flex items-center gap-2.5 bg-slate-900/50 border border-slate-700/60 hover:border-slate-600 focus-within:border-indigo-500/80 focus-within:ring-1 focus-within:ring-indigo-500/30 rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 transition-all">
+                                                                                <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase whitespace-nowrap">Service Focus:</span>
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={(() => {
+                                                                                        const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
+                                                                                        const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
+                                                                                        if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
+                                                                                        if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
+                                                                                        if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
+                                                                                        if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
+                                                                                        return rawTitle || "TCM Progress Note";
+                                                                                    })()}
+                                                                                    onChange={(e) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, e.target.value)}
+                                                                                    placeholder="Enter encounter subject..."
+                                                                                    className="w-full bg-transparent border-0 outline-none text-[13px] sm:text-[14px] font-bold text-slate-100 placeholder:text-slate-500 focus:ring-0 focus:outline-none"
+                                                                                />
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="flex items-center py-0.5">
+                                                                                <span className="text-[9px] font-black tracking-widest text-indigo-500/80 dark:text-indigo-400 uppercase mr-2 sm:hidden">Focus:</span>
+                                                                                <span>
+                                                                                    {(() => {
+                                                                                        const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
+                                                                                        const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
+                                                                                        if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
+                                                                                        if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
+                                                                                        if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
+                                                                                        if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
+                                                                                        return rawTitle || "TCM Progress Note";
+                                                                                    })()}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
