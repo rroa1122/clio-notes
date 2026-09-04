@@ -691,8 +691,14 @@ export function PatientDetail() {
             updatedSocialNeeds.service_plan_client_agreement = updatedSocialNeeds.service_plan_client_agreement || 'agreed';
             updatedSocialNeeds.service_plan_discharge_criteria = updatedSocialNeeds.service_plan_discharge_criteria || '';
 
+            const rel = editData.emergency_contact_relation || updatedSocialNeeds.emergency_contact_relationship;
+            if (rel) {
+                updatedSocialNeeds.emergency_contact_relationship = rel;
+            }
+
             const finalData = {
                 ...editData,
+                emergency_contact_relation: rel || editData.emergency_contact_relation,
                 tcm_social_needs: updatedSocialNeeds,
                 full_name: `${editData.first_name || ''} ${editData.last_name || ''}`.trim() || patient.full_name
             };
@@ -1909,6 +1915,15 @@ export function PatientDetail() {
                                             onChange={handleFieldChange}
                                             theme="amber"
                                         />
+                                        <PremiumGlassField
+                                            icon={Users}
+                                            label={language === 'es' ? "Parentesco / Relación" : "Relationship"}
+                                            name="emergency_contact_relation"
+                                            value={isEditing ? (editData.emergency_contact_relation || '') : (patient.emergency_contact_relation || (patient?.tcm_social_needs as any)?.emergency_contact_relationship || '')}
+                                            isEditing={isEditing}
+                                            onChange={handleFieldChange}
+                                            theme="amber"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -2533,7 +2548,7 @@ export function PatientDetail() {
                                                     icon={Users}
                                                     label="Relationship / Parentesco"
                                                     name="emergency_contact_relationship"
-                                                    value={socialNeeds.emergency_contact_relationship || ''}
+                                                    value={socialNeeds.emergency_contact_relationship || patient?.emergency_contact_relation || editData?.emergency_contact_relation || ''}
                                                     isEditing={isEditing}
                                                     onChange={handleSocialNeedsTextChange}
                                                     theme="indigo"
@@ -5348,7 +5363,18 @@ function TcmCheckbox({
     onTextChange?: (key: string, value: string) => void
 }) {
     const { language } = useLanguage();
-    const isChecked = !!(needs && needs[field]);
+    const aliasMap: Record<string, string> = {
+        'info_family_friends': 'info_source_family',
+        'info_referring_agency': 'info_source_referring',
+        'info_records_review': 'info_source_records',
+        'info_client_input': 'info_source_client',
+        'info_school': 'info_source_school',
+        'info_treating_providers': 'info_source_treating',
+        'info_caregiver': 'info_source_caregiver',
+        'info_other': 'info_source_other',
+    };
+    const aliasKey = aliasMap[field];
+    const isChecked = !!(needs && (needs[field] || (aliasKey && needs[aliasKey])));
     const displayLabel = language === 'es' ? (labelEs || label) : label;
     const noteField = `${field}_note`;
     const noteValue = needs ? needs[noteField] || '' : '';
