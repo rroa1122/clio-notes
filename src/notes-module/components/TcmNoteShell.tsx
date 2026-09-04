@@ -1875,7 +1875,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     })();
 
     return (
-        <div className={`tcm-print-shell ${!isStandalone ? 'max-w-[1050px] mx-auto' : ''}`} style={{ minHeight: '100%' }}>
+        <div className={`tcm-print-shell notranslate ${!isStandalone ? 'max-w-[1050px] mx-auto' : ''}`} translate="no" style={{ minHeight: '100%' }}>
 
             {/* FLOATING TOOLBAR - MODERN CLINICAL HUD */}
             {!hideToolbar && (
@@ -2618,41 +2618,82 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                                             return (
                                                 <>
-                                                    <section className="print-section print-avoid">
+                                                    <section className="print-section print-avoid mt-2 mb-3">
                                                         <SectionHeader title="VISIT DETAILS" icon={Stethoscope} />
-                                                        <div className="mt-1 bg-slate-50/50 dark:!bg-slate-950/40 border border-slate-200/70 dark:!border-slate-800/80 rounded-2xl p-2.5 sm:p-3.5 print:bg-transparent print:border-0 print:p-0">
-                                                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3 items-center">
+                                                        <div className="py-2 px-0.5 border-y border-slate-200/70 dark:!border-slate-800/80">
+                                                            {/* Service Focus Header */}
+                                                            <div className="flex items-center gap-1.5 sm:gap-2 mb-2 min-w-0">
+                                                                <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">
+                                                                    Focus:
+                                                                </span>
+                                                                {isEditMode ? (
+                                                                    <div className="flex-1 min-w-0 bg-slate-900/50 border border-slate-700/60 hover:border-slate-600 focus-within:border-indigo-500/80 rounded-lg px-2.5 py-1">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={(() => {
+                                                                                const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
+                                                                                const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
+                                                                                if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
+                                                                                if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
+                                                                                if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
+                                                                                if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
+                                                                                return rawTitle || "TCM Progress Note";
+                                                                            })()}
+                                                                            onChange={(e) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, e.target.value)}
+                                                                            placeholder="Enter encounter subject..."
+                                                                            className="w-full bg-transparent border-0 outline-none text-[12px] sm:text-[13px] font-bold text-slate-100 placeholder:text-slate-500 focus:ring-0 focus:outline-none"
+                                                                        />
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-[12px] sm:text-[14px] font-black text-slate-900 dark:text-white uppercase tracking-tight truncate leading-tight">
+                                                                        {(() => {
+                                                                            const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
+                                                                            const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
+                                                                            if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
+                                                                            if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
+                                                                            if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
+                                                                            if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
+                                                                            return rawTitle || "TCM Progress Note";
+                                                                        })()}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Clinical Key-Value Grid: 2 columns on mobile, 4 columns on desktop */}
+                                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-2 sm:gap-x-4 gap-y-1.5 items-center">
                                                                 {/* 1. Date */}
-                                                                <div className="flex flex-col gap-0.5 items-center text-center">
-                                                                    <span className="label-small !mb-0 text-[9px]">Date</span>
-                                                                    <div className="value-text text-[12px] flex items-center justify-center">
+                                                                <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                                                                    <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Date:</span>
+                                                                    <div className="min-w-0 truncate">
                                                                         {isEditMode ? (
                                                                             <input
                                                                                 type="date"
                                                                                 value={svc.encounter?.dos_date || (svc as any).meta?.visitDate || ''}
                                                                                 onChange={(e) => handleUpdateField(`${pathPrefix}encounter.dos_date`, e.target.value)}
-                                                                                className="bg-slate-900/50 border border-slate-700/60 px-2.5 py-1 text-[11px] font-bold text-slate-200 rounded-full hover:border-slate-500 focus:border-indigo-400 transition-all outline-none w-[110px]"
+                                                                                className="bg-slate-900/50 border border-slate-700/60 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-slate-200 rounded-md hover:border-slate-500 focus:border-indigo-400 outline-none w-full max-w-[115px]"
                                                                             />
                                                                         ) : (
-                                                                            <span className="font-bold">{formatDosDate(svc.encounter?.dos_date || (svc as any).meta?.visitDate)}</span>
+                                                                            <span className="font-semibold text-slate-800 dark:text-slate-200 text-[10.5px] sm:text-[11.5px] leading-none truncate block">
+                                                                                {formatDosDate(svc.encounter?.dos_date || (svc as any).meta?.visitDate)}
+                                                                            </span>
                                                                         )}
                                                                     </div>
                                                                 </div>
 
                                                                 {/* 2. Time Range */}
-                                                                <div className="flex flex-col gap-0.5 items-center text-center">
-                                                                    <span className="label-small !mb-0 text-[9px]">Time Range</span>
-                                                                    <div className="value-text whitespace-nowrap text-[12px] flex items-center justify-center">
+                                                                <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                                                                    <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Time:</span>
+                                                                    <div className="min-w-0 truncate">
                                                                         {isEditMode ? (
-                                                                            <div className="flex items-center gap-1.5 no-print">
+                                                                            <div className="flex items-center gap-1 no-print">
                                                                                 <Popover>
                                                                                     <PopoverTrigger asChild>
-                                                                                        <button className="text-center px-2.5 py-0.5 text-[10.5px] font-bold min-w-[58px] sm:min-w-[70px] bg-slate-900/50 border border-slate-700/60 rounded-full hover:bg-slate-800 transition-colors text-indigo-300">
+                                                                                        <button className="text-center px-2 py-0.5 text-[10px] font-bold min-w-[52px] sm:min-w-[65px] bg-slate-900/50 border border-slate-700/60 rounded-md hover:bg-slate-800 transition-colors text-indigo-300">
                                                                                             {svcTimeStart || "Start"}
                                                                                         </button>
                                                                                     </PopoverTrigger>
                                                                                     <PopoverContent className="w-[300px] p-0 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900/95 backdrop-blur-md" side="bottom" align="center">
-                                                                                        <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 text-center">
+                                                                                        <div className="p-3 bg-slate-950/80 border-b border-slate-800 text-center">
                                                                                             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Encounter Start</span>
                                                                                         </div>
                                                                                         <div className="p-4">
@@ -2671,12 +2712,12 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                                                                                 <Popover>
                                                                                     <PopoverTrigger asChild>
-                                                                                        <button className="text-center px-2.5 py-0.5 text-[10.5px] font-bold min-w-[58px] sm:min-w-[70px] bg-slate-900/50 border border-slate-700/60 rounded-full hover:bg-slate-800 transition-colors text-indigo-300">
+                                                                                        <button className="text-center px-2 py-0.5 text-[10px] font-bold min-w-[52px] sm:min-w-[65px] bg-slate-900/50 border border-slate-700/60 rounded-md hover:bg-slate-800 transition-colors text-indigo-300">
                                                                                             {svcTimeEnd || "End"}
                                                                                         </button>
                                                                                     </PopoverTrigger>
                                                                                     <PopoverContent className="w-[300px] p-0 rounded-2xl overflow-hidden border border-slate-800 shadow-xl bg-slate-900/95 backdrop-blur-md" side="bottom" align="center">
-                                                                                        <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 text-center">
+                                                                                        <div className="p-3 bg-slate-950/80 border-b border-slate-800 text-center">
                                                                                             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Encounter End</span>
                                                                                         </div>
                                                                                         <div className="p-4">
@@ -2692,38 +2733,41 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                                 </Popover>
                                                                             </div>
                                                                         ) : (
-                                                                            <span className="font-bold">{svcTimeRange}</span>
+                                                                            <span className="font-semibold text-slate-800 dark:text-slate-200 text-[10.5px] sm:text-[11.5px] leading-none truncate block">
+                                                                                {svcTimeRange}
+                                                                            </span>
                                                                         )}
                                                                     </div>
                                                                 </div>
 
                                                                 {/* 3. POS */}
-                                                                <div className="flex flex-col gap-0.5 items-center text-center">
-                                                                    <span className="label-small !mb-0 text-[9px]">POS</span>
-                                                                    <div className="value-text text-[12px]">
+                                                                <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                                                                    <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">POS:</span>
+                                                                    <div className="min-w-0 truncate">
                                                                         <GhostInput
                                                                             value={svc.encounter?.location_name || (svc.encounter as any)?.place_of_service_name || (((svc.subTemplate || svc._frontend_service_title || mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")) ? "11 - Office" : "12 - Home")}
                                                                             isEditMode={isEditMode}
                                                                             onChange={(val) => handleUpdateField(`${pathPrefix}encounter.location_name`, val)}
-                                                                            className="text-center !rounded-full"
+                                                                            className="!px-1 !py-0 !text-[10.5px] sm:!text-[11.5px] font-semibold text-slate-800 dark:text-slate-200"
                                                                         />
                                                                     </div>
                                                                 </div>
 
-                                                                {/* 4. Combined Duration & Units - Mobile only */}
-                                                                <div className="flex sm:hidden flex-col gap-0.5 items-center text-center">
-                                                                    <span className="label-small !mb-0 text-[9px]">Duration · Units</span>
-                                                                    <div className="value-text text-[12px] flex items-center justify-center gap-1.5 font-bold">
+                                                                {/* 4. Duration & Units */}
+                                                                <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                                                                    <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Duration:</span>
+                                                                    <div className="min-w-0">
                                                                         {isEditMode ? (
                                                                             <div className="flex items-center gap-1">
                                                                                 <GhostInput
                                                                                     value={svc.encounter?.duration}
                                                                                     isEditMode={true}
                                                                                     onChange={(val) => handleUpdateField(`${pathPrefix}encounter.duration`, val)}
-                                                                                    className="text-center !rounded-full !px-1.5 !py-0.5 !text-[11px] w-12"
+                                                                                    className="text-center !rounded-md !px-1 !py-0.5 !text-[10.5px] w-10 bg-slate-900/50 border border-slate-700/60"
                                                                                     placeholder="min"
                                                                                 />
-                                                                                <span className="text-[10px] text-slate-400 font-bold">m ·</span>
+                                                                                <span className="text-[9.5px] text-slate-400 font-bold">m</span>
+                                                                                <span className="text-slate-500">·</span>
                                                                                 <GhostInput
                                                                                     value={svc.encounter?.billing_units || svc.encounter?.units || ''}
                                                                                     isEditMode={true}
@@ -2731,96 +2775,17 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                                         handleUpdateField(`${pathPrefix}encounter.billing_units`, val);
                                                                                         handleUpdateField(`${pathPrefix}encounter.units`, val);
                                                                                     }}
-                                                                                    className="text-center !rounded-full !px-1.5 !py-0.5 !text-[11px] w-10"
+                                                                                    className="text-center !rounded-md !px-1 !py-0.5 !text-[10.5px] w-8 bg-slate-900/50 border border-slate-700/60"
                                                                                     placeholder="0"
                                                                                 />
-                                                                                <span className="text-[10px] text-slate-400 font-bold">u</span>
+                                                                                <span className="text-[9.5px] text-slate-400 font-bold">u</span>
                                                                             </div>
                                                                         ) : (
-                                                                            <>
+                                                                            <div className="flex items-center gap-1 font-semibold text-slate-800 dark:text-slate-200 text-[10.5px] sm:text-[11.5px] leading-none whitespace-nowrap">
                                                                                 <span>{svc.encounter?.duration || 0} min</span>
                                                                                 <span className="text-slate-300 dark:text-slate-600 font-normal">·</span>
-                                                                                <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-full text-[11px] font-black border border-indigo-100 dark:border-indigo-800">
+                                                                                <span className="px-1.5 py-0.2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded text-[9.5px] sm:text-[10px] font-black border border-indigo-100 dark:border-indigo-800">
                                                                                     {svc.encounter?.billing_units || svc.encounter?.units || 0}u
-                                                                                </span>
-                                                                            </>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* 5. Duration - Desktop only */}
-                                                                <div className="hidden sm:flex flex-col gap-0.5 items-center text-center">
-                                                                    <span className="label-small !mb-0 text-[9px]">Duration</span>
-                                                                    <div className="value-text text-[12px] flex items-center justify-center gap-1">
-                                                                        <GhostInput
-                                                                            value={svc.encounter?.duration}
-                                                                            isEditMode={isEditMode}
-                                                                            onChange={(val) => handleUpdateField(`${pathPrefix}encounter.duration`, val)}
-                                                                            className="text-center !rounded-full !px-2 !py-0.5 !text-[12px] w-14"
-                                                                            placeholder="min"
-                                                                        />
-                                                                        {!isEditMode && <span className="text-[10px] text-slate-400 font-bold">min</span>}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* 6. Units - Desktop only */}
-                                                                <div className="hidden sm:flex flex-col gap-0.5 items-center text-center">
-                                                                    <span className="label-small !mb-0 text-[9px]">Units</span>
-                                                                    <div className="value-text">
-                                                                        {isEditMode ? (
-                                                                            <GhostInput
-                                                                                value={svc.encounter?.billing_units || svc.encounter?.units || ''}
-                                                                                isEditMode={true}
-                                                                                onChange={(val) => {
-                                                                                    handleUpdateField(`${pathPrefix}encounter.billing_units`, val);
-                                                                                    handleUpdateField(`${pathPrefix}encounter.units`, val);
-                                                                                }}
-                                                                                className="text-center !rounded-full !px-2 !py-0.5 !text-[11px] w-14"
-                                                                                placeholder="0"
-                                                                            />
-                                                                        ) : (
-                                                                            <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded-full text-[11px] font-black border border-indigo-100 dark:border-indigo-800">
-                                                                                {svc.encounter?.billing_units || svc.encounter?.units || 0}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* 7. Service Focus - Spans full width */}
-                                                                <div className="col-span-2 sm:col-span-5 mt-1 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
-                                                                    <div className="value-text !text-[13.5px] sm:!text-[15px] font-black text-indigo-950 dark:text-white tracking-tight leading-tight">
-                                                                        {isEditMode ? (
-                                                                            <div className="flex items-center gap-2.5 bg-slate-900/50 border border-slate-700/60 hover:border-slate-600 focus-within:border-indigo-500/80 focus-within:ring-1 focus-within:ring-indigo-500/30 rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 transition-all">
-                                                                                <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase whitespace-nowrap">Service Focus:</span>
-                                                                                <input
-                                                                                    type="text"
-                                                                                    value={(() => {
-                                                                                        const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
-                                                                                        const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
-                                                                                        if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
-                                                                                        if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
-                                                                                        if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
-                                                                                        if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
-                                                                                        return rawTitle || "TCM Progress Note";
-                                                                                    })()}
-                                                                                    onChange={(e) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, e.target.value)}
-                                                                                    placeholder="Enter encounter subject..."
-                                                                                    className="w-full bg-transparent border-0 outline-none text-[13px] sm:text-[14px] font-bold text-slate-100 placeholder:text-slate-500 focus:ring-0 focus:outline-none"
-                                                                                />
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div className="flex items-center py-0.5">
-                                                                                <span className="text-[9px] font-black tracking-widest text-indigo-500/80 dark:text-indigo-400 uppercase mr-2 sm:hidden">Focus:</span>
-                                                                                <span>
-                                                                                    {(() => {
-                                                                                        const rawTitle = svc.services?.service_focus_title || svc.encounter?.sub_template || (mergedNote as any).meta?.subTemplate || "";
-                                                                                        const subTitle = (svc.subTemplate || svc._frontend_service_title || svc.encounter?.primary_service_provided || "").trim();
-                                                                                        if (['OTC Obt', 'OTC Comp', 'OTC Sub'].includes(subTitle)) return subTitle;
-                                                                                        if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
-                                                                                        if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
-                                                                                        if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
-                                                                                        return rawTitle || "TCM Progress Note";
-                                                                                    })()}
                                                                                 </span>
                                                                             </div>
                                                                         )}

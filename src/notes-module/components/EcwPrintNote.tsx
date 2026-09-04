@@ -559,7 +559,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
     };
 
     return (
-        <div className={`ecw-print-shell ${!isStandalone ? 'max-w-[950px] mx-auto' : ''}`}>
+        <div className={`ecw-print-shell notranslate ${!isStandalone ? 'max-w-[950px] mx-auto' : ''}`} translate="no">
             <TimeConflictBanner
                 conflicts={conflicts}
                 confidence={confidence}
