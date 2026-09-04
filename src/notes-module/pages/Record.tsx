@@ -2143,23 +2143,23 @@ const Record: React.FC = () => {
                             </div>
 
                             {/* Middle Tier: Unified Capture Interface */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 xl:gap-7">
+                            <div className="grid grid-cols-2 gap-3 md:gap-4 lg:gap-5 xl:gap-7">
                                 {/* Voice Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[2rem] p-5 md:p-6 xl:p-7 flex flex-col gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[240px] md:min-h-[260px] xl:min-h-[280px]">
+                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-[2rem] p-3.5 sm:p-4 md:p-5 lg:p-6 xl:p-7 flex flex-col gap-2.5 sm:gap-3 md:gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[190px] md:min-h-[220px] lg:min-h-[260px] xl:min-h-[280px]">
                                         <div className="flex items-center justify-between w-full px-1">
                                             <div className="flex items-center gap-1.5">
-                                                <Mic size={14} className="text-slate-400" />
-                                                <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[10px]">
+                                                <Mic size={14} className="text-slate-400 shrink-0" />
+                                                <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2 md:px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px] md:text-[10px]">
                                                     {t('record.voice_capture', 'Voice Capture')}
                                                 </Badge>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col items-center justify-center flex-1 gap-3 xl:gap-4 w-full py-1">
+                                        <div className="flex flex-col items-center justify-center flex-1 gap-2.5 sm:gap-3 xl:gap-4 w-full py-1">
                                             <div className="relative group w-fit flex items-center justify-center">
                                                 {/* Soft Diffused Ambient Glow */}
                                                 <div className={cn(
-                                                    "absolute rounded-full blur-2xl pointer-events-none transition-all duration-700 -inset-3",
+                                                    "absolute rounded-full blur-xl md:blur-2xl pointer-events-none transition-all duration-700 -inset-2 md:-inset-3",
                                                     status === 'recording'
                                                         ? "bg-rose-500/25 animate-pulse"
                                                         : audioBlob
@@ -2171,7 +2171,7 @@ const Record: React.FC = () => {
                                                     onClick={status === 'idle' && !audioBlob ? startRecording : (status === 'recording' ? stopRecording : undefined)}
                                                     disabled={!!audioBlob}
                                                     className={cn(
-                                                        "relative size-22 md:size-24 xl:size-26 rounded-full flex items-center justify-center transition-all duration-300 ease-out transform-gpu will-change-transform z-10 shadow-lg cursor-pointer active:scale-95",
+                                                        "relative size-16 sm:size-18 md:size-20 lg:size-24 xl:size-[104px] rounded-full flex items-center justify-center transition-all duration-300 ease-out transform-gpu will-change-transform z-10 shadow-lg cursor-pointer active:scale-95",
                                                         audioBlob 
                                                             ? "bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 cursor-default shadow-emerald-500/10" 
                                                             : status === 'recording'
@@ -2181,31 +2181,32 @@ const Record: React.FC = () => {
                                                     title={status === 'recording' ? (language === 'es' ? 'Detener Grabación' : 'Stop Recording') : (audioBlob ? (language === 'es' ? 'Audio Capturado' : 'Audio Captured') : (language === 'es' ? 'Iniciar Grabación' : 'Start Recording'))}
                                                 >
                                                     {status === 'recording' ? (
-                                                        <div className="size-7 rounded-lg bg-white shadow-sm flex items-center justify-center">
-                                                            <div className="size-3 bg-rose-600 rounded-xs" />
+                                                        <div className="size-5 md:size-6 lg:size-7 rounded-md md:rounded-lg bg-white shadow-sm flex items-center justify-center">
+                                                            <div className="size-2.5 md:size-3 bg-rose-600 rounded-xs" />
                                                         </div>
                                                     ) : (
-                                                        <Mic size={32} strokeWidth={1.75} className={cn(
-                                                            "transition-transform duration-300",
-                                                            audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-primary group-hover:scale-110"
+                                                        <Mic size={24} strokeWidth={1.75} className={cn(
+                                                            "transition-transform duration-300 md:scale-115 lg:scale-125",
+                                                            audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-primary group-hover:scale-125"
                                                         )} />
                                                     )}
                                                 </button>
 
                                                 {audioBlob && (
-                                                    <div className="absolute -top-1 -right-1 size-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-300 z-20">
-                                                        <Check size={14} strokeWidth={3} />
+                                                    <div className="absolute -top-1 -right-1 size-6 md:size-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-300 z-20">
+                                                        <Check size={12} strokeWidth={3} className="md:hidden" />
+                                                        <Check size={14} strokeWidth={3} className="hidden md:block" />
                                                     </div>
                                                 )}
                                             </div>
 
-                                            <div className="flex flex-col items-center gap-1 min-h-[36px] justify-start mt-0.5">
+                                            <div className="flex flex-col items-center gap-0.5 md:gap-1 min-h-[30px] md:min-h-[36px] justify-start mt-0.5">
                                                 {status === 'recording' ? (
                                                     <div className="flex flex-col items-center gap-1 animate-in fade-in duration-300">
-                                                        <span className="font-mono text-xl xl:text-2xl font-bold tabular-nums text-rose-600 dark:text-rose-400 leading-tight">
+                                                        <span className="font-mono text-lg md:text-xl xl:text-2xl font-bold tabular-nums text-rose-600 dark:text-rose-400 leading-tight">
                                                             {formatTime(timer)}
                                                         </span>
-                                                        <div className="flex items-center gap-1 h-3.5 justify-center w-16">
+                                                        <div className="flex items-center gap-1 h-3 md:h-3.5 justify-center w-14 md:w-16">
                                                             <span className="w-1 bg-rose-500 rounded-full animate-sound-bar-1" />
                                                             <span className="w-1 bg-rose-500 rounded-full animate-sound-bar-2" />
                                                             <span className="w-1 bg-rose-500 rounded-full animate-sound-bar-3" />
@@ -2216,7 +2217,7 @@ const Record: React.FC = () => {
                                                 ) : (
                                                     <div className="flex flex-col items-center gap-0.5 animate-in fade-in duration-300">
                                                         <p className={cn(
-                                                            "text-[10px] font-bold uppercase tracking-widest transition-colors duration-300",
+                                                            "text-[9px] md:text-[10px] font-bold uppercase tracking-wider md:tracking-widest transition-colors duration-300 text-center",
                                                             audioBlob ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground/70"
                                                         )}>
                                                             {audioBlob ? t('record.session_finalized', 'Session Finalized') : t('record.system_standby', 'System Standby')}
@@ -2225,7 +2226,7 @@ const Record: React.FC = () => {
                                                 )}
                                             </div>
 
-                                            <div className="flex flex-col gap-2 w-full max-w-[200px] mt-0.5">
+                                            <div className="flex flex-col gap-1.5 md:gap-2 w-full max-w-[170px] md:max-w-[200px] mt-0.5">
                                                 {audioBlob && status !== 'recording' && (
                                                     <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
                                                         <Button
@@ -2236,7 +2237,7 @@ const Record: React.FC = () => {
                                                                 setAudioUrl(null);
                                                                 setTimer(0);
                                                             }}
-                                                            className="h-8 w-full rounded-full font-black text-[10px] uppercase tracking-[0.15em] text-rose-400 hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-all"
+                                                            className="h-7 md:h-8 w-full rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-rose-400 hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-all"
                                                         >
                                                             {t('record.discard', 'Discard')}
                                                         </Button>
@@ -2249,14 +2250,14 @@ const Record: React.FC = () => {
 
                                 {/* Text Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
-                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-[2rem] p-5 md:p-6 xl:p-7 flex flex-col gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[240px] md:min-h-[260px] xl:min-h-[280px]">
+                                    <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-[2rem] p-3.5 sm:p-4 md:p-5 lg:p-6 xl:p-7 flex flex-col gap-2.5 sm:gap-3 md:gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[190px] md:min-h-[220px] lg:min-h-[260px] xl:min-h-[280px]">
                                         {selectedSubTemplate === 'Custom Template' ? (
-                                            <div className="flex flex-col gap-3.5 h-full">
-                                                <div className="flex-1 flex flex-col gap-2 relative">
+                                            <div className="flex flex-col gap-2.5 sm:gap-3.5 h-full">
+                                                <div className="flex-1 flex flex-col gap-1.5 md:gap-2 relative">
                                                     <div className="flex items-center justify-between w-full px-1">
                                                         <div className="flex items-center gap-1.5">
-                                                            <Target size={14} className="text-slate-400" />
-                                                            <Badge variant="outline" className="bg-white/80 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400 border-slate-100/50 dark:border-slate-800/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[10px]">
+                                                            <Target size={14} className="text-slate-400 shrink-0" />
+                                                            <Badge variant="outline" className="bg-white/80 dark:bg-slate-950/20 text-slate-500 dark:text-slate-400 border-slate-100/50 dark:border-slate-800/50 font-bold px-2 md:px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px] md:text-[10px]">
                                                                 {t('record.encounter_goals', 'Goals')}
                                                             </Badge>
                                                         </div>
@@ -2265,14 +2266,14 @@ const Record: React.FC = () => {
                                                         value={patientInfo.context}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
                                                         placeholder={t('record.goals_placeholder', 'Symptoms or session objectives...')}
-                                                        className="w-full flex-1 min-h-[85px] bg-white/40 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 px-3.5 py-2.5 text-[13px] font-medium rounded-xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-indigo-500/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
+                                                        className="w-full flex-1 min-h-[65px] md:min-h-[75px] lg:min-h-[85px] bg-white/40 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60 px-2.5 py-2 md:px-3.5 md:py-2.5 text-xs md:text-[13px] font-medium rounded-xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-indigo-500/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
                                                     />
                                                 </div>
-                                                <div className="flex-1 flex flex-col gap-2 relative">
+                                                <div className="flex-1 flex flex-col gap-1.5 md:gap-2 relative">
                                                     <div className="flex items-center justify-between w-full px-1">
                                                         <div className="flex items-center gap-1.5">
-                                                            <Sparkles size={14} className="text-emerald-400 animate-pulse" />
-                                                            <Badge variant="outline" className="bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-100/50 dark:border-emerald-900/50 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[10px]">
+                                                            <Sparkles size={14} className="text-emerald-400 animate-pulse shrink-0" />
+                                                            <Badge variant="outline" className="bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-100/50 dark:border-emerald-900/50 font-bold px-2 md:px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px] md:text-[10px]">
                                                                 {language === 'es' ? 'Plantilla' : 'Template'}
                                                             </Badge>
                                                         </div>
@@ -2281,21 +2282,21 @@ const Record: React.FC = () => {
                                                         value={patientInfo.customTemplateText}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, customTemplateText: e.target.value }))}
                                                         placeholder={language === 'es' ? 'Pega tu plantilla personalizada aquí...' : 'Paste your custom template here...'}
-                                                        className="w-full flex-1 min-h-[85px] bg-white/40 dark:bg-slate-950/30 border border-emerald-200/40 dark:border-emerald-900/40 px-3.5 py-2.5 text-[13px] font-medium rounded-xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-emerald-500/20 placeholder:text-slate-400 dark:placeholder:text-emerald-600 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
+                                                        className="w-full flex-1 min-h-[65px] md:min-h-[75px] lg:min-h-[85px] bg-white/40 dark:bg-slate-950/30 border border-emerald-200/40 dark:border-emerald-900/40 px-2.5 py-2 md:px-3.5 md:py-2.5 text-xs md:text-[13px] font-medium rounded-xl text-slate-700 dark:text-slate-200 shadow-sm focus-visible:ring-emerald-500/20 placeholder:text-slate-400 dark:placeholder:text-emerald-600 hover:bg-white dark:hover:bg-slate-950/70 focus:bg-white dark:focus:bg-slate-950/90 transition-all duration-300"
                                                     />
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col gap-2 h-full relative group/text flex-1">
+                                            <div className="flex flex-col gap-1.5 md:gap-2 h-full relative group/text flex-1">
                                                 <div className="flex items-center justify-between w-full px-1">
                                                     <div className="flex items-center gap-1.5">
-                                                        <Target size={14} className="text-slate-400" />
-                                                        <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[10px]">
+                                                        <Target size={14} className="text-slate-400 shrink-0" />
+                                                        <Badge variant="outline" className="bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 border-slate-100 dark:border-slate-800 font-bold px-2 md:px-2.5 py-0.5 rounded-full scale-90 uppercase tracking-widest text-[9px] md:text-[10px]">
                                                             {t('record.encounter_goals', 'Encounter Goals')}
                                                         </Badge>
                                                     </div>
                                                     {patientInfo.context.trim().length > 0 && (
-                                                        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950 text-emerald-500 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900 flex items-center gap-1 font-bold animate-in zoom-in px-2.5 py-0.5 rounded-full scale-90 text-[10px]">
+                                                        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-950 text-emerald-500 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900 flex items-center gap-1 font-bold animate-in zoom-in px-2 md:px-2.5 py-0.5 rounded-full scale-90 text-[9px] md:text-[10px]">
                                                             <Check size={11} strokeWidth={3} /> {language === 'es' ? "Añadido" : "Added"}
                                                         </Badge>
                                                     )}
@@ -2304,8 +2305,8 @@ const Record: React.FC = () => {
                                                     {!patientInfo.context.trim() && (
                                                         <div className="absolute inset-x-0 top-1 pointer-events-none px-1 flex group-focus-within/text:opacity-0 transition-opacity duration-300">
                                                             <div className="flex items-start gap-1">
-                                                                <div className="w-[2px] h-4.5 bg-indigo-500/40 animate-cursor-blink rounded-full mt-0.5" />
-                                                                <span className="text-[13px] font-medium text-slate-400/60 dark:text-slate-500/60 tracking-tight leading-relaxed animate-in fade-in">
+                                                                <div className="w-[2px] h-3.5 md:h-4.5 bg-indigo-500/40 animate-cursor-blink rounded-full mt-0.5 shrink-0" />
+                                                                <span className="text-xs md:text-[13px] font-medium text-slate-400/60 dark:text-slate-500/60 tracking-tight leading-relaxed animate-in fade-in">
                                                                     {t('record.goals_placeholder', 'Specify symptoms, history focus, or session objectives (optional)...')}
                                                                 </span>
                                                             </div>
@@ -2315,7 +2316,7 @@ const Record: React.FC = () => {
                                                         value={patientInfo.context}
                                                         onChange={(e) => setPatientInfo(prev => ({ ...prev, context: e.target.value }))}
                                                         placeholder=""
-                                                        className="w-full flex-1 bg-transparent border-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1 py-0 text-[13px] font-medium text-slate-600 dark:text-slate-200 placeholder:text-transparent resize-none leading-relaxed transition-all shadow-none tracking-tight z-10 min-h-[110px] md:min-h-[130px] xl:min-h-[150px]"
+                                                        className="w-full flex-1 bg-transparent border-none outline-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1 py-0 text-xs md:text-[13px] font-medium text-slate-600 dark:text-slate-200 placeholder:text-transparent resize-none leading-relaxed transition-all shadow-none tracking-tight z-10 min-h-[85px] md:min-h-[110px] lg:min-h-[130px] xl:min-h-[150px]"
                                                     />
                                                 </div>
                                             </div>
