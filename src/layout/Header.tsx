@@ -62,7 +62,7 @@ export function Header() {
     return (
         <>
             <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-100 shadow-sm print:hidden">
-            <div className="h-16 flex items-center justify-between px-4 md:px-8 lg:px-10 w-full">
+            <div className="h-16 flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 w-full">
                 {/* 1. Logo Area */}
                 <Link
                     to="/notes/new"
@@ -122,7 +122,7 @@ export function Header() {
                 </Link>
 
                 {/* 2. Desktop Navigation (Center) */}
-                <nav className="hidden md:flex items-center gap-2 justify-center flex-1 mx-8">
+                <nav className="hidden md:flex items-center gap-1.5 xl:gap-2 justify-center flex-1 mx-2 sm:mx-4 xl:mx-8 min-w-0">
                     {navItems.map((item) => {
                         const isActive = item.path === '/notes/new' ? pathname === '/notes/new' : pathname.startsWith(item.path);
                         return (
@@ -135,22 +135,23 @@ export function Header() {
                                         window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
                                     }
                                 }}
+                                title={item.label}
                                 className={cn(
-                                    "flex items-center gap-2 px-4 h-9 rounded-full text-sm font-semibold transition-all duration-200 border border-transparent",
+                                    "flex items-center justify-center gap-2 px-2.5 xl:px-4 h-9 rounded-full text-sm font-semibold transition-all duration-200 border border-transparent shrink-0",
                                     isActive
                                         ? "bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/20 shadow-sm"
                                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800/60"
                                 )}
                             >
-                                <item.icon className={cn("size-4", isActive ? "opacity-100" : "opacity-75")} />
-                                <span>{item.label}</span>
+                                <item.icon className={cn("size-4 shrink-0", isActive ? "opacity-100" : "opacity-75")} />
+                                <span className="hidden xl:inline whitespace-nowrap">{item.label}</span>
                             </NavLink>
                         );
                     })}
                 </nav>
 
                 {/* 3. User Profile Dropdown & Mobile Menu Toggle */}
-                <div className="flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
                     
                     {/* Theme Toggle */}
                     <button
@@ -165,9 +166,9 @@ export function Header() {
                     <div className="relative" id="user-dropdown-container">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="flex items-center gap-2.5 px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all select-none border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50"
+                            className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all select-none border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50"
                         >
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 hidden lg:block">{displayName}</span>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 hidden xl:block whitespace-nowrap">{displayName}</span>
                             <div className="h-8 w-8 rounded-full overflow-hidden border border-slate-200 bg-slate-50 shadow-sm ring-1 ring-slate-100 shrink-0">
                                 <img
                                     src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=4f46e5&color=fff&bold=true`}
