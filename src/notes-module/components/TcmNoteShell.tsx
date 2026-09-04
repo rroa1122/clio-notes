@@ -18,7 +18,7 @@ import { TimeSpinner } from '../../components/ui/time-spinner';
 import { Button } from '../../components/ui/button';
 import SignatureModal from './SignatureModal';
 import { useProviderTimeConflicts } from '../hooks/useProviderTimeConflicts';
-import { TimeConflictBanner } from './TimeConflictBanner';
+import { TimeConflictModal } from './TimeConflictModal';
 import { areOverlapping, extractNormalizedTimeRange } from '../lib/conflictUtils';
 import { settingsService, type ClinicSettings } from '../../services/settingsService';
 import { SyncErrorModal } from './SyncErrorModal';
@@ -788,6 +788,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncTask, setSyncTask] = useState<{ status: string; error_message: string | null } | null>(null);
     const [isSyncErrorModalOpen, setIsSyncErrorModalOpen] = useState(false);
+    const [isTimeConflictModalOpen, setIsTimeConflictModalOpen] = useState(false);
 
     const lastNotifiedTaskRef = React.useRef<string | null>(null);
 
@@ -1251,6 +1252,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         
         if (hasInternalTimeConflict || (conflicts && conflicts.length > 0)) {
             toast.error("Cannot save note with overlapping times. Please resolve time conflicts first.");
+            if (conflicts && conflicts.length > 0) {
+                setIsTimeConflictModalOpen(true);
+            }
             return;
         }
 
@@ -2404,14 +2408,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
 
 
-            {/* Time Conflict Warning Banner */}
-            {!isConflictLoading && (confidence === 'low' || conflicts.length > 0) && (
-                <div className="no-print w-full pb-4 flex items-center justify-center">
-                    <div className="w-full max-w-[1050px]">
-                        <TimeConflictBanner conflicts={conflicts} confidence={confidence} isLoading={isConflictLoading} />
-                    </div>
-                </div>
-            )}
+
 
             <div className="document-canvas-wrapper no-print-bg">
                 <table id="note-print-root" className="document-page border-collapse">
@@ -3168,6 +3165,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 isRetrying={isSyncing}
                 patientName={mergedNote?.patient?.full_name || (mergedNote as any)?.meta?.patientName}
                 visitDate={mergedNote?.joint_services?.[0]?.encounter?.dos_date || mergedNote?.encounter?.dos_date || (mergedNote as any)?.meta?.dos_date || (mergedNote as any)?.meta?.visitDate || (mergedNote as any)?.date_of_service}
+            />
+            <TimeConflictModal 
+                isOpen={isTimeConflictModalOpen}
+                onClose={() => setIsTimeConflictModalOpen(false)}
+                conflicts={conflicts || []}
             />
         </div>
     );

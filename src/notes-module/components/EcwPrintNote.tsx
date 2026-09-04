@@ -8,7 +8,7 @@ import { Save, CheckCircle2, PenTool, Copy, Check, Calendar, Lock } from 'lucide
 import { DatePicker } from '@/components/ui/date-picker';
 import SignatureModal from './SignatureModal';
 import { useProviderTimeConflicts } from '../hooks/useProviderTimeConflicts';
-import { TimeConflictBanner } from './TimeConflictBanner';
+import { TimeConflictModal } from './TimeConflictModal';
 import { printNoteViaIframe } from '../lib/printNote';
 import { settingsService, type ClinicSettings } from '../../services/settingsService';
 
@@ -259,6 +259,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
     const [lastSavedId, setLastSavedId] = useState<string | null>(
         (note as any)?.id || (note as any)?._id || (note as any)?.noteId || null
     );
+    const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
 
     const handleCopy = async (text: string, fieldId: string) => {
         if (!text) return;
@@ -431,6 +432,7 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
 
         if (conflicts && conflicts.length > 0) {
             toast.error("Cannot save note with overlapping times. Please resolve time conflicts first.");
+            setIsConflictModalOpen(true);
             return false;
         }
 
@@ -560,11 +562,6 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
 
     return (
         <div className={`ecw-print-shell notranslate ${!isStandalone ? 'max-w-[950px] mx-auto' : ''}`} translate="no">
-            <TimeConflictBanner
-                conflicts={conflicts}
-                confidence={confidence}
-                isLoading={isConflictLoading}
-            />
             {!hideToolbar && (
                 <div className="ecw-toolbar no-print flex flex-col gap-4 mb-6 mt-4">
                     {parsingError && (
@@ -580,14 +577,11 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                         {!isSigned && (
                             <button
                                 onClick={handleSaveToHistory}
-                                disabled={isSaving || isSaved || !user || (conflicts && conflicts.length > 0)}
+                                disabled={isSaving || isSaved || !user}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all shadow-sm border ${isSaved
                                     ? "bg-slate-100 text-slate-400 border-slate-200 cursor-default"
-                                    : (conflicts && conflicts.length > 0)
-                                    ? "bg-red-50 text-red-400 border-red-100 cursor-not-allowed"
                                     : "bg-teal-50 text-teal-600 border-teal-100 hover:bg-teal-600 hover:text-white disabled:opacity-50"
                                     }`}
-                                title={(conflicts && conflicts.length > 0) ? "Please resolve time conflicts before saving" : ""}
                             >
                                 {isSaving ? (
                                     <div className="size-3 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
@@ -1233,6 +1227,11 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                     setSigModal(prev => ({ ...prev, open: false }));
                 }}
                 title={sigModal.type === 'cm' ? "Clinician Signature" : "Supervisor Signature"}
+            />
+            <TimeConflictModal 
+                isOpen={isConflictModalOpen}
+                onClose={() => setIsConflictModalOpen(false)}
+                conflicts={conflicts || []}
             />
         </div>
     );
