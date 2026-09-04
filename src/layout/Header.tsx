@@ -121,8 +121,8 @@ export function Header() {
                     </div>
                 </Link>
 
-                {/* 2. Desktop Navigation (Center) */}
-                <nav className="hidden md:flex items-center gap-1.5 xl:gap-2 justify-center flex-1 mx-2 sm:mx-4 xl:mx-8 min-w-0">
+                {/* 2. Navigation (Center) - Always visible with icons */}
+                <nav className="flex items-center gap-1 sm:gap-1.5 xl:gap-2 justify-center flex-1 mx-1 sm:mx-4 xl:mx-8 min-w-0">
                     {navItems.map((item) => {
                         const isActive = item.path === '/notes/new' ? pathname === '/notes/new' : pathname.startsWith(item.path);
                         return (
@@ -137,7 +137,7 @@ export function Header() {
                                 }}
                                 title={item.label}
                                 className={cn(
-                                    "flex items-center justify-center gap-2 px-2.5 xl:px-4 h-9 rounded-full text-sm font-semibold transition-all duration-200 border border-transparent shrink-0",
+                                    "flex items-center justify-center gap-2 px-2 sm:px-2.5 xl:px-4 h-8 sm:h-9 rounded-full text-sm font-semibold transition-all duration-200 border border-transparent shrink-0",
                                     isActive
                                         ? "bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/20 shadow-sm"
                                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/60 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800/60"
@@ -150,8 +150,8 @@ export function Header() {
                     })}
                 </nav>
 
-                {/* 3. User Profile Dropdown & Mobile Menu Toggle */}
-                <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+                {/* 3. User Profile Dropdown & Theme Toggle */}
+                <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3.5 shrink-0">
                     
                     {/* Theme Toggle */}
                     <button
@@ -166,7 +166,7 @@ export function Header() {
                     <div className="relative" id="user-dropdown-container">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all select-none border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50"
+                            className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 md:px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all select-none border border-transparent hover:border-slate-200/50 dark:hover:border-slate-700/50"
                         >
                             <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 hidden xl:block whitespace-nowrap">{displayName}</span>
                             <div className="h-8 w-8 rounded-full overflow-hidden border border-slate-200 bg-slate-50 shadow-sm ring-1 ring-slate-100 shrink-0">
@@ -272,48 +272,6 @@ export function Header() {
                 </div>
             </div>
         </header>
-
-            {/* Mobile Bottom Navigation Bar */}
-            <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/85 dark:bg-slate-950/85 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-around px-6 z-50 shadow-[0_-4px_25px_-6px_rgba(0,0,0,0.08)]">
-                {/* 1. History */}
-                <NavLink
-                    to="/notes/history"
-                    className={({ isActive }) => cn(
-                        "flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all",
-                        isActive && "text-[#6366f1] dark:text-[#6366f1] font-black"
-                    )}
-                >
-                    <FileText size={20} />
-                    <span className="text-[10px] font-black tracking-wide">{t('nav.history', 'History')}</span>
-                </NavLink>
-
-                {/* 2. Center FAB: New Encounter */}
-                <NavLink
-                    to="/notes/new"
-                    onClick={() => {
-                        sessionStorage.removeItem('clio_encounter_draft');
-                        window.dispatchEvent(new CustomEvent('clio-reset-workspace'));
-                    }}
-                    className={({ isActive }) => cn(
-                        "relative -top-4 flex items-center justify-center size-14 rounded-full bg-gradient-to-tr from-indigo-500 via-indigo-600 to-[#6366f1] text-white shadow-lg shadow-indigo-500/35 transition-all hover:scale-105 active:scale-95 z-50",
-                        isActive && "ring-4 ring-indigo-500/25"
-                    )}
-                >
-                    <Mic size={24} className="animate-pulse" />
-                </NavLink>
-
-                {/* 3. Clients */}
-                <NavLink
-                    to="/patients"
-                    className={({ isActive }) => cn(
-                        "flex flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all",
-                        isActive && "text-[#6366f1] dark:text-[#6366f1] font-black"
-                    )}
-                >
-                    <Users size={20} />
-                    <span className="text-[10px] font-black tracking-wide">{t('nav.clients', 'Clients')}</span>
-                </NavLink>
-            </div>
         </>
     );
 }
