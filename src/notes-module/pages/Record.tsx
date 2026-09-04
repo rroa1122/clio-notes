@@ -1555,43 +1555,29 @@ const Record: React.FC = () => {
         <div className="flex flex-col items-center max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-12 animate-in fade-in duration-300">
             {status === 'done' && pdfResponse ? (
                 <div className="max-w-5xl w-full animate-in fade-in duration-300">
-                    <div className="w-full bg-white dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800/80 rounded-[2.5rem] p-4 sm:p-5 md:p-6 shadow-2xl space-y-2">
-                        
-                        {/* Canvas Header Bar with minimal Back button */}
-                        <div className="flex items-center no-print px-1 pt-1">
-                            <button
-                                onClick={handleBack}
-                                className="group flex items-center gap-2 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors font-black text-[10px] uppercase tracking-widest active:scale-[0.98] bg-transparent border-none p-0 outline-none cursor-pointer"
-                            >
-                                <ArrowLeft size={13} className="text-indigo-400 group-hover:-translate-x-0.5 transition-transform" />
-                                Back
-                            </button>
-                        </div>
-
-                        {/* Document Content */}
-                        <div id="review-workspace-root" className="w-full relative pt-1">
-                            {isTemplatesLoading && (
-                                <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-3xl">
-                                    <Loader2 className="animate-spin text-primary" size={32} />
-                                </div>
-                            )}
-                            {clioNote ? (
-                                <ClioNoteViewer
-                                    note={clioNote}
-                                    onSaveComplete={(saved) => {
-                                        if (saved) {
-                                            toast.success("Saved successfully");
-                                        }
-                                    }}
-                                />
-                            ) : (
-                                <NotePrintPreview
-                                    data={pdfResponse.data}
-                                    pdfUrl={pdfResponse.url}
-                                    onRegenerate={handleRegenerate}
-                                />
-                            )}
-                        </div>
+                    {/* Document Content */}
+                    <div id="review-workspace-root" className="w-full relative">
+                        {isTemplatesLoading && (
+                            <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-3xl">
+                                <Loader2 className="animate-spin text-primary" size={32} />
+                            </div>
+                        )}
+                        {clioNote ? (
+                            <ClioNoteViewer
+                                note={clioNote}
+                                onSaveComplete={(saved) => {
+                                    if (saved) {
+                                        toast.success("Saved successfully");
+                                    }
+                                }}
+                            />
+                        ) : (
+                            <NotePrintPreview
+                                data={pdfResponse.data}
+                                pdfUrl={pdfResponse.url}
+                                onRegenerate={handleRegenerate}
+                            />
+                        )}
                     </div>
                 </div>
             ) : (

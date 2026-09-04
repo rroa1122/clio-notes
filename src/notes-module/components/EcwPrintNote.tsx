@@ -680,36 +680,66 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
 
                 /* Layout Canvas Styles (Screen) */
                 .document-canvas-wrapper {
-                    background-color: #f1f5f9; /* slate-100 */
-                    min-height: 100vh;
-                    padding: 3rem 1rem;
+                    background: transparent !important;
+                    min-height: auto;
+                    padding: 0 !important;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                 }
- 
+
                 .document-page {
                     background-color: white;
                     width: 100%;
                     max-width: 8.5in;
                     min-height: 11in;
                     padding: 0.6in;
-                    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-                    border: 1px solid #e2e8f0;
+                    box-shadow: 
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+                        0 2px 8px -2px rgba(0, 0, 0, 0.03),
+                        0 12px 32px -4px rgba(0, 0, 0, 0.05),
+                        0 24px 60px -12px rgba(99, 102, 241, 0.08);
+                    border: 1px solid rgba(226, 232, 240, 0.85);
+                    border-radius: 2rem;
                     position: relative;
                     margin-bottom: 2rem;
                     box-sizing: border-box;
                     font-family: 'Inter', system-ui, sans-serif !important;
+                    transition: all 0.3s ease;
                 }
 
                 @media screen and (max-width: 640px) {
                     .document-canvas-wrapper {
-                        padding: 1rem 0.25rem !important;
+                        padding: 0 !important;
                     }
                     .document-page {
                         padding: 1.25rem 0.875rem !important;
-                        border-radius: 1.25rem !important;
+                        border-radius: 1.5rem !important;
                         min-height: auto !important;
+                        box-shadow: 
+                            inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+                            0 4px 16px -2px rgba(0, 0, 0, 0.04),
+                            0 12px 30px -6px rgba(99, 102, 241, 0.07) !important;
+                    }
+                }
+
+                .dark .document-canvas-wrapper {
+                    background: transparent !important;
+                }
+                .dark .document-page {
+                    background-color: #0b1120 !important;
+                    color: #cbd5e1 !important;
+                    border: 1px solid rgba(99, 102, 241, 0.18) !important;
+                    box-shadow: 
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+                        0 12px 36px -8px rgba(0, 0, 0, 0.7),
+                        0 25px 60px -12px rgba(99, 102, 241, 0.16),
+                        0 0 45px -10px rgba(99, 102, 241, 0.12) !important;
+                    border-radius: 2rem !important;
+                }
+                @media screen and (max-width: 640px) {
+                    .dark .document-page {
+                        border-radius: 1.5rem !important;
                     }
                 }
             `}} />

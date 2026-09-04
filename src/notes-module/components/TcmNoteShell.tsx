@@ -2044,8 +2044,12 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     min-height: 11in; 
 
                     padding: 0.5in 0.6in; 
-                    box-shadow: 0 20px 45px -15px rgba(0,0,0,0.06);
-                    border: 1px solid #e2e8f0; 
+                    box-shadow: 
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+                        0 2px 8px -2px rgba(0, 0, 0, 0.03),
+                        0 12px 32px -4px rgba(0, 0, 0, 0.05),
+                        0 24px 60px -12px rgba(99, 102, 241, 0.08);
+                    border: 1px solid rgba(226, 232, 240, 0.85); 
                     border-radius: 2rem;
                     position: relative; 
                     margin-bottom: 4rem; 
@@ -2059,9 +2063,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 @media screen and (max-width: 640px) {
                     .document-page {
                         padding: 1.25rem 0.875rem !important;
-                        border-radius: 1.25rem !important;
+                        border-radius: 1.5rem !important;
                         margin-bottom: 2rem !important;
                         min-height: auto !important;
+                        box-shadow: 
+                            inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+                            0 4px 16px -2px rgba(0, 0, 0, 0.04),
+                            0 12px 30px -6px rgba(99, 102, 241, 0.07) !important;
                     }
                 }
 
@@ -2070,11 +2078,20 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     background: transparent !important;
                 }
                 .dark .document-page { 
-                    background-color: #070c18 !important; 
+                    background-color: #0b1120 !important; 
                     color: #cbd5e1 !important; 
-                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-                    border-radius: 1.5rem !important;
+                    border: 1px solid rgba(99, 102, 241, 0.18) !important;
+                    box-shadow: 
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+                        0 12px 36px -8px rgba(0, 0, 0, 0.7),
+                        0 25px 60px -12px rgba(99, 102, 241, 0.16),
+                        0 0 45px -10px rgba(99, 102, 241, 0.12) !important;
+                    border-radius: 2rem !important;
+                }
+                @media screen and (max-width: 640px) {
+                    .dark .document-page {
+                        border-radius: 1.5rem !important;
+                    }
                 }
                 .dark .document-page .text-slate-900,
                 .dark .document-page h1,
