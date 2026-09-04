@@ -1555,29 +1555,43 @@ const Record: React.FC = () => {
         <div className="flex flex-col items-center max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-12 animate-in fade-in duration-300">
             {status === 'done' && pdfResponse ? (
                 <div className="max-w-5xl w-full animate-in fade-in duration-300">
-                    {/* Document Content */}
-                    <div id="review-workspace-root" className="w-full relative">
-                        {isTemplatesLoading && (
-                            <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-3xl">
-                                <Loader2 className="animate-spin text-primary" size={32} />
-                            </div>
-                        )}
-                        {clioNote ? (
-                            <ClioNoteViewer
-                                note={clioNote}
-                                onSaveComplete={(saved) => {
-                                    if (saved) {
-                                        toast.success("Saved successfully");
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <NotePrintPreview
-                                data={pdfResponse.data}
-                                pdfUrl={pdfResponse.url}
-                                onRegenerate={handleRegenerate}
-                            />
-                        )}
+                    <div className="w-full bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-[2rem] p-3.5 sm:p-5 md:p-6 lg:p-7 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 space-y-3 print:border-none print:shadow-none print:p-0 print:bg-white print:rounded-none">
+                        
+                        {/* Header Bar with Back button */}
+                        <div className="flex items-center no-print px-1 pt-1">
+                            <button
+                                onClick={handleBack}
+                                className="group flex items-center gap-2 text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors font-black text-[10px] sm:text-[11px] uppercase tracking-widest active:scale-95 bg-transparent border-none p-0 outline-none cursor-pointer"
+                            >
+                                <ArrowLeft size={14} className="text-indigo-400 group-hover:-translate-x-1 transition-transform" />
+                                Back
+                            </button>
+                        </div>
+
+                        {/* Document Content */}
+                        <div id="review-workspace-root" className="w-full relative">
+                            {isTemplatesLoading && (
+                                <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-sm flex items-center justify-center rounded-3xl">
+                                    <Loader2 className="animate-spin text-primary" size={32} />
+                                </div>
+                            )}
+                            {clioNote ? (
+                                <ClioNoteViewer
+                                    note={clioNote}
+                                    onSaveComplete={(saved) => {
+                                        if (saved) {
+                                            toast.success("Saved successfully");
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <NotePrintPreview
+                                    data={pdfResponse.data}
+                                    pdfUrl={pdfResponse.url}
+                                    onRegenerate={handleRegenerate}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
             ) : (

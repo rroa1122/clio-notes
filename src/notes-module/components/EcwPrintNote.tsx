@@ -689,18 +689,14 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                 }
 
                 .document-page {
-                    background-color: white;
+                    background-color: transparent !important;
                     width: 100%;
-                    max-width: 8.5in;
-                    min-height: 11in;
-                    padding: 0.6in;
-                    box-shadow: 
-                        inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-                        0 2px 8px -2px rgba(0, 0, 0, 0.03),
-                        0 12px 32px -4px rgba(0, 0, 0, 0.05),
-                        0 24px 60px -12px rgba(99, 102, 241, 0.08);
-                    border: 1px solid rgba(226, 232, 240, 0.85);
-                    border-radius: 2rem;
+                    max-width: 100%;
+                    min-height: auto;
+                    padding: 0.5rem 0.25rem;
+                    box-shadow: none !important;
+                    border: none !important;
+                    border-radius: 0 !important;
                     position: relative;
                     margin-bottom: 2rem;
                     box-sizing: border-box;
@@ -713,13 +709,10 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                         padding: 0 !important;
                     }
                     .document-page {
-                        padding: 1.25rem 0.875rem !important;
-                        border-radius: 1.5rem !important;
+                        padding: 0.25rem 0 !important;
+                        border-radius: 0 !important;
                         min-height: auto !important;
-                        box-shadow: 
-                            inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
-                            0 4px 16px -2px rgba(0, 0, 0, 0.04),
-                            0 12px 30px -6px rgba(99, 102, 241, 0.07) !important;
+                        box-shadow: none !important;
                     }
                 }
 
@@ -727,20 +720,11 @@ const EcwPrintNote: React.FC<EcwPrintNoteProps> = ({
                     background: transparent !important;
                 }
                 .dark .document-page {
-                    background-color: #0b1120 !important;
+                    background-color: transparent !important;
                     color: #cbd5e1 !important;
-                    border: 1px solid rgba(99, 102, 241, 0.18) !important;
-                    box-shadow: 
-                        inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
-                        0 12px 36px -8px rgba(0, 0, 0, 0.7),
-                        0 25px 60px -12px rgba(99, 102, 241, 0.16),
-                        0 0 45px -10px rgba(99, 102, 241, 0.12) !important;
-                    border-radius: 2rem !important;
-                }
-                @media screen and (max-width: 640px) {
-                    .dark .document-page {
-                        border-radius: 1.5rem !important;
-                    }
+                    border: none !important;
+                    box-shadow: none !important;
+                    border-radius: 0 !important;
                 }
             `}} />
 
