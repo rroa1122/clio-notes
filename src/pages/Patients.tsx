@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { storage, type Patient } from '../notes-module/lib/storage';
-import { Search, Calendar, MoreHorizontal, UserPlus, Users2, Trash2, ExternalLink, Loader2, SlidersHorizontal, Tag, Hash } from 'lucide-react';
+import { Search, Calendar, MoreHorizontal, UserPlus, Users2, Trash2, ExternalLink, Loader2, SlidersHorizontal, Tag, Hash, ChevronRight, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '../components/ui/button';
@@ -122,8 +122,59 @@ export function Patients() {
     return (
         <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 h-auto lg:h-[calc(100vh-8.5rem)] mb-2">
             <div className="flex flex-col lg:flex-1 bg-transparent md:bg-surface md:dark:bg-slate-900 rounded-[2rem] shadow-none md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 md:border border-border/60 overflow-visible lg:overflow-hidden relative h-auto lg:h-full">
-                {/* Card Header area matching the history timeline filters */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 px-8 py-6 bg-surface border-b border-slate-105 dark:border-slate-800/80 z-20 shrink-0">
+                {/* Mobile Header (block md:hidden) */}
+                <div className="block md:hidden px-3.5 pt-3 pb-3 bg-surface dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800/80 shrink-0">
+                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <h1 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight shrink-0">
+                                {language === 'es' ? "Clientes" : "Clients"}
+                            </h1>
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50 shrink-0">
+                                <span className="size-1.5 rounded-full bg-emerald-500 animate-tactile-pulse shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                                {patients.length}
+                            </span>
+                        </div>
+                        <button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow active:scale-95 transition-all shrink-0"
+                        >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>{language === 'es' ? "Nuevo" : "New Client"}</span>
+                        </button>
+                    </div>
+
+                    <div className="flex items-center border border-slate-200/80 dark:border-slate-800/80 rounded-2xl px-3 h-9 bg-slate-50/60 dark:bg-slate-950/30 relative focus-within:border-indigo-500/50 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                        <Search className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0 pointer-events-none" />
+                        <Input
+                            id="patient_search_query_mobile"
+                            name="patient_search_query_mobile"
+                            type="text"
+                            placeholder={language === 'es' ? "Buscar por nombre, fecha o caso..." : "Search name, DOB, case..."}
+                            className="h-full w-full bg-transparent border-0 p-0 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none text-xs font-medium text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            value={searchTerm}
+                            onChange={handleSearch}
+                            autoComplete="off"
+                            data-lpignore="true"
+                            data-1p-ignore="true"
+                            data-bwignore="true"
+                            data-form-type="other"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => {
+                                    setSearchTerm('');
+                                    loadPatients();
+                                }}
+                                className="text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-1 py-0.5"
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Desktop Header (hidden md:grid) */}
+                <div className="hidden md:grid md:grid-cols-12 gap-6 px-8 py-6 bg-surface border-b border-slate-105 dark:border-slate-800/80 z-20 shrink-0">
                     {/* Column 1 - Clinical Directory Stats (4/12 width) */}
                     <div className="md:col-span-4 flex flex-col gap-1.5 w-full">
                         <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5 ml-2.5">
@@ -312,13 +363,13 @@ export function Patients() {
                     </div>
 
                     {/* Mobile View */}
-                    <div className="block lg:hidden space-y-4 px-4 pb-6">
+                    <div className="block lg:hidden space-y-2.5 px-3 pt-3 pb-6">
                         {isLoading && patients.length === 0 ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="p-4 rounded-3xl bg-white/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/40 animate-pulse flex items-center gap-4">
-                                    <div className="size-12 rounded-2xl bg-slate-200/60 dark:bg-slate-800 animate-pulse shrink-0" />
-                                    <div className="flex-1 space-y-2.5">
-                                        <div className="h-4 bg-slate-200/60 dark:bg-slate-800 rounded animate-pulse w-2/3" />
+                                <div key={i} className="p-3 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/40 animate-pulse flex items-center gap-3">
+                                    <div className="size-10 rounded-xl bg-slate-200/60 dark:bg-slate-800 animate-pulse shrink-0" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-3.5 bg-slate-200/60 dark:bg-slate-800 rounded animate-pulse w-2/3" />
                                         <div className="h-3 bg-slate-200/60 dark:bg-slate-800 rounded animate-pulse w-1/3" />
                                     </div>
                                 </div>
@@ -343,53 +394,70 @@ export function Patients() {
                                 <div 
                                     key={patient.id} 
                                     onClick={() => navigate(`/patients/${patient.id}`)}
-                                    className="p-4 rounded-3xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:border-indigo-500/25 active:scale-[0.99] transition-all duration-300 flex items-center justify-between group cursor-pointer"
+                                    className="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/70 shadow-sm hover:shadow-md hover:border-indigo-500/25 active:scale-[0.99] transition-all duration-200 flex items-center justify-between gap-2.5 group cursor-pointer"
                                 >
-                                    <div className="flex items-center gap-4 min-w-0">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
                                         <div className={cn(
-                                            "size-12 rounded-2xl flex items-center justify-center font-bold text-base shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105",
+                                            "size-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105",
                                             getInitialsTheme(patient.full_name)
                                         )}>
                                             {patient.full_name?.charAt(0) || '?'}
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <div className="flex items-center flex-wrap gap-2">
+                                        <div className="flex flex-col min-w-0 flex-1">
+                                            {/* Row 1: Name and Badge */}
+                                            <div className="flex items-center gap-1.5 min-w-0">
                                                 <span className="font-bold text-foreground text-sm tracking-tight truncate leading-tight group-hover:text-primary transition-colors">
                                                     {patient.full_name}
                                                 </span>
-                                                {patient.emr_id && (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/30 shrink-0">
+                                                {patient.emr_id ? (
+                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/30 shrink-0">
                                                         {patient.emr_id}
                                                     </span>
-                                                )}
-                                                {patient.case_number && (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/40 shrink-0">
+                                                ) : patient.case_number ? (
+                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/40 shrink-0">
                                                         #{patient.case_number}
                                                     </span>
-                                                )}
+                                                ) : null}
                                             </div>
-                                            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground font-semibold tracking-tight">
-                                                <span>
+
+                                            {/* Row 2: DOB & Phone */}
+                                            <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground font-medium tracking-tight truncate">
+                                                <span className="shrink-0">
                                                     {patient.dob ? `${language === 'es' ? 'F. Nac: ' : 'DOB: '}${format(new Date(patient.dob + "T00:00:00"), language === 'es' ? 'dd/MM/yyyy' : 'MM/dd/yyyy')}` : (language === 'es' ? 'Sin fecha nac.' : 'No DOB')}
                                                 </span>
                                                 {patient.phone && (
                                                     <>
-                                                        <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                                                        <span className="truncate">{patient.phone}</span>
+                                                        <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700 shrink-0" />
+                                                        <span className="truncate flex items-center gap-1">
+                                                            <Phone className="w-2.5 h-2.5 shrink-0 opacity-70" />
+                                                            {patient.phone}
+                                                        </span>
+                                                    </>
+                                                )}
+                                                {!patient.phone && patient.emr_id && patient.case_number && (
+                                                    <>
+                                                        <span className="size-1 rounded-full bg-slate-300 dark:bg-slate-700 shrink-0" />
+                                                        <span className="truncate text-[10px]">
+                                                            #{patient.case_number}
+                                                        </span>
                                                     </>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+
+                                    {/* Action button + Chevron */}
+                                    <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="size-9 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 active:scale-95 transition-all"
+                                            className="size-8 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 active:scale-95 transition-all"
                                             onClick={(e) => confirmDelete(e, patient.id, patient.full_name)}
+                                            title={language === 'es' ? "Eliminar" : "Delete"}
                                         >
-                                            <Trash2 size={15} />
+                                            <Trash2 size={14} />
                                         </Button>
+                                        <ChevronRight size={16} className="text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors" />
                                     </div>
                                 </div>
                             ))
