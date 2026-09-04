@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { 
     Save, CheckCircle2, CheckCircle, X, PenTool, Plus, Trash2, Copy, Check, AlertCircle, Lock,
     Calendar, Printer, Edit3, FileText, User, Activity, ClipboardList, MapPin, Clock, 
-    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw, ArrowLeft
+    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw, ArrowLeft, Building2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DatePicker } from '../../components/ui/date-picker';
@@ -2433,98 +2433,102 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             )}
                         </div>
 
-                        {/* Patient & Facility Grid - TIGHTER & ALIGNED */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-x-8 mb-2 items-start">
+                        {/* Patient & Facility Grid - SIDE BY SIDE 2-COLUMN COMPACT */}
+                        <div className="grid grid-cols-2 gap-2 sm:gap-x-8 mb-2 items-start">
                             {/* Left: Patient Info */}
-                            <div className="flex flex-col items-start group/patient relative w-full">
+                            <div className="flex flex-col items-start group/patient relative w-full min-w-0">
                                 <div className="absolute -top-6 right-0 no-print opacity-0 group-hover/patient:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => handleCopy(`Patient: ${mergedNote.patient?.full_name}\nDOB: ${mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString() : '—'}\nCase No: ${mergedNote.patient?.account_number || mergedNote.patient?.case_no || '—'}\nSex: ${mergedNote.patient?.sex_at_birth || '—'}`, "Patient Info", "patient")}
-                                        className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${copyingSection === 'patient' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-blue-50 text-blue-600 border-blue-100'} border text-[10px] font-bold uppercase hover:bg-blue-600 hover:text-white`}
+                                        className={`flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded transition-colors ${copyingSection === 'patient' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-blue-50 text-blue-600 border-blue-100'} border text-[9px] sm:text-[10px] font-bold uppercase hover:bg-blue-600 hover:text-white`}
                                     >
-                                        {copyingSection === 'patient' ? <Check size={12} /> : <Copy size={12} />}
-                                        {copyingSection === 'patient' ? 'Copied' : 'Copy Patient'}
+                                        {copyingSection === 'patient' ? <Check size={11} /> : <Copy size={11} />}
+                                        <span className="hidden sm:inline">{copyingSection === 'patient' ? 'Copied' : 'Copy Patient'}</span>
                                     </button>
                                 </div>
-                                <div className="label-small text-slate-400 mb-1 flex items-center h-4">
-                                    <User size={11} className="text-indigo-400" />
-                                    CLIENT IDENTITY
+                                <div className="label-small text-slate-400 mb-1 flex items-center gap-1 h-4 text-[9px] sm:text-[10px]">
+                                    <User size={11} className="text-indigo-400 shrink-0" />
+                                    <span className="tracking-wider font-bold">CLIENT</span>
                                 </div>
                                 {isEditMode ? (
-                                    <div className="w-full bg-slate-900/50 border border-slate-700/60 rounded-xl p-2.5 space-y-2 mt-0.5">
+                                    <div className="w-full bg-slate-900/50 border border-slate-700/60 rounded-xl p-2 sm:p-2.5 space-y-1.5 sm:space-y-2 mt-0.5">
                                         <div className="flex items-center">
                                             <input
                                                 type="text"
                                                 value={mergedNote.patient?.full_name || ''}
                                                 onChange={(e) => handleUpdateField('patient.full_name', e.target.value)}
                                                 placeholder="Patient Full Name"
-                                                className="w-full bg-transparent border-0 border-b border-slate-700/60 focus:border-indigo-400 pb-1 text-[13px] font-black text-slate-100 uppercase tracking-tight outline-none placeholder:text-slate-500"
+                                                className="w-full bg-transparent border-0 border-b border-slate-700/60 focus:border-indigo-400 pb-1 text-[11px] sm:text-[13px] font-black text-slate-100 uppercase tracking-tight outline-none placeholder:text-slate-500 truncate"
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 pt-0.5">
-                                            <div className="flex items-center gap-1.5 text-[11px]">
-                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] min-w-[50px]">Case No:</span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-x-2 sm:gap-y-1.5 pt-0.5">
+                                            <div className="flex items-center gap-1 text-[10px] sm:text-[11px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[8px] sm:text-[9px] min-w-[34px] sm:min-w-[50px]">Case:</span>
                                                 <input
                                                     type="text"
                                                     value={mergedNote.patient?.account_number || mergedNote.patient?.case_no || ''}
                                                     onChange={(e) => handleUpdateField('patient.account_number', e.target.value)}
                                                     placeholder="—"
-                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
+                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-1.5 py-0.5 text-[10px] sm:text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
                                                 />
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[11px]">
-                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] min-w-[32px]">Sex:</span>
+                                            <div className="flex items-center gap-1 text-[10px] sm:text-[11px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[8px] sm:text-[9px] min-w-[26px] sm:min-w-[32px]">Sex:</span>
                                                 <input
                                                     type="text"
                                                     value={mergedNote.patient?.sex_at_birth || ''}
                                                     onChange={(e) => handleUpdateField('patient.sex_at_birth', e.target.value)}
                                                     placeholder="—"
-                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
+                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-1.5 py-0.5 text-[10px] sm:text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
                                                 />
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[11px]">
-                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] min-w-[50px]">Mobile:</span>
+                                            <div className="flex items-center gap-1 text-[10px] sm:text-[11px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[8px] sm:text-[9px] min-w-[34px] sm:min-w-[50px]">Tel:</span>
                                                 <input
                                                     type="text"
                                                     value={mergedNote.patient?.phone || mergedNote.patient?.mobile || ''}
                                                     onChange={(e) => handleUpdateField('patient.phone', e.target.value)}
                                                     placeholder="—"
-                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-2 py-0.5 text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
+                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-1.5 py-0.5 text-[10px] sm:text-[11px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
                                                 />
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[11px]">
-                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[9px] min-w-[32px]">DOB:</span>
+                                            <div className="flex items-center gap-1 text-[10px] sm:text-[11px]">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[8px] sm:text-[9px] min-w-[26px] sm:min-w-[32px]">DOB:</span>
                                                 <input
                                                     type="date"
                                                     value={mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toISOString().split('T')[0] : ''}
                                                     onChange={(e) => handleUpdateField('patient.dob', e.target.value)}
-                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-1.5 py-0.5 text-[10px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
+                                                    className="w-full bg-slate-900/70 border border-slate-700/50 rounded-md px-1 py-0.5 text-[9px] sm:text-[10px] font-semibold text-slate-200 outline-none focus:border-indigo-400"
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="text-[14px] font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight flex items-center w-full mb-0.5 h-5">
-                                            <span>{mergedNote.patient?.full_name || '—'}</span>
+                                        <div className="text-[12px] sm:text-[14px] font-black text-slate-900 dark:text-white leading-none uppercase tracking-tight flex items-center w-full mb-0.5 h-5 min-w-0" title={mergedNote.patient?.full_name || '—'}>
+                                            <span className="truncate">{mergedNote.patient?.full_name || '—'}</span>
                                         </div>
-                                        <div className="w-full space-y-[2px] mt-1">
-                                            <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
-                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Case No:</span>
-                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{mergedNote.patient?.account_number || mergedNote.patient?.case_no || "—"}</span>
+                                        <div className="w-full space-y-[2px] mt-1 min-w-0">
+                                            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] h-[16px] min-w-0">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Case:</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none truncate">{mergedNote.patient?.account_number || mergedNote.patient?.case_no || "—"}</span>
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
-                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Sex:</span>
-                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{mergedNote.patient?.sex_at_birth || "—"}</span>
+                                            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] h-[16px] min-w-0">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Sex:</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none truncate">{mergedNote.patient?.sex_at_birth || "—"}</span>
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
-                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Mobile:</span>
-                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{mergedNote.patient?.phone || mergedNote.patient?.mobile || "—"}</span>
+                                            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] h-[16px] min-w-0">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Tel:</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none truncate">{mergedNote.patient?.phone || mergedNote.patient?.mobile || "—"}</span>
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-[11px] h-[16px]">
-                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">DOB:</span>
-                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "—"}</span>
-                                                <span className="text-slate-400 font-semibold text-[10px] ml-1 leading-none">({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"} years old)</span>
+                                            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] h-[16px] min-w-0">
+                                                <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">DOB:</span>
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none whitespace-nowrap">
+                                                    {mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : "—"}
+                                                </span>
+                                                <span className="text-slate-400 font-semibold text-[9px] hidden sm:inline ml-0.5 leading-none shrink-0">
+                                                    ({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"}yo)
+                                                </span>
                                             </div>
                                         </div>
                                     </>
@@ -2532,30 +2536,34 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             </div>
  
                             {/* Right: Facility Info */}
-                            <div className="flex flex-col items-start sm:items-end text-left sm:text-right group/facility relative w-full pt-3 sm:pt-0 border-t border-slate-100 sm:border-0 dark:border-slate-800/60">
-                                <div className="label-small text-slate-400 mb-1 justify-start sm:justify-end flex items-center h-4">
-                                    FACILITY INFO
-                                    <MapPin size={12} className="text-indigo-400 ml-1" />
+                            <div className="flex flex-col items-end text-right group/facility relative w-full min-w-0">
+                                <div className="label-small text-slate-400 mb-1 justify-end flex items-center gap-1 h-4 text-[9px] sm:text-[10px]">
+                                    <span className="tracking-wider font-bold">FACILITY</span>
+                                    <Building2 size={11} className="text-indigo-400 shrink-0" />
                                 </div>
-                                <div className="text-[14px] font-black text-slate-900 dark:text-white mb-0.5 leading-none uppercase tracking-tight flex items-center justify-start sm:justify-end h-5 w-full">
-                                    {clinicSettings?.clinicName || "Independent Practice"}
+                                <div className="text-[12px] sm:text-[14px] font-black text-slate-900 dark:text-white mb-0.5 leading-none uppercase tracking-tight flex items-center justify-end h-5 w-full min-w-0" title={clinicSettings?.clinicName || "Independent Practice"}>
+                                    <span className="truncate">{clinicSettings?.clinicName || "Independent Practice"}</span>
                                 </div>
-                                <div className="space-y-[2px] mt-1 w-full">
-                                    <div className="flex items-center justify-start sm:justify-end gap-x-1.5 h-[16px] text-[11px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Fax:</span>
-                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{clinicSettings?.fax || "—"}</span>
+                                <div className="space-y-[2px] mt-1 w-full min-w-0">
+                                    <div className="flex items-center justify-end gap-x-1 h-[16px] text-[10px] sm:text-[11px] min-w-0">
+                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Fax:</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none truncate">{clinicSettings?.fax || "—"}</span>
                                     </div>
-                                    <div className="flex items-center justify-start sm:justify-end gap-x-1.5 h-[16px] text-[11px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Phone:</span>
-                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none">{clinicSettings?.phone || "—"}</span>
+                                    <div className="flex items-center justify-end gap-x-1 h-[16px] text-[10px] sm:text-[11px] min-w-0">
+                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Tel:</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none truncate">{clinicSettings?.phone || "—"}</span>
                                     </div>
-                                    <div className="flex items-center justify-start sm:justify-end gap-x-1.5 h-[16px] text-[11px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Email:</span>
-                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none lowercase break-all">{clinicSettings?.email || "—"}</span>
+                                    <div className="flex items-center justify-end gap-x-1 h-[16px] text-[10px] sm:text-[11px] min-w-0">
+                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">Email:</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-none lowercase truncate max-w-[95px] sm:max-w-none" title={clinicSettings?.email || "—"}>
+                                            {clinicSettings?.email || "—"}
+                                        </span>
                                     </div>
-                                    <div className="flex items-start justify-start sm:justify-end gap-x-1.5 min-h-[16px] text-[11px]">
-                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] whitespace-nowrap">Address:</span>
-                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-tight text-left sm:text-right">{clinicSettings?.address || "—"}</span>
+                                    <div className="flex items-center justify-end gap-x-1 min-h-[16px] text-[10px] sm:text-[11px] min-w-0">
+                                        <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0 whitespace-nowrap">Dir:</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 leading-tight text-right truncate max-w-[95px] sm:max-w-none" title={clinicSettings?.address || "—"}>
+                                            {clinicSettings?.address || "—"}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
