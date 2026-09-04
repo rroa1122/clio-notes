@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { storage, type Patient } from '../notes-module/lib/storage';
-import { Search, Calendar, MoreHorizontal, UserPlus, Users2, Trash2, ExternalLink, Loader2, SlidersHorizontal, Tag } from 'lucide-react';
+import { Search, Calendar, MoreHorizontal, UserPlus, Users2, Trash2, ExternalLink, Loader2, SlidersHorizontal, Tag, Hash } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from '../components/ui/button';
@@ -182,7 +182,7 @@ export function Patients() {
                         <div className="grid grid-cols-12 gap-4 -mx-8 px-14 pb-3.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200/60 dark:border-slate-800/80 mb-5">
                             <div className="col-span-4">{t('record.client_identity', 'Client Identity')}</div>
                             <div className="col-span-3">{t('patient.label.dob', 'Date of Birth')}</div>
-                            <div className="col-span-2">{t('patient.label.case_number', 'EMR ID / MRN')}</div>
+                            <div className="col-span-2">{t('patients.table.case_number', 'EMR ID / Case #')}</div>
                             <div className="col-span-2">{t('patients.table.created', 'Registered')}</div>
                             <div className="col-span-1 text-right pr-2">{t('patients.table.actions', 'Actions')}</div>
                         </div>
@@ -251,15 +251,22 @@ export function Patients() {
                                             )}
                                         </div>
 
-                                        {/* Case Number */}
-                                        <div className="col-span-2 flex items-center">
+                                        {/* EMR ID / Case Number */}
+                                        <div className="col-span-2 flex flex-col justify-center gap-1">
                                             {patient.emr_id ? (
-                                                <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider bg-indigo-50/60 dark:bg-indigo-950/30 px-3 py-0.5 rounded-full border border-indigo-100/30 dark:border-indigo-900/30">
+                                                <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider bg-indigo-50/60 dark:bg-indigo-950/30 px-2.5 py-0.5 rounded-full border border-indigo-100/30 dark:border-indigo-900/30 w-fit">
                                                     <Tag className="w-2.5 h-2.5 opacity-80 shrink-0" />
                                                     {patient.emr_id}
                                                 </span>
-                                            ) : (
-                                                <span className="text-slate-300 dark:text-slate-700 italic font-normal text-xs">—</span>
+                                            ) : null}
+                                            {patient.case_number ? (
+                                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wide ml-1 flex items-center gap-1">
+                                                    <Hash className="w-2.5 h-2.5 opacity-70 shrink-0" />
+                                                    {language === 'es' ? `Caso #${patient.case_number}` : `Case #${patient.case_number}`}
+                                                </span>
+                                            ) : null}
+                                            {!patient.emr_id && !patient.case_number && (
+                                                <span className="text-slate-300 dark:text-slate-700 italic font-normal text-xs ml-2">—</span>
                                             )}
                                         </div>
 
@@ -353,6 +360,11 @@ export function Patients() {
                                                 {patient.emr_id && (
                                                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/30 shrink-0">
                                                         {patient.emr_id}
+                                                    </span>
+                                                )}
+                                                {patient.case_number && (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/40 shrink-0">
+                                                        #{patient.case_number}
                                                     </span>
                                                 )}
                                             </div>
