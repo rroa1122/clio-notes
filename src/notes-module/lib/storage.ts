@@ -791,20 +791,34 @@ export const storage = {
             const userId = await getCurrentUserId();
             const clinicId = await getCurrentClinicId(userId);
 
-            // [LOGIC] Check if patient exists by name if no ID is provided to prevent duplicates
+            // [LOGIC] Check if patient exists by amexzone_id or name if no ID is provided to prevent duplicates
             let targetId = patient.id;
-            if (!targetId && patient.full_name) {
-                const { data: existing } = await supabase
-                    .from('patients')
-                    .select('id')
-                    .eq('full_name', patient.full_name)
-                    .eq('user_id', userId)
-                    .is('deleted_at', null)
-                    .maybeSingle();
-                
-                if (existing) {
-                    targetId = existing.id;
-                    console.log('[Storage] Existing patient match found.');
+            if (!targetId) {
+                if (patient.amexzone_id) {
+                    const { data: existingByAmex } = await supabase
+                        .from('patients')
+                        .select('id')
+                        .eq('amexzone_id', patient.amexzone_id)
+                        .eq('user_id', userId)
+                        .is('deleted_at', null)
+                        .maybeSingle();
+                    if (existingByAmex) {
+                        targetId = existingByAmex.id;
+                        console.log('[Storage] Existing patient match found by amexzone_id:', targetId);
+                    }
+                }
+                if (!targetId && patient.full_name) {
+                    const { data: existingByName } = await supabase
+                        .from('patients')
+                        .select('id')
+                        .ilike('full_name', patient.full_name)
+                        .eq('user_id', userId)
+                        .is('deleted_at', null)
+                        .maybeSingle();
+                    if (existingByName) {
+                        targetId = existingByName.id;
+                        console.log('[Storage] Existing patient match found by full_name:', targetId);
+                    }
                 }
             }
 
