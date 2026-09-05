@@ -153,10 +153,10 @@ export function Header() {
                 {/* 3. User Profile Dropdown & Theme Toggle */}
                 <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3.5 shrink-0">
                     
-                    {/* Theme Toggle */}
+                    {/* Theme Toggle (Desktop only, moved to user dropdown on mobile) */}
                     <button
                         onClick={toggleTheme}
-                        className="size-8 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 border border-slate-200/50 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+                        className="hidden sm:flex size-8 rounded-full items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 border border-slate-200/50 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm cursor-pointer"
                         title={theme === 'dark' ? (language === 'es' ? "Modo claro" : "Light mode") : (language === 'es' ? "Modo oscuro" : "Dark mode")}
                     >
                         {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
@@ -249,6 +249,42 @@ export function Header() {
                                                 )}
                                             >
                                                 ES
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Theme Switcher (Mobile) */}
+                                    <div className="flex sm:hidden items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300">
+                                        <div className="flex items-center gap-2.5">
+                                            {theme === 'dark' ? <Moon size={14} className="opacity-75" /> : <Sun size={14} className="opacity-75" />}
+                                            <span>{language === 'es' ? 'Tema' : 'Theme'}</span>
+                                        </div>
+                                        <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-0.5 rounded-full border border-slate-200/50 dark:border-slate-800/50">
+                                            <button
+                                                type="button"
+                                                onClick={() => { if (theme !== 'light') toggleTheme(); }}
+                                                className={cn(
+                                                    "px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-full transition-all duration-300 flex items-center justify-center cursor-pointer",
+                                                    theme === 'light'
+                                                        ? "bg-white dark:bg-slate-800 text-[#6366f1] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                                                        : "text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
+                                                )}
+                                                title={language === 'es' ? "Modo claro" : "Light mode"}
+                                            >
+                                                <Sun size={12} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { if (theme !== 'dark') toggleTheme(); }}
+                                                className={cn(
+                                                    "px-2.5 py-1 text-[9px] font-black uppercase tracking-wider rounded-full transition-all duration-300 flex items-center justify-center cursor-pointer",
+                                                    theme === 'dark'
+                                                        ? "bg-white dark:bg-slate-800 text-[#6366f1] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                                                        : "text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100"
+                                                )}
+                                                title={language === 'es' ? "Modo oscuro" : "Dark mode"}
+                                            >
+                                                <Moon size={12} />
                                             </button>
                                         </div>
                                     </div>
