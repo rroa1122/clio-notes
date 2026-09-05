@@ -468,10 +468,10 @@ export function SyncPortal() {
     }
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-16 space-y-8">
+        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-16 space-y-4 md:space-y-6 lg:space-y-8">
 
             {/* Main Frosted Glass Connection Card */}
-            <div className="backdrop-blur-2xl bg-card/95 border border-border/60 shadow-elevated rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-all duration-300">
+            <div className="backdrop-blur-2xl bg-card/95 border border-border/60 shadow-elevated rounded-2xl sm:rounded-3xl p-4 sm:p-8 relative overflow-hidden transition-all duration-300">
                 {/* Subtle Ambient Radial Glow */}
                 <div 
                     className={`pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl opacity-10 transition-colors duration-700 ${
@@ -485,10 +485,10 @@ export function SyncPortal() {
                     }`} 
                 />
 
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-stretch">
                     
                     {/* Left Column: Connection credentials & configuration */}
-                    <div className="lg:col-span-7 bg-muted/30 dark:bg-slate-900/40 p-6 rounded-2xl border border-border/60 flex flex-col justify-between space-y-6">
+                    <div className="lg:col-span-7 bg-muted/30 dark:bg-slate-900/40 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-border/60 flex flex-col justify-between space-y-4 sm:space-y-6">
                         <div className="space-y-5">
                             <div className="flex items-center justify-between pb-3 border-b border-border/50">
                                 <div className="flex items-center gap-2">
@@ -814,22 +814,22 @@ export function SyncPortal() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-slate-50 dark:bg-slate-900/60 p-6 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col items-center justify-center text-center h-full space-y-5">
-                                <div className={`size-16 rounded-2xl flex items-center justify-center border transition-all duration-300 ${
+                            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-7 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col items-center justify-center text-center h-full space-y-3 sm:space-y-5">
+                                <div className={`size-12 sm:size-16 rounded-xl sm:rounded-2xl flex items-center justify-center border transition-all duration-300 ${
                                     mfaStatus === 'connected'
                                         ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.15)]'
                                         : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
                                 }`}>
-                                    {mfaStatus === 'connected' ? <ShieldCheck size={32} /> : <Shield size={32} />}
+                                    {mfaStatus === 'connected' ? <ShieldCheck className="size-6 sm:size-8" /> : <Shield className="size-6 sm:size-8" />}
                                 </div>
                                 
-                                <div className="space-y-1.5 max-w-xs">
-                                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                                <div className="space-y-1 sm:space-y-1.5 max-w-xs">
+                                    <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
                                         {mfaStatus === 'connected' 
                                             ? (language === 'es' ? "Conexión EMR Segura Activa" : "Secure EMR Link Active")
                                             : (language === 'es' ? "Integración Amexzone" : "Amexzone Bot Integration")}
                                     </h4>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+                                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
                                         {mfaStatus === 'connected'
                                             ? (language === 'es' 
                                                 ? "El bot local está completamente sincronizado y autorizado por 90 días para procesar tus notas clínicas."
@@ -841,8 +841,8 @@ export function SyncPortal() {
                                 </div>
 
                                 {mfaStatus === 'connected' && (
-                                    <div className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-[11px] uppercase tracking-wider bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20 shadow-sm">
-                                        <Sparkles size={13} className="text-emerald-500 dark:text-emerald-400" />
+                                    <div className="inline-flex items-center gap-1.5 sm:gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider bg-emerald-500/10 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-emerald-500/20 shadow-sm">
+                                        <Sparkles size={12} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
                                         <span>{language === 'es' ? "PUENTE LISTO PARA SINCRONIZAR" : "READY FOR NOTE DISPATCH"}</span>
                                     </div>
                                 )}
@@ -905,72 +905,134 @@ export function SyncPortal() {
                                             const hasSummary = (task.status === 'completed' && task.result_summary) || (task.status === 'failed' && task.error_message);
 
                                             return (
-                                                <div
-                                                    key={task.id}
-                                                    onClick={() => { if (hasSummary) setSelectedTask(task); }}
-                                                    className={`px-5 py-3.5 flex flex-col lg:grid lg:grid-cols-12 gap-3 lg:gap-4 items-start lg:items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-150 group ${
-                                                        hasSummary ? 'cursor-pointer' : ''
-                                                    }`}
-                                                >
-                                                    {/* Patient Column */}
-                                                    <div className="lg:col-span-4 flex items-center gap-3 w-full min-w-0">
-                                                        <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 flex items-center justify-center text-xs font-bold shrink-0">
-                                                            {task.patient_name ? task.patient_name.charAt(0).toUpperCase() : <User size={13} />}
+                                                <Fragment key={task.id}>
+                                                    {/* Desktop View (lg+) */}
+                                                    <div
+                                                        onClick={() => { if (hasSummary) setSelectedTask(task); }}
+                                                        className={`hidden lg:grid lg:grid-cols-12 gap-4 px-5 py-3.5 items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-150 group ${
+                                                            hasSummary ? 'cursor-pointer' : ''
+                                                        }`}
+                                                    >
+                                                        {/* Patient Column */}
+                                                        <div className="lg:col-span-4 flex items-center gap-3 w-full min-w-0">
+                                                            <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 flex items-center justify-center text-xs font-bold shrink-0">
+                                                                {task.patient_name ? task.patient_name.charAt(0).toUpperCase() : <User size={13} />}
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="font-semibold text-slate-800 dark:text-slate-100 text-xs truncate">
+                                                                    {task.patient_name || (language === 'es' ? 'Paciente sin nombre' : 'Unnamed Patient')}
+                                                                </p>
+                                                                {task.patient_dob && (
+                                                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">DOB: {task.patient_dob}</p>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="font-semibold text-slate-800 dark:text-slate-100 text-xs truncate">
-                                                                {task.patient_name || (language === 'es' ? 'Paciente sin nombre' : 'Unnamed Patient')}
-                                                            </p>
-                                                            {task.patient_dob && (
-                                                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">DOB: {task.patient_dob}</p>
+
+                                                        {/* Clinical Note / Service Column */}
+                                                        <div className="lg:col-span-4 flex items-center gap-2.5 w-full min-w-0">
+                                                            <span className={`size-7 rounded-lg flex items-center justify-center text-xs ${details.color} shrink-0 border border-slate-200 dark:border-slate-800`}>
+                                                                {details.icon}
+                                                            </span>
+                                                            <div className="min-w-0 flex-1">
+                                                                <span className="font-medium text-slate-800 dark:text-slate-200 text-xs block truncate">
+                                                                    {details.name}
+                                                                </span>
+                                                                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block truncate">
+                                                                    ID: {task.id.substring(0, 8)}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Date Column */}
+                                                        <div className="lg:col-span-2 text-xs font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                                                            <Clock size={12} className="text-slate-400 dark:text-slate-500 shrink-0" />
+                                                            <span className="truncate">{taskDate}</span>
+                                                        </div>
+
+                                                        {/* Amexzone Status Column */}
+                                                        <div className="lg:col-span-2 w-full flex items-center justify-end gap-2 shrink-0">
+                                                            {task.status === 'failed' && (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleRetryTask(task.id); }}
+                                                                    disabled={retryingTaskId === task.id}
+                                                                    className="h-7 px-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30 transition-all flex items-center gap-1 text-[11px] font-medium cursor-pointer disabled:opacity-50 shrink-0"
+                                                                    title={language === 'es' ? "Reintentar sincronización" : "Retry sync"}
+                                                                >
+                                                                    <RotateCcw size={11} className={retryingTaskId === task.id ? "animate-spin" : ""} />
+                                                                    <span>{language === 'es' ? "Reintentar" : "Retry"}</span>
+                                                                </button>
                                                             )}
+                                                            <TaskStatusBadge status={task.status} language={language} />
                                                         </div>
                                                     </div>
 
-                                                    {/* Clinical Note / Service Column */}
-                                                    <div className="lg:col-span-4 flex items-center gap-2.5 w-full min-w-0">
-                                                        <span className={`size-7 rounded-lg flex items-center justify-center text-xs ${details.color} shrink-0 border border-slate-200 dark:border-slate-800`}>
-                                                            {details.icon}
-                                                        </span>
-                                                        <div className="min-w-0 flex-1">
-                                                            <span className="font-medium text-slate-800 dark:text-slate-200 text-xs block truncate">
-                                                                {details.name}
+                                                    {/* Mobile View (< lg) */}
+                                                    <div
+                                                        onClick={() => { if (hasSummary) setSelectedTask(task); }}
+                                                        className={`block lg:hidden p-3 sm:p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-150 ${
+                                                            hasSummary ? 'cursor-pointer active:bg-slate-100 dark:active:bg-slate-800/50' : ''
+                                                        }`}
+                                                    >
+                                                        {/* Row 1: Left (Avatar + Name + Service Badge) & Right (Status Badge + Retry) */}
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                                <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 flex items-center justify-center text-xs font-bold shrink-0">
+                                                                    {task.patient_name ? task.patient_name.charAt(0).toUpperCase() : <User size={13} />}
+                                                                </div>
+                                                                <div className="min-w-0 flex items-center gap-1.5 flex-1">
+                                                                    <p className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[130px] sm:max-w-[200px]">
+                                                                        {task.patient_name || (language === 'es' ? 'Paciente sin nombre' : 'Unnamed Patient')}
+                                                                    </p>
+                                                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${details.badgeClasses} shrink-0 border`}>
+                                                                        <span className="scale-75 origin-center -mr-0.5">{details.icon}</span>
+                                                                        <span className="truncate max-w-[90px] sm:max-w-[120px]">{details.name}</span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Status + Retry Actions */}
+                                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                                {task.status === 'failed' && (
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); handleRetryTask(task.id); }}
+                                                                        disabled={retryingTaskId === task.id}
+                                                                        className="h-6 px-2 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30 transition-all flex items-center gap-1 text-[10px] font-medium cursor-pointer disabled:opacity-50"
+                                                                        title={language === 'es' ? "Reintentar sincronización" : "Retry sync"}
+                                                                    >
+                                                                        <RotateCcw size={10} className={retryingTaskId === task.id ? "animate-spin" : ""} />
+                                                                        <span>{language === 'es' ? "Reintentar" : "Retry"}</span>
+                                                                    </button>
+                                                                )}
+                                                                <TaskStatusBadge status={task.status} language={language} />
+                                                                {hasSummary && (
+                                                                    <ChevronRight size={14} className="text-slate-400 dark:text-slate-500 shrink-0" />
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Row 2: Secondary info line (DOB • Timestamp • Task ID) */}
+                                                        <div className="pl-10.5 mt-1 flex items-center gap-2 text-[10.5px] text-slate-400 dark:text-slate-500 font-medium tracking-tight truncate">
+                                                            {task.patient_dob && (
+                                                                <>
+                                                                    <span className="font-mono text-slate-500 dark:text-slate-400">DOB: {task.patient_dob}</span>
+                                                                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                                                                </>
+                                                            )}
+                                                            <span className="flex items-center gap-1 truncate font-mono">
+                                                                <Clock size={10} className="shrink-0 text-slate-400 dark:text-slate-500" />
+                                                                {taskDate}
                                                             </span>
-                                                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block truncate">
-                                                                ID: {task.id.substring(0, 8)}
-                                                            </span>
+                                                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                                                            <span className="font-mono text-slate-400/80">#{task.id.substring(0, 8)}</span>
                                                         </div>
                                                     </div>
-
-                                                    {/* Date Column */}
-                                                    <div className="lg:col-span-2 text-xs font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate">
-                                                        <Clock size={12} className="text-slate-400 dark:text-slate-500 shrink-0" />
-                                                        <span className="truncate">{taskDate}</span>
-                                                    </div>
-
-                                                    {/* Amexzone Status Column */}
-                                                    <div className="lg:col-span-2 w-full flex items-center justify-end gap-2 shrink-0">
-                                                        {task.status === 'failed' && (
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); handleRetryTask(task.id); }}
-                                                                disabled={retryingTaskId === task.id}
-                                                                className="h-7 px-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30 transition-all flex items-center gap-1 text-[11px] font-medium cursor-pointer disabled:opacity-50 shrink-0"
-                                                                title={language === 'es' ? "Reintentar sincronización" : "Retry sync"}
-                                                            >
-                                                                <RotateCcw size={11} className={retryingTaskId === task.id ? "animate-spin" : ""} />
-                                                                <span>{language === 'es' ? "Reintentar" : "Retry"}</span>
-                                                            </button>
-                                                        )}
-                                                        <TaskStatusBadge status={task.status} language={language} />
-                                                    </div>
-
-                                                </div>
+                                                </Fragment>
                                             );
                                         })}
 
                                         {/* Pagination Footer */}
                                         {totalTaskPages > 1 && (
-                                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-slate-200/80 dark:border-slate-850 bg-slate-50/50 dark:bg-[#131d31]/40">
+                                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3.5 sm:px-6 py-3 sm:py-4 border-t border-slate-200/80 dark:border-slate-850 bg-slate-50/50 dark:bg-[#131d31]/40">
                                                 <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                                                     {language === 'es'
                                                         ? `Mostrando ${((tasksCurrentPage - 1) * tasksPageSize) + 1} - ${Math.min(tasksCurrentPage * tasksPageSize, tasks.length)} de ${tasks.length.toLocaleString()} notas sincronizadas`
