@@ -121,9 +121,9 @@ export function Patients() {
 
     return (
         <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 h-auto lg:h-[calc(100vh-8.5rem)] mb-2">
-            <div className="flex flex-col lg:flex-1 bg-transparent md:bg-surface md:dark:bg-slate-900 rounded-[2rem] shadow-none md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border-0 md:border border-border/60 overflow-visible lg:overflow-hidden relative h-auto lg:h-full">
+            <div className="flex flex-col lg:flex-1 bg-surface dark:bg-slate-900 rounded-2xl md:rounded-[2rem] shadow-sm md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] border border-slate-200/80 dark:border-slate-800/80 overflow-hidden relative h-auto lg:h-full">
                 {/* Mobile Header (block md:hidden) */}
-                <div className="block md:hidden px-3.5 pt-3 pb-3 bg-surface dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800/80 shrink-0">
+                <div className="block md:hidden px-3.5 pt-3.5 pb-3 bg-surface dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800/80 shrink-0">
                     <div className="flex items-center justify-between gap-2 mb-2.5">
                         <div className="flex items-center gap-2 min-w-0">
                             <h1 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight shrink-0">
@@ -363,10 +363,10 @@ export function Patients() {
                     </div>
 
                     {/* Mobile View */}
-                    <div className="block lg:hidden space-y-2.5 px-3 pt-3 pb-6">
+                    <div className="block lg:hidden space-y-2 p-3 sm:p-4 pb-6">
                         {isLoading && patients.length === 0 ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="p-3 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/40 animate-pulse flex items-center gap-3">
+                                <div key={i} className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/60 animate-pulse flex items-center gap-3">
                                     <div className="size-10 rounded-xl bg-slate-200/60 dark:bg-slate-800 animate-pulse shrink-0" />
                                     <div className="flex-1 space-y-2">
                                         <div className="h-3.5 bg-slate-200/60 dark:bg-slate-800 rounded animate-pulse w-2/3" />
@@ -394,7 +394,7 @@ export function Patients() {
                                 <div 
                                     key={patient.id} 
                                     onClick={() => navigate(`/patients/${patient.id}`)}
-                                    className="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/70 shadow-sm hover:shadow-md hover:border-indigo-500/25 active:scale-[0.99] transition-all duration-200 flex items-center justify-between gap-2.5 group cursor-pointer"
+                                    className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/60 hover:border-indigo-500/30 active:scale-[0.99] transition-all duration-200 flex items-center justify-between gap-2.5 group cursor-pointer"
                                 >
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
                                         <div className={cn(
