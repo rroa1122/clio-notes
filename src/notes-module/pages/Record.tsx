@@ -1596,8 +1596,8 @@ const Record: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <Card className="w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[1540px] bg-surface dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-sm md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] rounded-2xl md:rounded-3xl xl:rounded-[2rem] 2xl:rounded-[2.5rem] overflow-visible relative group transition-all duration-300">
-                    <CardContent className="p-3.5 sm:p-5 md:p-6 lg:p-7 xl:p-8 space-y-3 sm:space-y-4 md:space-y-4 xl:space-y-5">
+                <Card className="w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-[1540px] bg-transparent md:bg-surface border-0 md:border border-border/60 shadow-none md:shadow-soft rounded-2xl md:rounded-3xl xl:rounded-[2rem] 2xl:rounded-[2.5rem] overflow-visible md:overflow-visible relative group transition-all duration-300">
+                    <CardContent className="p-2 sm:p-4 md:p-5 lg:p-6 xl:p-7 2xl:p-8 space-y-3 sm:space-y-4 md:space-y-4 xl:space-y-5">
                         {showGuide && (
                             <div className="bg-gradient-to-r from-indigo-50/60 via-violet-50/40 to-slate-50 dark:from-indigo-950/10 dark:via-violet-950/5 dark:to-slate-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl p-5 md:p-6 pr-14 md:pr-16 relative animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm hidden md:flex flex-row items-center justify-between gap-6">
                                 <button 
