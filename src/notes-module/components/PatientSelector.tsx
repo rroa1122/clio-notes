@@ -62,11 +62,11 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
     return (
         <div className="relative w-full" ref={containerRef}>
             <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors z-10 pointer-events-none" />
+                <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors z-10 pointer-events-none" />
                 <Input
                     type="text"
-                    placeholder={t('record.search_patient_placeholder', 'Search patient registry...')}
-                    className="!pl-11 !pr-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 focus-visible:ring-4 focus-visible:ring-indigo-500/15 dark:focus-visible:ring-indigo-400/20 focus-visible:border-indigo-500/50 dark:focus-visible:border-indigo-400/50 focus-visible:ring-offset-0 text-[13px] font-medium text-slate-900 dark:text-slate-100 transition-all duration-200 shadow-xs focus-visible:shadow-[0_0_20px_-3px_rgba(99,102,241,0.18)]"
+                    placeholder={language === 'es' ? "Buscar cliente..." : "Search patient..."}
+                    className="!pl-8 sm:!pl-11 !pr-8 sm:!pr-11 h-11 rounded-xl md:rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 focus-visible:ring-4 focus-visible:ring-indigo-500/15 dark:focus-visible:ring-indigo-400/20 focus-visible:border-indigo-500/50 dark:focus-visible:border-indigo-400/50 focus-visible:ring-offset-0 text-xs sm:text-[13px] font-medium text-slate-900 dark:text-slate-100 transition-all duration-200 shadow-xs focus-visible:shadow-[0_0_20px_-3px_rgba(99,102,241,0.18)]"
                     value={query}
                     onChange={(e) => {
                         const val = e.target.value;
@@ -82,9 +82,9 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
                         size="icon"
                         variant="ghost"
                         onClick={onCreateNew}
-                        className="h-8 w-8 rounded-full bg-slate-100/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:border-indigo-200/60 dark:hover:border-indigo-800/60 border border-slate-200/40 dark:border-slate-700/40 transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xs cursor-pointer"
+                        className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-slate-100/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:border-indigo-200/60 dark:hover:border-indigo-800/60 border border-slate-200/40 dark:border-slate-700/40 transition-all duration-200 hover:scale-105 active:scale-95 shadow-2xs cursor-pointer"
                     >
-                        <UserPlus size={15} strokeWidth={2} />
+                        <UserPlus size={14} strokeWidth={2} />
                     </Button>
                     {/* Custom Crisp Tooltip */}
                     <div className="absolute bottom-[calc(100%+6px)] right-0 whitespace-nowrap pointer-events-none opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-150 z-50">
@@ -97,7 +97,7 @@ export function PatientSelector({ onSelect, onInputChange, onCreateNew }: Patien
             </div>
  
             {isOpen && (results.length > 0 || isLoading) && (
-                <Card className="absolute top-[calc(100%+8px)] left-0 right-0 z-[100] shadow-2xl shadow-indigo-500/10 dark:shadow-black/60 rounded-2xl p-1.5 border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl ring-1 ring-black/5 dark:ring-white/10 animate-in fade-in zoom-in-95 duration-200">
+                <Card className="absolute top-[calc(100%+8px)] left-0 w-[calc(200%+0.5rem)] md:w-full max-w-[calc(100vw-2rem)] z-[100] shadow-2xl shadow-indigo-500/10 dark:shadow-black/60 rounded-2xl p-1.5 border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl ring-1 ring-black/5 dark:ring-white/10 animate-in fade-in zoom-in-95 duration-200">
                     <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-1">
                         {isLoading ? (
                             <div className="p-8 flex flex-col items-center justify-center gap-3">

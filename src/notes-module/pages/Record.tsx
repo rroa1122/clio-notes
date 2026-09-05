@@ -1762,13 +1762,13 @@ const Record: React.FC = () => {
                         {/* Unified Encounter Layout */}
                         <div className="w-full space-y-2.5 md:space-y-3.5 xl:space-y-4">
                             {/* Top Tier: Mandatory Clinical Metadata */}
-                            <div className="grid grid-cols-1 md:grid-cols-10 gap-2.5 md:gap-3 lg:gap-4 xl:gap-5 pb-3 md:pb-3.5 xl:pb-4 border-b border-slate-100 dark:border-slate-800">
-                                {/* Patient Selection */}
-                                <div className="space-y-2.5 md:space-y-3 order-1 md:order-1 md:col-span-3">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <User size={14} className="text-slate-400" />
-                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.client_identity', 'Client identity')}</Label>
-                                        {selectedPatient && <Check size={12} className="text-emerald-400" />}
+                            <div className="grid grid-cols-2 md:grid-cols-10 gap-2 md:gap-3 lg:gap-4 xl:gap-5 pb-3 md:pb-3.5 xl:pb-4 border-b border-slate-100 dark:border-slate-800">
+                                {/* 1. Patient Selection */}
+                                <div className="space-y-1.5 md:space-y-3 order-1 md:order-1 col-span-1 md:col-span-3 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-1 truncate">
+                                        <User size={13} className="text-slate-400 shrink-0" />
+                                        <Label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 truncate">{t('record.client_identity', 'Client identity')}</Label>
+                                        {selectedPatient && <Check size={12} className="text-emerald-400 shrink-0" />}
                                     </div>
                                     {selectedPatient ? (
                                         <PatientSummaryCard
@@ -1797,12 +1797,178 @@ const Record: React.FC = () => {
                                     )}
                                 </div>
 
-                                {/* Encounter Date & Time */}
-                                <div className="space-y-2.5 md:space-y-3 order-3 md:order-2 md:col-span-4">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Calendar size={14} className="text-slate-400" />
-                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.encounter_info', 'Encounter Info')}</Label>
-                                        {serviceDate && timeIn && <Check size={12} className="text-emerald-400" />}
+                                {/* 2. Service Provided */}
+                                <div className="space-y-1.5 md:space-y-3 order-2 md:order-3 col-span-1 md:col-span-3 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-1 truncate">
+                                        <ClipboardList size={13} className="text-slate-400 shrink-0" />
+                                        <Label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 truncate">{t('record.service_provided', 'Service Provided')}</Label>
+                                        {selectedSubTemplate && <Check size={12} className="text-emerald-400 shrink-0" />}
+                                    </div>
+
+                                    {/* Mobile Service Trigger Button (flex md:hidden) */}
+                                    <div className="flex md:hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsMobileServiceModalOpen(true)}
+                                            className={cn(
+                                                "w-full h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 sm:px-2.5 flex items-center justify-between shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left overflow-hidden",
+                                                selectedSubTemplate ? "border-indigo-500/30 bg-indigo-50/15 dark:bg-indigo-950/15" : ""
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                                                <div className={cn(
+                                                    "size-6 sm:size-7 rounded-lg flex items-center justify-center shrink-0",
+                                                    selectedSubTemplate 
+                                                        ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" 
+                                                        : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                                )}>
+                                                    {selectedSubTemplate 
+                                                        ? renderCategoryIcon(
+                                                            SERVICE_HIERARCHICAL_GROUPS.find(g => g.items.some(i => i.name === selectedSubTemplate))?.id || "other",
+                                                            "size-3 sm:size-3.5"
+                                                        )
+                                                        : <ClipboardList size={13} />}
+                                                </div>
+                                                <div className="flex flex-col min-w-0 flex-1 truncate">
+                                                    {selectedSubTemplate ? (
+                                                        <>
+                                                            <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-100 truncate leading-tight">
+                                                                {SERVICE_HIERARCHICAL_GROUPS.flatMap(g => g.items).find(i => i.name === selectedSubTemplate)?.label || selectedSubTemplate}
+                                                            </span>
+                                                            <span className="text-[8px] sm:text-[9px] font-medium text-slate-400 truncate leading-tight">
+                                                                {SERVICE_HIERARCHICAL_GROUPS.find(g => g.items.some(i => i.name === selectedSubTemplate))?.category}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-[11px] sm:text-xs font-medium text-slate-400 truncate">
+                                                            {language === 'es' ? 'Servicio...' : 'Service...'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-0.5 shrink-0 ml-1">
+                                                {selectedSubTemplate && (
+                                                    <span
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedSubTemplate('');
+                                                            setSubTemplateSearchQuery('');
+                                                        }}
+                                                        className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                                        title={language === 'es' ? "Limpiar selección" : "Clear selection"}
+                                                    >
+                                                        <X size={12} />
+                                                    </span>
+                                                )}
+                                                <ChevronDown size={13} className="text-slate-400 shrink-0" />
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    {/* Desktop Service Dropdown (hidden md:block) */}
+                                    <div ref={subTemplateDropdownRef} className="hidden md:block relative mt-1">
+                                        <div 
+                                            className={cn(
+                                                "w-full h-11 flex items-center justify-between pl-5 pr-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 hover:bg-indigo-50/5 dark:hover:bg-indigo-950/5",
+                                                isDropdownOpen ? "border-indigo-500/40 ring-4 ring-indigo-500/5" : ""
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-3 flex-1 h-full cursor-text" onClick={() => setIsDropdownOpen(true)}>
+                                                <input
+                                                    type="text"
+                                                    style={{ border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent' }}
+                                                    className="w-full h-full !border-0 focus:!border-0 focus:!border-transparent focus-visible:!border-0 focus-visible:!border-transparent bg-transparent focus:bg-transparent active:bg-transparent focus-visible:bg-transparent text-[13px] font-medium tracking-tight text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 p-0 focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none outline-none"
+                                                    placeholder="Select encounter type..."
+                                                    value={isDropdownOpen ? subTemplateSearchQuery : selectedSubTemplate}
+                                                    onChange={(e) => {
+                                                        setSubTemplateSearchQuery(e.target.value);
+                                                        setIsDropdownOpen(true);
+                                                    }}
+                                                    onFocus={() => setIsDropdownOpen(true)}
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                {selectedSubTemplate && (
+                                                    <span
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedSubTemplate('');
+                                                            setSubTemplateSearchQuery('');
+                                                        }}
+                                                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                                        title="Clear selection"
+                                                    >
+                                                        <X size={14} />
+                                                    </span>
+                                                )}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                >
+                                                    <ChevronDown size={16} />
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        {isDropdownOpen && (
+                                            <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                                                <div className="max-h-72 overflow-y-auto custom-scrollbar p-2">
+                                                    {SERVICE_HIERARCHICAL_GROUPS.map((group) => {
+                                                        const matchingItems = group.items.filter(item => 
+                                                            item.name.toLowerCase().includes(subTemplateSearchQuery.toLowerCase()) ||
+                                                            item.label.toLowerCase().includes(subTemplateSearchQuery.toLowerCase()) ||
+                                                            group.category.toLowerCase().includes(subTemplateSearchQuery.toLowerCase())
+                                                        );
+
+                                                        if (matchingItems.length === 0) return null;
+
+                                                        return (
+                                                            <div key={group.id} className="mb-2 last:mb-0">
+                                                                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                                                    {group.category}
+                                                                </div>
+                                                                <div className="space-y-0.5">
+                                                                    {matchingItems.map((item) => (
+                                                                        <button
+                                                                            key={item.name}
+                                                                            onClick={() => {
+                                                                                setSelectedSubTemplate(item.name);
+                                                                                setIsDropdownOpen(false);
+                                                                            }}
+                                                                            className={cn(
+                                                                                "w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer",
+                                                                                selectedSubTemplate === item.name
+                                                                                    ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold"
+                                                                                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                                            )}
+                                                                        >
+                                                                            <span>{item.label}</span>
+                                                                            {selectedSubTemplate === item.name && <Check size={14} />}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* 3. Encounter Date & Time */}
+                                <div className="space-y-1.5 md:space-y-3 order-3 md:order-2 col-span-2 md:col-span-4 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-1 truncate">
+                                        <Calendar size={13} className="text-slate-400 shrink-0" />
+                                        <Label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 truncate">{t('record.encounter_info', 'Encounter Info')}</Label>
+                                        {serviceDate && timeIn && <Check size={12} className="text-emerald-400 shrink-0" />}
                                     </div>
                                     {/* Desktop Date & Time Pill (hidden md:flex) */}
                                     <div className="hidden md:flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-indigo-500/40 focus-within:ring-4 focus-within:ring-indigo-500/5 overflow-hidden mt-1 h-11 items-center">
@@ -1885,384 +2051,86 @@ const Record: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Mobile Date & Time Rows (flex md:hidden) */}
-                                    <div className="flex md:hidden flex-col gap-2 mt-1">
-                                        {/* Row 1: Fecha + Duración */}
-                                        <div className="grid grid-cols-5 gap-2">
-                                            {/* Date */}
-                                            <div className="col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-3 flex flex-col justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700">
-                                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                                                    {language === 'es' ? 'Fecha' : 'Date'}
-                                                </span>
-                                                <DatePicker 
-                                                    date={serviceDate} 
-                                                    setDate={setServiceDate} 
-                                                    dateFormat="dd/MM/yyyy"
-                                                    className="h-6 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 p-0 font-bold text-slate-800 dark:text-slate-100 text-xs justify-between"
-                                                />
-                                            </div>
-                                            {/* Duration */}
-                                            <div className="col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-3 flex flex-col justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700">
-                                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                                                    {language === 'es' ? 'Duración' : 'Duration'}
-                                                </span>
-                                                <div className="flex items-center gap-1 h-6">
-                                                    <Clock size={12} className="text-slate-400 shrink-0" />
-                                                    <input 
-                                                        type="number"
-                                                        min="0"
-                                                        autoComplete="off"
-                                                        placeholder="0"
-                                                        value={durationMin}
-                                                        onChange={(e) => handleDurationMinChange(e.target.value)}
-                                                        className="h-full !border-0 bg-transparent text-slate-800 dark:text-slate-100 font-bold text-xs w-full p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                    />
-                                                    <span className="text-[10px] text-slate-400 font-bold uppercase shrink-0">min</span>
-                                                </div>
-                                            </div>
+                                    {/* Mobile Date & Time 4-in-1 Row (grid md:hidden) */}
+                                    <div className="grid grid-cols-4 gap-1.5 mt-1 md:hidden">
+                                        {/* 1. Date */}
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-2 flex flex-col justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden">
+                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+                                                {language === 'es' ? 'Fecha' : 'Date'}
+                                            </span>
+                                            <DatePicker 
+                                                date={serviceDate} 
+                                                setDate={setServiceDate} 
+                                                dateFormat="dd/MM/yy"
+                                                icon={<span />}
+                                                className="h-5 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 !px-0 font-bold text-slate-800 dark:text-slate-100 text-[11px] justify-between cursor-pointer"
+                                            />
                                         </div>
 
-                                        {/* Row 2: Hora Inicio + Hora Fin */}
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {/* Time In Button */}
-                                            <button
-                                                type="button"
-                                                onClick={() => setMobileTimeModal('in')}
-                                                className={cn(
-                                                    "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 flex items-center justify-between shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left",
-                                                    timeIn ? "border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/10" : ""
-                                                )}
-                                            >
-                                                <div className="flex flex-col justify-center min-w-0">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="size-2 rounded-full bg-emerald-500 shrink-0 ring-2 ring-emerald-500/20" />
-                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                                                            {language === 'es' ? 'Inicio' : 'Start'}
-                                                        </span>
-                                                    </div>
-                                                    <span className={cn(
-                                                        "text-xs font-bold truncate mt-0.5",
-                                                        timeIn ? "text-slate-800 dark:text-slate-100" : "text-slate-400 font-medium"
-                                                    )}>
-                                                        {timeIn || '--:--'}
-                                                    </span>
-                                                </div>
-                                                <Clock size={13} className="text-slate-400 shrink-0 ml-1 opacity-70" />
-                                            </button>
-
-                                            {/* Time Out Button */}
-                                            <button
-                                                type="button"
-                                                onClick={() => setMobileTimeModal('out')}
-                                                className={cn(
-                                                    "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 flex items-center justify-between shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left",
-                                                    timeOut ? "border-purple-500/30 bg-purple-50/20 dark:bg-purple-950/10" : ""
-                                                )}
-                                            >
-                                                <div className="flex flex-col justify-center min-w-0">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <span className="size-2 rounded-full bg-purple-500 shrink-0 ring-2 ring-purple-500/20" />
-                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                                                            {language === 'es' ? 'Fin' : 'End'}
-                                                        </span>
-                                                    </div>
-                                                    <span className={cn(
-                                                        "text-xs font-bold truncate mt-0.5",
-                                                        timeOut ? "text-slate-800 dark:text-slate-100" : "text-slate-400 font-medium"
-                                                    )}>
-                                                        {timeOut || '--:--'}
-                                                    </span>
-                                                </div>
-                                                <Clock size={13} className="text-slate-400 shrink-0 ml-1 opacity-70" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Service Provided */}
-                                <div className="space-y-2.5 md:space-y-3 order-2 md:order-3 md:col-span-3">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <ClipboardList size={14} className="text-slate-400" />
-                                        <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.service_provided', 'Service Provided')}</Label>
-                                        {selectedSubTemplate && <Check size={12} className="text-emerald-400" />}
-                                    </div>
-
-                                    {/* Mobile Service Trigger Button (flex md:hidden) */}
-                                    <div className="flex md:hidden">
+                                        {/* 2. Start Time */}
                                         <button
                                             type="button"
-                                            onClick={() => setIsMobileServiceModalOpen(true)}
+                                            onClick={() => setMobileTimeModal('in')}
                                             className={cn(
-                                                "w-full h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 flex items-center justify-between shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left",
-                                                selectedSubTemplate ? "border-indigo-500/30 bg-indigo-50/15 dark:bg-indigo-950/15" : ""
+                                                "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 flex flex-col justify-center shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left overflow-hidden",
+                                                timeIn ? "border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/10" : ""
                                             )}
                                         >
-                                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                                <div className={cn(
-                                                    "size-7 rounded-lg flex items-center justify-center shrink-0",
-                                                    selectedSubTemplate 
-                                                        ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" 
-                                                        : "bg-slate-100 dark:bg-slate-800 text-slate-400"
-                                                )}>
-                                                    {selectedSubTemplate 
-                                                        ? renderCategoryIcon(
-                                                            SERVICE_HIERARCHICAL_GROUPS.find(g => g.items.some(i => i.name === selectedSubTemplate))?.id || "other",
-                                                            "size-3.5"
-                                                        )
-                                                        : <ClipboardList size={14} />}
-                                                </div>
-                                                <div className="flex flex-col min-w-0 flex-1">
-                                                    {selectedSubTemplate ? (
-                                                        <>
-                                                            <span className="text-[12px] font-bold text-slate-800 dark:text-slate-100 truncate leading-tight">
-                                                                {SERVICE_HIERARCHICAL_GROUPS.flatMap(g => g.items).find(i => i.name === selectedSubTemplate)?.label || selectedSubTemplate}
-                                                            </span>
-                                                            <span className="text-[9px] font-medium text-slate-400 truncate leading-tight">
-                                                                {SERVICE_HIERARCHICAL_GROUPS.find(g => g.items.some(i => i.name === selectedSubTemplate))?.category}
-                                                            </span>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-xs font-medium text-slate-400 truncate">
-                                                            {language === 'es' ? 'Seleccionar tipo de servicio...' : 'Select encounter type...'}
-                                                        </span>
-                                                    )}
-                                                </div>
+                                            <div className="flex items-center gap-1">
+                                                <span className="size-1.5 rounded-full bg-emerald-500 shrink-0 ring-1 ring-emerald-500/30" />
+                                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+                                                    {language === 'es' ? 'Inicio' : 'Start'}
+                                                </span>
                                             </div>
-
-                                            <div className="flex items-center gap-1 shrink-0 ml-2">
-                                                {selectedSubTemplate && (
-                                                    <span
-                                                        role="button"
-                                                        tabIndex={0}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSelectedSubTemplate('');
-                                                            setSubTemplateSearchQuery('');
-                                                        }}
-                                                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                                                        title={language === 'es' ? "Limpiar selección" : "Clear selection"}
-                                                    >
-                                                        <X size={13} />
-                                                    </span>
-                                                )}
-                                                <ChevronDown size={14} className="text-slate-400" />
-                                            </div>
+                                            <span className={cn(
+                                                "text-[11px] font-bold truncate mt-0.5",
+                                                timeIn ? "text-slate-800 dark:text-slate-100" : "text-slate-400 font-medium"
+                                            )}>
+                                                {timeIn || '--:--'}
+                                            </span>
                                         </button>
-                                    </div>
 
-                                    {/* Desktop Service Dropdown (hidden md:block) */}
-                                    <div ref={subTemplateDropdownRef} className="hidden md:block relative mt-1">
-                                        <div 
+                                        {/* 3. End Time */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setMobileTimeModal('out')}
                                             className={cn(
-                                                "w-full h-11 flex items-center justify-between pl-5 pr-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 hover:bg-indigo-50/5 dark:hover:bg-indigo-950/5",
-                                                isDropdownOpen ? "border-indigo-500/40 ring-4 ring-indigo-500/5" : ""
+                                                "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 flex flex-col justify-center shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left overflow-hidden",
+                                                timeOut ? "border-purple-500/30 bg-purple-50/20 dark:bg-purple-950/10" : ""
                                             )}
                                         >
-                                            <div className="flex items-center gap-3 flex-1 h-full cursor-text" onClick={() => setIsDropdownOpen(true)}>
-                                                <input
-                                                    type="text"
-                                                    style={{ border: 'none', outline: 'none', boxShadow: 'none', background: 'transparent' }}
-                                                    className="w-full h-full !border-0 focus:!border-0 focus:!border-transparent focus-visible:!border-0 focus-visible:!border-transparent bg-transparent focus:bg-transparent active:bg-transparent focus-visible:bg-transparent text-[13px] font-medium tracking-tight text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 p-0 focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none outline-none"
-                                                    placeholder="Select encounter type..."
-                                                    value={isDropdownOpen ? subTemplateSearchQuery : selectedSubTemplate}
-                                                    onChange={(e) => {
-                                                        setSubTemplateSearchQuery(e.target.value);
-                                                        setIsDropdownOpen(true);
-                                                    }}
-                                                    onFocus={() => setIsDropdownOpen(true)}
-                                                />
+                                            <div className="flex items-center gap-1">
+                                                <span className="size-1.5 rounded-full bg-purple-500 shrink-0 ring-1 ring-purple-500/30" />
+                                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+                                                    {language === 'es' ? 'Fin' : 'End'}
+                                                </span>
                                             </div>
-                                            <div className="flex items-center gap-1 shrink-0">
-                                                {selectedSubTemplate && isDropdownOpen && (
-                                                    <button
-                                                        type="button"
-                                                        onMouseDown={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            setSelectedSubTemplate('');
-                                                            setSubTemplateSearchQuery('');
-                                                        }}
-                                                        className="p-1.5 text-slate-450 hover:text-slate-650 dark:hover:text-slate-350 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                                                        title="Clear selection"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    onMouseDown={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        setIsDropdownOpen(prev => !prev);
-                                                    }}
-                                                    className="size-8 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center"
-                                                    title={isDropdownOpen ? "Close menu" : "Open menu"}
-                                                    aria-label={isDropdownOpen ? "Close menu" : "Open menu"}
-                                                >
-                                                    <ChevronDown className={cn("size-4 transition-transform duration-300", isDropdownOpen && "rotate-180")} />
-                                                </button>
+                                            <span className={cn(
+                                                "text-[11px] font-bold truncate mt-0.5",
+                                                timeOut ? "text-slate-800 dark:text-slate-100" : "text-slate-400 font-medium"
+                                            )}>
+                                                {timeOut || '--:--'}
+                                            </span>
+                                        </button>
+
+                                        {/* 4. Duration */}
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-2 flex flex-col justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden">
+                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+                                                {language === 'es' ? 'Duración' : 'Duration'}
+                                            </span>
+                                            <div className="flex items-center gap-0.5 h-5">
+                                                <input 
+                                                    type="number"
+                                                    min="0"
+                                                    autoComplete="off"
+                                                    placeholder="0"
+                                                    value={durationMin}
+                                                    onChange={(e) => handleDurationMinChange(e.target.value)}
+                                                    className="h-full !border-0 bg-transparent text-slate-800 dark:text-slate-100 font-bold text-[11px] w-full p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                />
+                                                <span className="text-[9px] text-slate-400 font-bold uppercase shrink-0">m</span>
                                             </div>
                                         </div>
-
-                                        {isDropdownOpen && (
-                                            <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/98 dark:bg-slate-950/98 backdrop-blur-xl border border-slate-700/80 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 text-slate-100">
-                                                {/* Search View */}   {/* Search View */}
-                                                {subTemplateSearchQuery.trim().length > 0 ? (
-                                                    <div className="flex flex-col gap-1.5 max-h-[50vh] sm:max-h-[360px] overflow-y-auto custom-scrollbar p-1">
-                                                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 flex items-center justify-between border-b border-slate-800/80 pb-1.5 mb-1">
-                                                            <span>Results</span>
-                                                            <span className="text-indigo-400 font-bold">{matchingItemsFromSearch.length} found</span>
-                                                        </div>
-                                                        {matchingItemsFromSearch.length === 0 ? (
-                                                            <div className="text-center py-8 text-slate-400 text-xs font-medium">
-                                                                No services found
-                                                            </div>
-                                                        ) : (
-                                                            matchingItemsFromSearch.map(({ group, item }) => {
-                                                                const isActive = selectedSubTemplate === item.name;
-                                                                return (
-                                                                    <button
-                                                                        key={item.id}
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            setSelectedSubTemplate(item.name);
-                                                                            setIsDropdownOpen(false);
-                                                                        }}
-                                                                        className={cn(
-                                                                            "w-full text-left p-2.5 rounded-xl transition-all flex flex-col gap-1 border group/item cursor-pointer",
-                                                                            isActive 
-                                                                                ? "bg-indigo-950/60 border-indigo-500/80 text-indigo-200" 
-                                                                                : "bg-slate-800/40 border-slate-800/80 hover:bg-slate-800 hover:border-slate-700 text-slate-300"
-                                                                        )}
-                                                                    >
-                                                                        {/* Top row: Icon + Step Badge at Left, POS Badge at Right */}
-                                                                        <div className="flex items-center justify-between gap-2 w-full">
-                                                                            <div className="flex items-center gap-2 min-w-0">
-                                                                                <div className="size-5 rounded-md bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-                                                                                    {renderCategoryIcon(group.id, "size-3")}
-                                                                                </div>
-                                                                                {item.stepBadge && (
-                                                                                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-indigo-900/70 text-indigo-300 border border-indigo-700/50">
-                                                                                        {item.stepBadge}
-                                                                                    </span>
-                                                                                )}
-                                                                                <span className="text-[10px] text-slate-400 truncate">{group.category}</span>
-                                                                            </div>
-                                                                            <div className="flex items-center gap-1.5 shrink-0">
-                                                                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/60">
-                                                                                    {item.pos}
-                                                                                </span>
-                                                                                {isActive && <Check size={14} strokeWidth={3} className="text-indigo-400" />}
-                                                                            </div>
-                                                                        </div>
-                                                                        <span className="text-[12px] font-semibold text-slate-300 leading-tight">{item.label}</span>
-                                                                        <span className="text-[10px] text-slate-400 leading-tight">{item.desc}</span>
-                                                                    </button>
-                                                                );
-                                                            })
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    /* Compact Accordion Categories */
-                                                    <div className="flex flex-col gap-1 max-h-[50vh] sm:max-h-[420px] overflow-y-auto custom-scrollbar p-0.5">
-                                                        {SERVICE_HIERARCHICAL_GROUPS.map((group) => {
-                                                            const isExpanded = expandedCategoryIds.includes(group.id);
-                                                            const hasActiveItem = group.items.some(i => i.name === selectedSubTemplate);
-                                                            return (
-                                                                <div key={group.id} className="rounded-xl overflow-hidden border border-slate-800/80 bg-slate-900/90 shrink-0 transition-all">
-                                                                    {/* Category Accordion Header */}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => toggleCategory(group.id)}
-                                                                        className={cn(
-                                                                            "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-2 cursor-pointer group/cat",
-                                                                            isExpanded 
-                                                                                ? "bg-slate-800/90 text-slate-200" 
-                                                                                : "bg-transparent text-slate-300 hover:bg-slate-800/60 hover:text-slate-200"
-                                                                        )}
-                                                                    >
-                                                                        <div className="flex items-center gap-2.5 min-w-0">
-                                                                            <div className={cn(
-                                                                                "size-5 rounded-md flex items-center justify-center shrink-0 transition-colors",
-                                                                                isExpanded ? "bg-indigo-500/20 text-indigo-300" : "bg-slate-800 text-slate-400 group-hover/cat:text-indigo-400"
-                                                                            )}>
-                                                                                {renderCategoryIcon(group.id, "size-3")}
-                                                                            </div>
-                                                                            <span className="text-[12px] font-semibold text-slate-300 tracking-tight">{group.category}</span>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1.5 shrink-0">
-                                                                            {hasActiveItem && (
-                                                                                <div className="size-2 rounded-full bg-emerald-400 shadow-xs" />
-                                                                            )}
-                                                                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/50">
-                                                                                {group.items.length}
-                                                                            </span>
-                                                                            <ChevronDown size={13} className={cn("transition-transform duration-200 text-slate-400", isExpanded && "rotate-180 text-indigo-400")} />
-                                                                        </div>
-                                                                    </button>
-
-                                                                    {/* Expanded Items */}
-                                                                    {isExpanded && (
-                                                                        <div className="ml-2.5 pl-2.5 my-1 mr-1.5 border-l-2 border-indigo-500/40 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-150">
-                                                                            {group.items.map((item) => {
-                                                                                const isActive = selectedSubTemplate === item.name;
-                                                                                return (
-                                                                                    <button
-                                                                                        key={item.id}
-                                                                                        type="button"
-                                                                                        onClick={() => {
-                                                                                            setSelectedSubTemplate(item.name);
-                                                                                            setIsDropdownOpen(false);
-                                                                                        }}
-                                                                                        className={cn(
-                                                                                            "w-full text-left px-2.5 py-2 rounded-lg text-xs transition-all flex flex-col gap-1 border cursor-pointer group/item",
-                                                                                            isActive 
-                                                                                                ? "bg-indigo-950/70 border-indigo-500/70 text-indigo-200 shadow-xs" 
-                                                                                                : "bg-slate-800/40 border-slate-800/80 hover:bg-slate-800 hover:border-slate-700 text-slate-300"
-                                                                                        )}
-                                                                                    >
-                                                                                        {/* Top Row: Left Step Badge + Right POS Tag (same level) */}
-                                                                                        <div className="flex items-center justify-between gap-2 w-full">
-                                                                                            {item.stepBadge ? (
-                                                                                                <span className={cn(
-                                                                                                    "text-[9px] font-black px-1.5 py-0.2 rounded shrink-0",
-                                                                                                    isActive ? "bg-indigo-900/80 text-indigo-200 border border-indigo-600/50" : "bg-indigo-950 text-indigo-400 border border-indigo-800/60"
-                                                                                                )}>
-                                                                                                    {item.stepBadge}
-                                                                                                </span>
-                                                                                            ) : <span />}
-                                                                                            <div className="flex items-center gap-1.5 shrink-0">
-                                                                                                <span className={cn(
-                                                                                                    "text-[9px] font-bold px-1.5 py-0.2 rounded",
-                                                                                                    isActive ? "bg-indigo-900/60 text-indigo-200 border border-indigo-700/50" : "bg-slate-800 text-slate-400 border border-slate-700/60"
-                                                                                                )}>
-                                                                                                    {item.pos}
-                                                                                                </span>
-                                                                                                {isActive && <Check size={13} strokeWidth={3} className="text-indigo-300 shrink-0" />}
-                                                                                            </div>
-                                                                                        </div>
-
-                                                                                        {/* Service Title */}
-                                                                                        <span className={cn("text-[12px] font-semibold leading-tight", isActive ? "text-indigo-200 font-bold" : "text-slate-300")}>
-                                                                                            {item.label}
-                                                                                        </span>
-
-                                                                                        {/* Service Subtitle */}
-                                                                                        <span className={cn("text-[10px] leading-tight", isActive ? "text-indigo-300/80" : "text-slate-400")}>
-                                                                                            {item.desc}
-                                                                                        </span>
-                                                                                    </button>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>
