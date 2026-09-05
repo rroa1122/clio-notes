@@ -246,17 +246,17 @@ export function Settings() {
     ];
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-300 max-w-5xl mx-auto w-full px-4 pt-4 lg:pt-6 pb-16">
-            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] border border-slate-100 dark:border-slate-800 relative">
+        <div className="flex flex-col animate-in fade-in duration-300 max-w-5xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-6 pb-12">
+            <div className="bg-surface dark:bg-slate-900 rounded-2xl md:rounded-[2rem] p-3.5 sm:p-5 md:p-8 shadow-sm md:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.4)] border border-slate-200/80 dark:border-slate-800/80 relative">
                 
                 {/* Header & Primary Action */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-6 border-b border-slate-100 dark:border-slate-800/80">
-                    <div>
-                        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-3">
-                            <SettingsIcon className="size-6 text-indigo-500" />
-                            {language === 'es' ? "Configuración y Preferencias" : "Settings & Preferences"}
+                <div className="flex items-center justify-between gap-2 pb-3 mb-3 md:pb-4 md:mb-5 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2 sm:gap-3 truncate">
+                            <SettingsIcon className="size-5 sm:size-6 text-indigo-500 shrink-0" />
+                            <span className="truncate">{language === 'es' ? "Configuración y Preferencias" : "Settings & Preferences"}</span>
                         </h1>
-                        <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-1">
+                        <p className="text-[11px] sm:text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5 truncate hidden sm:block">
                             {language === 'es' 
                                 ? "Gestiona tus credenciales, información de clínica, firmas digitales y seguridad." 
                                 : "Manage your credentials, facility details, digital signatures, and security."}
@@ -266,7 +266,7 @@ export function Settings() {
                         onClick={handleSave}
                         disabled={saved}
                         className={cn(
-                            "flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md self-start sm:self-auto shrink-0 cursor-pointer",
+                            "flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm shrink-0 cursor-pointer",
                             saved 
                                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" 
                                 : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 border border-indigo-500"
@@ -274,20 +274,20 @@ export function Settings() {
                     >
                         {saved ? (
                             <>
-                                <CheckCircle2 size={15} className="text-emerald-500 animate-in zoom-in-50" />
-                                {language === 'es' ? 'Guardado' : 'Saved'}
+                                <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in-50" />
+                                <span>{language === 'es' ? 'Guardado' : 'Saved'}</span>
                             </>
                         ) : (
                             <>
-                                <Save size={15} />
-                                {language === 'es' ? 'Guardar Cambios' : 'Save Changes'}
+                                <Save size={14} />
+                                <span>{language === 'es' ? 'Guardar' : 'Save Changes'}</span>
                             </>
                         )}
                     </button>
                 </div>
 
                 {/* Navigation Pills Bar */}
-                <div className="bg-slate-50/70 dark:bg-slate-950/50 backdrop-blur-md p-1.5 rounded-full border border-slate-200/50 dark:border-slate-800 shadow-sm w-full flex overflow-x-auto whitespace-nowrap scrollbar-none gap-2 justify-start md:justify-around mb-8">
+                <div className="bg-slate-50/70 dark:bg-slate-950/50 backdrop-blur-md p-1 rounded-xl md:rounded-full border border-slate-200/50 dark:border-slate-800 shadow-sm w-full flex overflow-x-auto whitespace-nowrap scrollbar-none gap-1 sm:gap-1.5 justify-start md:justify-around mb-4 md:mb-6">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -297,13 +297,13 @@ export function Settings() {
                                 type="button"
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={cn(
-                                    "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer",
+                                    "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg md:rounded-full text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer shrink-0",
                                     isActive
-                                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-md border border-slate-200/60 dark:border-slate-800"
+                                        ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/60 dark:border-slate-800"
                                         : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 border border-transparent"
                                 )}
                             >
-                                <Icon size={14} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"} />
+                                <Icon size={13} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"} />
                                 <span>{tab.label}</span>
                             </button>
                         );
@@ -315,9 +315,9 @@ export function Settings() {
                     
                     {/* [PROFILE TAB] */}
                     {activeTab === 'profile' && profile && (
-                        <div className="space-y-5">
+                        <div className="space-y-3.5 md:space-y-5">
                             {/* Personal & Professional Info Unified Grid */}
-                            <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-3xl p-6 md:p-8 space-y-5 shadow-sm">
+                            <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-3xl p-3.5 sm:p-5 md:p-8 space-y-3.5 md:space-y-5 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                         <User size={14} className="text-indigo-500" />
@@ -327,7 +327,7 @@ export function Settings() {
                                         {language === 'es' ? "Impreso en los registros clínicos" : "Printed on clinical records"}
                                     </span>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
                                     <InputField
                                         label={language === 'es' ? "Primer Nombre" : "First Name"}
                                         value={profile.first_name}
@@ -358,20 +358,20 @@ export function Settings() {
                             </div>
 
                             {/* Security PIN Code Card */}
-                            <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-3xl p-6 md:p-8 shadow-sm">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div className="space-y-1">
+                            <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-3xl p-3.5 sm:p-5 md:p-8 shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                                    <div className="space-y-0.5 sm:space-y-1">
                                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                             <Lock size={14} className="text-indigo-500" />
                                             {language === 'es' ? "Bloqueo Rápido de Pantalla (PIN)" : "Quick Screen Lock (4-Digit PIN)"}
                                         </h3>
-                                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                        <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium">
                                             {language === 'es' 
                                                 ? "Bloquea al instante la pantalla sin cerrar tu sesión activa." 
                                                 : "Quickly locks the screen without logging you out when away."}
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-3 shrink-0">
+                                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                                         <input
                                             type="password"
                                             maxLength={4}
@@ -381,7 +381,7 @@ export function Settings() {
                                                 handleProfileChange('screen_lock_passcode', digits);
                                             }}
                                             placeholder="••••"
-                                            className="w-28 h-11 text-center font-black tracking-widest text-base rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/80 shadow-sm"
+                                            className="w-24 sm:w-28 h-10 sm:h-11 text-center font-black tracking-widest text-sm sm:text-base rounded-xl md:rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/80 shadow-sm"
                                         />
                                         {profile.screen_lock_passcode && profile.screen_lock_passcode.length === 4 && (
                                             <button
@@ -393,10 +393,10 @@ export function Settings() {
                                                         setIsLocked(true);
                                                     }
                                                 }}
-                                                className="px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-all active:scale-95 flex items-center gap-2 shadow-sm cursor-pointer"
+                                                className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl md:rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-all active:scale-95 flex items-center gap-1.5 sm:gap-2 shadow-sm cursor-pointer h-10 sm:h-11"
                                             >
-                                                <Lock size={13} />
-                                                {language === 'es' ? "Probar Bloqueo" : "Test Lock"}
+                                                <Lock size={12} />
+                                                {language === 'es' ? "Probar" : "Test Lock"}
                                             </button>
                                         )}
                                     </div>
@@ -407,13 +407,13 @@ export function Settings() {
 
                     {/* [CLINIC TAB] */}
                     {activeTab === 'clinic' && settings && (
-                        <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-3xl p-6 md:p-8 space-y-5 shadow-sm">
+                        <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-3xl p-3.5 sm:p-5 md:p-8 space-y-3.5 md:space-y-5 shadow-sm">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <Building size={14} className="text-indigo-500" />
                                 {language === 'es' ? "Información del Centro Médico" : "Clinic Facility Information"}
                             </h3>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
                                 <div className="sm:col-span-2">
                                     <InputField
                                         label={language === 'es' ? "Nombre de la Clínica" : "Clinic Name"}
@@ -449,17 +449,17 @@ export function Settings() {
                                     />
                                 </div>
 
-                                <div className="sm:col-span-2 space-y-2">
-                                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest px-1">
-                                        <span className="flex items-center gap-2">
-                                            <MapPin size={13} className="text-indigo-500" />
+                                <div className="sm:col-span-2 space-y-1.5">
+                                    <label className="block text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
+                                        <span className="flex items-center gap-1.5">
+                                            <MapPin size={12} className="text-indigo-500" />
                                             {language === 'es' ? "Dirección" : "Address"}
                                         </span>
                                     </label>
                                     <textarea
                                         value={settings.address}
                                         onChange={(e) => handleClinicChange('address', e.target.value)}
-                                        className="w-full h-20 px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950/60 text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none shadow-sm"
+                                        className="w-full h-18 md:h-20 px-3.5 py-2.5 rounded-xl md:rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950/60 text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none shadow-sm"
                                         placeholder="14400 NW 77th Ct, Suite 100, Miami Lakes, FL 33016"
                                     />
                                 </div>
@@ -469,13 +469,13 @@ export function Settings() {
 
                     {/* [SUPERVISION TAB] */}
                     {activeTab === 'supervision' && settings && (
-                        <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-3xl p-6 md:p-8 space-y-5 shadow-sm">
+                        <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-3xl p-3.5 sm:p-5 md:p-8 space-y-3.5 md:space-y-5 shadow-sm">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <UserCheck size={14} className="text-indigo-500" />
                                 {language === 'es' ? "Supervisor Clínico Asignado" : "Assigned Clinical Supervisor"}
                             </h3>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
                                 <InputField
                                     label={language === 'es' ? "Nombre del Supervisor" : "Supervisor Name"}
                                     value={settings.supervisorName || ''}
@@ -505,7 +505,7 @@ export function Settings() {
 
                     {/* [SIGNATURES TAB] */}
                     {activeTab === 'signatures' && (
-                        <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-3xl p-6 md:p-8 space-y-4 shadow-sm">
+                        <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-3xl p-3.5 sm:p-5 md:p-8 space-y-3.5 md:space-y-4 shadow-sm">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <PenTool size={14} className="text-indigo-500" />
@@ -516,31 +516,31 @@ export function Settings() {
                                         onClick={() => clearSignature('user')}
                                         className="text-xs font-bold text-rose-500 hover:text-rose-600 flex items-center gap-1.5 px-3 py-1 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                                     >
-                                        <Eraser size={13} /> {language === 'es' ? "Borrar Firma" : "Clear"}
+                                        <Eraser size={13} /> {language === 'es' ? "Borrar" : "Clear"}
                                     </button>
                                 )}
                             </div>
 
                             <div
                                 onClick={() => setSigModal({ open: true, type: 'user' })}
-                                className="group relative cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-3xl h-36 bg-white dark:bg-slate-950/60 flex items-center justify-center transition-all hover:shadow-sm"
+                                className="group relative cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-2xl md:rounded-3xl h-32 sm:h-36 bg-white dark:bg-slate-950/60 flex items-center justify-center transition-all hover:shadow-sm"
                             >
                                 {profile?.signature_url ? (
-                                    <div className="relative w-full h-full flex items-center justify-center p-4">
-                                        <img src={profile.signature_url} alt="My Signature" className="max-h-28 object-contain filter drop-shadow-sm transition-transform group-hover:scale-105" />
-                                        <div className="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl flex items-center justify-center">
-                                            <span className="bg-slate-900/90 text-white text-xs font-bold px-4 py-2 rounded-full shadow-md border border-slate-700">
+                                    <div className="relative w-full h-full flex items-center justify-center p-3 sm:p-4">
+                                        <img src={profile.signature_url} alt="My Signature" className="max-h-24 sm:max-h-28 object-contain filter drop-shadow-sm transition-transform group-hover:scale-105" />
+                                        <div className="absolute inset-0 bg-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl md:rounded-3xl flex items-center justify-center">
+                                            <span className="bg-slate-900/90 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-md border border-slate-700">
                                                 {language === 'es' ? "Clic para editar firma" : "Click to edit signature"}
                                             </span>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-center space-y-2">
-                                        <div className="mx-auto size-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <PenTool size={18} />
+                                    <div className="text-center space-y-1.5 p-3">
+                                        <div className="mx-auto size-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <PenTool size={16} />
                                         </div>
                                         <p className="text-xs font-bold text-slate-400 group-hover:text-slate-300 transition-colors">
-                                            {language === 'es' ? "Clic aquí para dibujar y registrar tu firma" : "Click here to record your signature"}
+                                            {language === 'es' ? "Toca para registrar tu firma digital" : "Click here to record your signature"}
                                         </p>
                                     </div>
                                 )}
@@ -550,33 +550,33 @@ export function Settings() {
 
                     {/* [BILLING TAB] */}
                     {activeTab === 'billing' && (
-                        <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-3xl p-6 md:p-8 space-y-5 shadow-sm">
+                        <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-3xl p-3.5 sm:p-5 md:p-8 space-y-3.5 md:space-y-5 shadow-sm">
                             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <CreditCard size={14} className="text-indigo-500" />
                                 {language === 'es' ? "Plan y Cuota de Uso" : "Plan & Quota Usage"}
                             </h3>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl space-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+                                <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 sm:p-5 rounded-xl md:rounded-2xl space-y-1.5 sm:space-y-2">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                                         {language === 'es' ? "Plan Actual" : "Current Plan"}
                                     </span>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-slate-100">
+                                        <span className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-800 dark:text-slate-100">
                                             {user?.subscription_tier || 'FREE'}
                                         </span>
-                                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                                             {language === 'es' ? "Activo" : "Active"}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-5 rounded-2xl space-y-2">
+                                <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 p-4 sm:p-5 rounded-xl md:rounded-2xl space-y-1.5 sm:space-y-2">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                                         {language === 'es' ? "Notas Creadas" : "Notes Generated"}
                                     </span>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-lg font-black text-slate-800 dark:text-slate-100">
+                                        <span className="text-base sm:text-lg font-black text-slate-800 dark:text-slate-100">
                                             {noteCount} {language === 'es' ? "notas" : "notes"}
                                         </span>
                                         <span className="text-xs font-bold text-indigo-500">
@@ -604,10 +604,10 @@ export function Settings() {
 
 function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text", ...props }: any) {
     return (
-        <div className="group space-y-2">
-            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest px-1 group-focus-within:text-indigo-500 transition-colors">
-                <span className="flex items-center gap-2">
-                    {Icon && <Icon size={13} className="text-indigo-500 shrink-0" />}
+        <div className="group space-y-1.5">
+            <label className="block text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1 group-focus-within:text-indigo-500 transition-colors">
+                <span className="flex items-center gap-1.5">
+                    {Icon && <Icon size={12} className="text-indigo-500 shrink-0" />}
                     {label}
                 </span>
             </label>
@@ -615,7 +615,7 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                 type={type}
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full h-12 px-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950/60 text-sm font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm"
+                className="w-full h-10 md:h-11 px-3.5 rounded-xl md:rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950/60 text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm"
                 placeholder={placeholder}
                 {...props}
             />
