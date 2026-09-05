@@ -353,6 +353,7 @@ const Record: React.FC = () => {
     const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
     const [isTimeOutPopoverOpen, setIsTimeOutPopoverOpen] = useState(false);
     const [mobileTimeModal, setMobileTimeModal] = useState<'in' | 'out' | null>(null);
+    const [isMobileServiceModalOpen, setIsMobileServiceModalOpen] = useState(false);
 
     const [subTemplateSearchQuery, setSubTemplateSearchQuery] = useState('');
     const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>(["vaccination"]);
@@ -1763,7 +1764,7 @@ const Record: React.FC = () => {
                             {/* Top Tier: Mandatory Clinical Metadata */}
                             <div className="grid grid-cols-1 md:grid-cols-10 gap-2.5 md:gap-3 lg:gap-4 xl:gap-5 pb-3 md:pb-3.5 xl:pb-4 border-b border-slate-100 dark:border-slate-800">
                                 {/* Patient Selection */}
-                                <div className="space-y-3 md:col-span-3">
+                                <div className="space-y-2.5 md:space-y-3 order-1 md:order-1 md:col-span-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <User size={14} className="text-slate-400" />
                                         <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.client_identity', 'Client identity')}</Label>
@@ -1797,7 +1798,7 @@ const Record: React.FC = () => {
                                 </div>
 
                                 {/* Encounter Date & Time */}
-                                <div className="space-y-3 md:col-span-4">
+                                <div className="space-y-2.5 md:space-y-3 order-3 md:order-2 md:col-span-4">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Calendar size={14} className="text-slate-400" />
                                         <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.encounter_info', 'Encounter Info')}</Label>
@@ -1979,13 +1980,78 @@ const Record: React.FC = () => {
                                 </div>
 
                                 {/* Service Provided */}
-                                <div className="space-y-3 md:col-span-3">
+                                <div className="space-y-2.5 md:space-y-3 order-2 md:order-3 md:col-span-3">
                                     <div className="flex items-center gap-2 mb-1">
                                         <ClipboardList size={14} className="text-slate-400" />
                                         <Label className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">{t('record.service_provided', 'Service Provided')}</Label>
                                         {selectedSubTemplate && <Check size={12} className="text-emerald-400" />}
                                     </div>
-                                    <div ref={subTemplateDropdownRef} className="relative mt-1">
+
+                                    {/* Mobile Service Trigger Button (flex md:hidden) */}
+                                    <div className="flex md:hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsMobileServiceModalOpen(true)}
+                                            className={cn(
+                                                "w-full h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 flex items-center justify-between shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left",
+                                                selectedSubTemplate ? "border-indigo-500/30 bg-indigo-50/15 dark:bg-indigo-950/15" : ""
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                <div className={cn(
+                                                    "size-7 rounded-lg flex items-center justify-center shrink-0",
+                                                    selectedSubTemplate 
+                                                        ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" 
+                                                        : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                                )}>
+                                                    {selectedSubTemplate 
+                                                        ? renderCategoryIcon(
+                                                            SERVICE_HIERARCHICAL_GROUPS.find(g => g.items.some(i => i.name === selectedSubTemplate))?.id || "other",
+                                                            "size-3.5"
+                                                        )
+                                                        : <ClipboardList size={14} />}
+                                                </div>
+                                                <div className="flex flex-col min-w-0 flex-1">
+                                                    {selectedSubTemplate ? (
+                                                        <>
+                                                            <span className="text-[12px] font-bold text-slate-800 dark:text-slate-100 truncate leading-tight">
+                                                                {SERVICE_HIERARCHICAL_GROUPS.flatMap(g => g.items).find(i => i.name === selectedSubTemplate)?.label || selectedSubTemplate}
+                                                            </span>
+                                                            <span className="text-[9px] font-medium text-slate-400 truncate leading-tight">
+                                                                {SERVICE_HIERARCHICAL_GROUPS.find(g => g.items.some(i => i.name === selectedSubTemplate))?.category}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xs font-medium text-slate-400 truncate">
+                                                            {language === 'es' ? 'Seleccionar tipo de servicio...' : 'Select encounter type...'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-1 shrink-0 ml-2">
+                                                {selectedSubTemplate && (
+                                                    <span
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedSubTemplate('');
+                                                            setSubTemplateSearchQuery('');
+                                                        }}
+                                                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                                        title={language === 'es' ? "Limpiar selección" : "Clear selection"}
+                                                    >
+                                                        <X size={13} />
+                                                    </span>
+                                                )}
+                                                <ChevronDown size={14} className="text-slate-400" />
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    {/* Desktop Service Dropdown (hidden md:block) */}
+                                    <div ref={subTemplateDropdownRef} className="hidden md:block relative mt-1">
                                         <div 
                                             className={cn(
                                                 "w-full h-11 flex items-center justify-between pl-5 pr-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 hover:bg-indigo-50/5 dark:hover:bg-indigo-950/5",
@@ -2600,6 +2666,202 @@ const Record: React.FC = () => {
                                 setMobileTimeModal(null);
                             }}
                         />
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Mobile Service Selection Modal / Bottom Sheet */}
+            <Dialog open={isMobileServiceModalOpen} onOpenChange={(open) => {
+                setIsMobileServiceModalOpen(open);
+                if (!open) setSubTemplateSearchQuery('');
+            }}>
+                <DialogContent className="max-w-[440px] w-[95vw] p-0 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+                    {/* Sticky Header */}
+                    <div className="p-4 pb-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                        <div className="flex items-center gap-2 mb-2.5">
+                            <div className="size-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                <ClipboardList size={16} />
+                            </div>
+                            <div>
+                                <DialogTitle className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                                    {language === 'es' ? 'Servicio Prestado' : 'Service Provided'}
+                                </DialogTitle>
+                                <DialogDescription className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
+                                    {language === 'es' ? 'Selecciona el tipo de encuentro clínico' : 'Select clinical encounter type'}
+                                </DialogDescription>
+                            </div>
+                        </div>
+                        
+                        {/* Search Input */}
+                        <div className="relative flex items-center bg-slate-100 dark:bg-slate-800/80 rounded-xl px-3 h-9">
+                            <Search size={14} className="text-slate-400 shrink-0 mr-2" />
+                            <input
+                                type="text"
+                                placeholder={language === 'es' ? 'Buscar servicio o palabra clave...' : 'Search service or keyword...'}
+                                value={subTemplateSearchQuery}
+                                onChange={(e) => setSubTemplateSearchQuery(e.target.value)}
+                                className="w-full bg-transparent border-0 p-0 text-xs font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none focus:ring-0"
+                            />
+                            {subTemplateSearchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSubTemplateSearchQuery('')}
+                                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                >
+                                    <X size={13} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Scrollable Body - single touch-pan-y container with overscroll-contain */}
+                    <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y p-3 pb-16 custom-scrollbar">
+                        {subTemplateSearchQuery.trim().length > 0 ? (
+                            /* Search Results */
+                            <div className="flex flex-col gap-2">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1 flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+                                    <span>{language === 'es' ? 'Resultados' : 'Results'}</span>
+                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">{matchingItemsFromSearch.length} {language === 'es' ? 'encontrados' : 'found'}</span>
+                                </div>
+                                {matchingItemsFromSearch.length === 0 ? (
+                                    <div className="text-center py-10 text-slate-400 text-xs font-medium">
+                                        {language === 'es' ? 'No se encontraron servicios' : 'No services found'}
+                                    </div>
+                                ) : (
+                                    matchingItemsFromSearch.map(({ group, item }) => {
+                                        const isActive = selectedSubTemplate === item.name;
+                                        return (
+                                            <button
+                                                key={item.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedSubTemplate(item.name);
+                                                    setIsMobileServiceModalOpen(false);
+                                                }}
+                                                className={cn(
+                                                    "w-full text-left p-3 rounded-2xl transition-all flex flex-col gap-1 border active:scale-[0.99] cursor-pointer",
+                                                    isActive 
+                                                        ? "bg-indigo-50/80 dark:bg-indigo-950/60 border-indigo-500/50 text-indigo-900 dark:text-indigo-200 shadow-xs" 
+                                                        : "bg-white dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300"
+                                                )}
+                                            >
+                                                <div className="flex items-center justify-between gap-2 w-full">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <div className="size-6 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 shrink-0">
+                                                            {renderCategoryIcon(group.id, "size-3.5")}
+                                                        </div>
+                                                        {item.stepBadge && (
+                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                                                                {item.stepBadge}
+                                                            </span>
+                                                        )}
+                                                        <span className="text-[10px] font-medium text-slate-400 truncate">{group.category}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                                                            {item.pos}
+                                                        </span>
+                                                        {isActive && <Check size={14} strokeWidth={3} className="text-indigo-600 dark:text-indigo-400" />}
+                                                    </div>
+                                                </div>
+                                                <span className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug">{item.label}</span>
+                                                <span className="text-[11px] text-slate-400 leading-snug">{item.desc}</span>
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        ) : (
+                            /* Accordion Categories */
+                            <div className="flex flex-col gap-2">
+                                {SERVICE_HIERARCHICAL_GROUPS.map((group) => {
+                                    const isExpanded = expandedCategoryIds.includes(group.id);
+                                    const hasActiveItem = group.items.some(i => i.name === selectedSubTemplate);
+                                    return (
+                                        <div key={group.id} className="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 shrink-0 transition-all">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleCategory(group.id)}
+                                                className={cn(
+                                                    "w-full text-left px-3.5 py-2.5 text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer",
+                                                    isExpanded 
+                                                        ? "bg-slate-100/80 dark:bg-slate-800/90 text-slate-900 dark:text-slate-100" 
+                                                        : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className={cn(
+                                                        "size-6 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                                                        isExpanded ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-300" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                                    )}>
+                                                        {renderCategoryIcon(group.id, "size-3.5")}
+                                                    </div>
+                                                    <span className="text-xs font-bold tracking-tight">{group.category}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    {hasActiveItem && (
+                                                        <div className="size-2 rounded-full bg-emerald-500 shadow-xs ring-2 ring-emerald-500/20" />
+                                                    )}
+                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/50">
+                                                        {group.items.length}
+                                                    </span>
+                                                    <ChevronDown size={14} className={cn("transition-transform duration-200 text-slate-400", isExpanded && "rotate-180 text-indigo-600 dark:text-indigo-400")} />
+                                                </div>
+                                            </button>
+
+                                            {isExpanded && (
+                                                <div className="p-2 pt-1 flex flex-col gap-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                                                    {group.items.map((item) => {
+                                                        const isActive = selectedSubTemplate === item.name;
+                                                        return (
+                                                            <button
+                                                                key={item.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedSubTemplate(item.name);
+                                                                    setIsMobileServiceModalOpen(false);
+                                                                }}
+                                                                className={cn(
+                                                                    "w-full text-left p-2.5 rounded-xl text-xs transition-all flex flex-col gap-1 border cursor-pointer active:scale-[0.99]",
+                                                                    isActive 
+                                                                        ? "bg-indigo-50/90 dark:bg-indigo-950/70 border-indigo-500/60 text-indigo-900 dark:text-indigo-200 shadow-xs" 
+                                                                        : "bg-white/90 dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-800 hover:border-slate-300 text-slate-700 dark:text-slate-300"
+                                                                )}
+                                                            >
+                                                                <div className="flex items-center justify-between gap-2 w-full">
+                                                                    {item.stepBadge ? (
+                                                                        <span className={cn(
+                                                                            "text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0",
+                                                                            isActive ? "bg-indigo-100 dark:bg-indigo-900/80 text-indigo-700 dark:text-indigo-200" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                                                        )}>
+                                                                            {item.stepBadge}
+                                                                        </span>
+                                                                    ) : <span />}
+                                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/60">
+                                                                            {item.pos}
+                                                                        </span>
+                                                                        {isActive && <Check size={13} strokeWidth={3} className="text-indigo-600 dark:text-indigo-300 shrink-0" />}
+                                                                    </div>
+                                                                </div>
+
+                                                                <span className={cn("text-xs font-bold leading-tight", isActive ? "text-indigo-600 dark:text-indigo-300" : "text-slate-800 dark:text-slate-200")}>
+                                                                    {item.label}
+                                                                </span>
+
+                                                                <span className="text-[10px] text-slate-400 leading-tight">
+                                                                    {item.desc}
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </DialogContent>
             </Dialog>
