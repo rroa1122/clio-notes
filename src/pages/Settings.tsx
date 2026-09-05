@@ -252,9 +252,12 @@ export function Settings() {
                 {/* Header & Primary Action */}
                 <div className="flex items-center justify-between gap-2 pb-3 mb-3 md:pb-4 md:mb-5 border-b border-slate-100 dark:border-slate-800/80">
                     <div className="min-w-0 flex-1">
-                        <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2 sm:gap-3 truncate">
-                            <SettingsIcon className="size-5 sm:size-6 text-indigo-500 shrink-0" />
-                            <span className="truncate">{language === 'es' ? "Configuración y Preferencias" : "Settings & Preferences"}</span>
+                        <h1 className="text-sm sm:text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2 sm:gap-3 truncate">
+                            <SettingsIcon className="size-4.5 sm:size-6 text-indigo-500 shrink-0" />
+                            <span className="truncate">
+                                <span className="sm:hidden">{language === 'es' ? "Configuración" : "Settings"}</span>
+                                <span className="hidden sm:inline">{language === 'es' ? "Configuración y Preferencias" : "Settings & Preferences"}</span>
+                            </span>
                         </h1>
                         <p className="text-[11px] sm:text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5 truncate hidden sm:block">
                             {language === 'es' 
@@ -266,7 +269,7 @@ export function Settings() {
                         onClick={handleSave}
                         disabled={saved}
                         className={cn(
-                            "flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm shrink-0 cursor-pointer",
+                            "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm shrink-0 cursor-pointer",
                             saved 
                                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" 
                                 : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 border border-indigo-500"
@@ -274,12 +277,12 @@ export function Settings() {
                     >
                         {saved ? (
                             <>
-                                <CheckCircle2 size={14} className="text-emerald-500 animate-in zoom-in-50" />
+                                <CheckCircle2 size={13} className="text-emerald-500 animate-in zoom-in-50" />
                                 <span>{language === 'es' ? 'Guardado' : 'Saved'}</span>
                             </>
                         ) : (
                             <>
-                                <Save size={14} />
+                                <Save size={13} />
                                 <span>{language === 'es' ? 'Guardar' : 'Save Changes'}</span>
                             </>
                         )}
@@ -287,7 +290,7 @@ export function Settings() {
                 </div>
 
                 {/* Navigation Pills Bar */}
-                <div className="bg-slate-50/70 dark:bg-slate-950/50 backdrop-blur-md p-1 rounded-xl md:rounded-full border border-slate-200/50 dark:border-slate-800 shadow-sm w-full flex overflow-x-auto whitespace-nowrap scrollbar-none gap-1 sm:gap-1.5 justify-start md:justify-around mb-4 md:mb-6">
+                <div className="bg-slate-50/70 dark:bg-slate-950/50 backdrop-blur-md p-1 rounded-xl md:rounded-full border border-slate-200/50 dark:border-slate-800 shadow-sm w-full flex items-center justify-between md:justify-around gap-1 sm:gap-1.5 mb-4 md:mb-6">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -296,15 +299,17 @@ export function Settings() {
                                 key={tab.id}
                                 type="button"
                                 onClick={() => setActiveTab(tab.id as any)}
+                                title={tab.label}
+                                aria-label={tab.label}
                                 className={cn(
-                                    "flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg md:rounded-full text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer shrink-0",
+                                    "flex-1 md:flex-initial flex items-center justify-center gap-1.5 h-9 sm:h-9 md:h-auto px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg md:rounded-full text-xs font-bold transition-all duration-200 active:scale-95 cursor-pointer",
                                     isActive
                                         ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm border border-slate-200/60 dark:border-slate-800"
                                         : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 border border-transparent"
                                 )}
                             >
-                                <Icon size={13} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"} />
-                                <span>{tab.label}</span>
+                                <Icon size={15} className={cn("shrink-0", isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400")} />
+                                <span className="hidden md:inline whitespace-nowrap">{tab.label}</span>
                             </button>
                         );
                     })}
@@ -319,9 +324,9 @@ export function Settings() {
                             {/* Personal & Professional Info Unified Grid */}
                             <div className="bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-3xl p-3.5 sm:p-5 md:p-8 space-y-3.5 md:space-y-5 shadow-sm">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        <User size={14} className="text-indigo-500" />
-                                        {language === 'es' ? "Identidad Profesional y Credenciales" : "Professional Identity & Credentials"}
+                                    <h3 className="text-[11px] sm:text-xs font-black text-slate-400 uppercase tracking-wider sm:tracking-widest flex items-center gap-2 truncate whitespace-nowrap">
+                                        <User size={14} className="text-indigo-500 shrink-0" />
+                                        <span>{language === 'es' ? "Identidad y Credenciales" : "Identity & Credentials"}</span>
                                     </h3>
                                     <span className="text-xs text-slate-500 font-medium hidden sm:inline">
                                         {language === 'es' ? "Impreso en los registros clínicos" : "Printed on clinical records"}
