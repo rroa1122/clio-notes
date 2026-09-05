@@ -14,7 +14,6 @@ import {
     PenTool, 
     Eraser, 
     Lock, 
-    Settings as SettingsIcon, 
     Mail, 
     Check, 
     Star,
@@ -252,12 +251,9 @@ export function Settings() {
                 {/* Header & Primary Action */}
                 <div className="flex items-center justify-between gap-2 pb-3 mb-3 md:pb-4 md:mb-5 border-b border-slate-100 dark:border-slate-800/80">
                     <div className="min-w-0 flex-1">
-                        <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2 sm:gap-2.5 truncate">
-                            <SettingsIcon className="size-4.5 sm:size-5.5 text-indigo-500 shrink-0" />
-                            <span className="truncate">
-                                <span className="sm:hidden">{language === 'es' ? "Configuración" : "Settings"}</span>
-                                <span className="hidden sm:inline">{language === 'es' ? "Configuración y Preferencias" : "Settings & Preferences"}</span>
-                            </span>
+                        <h1 className="text-base sm:text-lg md:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight truncate">
+                            <span className="sm:hidden">{language === 'es' ? "Configuración" : "Settings"}</span>
+                            <span className="hidden sm:inline">{language === 'es' ? "Configuración y Preferencias" : "Settings & Preferences"}</span>
                         </h1>
                         <p className="text-[11px] sm:text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5 truncate hidden sm:block">
                             {language === 'es' 
