@@ -126,20 +126,20 @@ export function Patients() {
                 <div className="block md:hidden px-3.5 pt-3.5 pb-3 bg-surface dark:bg-slate-900 border-b border-slate-200/60 dark:border-slate-800/80 shrink-0">
                     <div className="flex items-center justify-between gap-2 mb-2.5">
                         <div className="flex items-center gap-2 min-w-0">
-                            <h1 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight shrink-0">
+                            <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight shrink-0">
                                 {language === 'es' ? "Clientes" : "Clients"}
                             </h1>
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50 shrink-0">
-                                <span className="size-1.5 rounded-full bg-emerald-500 animate-tactile-pulse shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-black bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shrink-0 shadow-xs">
+                                <span className="size-1.5 rounded-full bg-emerald-400 ring-2 ring-emerald-400/20 shrink-0" />
                                 {patients.length}
                             </span>
                         </div>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm hover:shadow active:scale-95 transition-all shrink-0"
+                            className="group flex items-center gap-1.5 py-1 px-2.5 rounded-full text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 transition-all font-black text-[11px] uppercase tracking-widest active:scale-95 cursor-pointer shrink-0 border border-indigo-500/20"
                         >
-                            <UserPlus className="w-3.5 h-3.5" />
-                            <span>{language === 'es' ? "Nuevo" : "New Client"}</span>
+                            <UserPlus size={13} className="text-indigo-500 dark:text-indigo-400 group-hover:scale-110 transition-transform shrink-0" />
+                            <span>{language === 'es' ? "Nuevo Cliente" : "New Client"}</span>
                         </button>
                     </div>
 
@@ -406,24 +406,24 @@ export function Patients() {
                                         <div className="flex flex-col min-w-0 flex-1">
                                             {/* Row 1: Name and Badge */}
                                             <div className="flex items-center gap-1.5 min-w-0">
-                                                <span className="font-bold text-foreground text-sm tracking-tight truncate leading-tight group-hover:text-primary transition-colors">
+                                                <span className="font-bold text-slate-900 dark:text-slate-100 text-[13.5px] tracking-tight truncate leading-tight group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
                                                     {patient.full_name}
                                                 </span>
                                                 {patient.emr_id ? (
-                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-900/30 shrink-0">
+                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-black bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50 shrink-0">
                                                         {patient.emr_id}
                                                     </span>
                                                 ) : patient.case_number ? (
-                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/40 shrink-0">
+                                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/40 dark:border-slate-700/40 shrink-0">
                                                         #{patient.case_number}
                                                     </span>
                                                 ) : null}
                                             </div>
 
                                             {/* Row 2: DOB & Phone */}
-                                            <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground font-medium tracking-tight truncate">
+                                            <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 dark:text-slate-400 font-medium tracking-tight truncate">
                                                 <span className="shrink-0">
-                                                    {patient.dob ? `${language === 'es' ? 'F. Nac: ' : 'DOB: '}${format(new Date(patient.dob + "T00:00:00"), language === 'es' ? 'dd/MM/yyyy' : 'MM/dd/yyyy')}` : (language === 'es' ? 'Sin fecha nac.' : 'No DOB')}
+                                                    {patient.dob ? `${language === 'es' ? 'F. Nac: ' : 'DOB: '}${format(new Date(patient.dob + "T00:00:00"), language === 'es' ? 'dd/MM/yyyy' : 'MM/dd/yyyy')}` : (language === 'es' ? 'Sin fecha' : 'No DOB')}
                                                 </span>
                                                 {patient.phone && (
                                                     <>
@@ -451,13 +451,13 @@ export function Patients() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="size-8 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 active:scale-95 transition-all"
+                                            className="size-8 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50/80 dark:hover:bg-rose-950/30 active:scale-95 transition-all"
                                             onClick={(e) => confirmDelete(e, patient.id, patient.full_name)}
                                             title={language === 'es' ? "Eliminar" : "Delete"}
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2 size={13} />
                                         </Button>
-                                        <ChevronRight size={16} className="text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors" />
+                                        <ChevronRight size={14} className="text-slate-400 dark:text-slate-600 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors" />
                                     </div>
                                 </div>
                             ))
