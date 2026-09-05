@@ -252,8 +252,8 @@ export function Settings() {
                 {/* Header & Primary Action */}
                 <div className="flex items-center justify-between gap-2 pb-3 mb-3 md:pb-4 md:mb-5 border-b border-slate-100 dark:border-slate-800/80">
                     <div className="min-w-0 flex-1">
-                        <h1 className="text-sm sm:text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2 sm:gap-3 truncate">
-                            <SettingsIcon className="size-4.5 sm:size-6 text-indigo-500 shrink-0" />
+                        <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2 sm:gap-2.5 truncate">
+                            <SettingsIcon className="size-4.5 sm:size-5.5 text-indigo-500 shrink-0" />
                             <span className="truncate">
                                 <span className="sm:hidden">{language === 'es' ? "Configuración" : "Settings"}</span>
                                 <span className="hidden sm:inline">{language === 'es' ? "Configuración y Preferencias" : "Settings & Preferences"}</span>
@@ -269,20 +269,20 @@ export function Settings() {
                         onClick={handleSave}
                         disabled={saved}
                         className={cn(
-                            "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-sm shrink-0 cursor-pointer",
+                            "group flex items-center gap-1.5 py-1 px-2.5 sm:px-3.5 rounded-full font-black text-[11px] uppercase tracking-widest transition-all duration-200 active:scale-95 shrink-0 cursor-pointer border",
                             saved 
-                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" 
-                                : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20 border border-indigo-500"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" 
+                                : "text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 border-indigo-500/20"
                         )}
                     >
                         {saved ? (
                             <>
-                                <CheckCircle2 size={13} className="text-emerald-500 animate-in zoom-in-50" />
+                                <CheckCircle2 size={13} className="text-emerald-500 animate-in zoom-in-50 shrink-0" />
                                 <span>{language === 'es' ? 'Guardado' : 'Saved'}</span>
                             </>
                         ) : (
                             <>
-                                <Save size={13} />
+                                <Save size={13} className="text-indigo-500 dark:text-indigo-400 group-hover:scale-110 transition-transform shrink-0" />
                                 <span>{language === 'es' ? 'Guardar' : 'Save Changes'}</span>
                             </>
                         )}
