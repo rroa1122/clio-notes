@@ -488,116 +488,114 @@ export function SyncPortal() {
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-stretch">
                     
                     {/* Left Column: Connection credentials & configuration */}
-                    <div className="lg:col-span-7 bg-muted/30 dark:bg-slate-900/40 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-border/60 flex flex-col justify-between space-y-4 sm:space-y-6">
-                        <div className="space-y-5">
-                            <div className="flex items-center justify-between pb-3 border-b border-border/50">
+                    <div className="lg:col-span-7 bg-muted/30 dark:bg-slate-900/40 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-border/60 flex flex-col justify-between space-y-3.5 sm:space-y-5">
+                        <div className="space-y-3 sm:space-y-4">
+                            <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-border/50">
                                 <div className="flex items-center gap-2">
-                                    <Key size={15} className="text-primary" />
+                                    <Key size={14} className="text-primary" />
                                     <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                                        {language === 'es' ? "Credenciales de Acceso Amexzone" : "Amexzone Portal Credentials"}
+                                        {language === 'es' ? "Credenciales Amexzone" : "Amexzone Credentials"}
                                     </h2>
                                 </div>
+                                <ConnectionStatusPill status={mfaStatus} language={language} compact />
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <InputField
-                                    label="Amexzone Email"
-                                    value={email}
-                                    onChange={setEmail}
-                                    placeholder="doctor@arcmentalhealth.com"
-                                    icon={User}
-                                    disabled={mfaStatus !== 'not_connected'}
-                                />
-
-                                <InputField
-                                    label={language === 'es' ? "Contraseña de Amexzone" : "Amexzone Password"}
-                                    value={password}
-                                    onChange={setPassword}
-                                    placeholder="••••••••••••"
-                                    icon={Lock}
-                                    type="password"
-                                    disabled={mfaStatus !== 'not_connected'}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-                                <InputField
-                                    label={language === 'es' ? "PIN de Acceso" : "Access PIN"}
-                                    value={pin}
-                                    onChange={setPin}
-                                    placeholder="1206"
-                                    icon={Key}
-                                    type="password"
-                                    disabled={mfaStatus !== 'not_connected'}
-                                />
-
-                                {/* MFA Channel Selection */}
-                                <div className="flex flex-col space-y-2">
-                                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-muted-foreground uppercase tracking-wider pl-1">
-                                        {language === 'es' ? "Canal 2FA" : "2FA Channel"}
-                                    </label>
-                                    <div className="h-11 rounded-xl border border-slate-200 dark:border-border/80 bg-slate-100 dark:bg-slate-950/60 flex p-1 gap-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => setMfaChannel('sms')}
-                                            disabled={mfaStatus !== 'not_connected'}
-                                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                                                mfaChannel === 'sms'
-                                                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80 font-bold"
-                                                    : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
-                                            }`}
-                                        >
-                                            <Phone size={13} />
-                                            SMS
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setMfaChannel('email')}
-                                            disabled={mfaStatus !== 'not_connected'}
-                                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                                                mfaChannel === 'email'
-                                                    ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80 font-bold"
-                                                    : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
-                                            }`}
-                                        >
-                                            <Mail size={13} />
-                                            {language === 'es' ? "Correo" : "Email"}
-                                        </button>
-                                    </div>
+                            <div className="grid grid-cols-12 gap-2.5 sm:gap-4">
+                                {/* Email: Full width on mobile, 6 cols on desktop */}
+                                <div className="col-span-12 sm:col-span-6">
+                                    <InputField
+                                        label={language === 'es' ? "Correo Electrónico" : "Amexzone Email"}
+                                        value={email}
+                                        onChange={setEmail}
+                                        placeholder="doctor@arcmentalhealth.com"
+                                        icon={User}
+                                        disabled={mfaStatus !== 'not_connected'}
+                                    />
                                 </div>
 
-                                {/* Status Summary Tile */}
-                                <div className="flex flex-col space-y-2">
-                                    <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">
-                                        {language === 'es' ? "Estado" : "State"}
-                                    </label>
-                                    <div className="h-11 rounded-xl px-3 border border-border/80 bg-background/80 flex items-center justify-between">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
-                                            {language === 'es' ? "Sesión:" : "Session:"}
+                                {/* Password: 7 cols on mobile, 6 cols on desktop */}
+                                <div className="col-span-7 sm:col-span-6">
+                                    <InputField
+                                        label={language === 'es' ? "Contraseña" : "Password"}
+                                        value={password}
+                                        onChange={setPassword}
+                                        placeholder="••••••••••••"
+                                        icon={Lock}
+                                        type="password"
+                                        disabled={mfaStatus !== 'not_connected'}
+                                    />
+                                </div>
+
+                                {/* Access PIN: 5 cols on mobile, 5 cols on desktop */}
+                                <div className="col-span-5 sm:col-span-5">
+                                    <InputField
+                                        label={language === 'es' ? "PIN de Acceso" : "Access PIN"}
+                                        value={pin}
+                                        onChange={setPin}
+                                        placeholder="1206"
+                                        icon={Key}
+                                        type="password"
+                                        disabled={mfaStatus !== 'not_connected'}
+                                    />
+                                </div>
+
+                                {/* MFA Channel Selection: Inline row on mobile, 7 cols on desktop */}
+                                <div className="col-span-12 sm:col-span-7 flex flex-col justify-end">
+                                    <div className="h-10 sm:h-11 rounded-xl border border-slate-200 dark:border-border/80 bg-slate-100 dark:bg-slate-950/60 flex items-center justify-between p-1 pl-3 gap-2">
+                                        <span className="text-[10.5px] sm:text-[11px] font-semibold text-slate-500 dark:text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                                            <Shield size={12} className="text-primary hidden sm:inline" />
+                                            {language === 'es' ? "Canal 2FA" : "2FA Channel"}
                                         </span>
-                                        <ConnectionStatusPill status={mfaStatus} language={language} compact />
+                                        <div className="flex h-full gap-1 w-36 sm:w-44 shrink-0">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMfaChannel('sms')}
+                                                disabled={mfaStatus !== 'not_connected'}
+                                                className={`flex-1 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                                    mfaChannel === 'sms'
+                                                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80 font-bold"
+                                                        : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
+                                                }`}
+                                            >
+                                                <Phone size={12} />
+                                                SMS
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMfaChannel('email')}
+                                                disabled={mfaStatus !== 'not_connected'}
+                                                className={`flex-1 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+                                                    mfaChannel === 'email'
+                                                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80 font-bold"
+                                                        : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
+                                                }`}
+                                            >
+                                                <Mail size={12} />
+                                                {language === 'es' ? "Correo" : "Email"}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Session status banner message */}
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 flex items-start gap-2.5">
-                                <Info size={15} className="text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
-                                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                            <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 flex items-start gap-2">
+                                <Info size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
+                                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
                                     {mfaStatus === 'connected' && (language === 'es' 
-                                        ? "La sesión está activa y verificada. Las notas se sincronizarán automáticamente con Amexzone al ser firmadas." 
+                                        ? "Sesión verificada y activa. Las notas firmadas se enviarán automáticamente a Amexzone." 
                                         : "Session is verified and active. Signed notes are automatically dispatched and synced to Amexzone.")}
                                     {mfaStatus === 'expired' && (language === 'es' 
-                                        ? "La sesión de Amexzone ha caducado. Haz clic en desconectar y vuelve a iniciar sesión." 
+                                        ? "La sesión de Amexzone ha caducado. Desconecta y vuelve a iniciar sesión para reactivarla." 
                                         : "Amexzone session has expired. Please disconnect and reconnect to re-authenticate.")}
                                     {mfaStatus === 'awaiting_2fa' && (
                                         mfaChannel === 'email' ? (
                                             language === 'es'
-                                                ? "Código 2FA solicitado vía correo electrónico. Introdúcelo en el panel lateral para completar el enlace."
+                                                ? "Código 2FA solicitado vía correo. Introdúcelo en el panel para completar el enlace."
                                                 : "2FA code requested via Email. Enter it in the side verification card to finish connecting."
                                         ) : (
                                             language === 'es'
-                                                ? "Código 2FA solicitado vía SMS. Introdúcelo en el panel lateral para completar el enlace."
+                                                ? "Código 2FA solicitado vía SMS. Introdúcelo en el panel para completar el enlace."
                                                 : "2FA code requested via SMS. Enter it in the side verification card to finish connecting."
                                         )
                                     )}
@@ -605,28 +603,28 @@ export function SyncPortal() {
                                         ? "El bot automatizado está validando las credenciales y conectando con el portal seguro..."
                                         : "Automated bot is verifying credentials and linking with the secure portal...")}
                                     {mfaStatus === 'not_connected' && (language === 'es' 
-                                        ? "Ingresa tus credenciales clínicas de Amexzone y presiona 'Conectar' para habilitar el puente de sincronización." 
+                                        ? "Ingresa tus credenciales clínicas de Amexzone y presiona 'Conectar' para habilitar el puente." 
                                         : "Enter your Amexzone clinical credentials and click 'Connect' to enable the synchronization bridge.")}
                                 </p>
                             </div>
                         </div>
 
                         {/* Action buttons */}
-                        <div className="pt-4 border-t border-border/50">
+                        <div className="pt-3 border-t border-border/50">
                             {mfaStatus !== 'connected' && mfaStatus !== 'processing' && mfaStatus !== 'awaiting_2fa' && (
                                 <button
                                     onClick={handleConnect}
                                     disabled={saving}
-                                    className="w-full h-13 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider shadow-md shadow-indigo-950/50 border border-indigo-500 active:translate-y-[1px] disabled:opacity-40 cursor-pointer select-none"
+                                    className="w-full h-11 sm:h-12 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl sm:rounded-2xl font-bold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider shadow-md shadow-indigo-950/50 border border-indigo-500 active:translate-y-[1px] disabled:opacity-40 cursor-pointer select-none"
                                 >
                                     {saving ? (
                                         <>
-                                            <RefreshCw size={16} className="animate-spin text-white" />
+                                            <RefreshCw size={15} className="animate-spin text-white" />
                                             <span>{language === 'es' ? "Estableciendo conexión..." : "Initiating connection..."}</span>
                                         </>
                                     ) : (
                                         <>
-                                            <Play size={16} className="text-white fill-white" />
+                                            <Play size={15} className="text-white fill-white" />
                                             <span>{language === 'es' ? "Conectar e Iniciar Login" : "Connect & Verify Account"}</span>
                                         </>
                                     )}
@@ -636,9 +634,9 @@ export function SyncPortal() {
                             {(mfaStatus === 'connected' || mfaStatus === 'awaiting_2fa' || mfaStatus === 'processing' || mfaStatus === 'expired') && (
                                 <button
                                     onClick={() => setIsDisconnectModalOpen(true)}
-                                    className="w-full h-13 py-3.5 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-500/50 hover:text-rose-600 dark:hover:text-rose-200 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 rounded-2xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider active:translate-y-[1px] cursor-pointer select-none"
+                                    className="w-full h-11 sm:h-12 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-500/50 hover:text-rose-600 dark:hover:text-rose-200 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 rounded-xl sm:rounded-2xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider active:translate-y-[1px] cursor-pointer select-none"
                                 >
-                                    <Trash2 size={15} />
+                                    <Trash2 size={14} />
                                     <span>{language === 'es' ? "Desconectar y Modificar Credenciales" : "Disconnect & Edit Credentials"}</span>
                                 </button>
                             )}
@@ -1437,17 +1435,17 @@ function TaskStatusBadge({ status, language }: { status: string; language: strin
 }
 
 // Inline input field helper
-function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text", disabled = false }: any) {
+function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text", disabled = false, className = "" }: any) {
     const [showPasswordText, setShowPasswordText] = useState(false);
     const isPasswordField = type === "password";
     const currentInputType = isPasswordField ? (showPasswordText ? "text" : "password") : type;
 
     return (
-        <div className="group space-y-2">
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1 group-focus-within:text-primary transition-colors">
-                <span className="flex items-center gap-2">
-                    {Icon && <Icon size={12} className="text-muted-foreground group-focus-within:text-primary transition-colors" />}
-                    {label}
+        <div className={`group space-y-1 sm:space-y-1.5 ${className}`}>
+            <label className="block text-[10.5px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1 group-focus-within:text-primary transition-colors truncate">
+                <span className="flex items-center gap-1.5">
+                    {Icon && <Icon size={12} className="text-muted-foreground group-focus-within:text-primary transition-colors shrink-0" />}
+                    <span className="truncate">{label}</span>
                 </span>
             </label>
             <div className="relative flex items-center">
@@ -1456,7 +1454,7 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                     value={value || ''}
                     onChange={(e) => onChange(e.target.value)}
                     disabled={disabled}
-                    className={`w-full h-11 px-4 ${isPasswordField ? 'pr-10' : ''} rounded-xl border border-border/80 bg-background/80 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`w-full h-10 sm:h-11 px-3 sm:px-4 ${isPasswordField ? 'pr-9 sm:pr-10' : ''} rounded-xl border border-border/80 bg-background/80 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                     placeholder={placeholder}
                 />
                 {isPasswordField && (
@@ -1464,10 +1462,10 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                         type="button"
                         onClick={() => setShowPasswordText(!showPasswordText)}
                         tabIndex={-1}
-                        className="absolute right-3 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        className="absolute right-2.5 sm:right-3 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                         title={showPasswordText ? "Hide" : "Show"}
                     >
-                        {showPasswordText ? <EyeOff size={15} /> : <Eye size={15} />}
+                        {showPasswordText ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                 )}
             </div>
