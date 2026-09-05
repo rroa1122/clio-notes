@@ -2054,16 +2054,16 @@ const Record: React.FC = () => {
                                     {/* Mobile Date & Time 4-in-1 Row (grid md:hidden) */}
                                     <div className="grid grid-cols-4 gap-1.5 mt-1 md:hidden">
                                         {/* 1. Date */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-2 flex flex-col justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden">
-                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-1 flex flex-col items-center justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden text-center">
+                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate text-center w-full">
                                                 {language === 'es' ? 'Fecha' : 'Date'}
                                             </span>
                                             <DatePicker 
                                                 date={serviceDate} 
                                                 setDate={setServiceDate} 
                                                 dateFormat="dd/MM/yy"
-                                                icon={<span />}
-                                                className="h-5 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 !px-0 font-bold text-slate-800 dark:text-slate-100 text-[11px] justify-between cursor-pointer"
+                                                icon={<span className="hidden" />}
+                                                className="h-5 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 !px-0 font-bold text-slate-800 dark:text-slate-100 text-[11px] !justify-center text-center cursor-pointer"
                                             />
                                         </div>
 
@@ -2072,18 +2072,18 @@ const Record: React.FC = () => {
                                             type="button"
                                             onClick={() => setMobileTimeModal('in')}
                                             className={cn(
-                                                "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 flex flex-col justify-center shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left overflow-hidden",
+                                                "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1 flex flex-col items-center justify-center shadow-xs active:scale-[0.98] transition-all cursor-pointer text-center overflow-hidden",
                                                 timeIn ? "border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/10" : ""
                                             )}
                                         >
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center justify-center gap-1 w-full">
                                                 <span className="size-1.5 rounded-full bg-emerald-500 shrink-0 ring-1 ring-emerald-500/30" />
                                                 <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
                                                     {language === 'es' ? 'Inicio' : 'Start'}
                                                 </span>
                                             </div>
                                             <span className={cn(
-                                                "text-[11px] font-bold truncate mt-0.5",
+                                                "text-[11px] font-bold truncate mt-0.5 text-center w-full",
                                                 timeIn ? "text-slate-800 dark:text-slate-100" : "text-slate-400 font-medium"
                                             )}>
                                                 {timeIn || '--:--'}
@@ -2095,18 +2095,18 @@ const Record: React.FC = () => {
                                             type="button"
                                             onClick={() => setMobileTimeModal('out')}
                                             className={cn(
-                                                "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 flex flex-col justify-center shadow-xs active:scale-[0.98] transition-all cursor-pointer text-left overflow-hidden",
+                                                "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1 flex flex-col items-center justify-center shadow-xs active:scale-[0.98] transition-all cursor-pointer text-center overflow-hidden",
                                                 timeOut ? "border-purple-500/30 bg-purple-50/20 dark:bg-purple-950/10" : ""
                                             )}
                                         >
-                                            <div className="flex items-center gap-1">
+                                            <div className="flex items-center justify-center gap-1 w-full">
                                                 <span className="size-1.5 rounded-full bg-purple-500 shrink-0 ring-1 ring-purple-500/30" />
                                                 <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
                                                     {language === 'es' ? 'Fin' : 'End'}
                                                 </span>
                                             </div>
                                             <span className={cn(
-                                                "text-[11px] font-bold truncate mt-0.5",
+                                                "text-[11px] font-bold truncate mt-0.5 text-center w-full",
                                                 timeOut ? "text-slate-800 dark:text-slate-100" : "text-slate-400 font-medium"
                                             )}>
                                                 {timeOut || '--:--'}
@@ -2114,11 +2114,11 @@ const Record: React.FC = () => {
                                         </button>
 
                                         {/* 4. Duration */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-2 flex flex-col justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden">
-                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate">
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-1 flex flex-col items-center justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden text-center">
+                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate text-center w-full">
                                                 {language === 'es' ? 'Duración' : 'Duration'}
                                             </span>
-                                            <div className="flex items-center gap-0.5 h-5">
+                                            <div className="flex items-center justify-center gap-0.5 h-5 w-full">
                                                 <input 
                                                     type="number"
                                                     min="0"
@@ -2126,7 +2126,7 @@ const Record: React.FC = () => {
                                                     placeholder="0"
                                                     value={durationMin}
                                                     onChange={(e) => handleDurationMinChange(e.target.value)}
-                                                    className="h-full !border-0 bg-transparent text-slate-800 dark:text-slate-100 font-bold text-[11px] w-full p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className="h-full !border-0 bg-transparent text-slate-800 dark:text-slate-100 font-bold text-[11px] w-8 text-right p-0 outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                                 <span className="text-[9px] text-slate-400 font-bold uppercase shrink-0">m</span>
                                             </div>
