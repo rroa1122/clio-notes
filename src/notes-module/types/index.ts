@@ -294,8 +294,9 @@ export interface ClioNote {
     _frontend_service_title?: string;
     patient: {
         full_name: string;
+        first_name?: string;
         dob: string;
-        age: string | number;
+        age?: string | number;
         sex_at_birth: string;
         address?: string;
         phone?: string;
@@ -305,7 +306,7 @@ export interface ClioNote {
         insurance?: string;
     };
     encounter: {
-        mode: string;
+        mode?: string;
         dos_date?: string;
         time_in?: string;
         time_out?: string;
@@ -317,6 +318,8 @@ export interface ClioNote {
         billing_units?: string | number;
         location_name?: string;
         place_of_service_name?: string;
+        service_location?: string;
+        cpt_code?: string;
         sub_template?: string;
         primary_service_provided?: string;
     };
@@ -336,18 +339,20 @@ export interface ClioNote {
     };
     meta: {
         template_id: string;
-        template_version: string;
-        confidence_overall: number;
-        context: string;
-        warnings: string[];
-        missing_fields: string[];
+        template_version?: string;
+        confidence_overall?: number;
+        context?: string;
+        warnings?: string[];
+        missing_fields?: string[];
         provider?: string;
         visitDate?: string;
         visit_date?: string;
         subTemplate?: string;
+        generated_at?: string;
     };
     services?: {
         service_focus_title?: string;
+        domains_selected?: Record<string, boolean>;
     };
     staff?: {
         case_manager_name?: string;
@@ -368,7 +373,7 @@ export interface ClioNote {
         location?: string;
         service_focus_title?: string;
     };
-    hpi: {
+    hpi?: {
         chief_complaint: string;
         narrative: string;
         facts: {
@@ -386,10 +391,10 @@ export interface ClioNote {
             };
         };
     };
-    ros: {
+    ros?: {
         positive: string[];
     };
-    mse: {
+    mse?: {
         appearance: string;
         mood: string;
         affect: string;
@@ -399,13 +404,13 @@ export interface ClioNote {
         insight_judgment: string;
         [key: string]: string;
     };
-    screenings: Array<{
+    screenings?: Array<{
         name: string;
         score: string | number;
         performed: "yes" | "no";
     }>;
-    assessment_dsm5: string[];
-    plan: {
+    assessment_dsm5?: string[];
+    plan?: {
         pharmacological: {
             start: string[];
             continue: string[];
@@ -435,6 +440,7 @@ export interface ClioNote {
     };
     narrative?: {
         summary_notes?: string;
+        clinical_narrative?: string;
         outcome_of_services?: string;
         next_steps?: string;
     };

@@ -1258,6 +1258,39 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
             return;
         }
 
+        // Mandatory validations: DOS, Case Manager, Supervisor, at least 1 domain, at least 1 diagnosis
+        const dosVal = mergedNote.encounter?.dos_date || (mergedNote as any).meta?.dos_date || (mergedNote as any).meta?.visitDate;
+        if (!dosVal || dosVal === '—' || dosVal.trim() === '') {
+            toast.error("Cannot save note: Date of Service (DOS) is required.");
+            return;
+        }
+
+        const cmVal = mergedNote.signatures?.cm_name || mergedNote.signatures?.case_manager?.name || mergedNote.staff?.case_manager_name;
+        if (!cmVal || cmVal.trim() === '' || cmVal === '—') {
+            toast.error("Cannot save note: Case Manager is required.");
+            return;
+        }
+
+        const supVal = mergedNote.signatures?.sup_name || mergedNote.signatures?.supervisor?.name || mergedNote.staff?.supervisor_name;
+        if (!supVal || supVal.trim() === '' || supVal === '—') {
+            toast.error("Cannot save note: Supervisor is required.");
+            return;
+        }
+
+        const hasDomain = Object.values(mergedNote.services?.domains_selected || {}).some(Boolean) ||
+            (mergedNote.joint_services && mergedNote.joint_services.some((s: any) => Object.values(s.services?.domains_selected || {}).some(Boolean)));
+        if (!hasDomain) {
+            toast.error("Cannot save note: At least one domain must be selected.");
+            return;
+        }
+
+        const diags = mergedNote.diagnoses || mergedNote.diagnosis;
+        const hasDiag = Array.isArray(diags) ? diags.some((d: any) => (d.name && d.name.trim()) || (d.icd10 && d.icd10.trim())) : (diags && typeof diags === 'object' && Object.keys(diags).length > 0);
+        if (!hasDiag) {
+            toast.error("Cannot save note: At least one diagnosis is required.");
+            return;
+        }
+
         setIsSaving(true);
         try {
             const noteToSave = { ...mergedNote };
@@ -2423,9 +2456,20 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 <h1 className="text-[20px] sm:text-[26px] font-black text-slate-900 tracking-tight leading-none uppercase font-sans">
                                     Progress Note
                                 </h1>
-                                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                    DOS: {formatDosDate(mergedNote.joint_services?.[0]?.encounter?.dos_date || mergedNote.encounter?.dos_date || (mergedNote as any).meta?.dos_date || (mergedNote as any).meta?.visitDate || (mergedNote as any).appointment?.date_of_service)}
-                                </span>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                        DOS: {formatDosDate(mergedNote.joint_services?.[0]?.encounter?.dos_date || mergedNote.encounter?.dos_date || (mergedNote as any).meta?.dos_date || (mergedNote as any).meta?.visitDate || (mergedNote as any).appointment?.date_of_service)}
+                                    </span>
+                                    {mergedNote.joint_services && mergedNote.joint_services.length > 1 && (() => {
+                                        const dur = mergedNote.joint_services.reduce((acc: number, s: any) => acc + (parseInt(s.encounter?.duration_minutes || s.encounter?.duration || '0', 10) || 0), 0);
+                                        const units = mergedNote.joint_services.reduce((acc: number, s: any) => acc + (parseInt(s.encounter?.billing_units || s.encounter?.units || '0', 10) || 0), 0);
+                                        return (
+                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 tracking-tight">
+                                                {mergedNote.joint_services.length} services · {dur || mergedNote.encounter?.duration || 0} min · {units || mergedNote.encounter?.units || 0} units
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
                             </div>
                             {clinicSettings?.logoUrl && (
                                 <div className="h-10 sm:h-12 flex items-center justify-end">
@@ -2743,7 +2787,20 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                     <span className="font-bold text-slate-400 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">POS:</span>
                                                                     <div className="min-w-0 truncate">
                                                                         <GhostInput
-                                                                            value={svc.encounter?.location_name || (svc.encounter as any)?.place_of_service_name || (((svc.subTemplate || svc._frontend_service_title || mergedNote.encounter?.primary_service_provided || "").toLowerCase().includes("otc")) ? "11 - Office" : "12 - Home")}
+                                                                            value={(() => {
+                                                                                const enc = svc.encounter || {};
+                                                                                const title = (svc.subTemplate || svc._frontend_service_title || enc.primary_service_provided || enc.sub_template || "").toLowerCase();
+                                                                                const tmplId = (svc.template_id || svc.templateId || "").toLowerCase();
+                                                                                if (enc.location_name && enc.location_name !== '—') return enc.location_name;
+                                                                                if (enc.place_of_service_name && enc.place_of_service_name !== '—') return enc.place_of_service_name;
+                                                                                if (enc.pos_full && enc.pos_full !== '—') return enc.pos_full;
+                                                                                if (enc.pos && enc.pos.includes('11')) return '11 - Office';
+                                                                                if (enc.pos && enc.pos.includes('12')) return '12 - Home';
+                                                                                if (title.includes('case assign') || tmplId.includes('case_assignment') || title.includes('otc') || title.includes('gather') || title.includes('emergency') || title.includes('coordination') || title.includes('office')) {
+                                                                                    return '11 - Office';
+                                                                                }
+                                                                                return '12 - Home';
+                                                                            })()}
                                                                             isEditMode={isEditMode}
                                                                             onChange={(val) => handleUpdateField(`${pathPrefix}encounter.location_name`, val)}
                                                                             className="!px-1 !py-0 !text-[10.5px] sm:!text-[11.5px] font-semibold text-slate-800 dark:text-slate-200"
@@ -3008,8 +3065,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             <div className="flex items-start gap-4 mb-2">
                                     <History size={14} className="text-indigo-400 mt-1 shrink-0" />
                                     <p className="text-[10px] font-bold text-slate-400 italic leading-relaxed max-w-[550px] opacity-80">
-                                        I certify that I provided the above services following all clinical policies, procedures, and ethical guidelines.
-                                        This document is the result of an authenticated electronic health record process.
+                                        By signing below, I certify that I provided the above services following all applicable policies and procedures.
                                     </p>
                             </div>
 
