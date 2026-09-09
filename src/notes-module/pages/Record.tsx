@@ -2536,7 +2536,7 @@ const Record: React.FC = () => {
                                                         canAdd 
                                                             ? (editingServiceId 
                                                                 ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400/80 shadow-[0_4px_12px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] active:translate-y-[1px]"
-                                                                : "bg-indigo-600 hover:bg-indigo-500 dark:bg-[#172033] dark:hover:bg-[#1e293b] text-white dark:text-indigo-200 dark:hover:text-white border border-indigo-500 dark:border-slate-700/80 shadow-md shadow-indigo-500/20 active:translate-y-[1px]") 
+                                                                : "bg-indigo-600 hover:bg-indigo-500 dark:bg-[#172033] dark:hover:bg-[#1e293b] text-white dark:text-indigo-200 dark:hover:text-white border border-indigo-500 dark:border-slate-700/80 shadow-sm dark:shadow-none active:translate-y-[1px]") 
                                                             : "bg-slate-100 dark:bg-[#0f172a]/90 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 cursor-not-allowed"
                                                     )}
                                                 >
@@ -2576,7 +2576,7 @@ const Record: React.FC = () => {
                                                 status === 'processing' || status === 'uploading'
                                                     ? "bg-gradient-to-b from-[#3730a3] to-[#1e1b4b] text-white border-indigo-500/40 shadow-md animate-pulse cursor-wait"
                                                     : (recordedServices.length > 0
-                                                        ? "bg-indigo-600 hover:bg-indigo-700 dark:bg-gradient-to-b dark:from-[#4338ca] dark:via-[#3730a3] dark:to-[#2e2680] text-white border border-indigo-500 shadow-md shadow-indigo-500/20"
+                                                        ? "bg-indigo-600 hover:bg-indigo-700 dark:bg-gradient-to-b dark:from-[#4338ca] dark:via-[#3730a3] dark:to-[#2e2680] text-white border border-indigo-500 shadow-sm dark:shadow-none"
                                                         : "bg-slate-100 dark:bg-[#0f172a]/90 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800 pointer-events-none")
                                             )}
                                         >
