@@ -385,6 +385,46 @@ export const DEFAULT_TEMPLATES: Template[] = [
         ], null, 2)
     },
     {
+        id: 'tcm_case_assignment_note',
+        version: '1.0',
+        name: 'Case Assigned',
+        category: 'CASE MANAGEMENT',
+        content: 'CASE ASSIGNED:\n\nSUMMARY NOTES:',
+        definition: JSON.stringify([
+            {
+                title: "Progress Note",
+                fields: [
+                    { label: "DOS:", path: "visit.dos_date" },
+                    { label: "PATIENT NAME:", path: "patient.full_name" },
+                    { label: "EMR:", path: "patient.emr" },
+                    { label: "CASE NO:", path: "patient.case_no" },
+                    { label: "SEX:", path: "patient.sex" },
+                    { label: "MOBILE:", path: "patient.mobile" },
+                    { label: "DOB:", path: "patient.dob" },
+                    { label: "AGE:", path: "patient.age" }
+                ]
+            },
+            {
+                title: "Facility",
+                fields: [
+                    { label: "FACILITY NAME:", path: "facility.name" },
+                    { label: "FACILITY ADDRESS:", path: "facility.address" },
+                    { label: "FACILITY PHONE:", path: "facility.phone" },
+                    { label: "FACILITY FAX:", path: "facility.fax" },
+                    { label: "FACILITY EMAIL:", path: "facility.email" }
+                ]
+            },
+            {
+                title: "Services (Domains)",
+                fields: TCM_DOMAINS.map(d => ({ label: d.label, path: d.path }))
+            },
+            {
+                title: "Summary (Notes)",
+                fields: [{ label: "", path: "note.summary_notes" }]
+            }
+        ], null, 2)
+    },
+    {
         id: 'tcm_initial_home_visit_note',
         version: '1.0',
         name: 'Initial Home Visit',

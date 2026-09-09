@@ -22,7 +22,6 @@ import { settingsService } from '../../services/settingsService';
 import { PatientSelector } from '../components/PatientSelector';
 import { PatientSummaryCard } from '../components/PatientSummaryCard';
 import { PatientCreateModal } from '../components/PatientCreateModal';
-import { CaseAssignmentBuilder } from '../components/CaseAssignmentBuilder';
 import type { ClioNote } from '../types';
 import { PageHeader } from '../../components/ui/page-header';
 import { Button } from '../../components/ui/button';
@@ -321,7 +320,6 @@ const Record: React.FC = () => {
     const [audioUrl, setAudioUrl] = useState<string | null>(null);
     const [timer, setTimer] = useState(0);
     const [recordedServices, setRecordedServices] = useState<Array<{ id: string, audioBlob: Blob | null, subTemplate: string, templateId?: string, duration: number, manualText?: string, customTemplateText?: string, serviceDate?: string, timeIn?: string, timeOut?: string, units?: string, structuredNote?: any }>>([]);
-    const [isCaseAssignmentModalOpen, setIsCaseAssignmentModalOpen] = useState(false);
 
     // Process State
     const [status, setStatus] = useState<'idle' | 'recording' | 'uploading' | 'processing' | 'done'>('idle');
@@ -2276,39 +2274,7 @@ const Record: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Case Assignment Dedicated Builder Callout */}
-                            {(selectedSubTemplate === 'Case Assigned' || selectedSubTemplate === 'Case Assignment' || selectedSubTemplate === 'TCM Case Assignment') && (
-                                <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 dark:from-indigo-950/40 dark:via-purple-950/30 dark:to-pink-950/20 border border-indigo-200/80 dark:border-indigo-800/80 rounded-2xl md:rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="flex items-start sm:items-center gap-3.5">
-                                        <div className="size-11 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/20">
-                                            <Sparkles size={22} />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
-                                                    {language === 'es' ? 'Constructor Clínico: Case Assignment' : 'Case Assignment Clinical Builder'}
-                                                </h4>
-                                                <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 text-[10px] font-bold">
-                                                    30m · 2u · POS 11
-                                                </Badge>
-                                            </div>
-                                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 max-w-xl">
-                                                {language === 'es'
-                                                    ? 'Configura los 11 bloques clínicos toggleables, selecciona diagnósticos ICD-10 y genera tu nota o agrégala a la nota conjunta.'
-                                                    : 'Configure the 11 clinical toggleable blocks, select ICD-10 diagnoses, and generate your note or add it to a joint note.'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        onClick={() => setIsCaseAssignmentModalOpen(true)}
-                                        className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-5 py-2.5 h-10 rounded-xl shadow-sm shrink-0 cursor-pointer flex items-center justify-center gap-2"
-                                    >
-                                        <Sparkles size={15} />
-                                        <span>{language === 'es' ? 'Abrir Constructor Clínico' : 'Open Clinical Builder'}</span>
-                                    </Button>
-                                </div>
-                            )}
+
 
                             {/* Middle Tier: Unified Capture Interface */}
                             <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-7">
@@ -2909,50 +2875,7 @@ const Record: React.FC = () => {
                 </DialogContent>
             </Dialog>
 
-            {/* Case Assignment Builder Modal */}
-            <Dialog open={isCaseAssignmentModalOpen} onOpenChange={setIsCaseAssignmentModalOpen}>
-                <DialogContent className="max-w-5xl w-[95vw] max-h-[92vh] overflow-y-auto p-0 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
-                    <DialogHeader className="sr-only">
-                        <DialogTitle>Case Assignment Builder</DialogTitle>
-                        <DialogDescription>Interactive builder for TCM Case Assignment progress notes</DialogDescription>
-                    </DialogHeader>
-                    <CaseAssignmentBuilder
-                        patient={selectedPatient}
-                        clinicSettings={userClinic}
-                        userProfile={userProfile}
-                        currentUser={user}
-                        initialDate={serviceDate}
-                        initialTimeIn={timeIn}
-                        onGenerateNote={(generatedNote) => {
-                            setIsCaseAssignmentModalOpen(false);
-                            setClioNote(generatedNote);
-                            setPdfResponse({
-                                success: true,
-                                data: generatedNote
-                            } as any);
-                        }}
-                        onAddToJointNote={(serviceData) => {
-                            setIsCaseAssignmentModalOpen(false);
-                            setRecordedServices(prev => [...prev, {
-                                id: serviceData.id,
-                                audioBlob: null,
-                                subTemplate: serviceData.subTemplate,
-                                templateId: serviceData.templateId,
-                                duration: serviceData.duration,
-                                serviceDate: serviceData.serviceDate,
-                                timeIn: serviceData.timeIn,
-                                timeOut: serviceData.timeOut,
-                                units: serviceData.units,
-                                manualText: serviceData.manualText,
-                                customTemplateText: serviceData.customTemplateText,
-                                structuredNote: serviceData.structuredNote
-                            }]);
-                        }}
-                        onClose={() => setIsCaseAssignmentModalOpen(false)}
-                    />
-                </DialogContent>
-            </Dialog>
-        </div >
+        </div>
     );
 };
 
