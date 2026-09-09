@@ -662,81 +662,73 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         "12_other"
     ];
     
-    const hasExistingDomains = domainKeys.some(d => !!raw.services?.domains_selected?.[d]);
-    if (!hasExistingDomains) {
-        domainKeys.forEach(d => {
-            services.domains_selected[d] = false;
-        });
+    domainKeys.forEach(d => {
+        services.domains_selected[d] = false;
+    });
 
-        const activeTemplateId = raw.template_id || raw.templateId || raw.meta?.template_id || 'tcm_progress_note';
-        const isHurricane = activeTemplateId === 'tcm_hurricane_addendum_note' || activeTemplateId === 'tcm_hurricane_update_note';
-        const isSts = activeTemplateId === 'tcm_sts_complete_note' || activeTemplateId === 'tcm_sts_collect_note' || activeTemplateId === 'tcm_sts_submit_note';
-        const isDpp = activeTemplateId === 'tcm_dpp_obtain_note' || activeTemplateId === 'tcm_dpp_complete_note' || activeTemplateId === 'tcm_dpp_submit_pcp_note';
+    const isHurricane = activeTemplateId === 'tcm_hurricane_addendum_note' || activeTemplateId === 'tcm_hurricane_update_note';
+    const isSts = activeTemplateId === 'tcm_sts_complete_note' || activeTemplateId === 'tcm_sts_collect_note' || activeTemplateId === 'tcm_sts_submit_note';
+    const isDpp = activeTemplateId === 'tcm_dpp_obtain_note' || activeTemplateId === 'tcm_dpp_complete_note' || activeTemplateId === 'tcm_dpp_submit_pcp_note';
 
-        const isDonationObtain = activeTemplateId === 'tcm_donation_obtain_note' || activeTemplateId === 'tcm_cleaning_donation_gather_note' || activeTemplateId === 'tcm_cleaning_donation_obtain_note' || activeTemplateId === 'tcm_clothing_donation_gather_note' || activeTemplateId === 'tcm_clothing_donation_obtain_note' || activeTemplateId === 'tcm_food_donation_gather_note' || activeTemplateId === 'tcm_food_donation_obtain_note';
-        const isVaccinationAssistance = activeTemplateId === 'tcm_vaccination_assistance_note';
-        const isApptCoord = activeTemplateId === 'tcm_provider_appt_coord_note';
-        const isUscisAssistance = activeTemplateId === 'tcm_uscis_assistance_note';
-        const isHousingAssistance = activeTemplateId === 'tcm_housing_assistance_note';
-        const isSnapRecert = activeTemplateId === 'tcm_snap_recertification_note';
-        const isMhv = activeTemplateId === 'tcm_mhv_note';
-     
-        if (isHurricane) {
-            services.domains_selected["12_other"] = true;
-        } else if (isOtc || isVaccinationAssistance) {
-            services.domains_selected["2_physical_health_medical_dental"] = true;
-        } else if (isSts || isDpp) {
-            services.domains_selected["10_transportation"] = true;
-        } else if (isDonationObtain) {
+    const isDonationObtain = activeTemplateId === 'tcm_donation_obtain_note' || activeTemplateId === 'tcm_cleaning_donation_gather_note' || activeTemplateId === 'tcm_cleaning_donation_obtain_note' || activeTemplateId === 'tcm_clothing_donation_gather_note' || activeTemplateId === 'tcm_clothing_donation_obtain_note' || activeTemplateId === 'tcm_food_donation_gather_note' || activeTemplateId === 'tcm_food_donation_obtain_note';
+    const isVaccinationAssistance = activeTemplateId === 'tcm_vaccination_assistance_note';
+    const isApptCoord = activeTemplateId === 'tcm_provider_appt_coord_note';
+    const isUscisAssistance = activeTemplateId === 'tcm_uscis_assistance_note';
+    const isHousingAssistance = activeTemplateId === 'tcm_housing_assistance_note';
+    const isSnapRecert = activeTemplateId === 'tcm_snap_recertification_note';
+    const isMhv = activeTemplateId === 'tcm_mhv_note';
+ 
+    if (isHurricane) {
+        services.domains_selected["12_other"] = true;
+    } else if (isOtc || isVaccinationAssistance) {
+        services.domains_selected["2_physical_health_medical_dental"] = true;
+    } else if (isSts || isDpp) {
+        services.domains_selected["10_transportation"] = true;
+    } else if (isDonationObtain) {
+        services.domains_selected["9_basic_needs"] = true;
+    } else if (isApptCoord) {
+        const titleLower = (services.service_focus_title || "").toLowerCase();
+        const narrLower = (narrative.summary_notes || "").toLowerCase();
+        const wantsPsych = titleLower.includes("psych") || titleLower.includes("mental");
+        const wantsPcp = titleLower.includes("pcp") || titleLower.includes("primary care") || titleLower.includes("medical") || titleLower.includes("specialist");
+        const wantsTrans = titleLower.includes("transport") || titleLower.includes("nemt") || narrLower.includes("transportation") || narrLower.includes("nemt") || narrLower.includes("saferide");
+        
+        services.domains_selected["1_mental_health_substance_abuse"] = wantsPsych || (!wantsPsych && !wantsPcp && !wantsTrans);
+        services.domains_selected["2_physical_health_medical_dental"] = wantsPcp;
+        services.domains_selected["10_transportation"] = wantsTrans;
+    } else if (isUscisAssistance) {
+        const narrLower = (narrative.summary_notes || "").toLowerCase();
+        const wantsAdl = narrLower.includes("form") || narrLower.includes("paperwork") || narrLower.includes("document") || narrLower.includes("organize") || narrLower.includes("residency");
+        const wantsPsych = narrLower.includes("anxiety") || narrLower.includes("anxious") || narrLower.includes("emotional support") || narrLower.includes("reassurance");
+        
+        services.domains_selected["11_legal_immigration"] = true;
+        services.domains_selected["6_activities_of_daily_living"] = wantsAdl;
+        services.domains_selected["1_mental_health_substance_abuse"] = wantsPsych;
+    } else if (isHousingAssistance) {
+        services.domains_selected["7_housing_shelter"] = true;
+    } else if (isSnapRecert) {
+        services.domains_selected["8_economic_financial"] = true;
+    } else if (isMhv) {
+        services.domains_selected["1_mental_health_substance_abuse"] = true;
+        const narrLower = (narrative.summary_notes || "").toLowerCase();
+        const titleLower = (services.service_focus_title || "").toLowerCase();
+        if (narrLower.includes("donation") || titleLower.includes("donation") || narrLower.includes("basic needs") || titleLower.includes("basic needs")) {
             services.domains_selected["9_basic_needs"] = true;
-        } else if (isApptCoord) {
-            const titleLower = (services.service_focus_title || "").toLowerCase();
-            const narrLower = (narrative.summary_notes || "").toLowerCase();
-            const wantsPsych = titleLower.includes("psych") || titleLower.includes("mental");
-            const wantsPcp = titleLower.includes("pcp") || titleLower.includes("primary care") || titleLower.includes("medical") || titleLower.includes("specialist");
-            const wantsTrans = titleLower.includes("transport") || titleLower.includes("nemt") || narrLower.includes("transportation") || narrLower.includes("nemt") || narrLower.includes("saferide");
-            
-            services.domains_selected["1_mental_health_substance_abuse"] = wantsPsych || (!wantsPsych && !wantsPcp && !wantsTrans);
-            services.domains_selected["2_physical_health_medical_dental"] = wantsPcp;
-            services.domains_selected["10_transportation"] = wantsTrans;
-        } else if (isUscisAssistance) {
-            const narrLower = (narrative.summary_notes || "").toLowerCase();
-            const wantsAdl = narrLower.includes("form") || narrLower.includes("paperwork") || narrLower.includes("document") || narrLower.includes("organize") || narrLower.includes("residency");
-            const wantsPsych = narrLower.includes("anxiety") || narrLower.includes("anxious") || narrLower.includes("emotional support") || narrLower.includes("reassurance");
-            
-            services.domains_selected["11_legal_immigration"] = true;
-            services.domains_selected["6_activities_of_daily_living"] = wantsAdl;
-            services.domains_selected["1_mental_health_substance_abuse"] = wantsPsych;
-        } else if (isHousingAssistance) {
-            services.domains_selected["7_housing_shelter"] = true;
-        } else if (isSnapRecert) {
+        }
+        if (narrLower.includes("appointment") || titleLower.includes("appointment") || narrLower.includes("pcp") || titleLower.includes("medical")) {
+            services.domains_selected["2_physical_health_medical_dental"] = true;
+        }
+        if (narrLower.includes("transport") || titleLower.includes("transport") || narrLower.includes("sts") || titleLower.includes("sts")) {
+            services.domains_selected["10_transportation"] = true;
+        }
+        if (narrLower.includes("correspondence") || titleLower.includes("correspondence") || narrLower.includes("form") || titleLower.includes("form") || narrLower.includes("survey")) {
+            services.domains_selected["6_activities_of_daily_living"] = true;
+        }
+        if (narrLower.includes("benefit") || titleLower.includes("benefit") || narrLower.includes("financial") || titleLower.includes("financial")) {
             services.domains_selected["8_economic_financial"] = true;
-        } else if (isMhv) {
-            services.domains_selected["1_mental_health_substance_abuse"] = true;
-            const narrLower = (narrative.summary_notes || "").toLowerCase();
-            const titleLower = (services.service_focus_title || "").toLowerCase();
-            if (narrLower.includes("donation") || titleLower.includes("donation") || narrLower.includes("basic needs") || titleLower.includes("basic needs")) {
-                services.domains_selected["9_basic_needs"] = true;
-            }
-            if (narrLower.includes("appointment") || titleLower.includes("appointment") || narrLower.includes("pcp") || titleLower.includes("medical")) {
-                services.domains_selected["2_physical_health_medical_dental"] = true;
-            }
-            if (narrLower.includes("transport") || titleLower.includes("transport") || narrLower.includes("sts") || titleLower.includes("sts")) {
-                services.domains_selected["10_transportation"] = true;
-            }
-            if (narrLower.includes("correspondence") || titleLower.includes("correspondence") || narrLower.includes("form") || titleLower.includes("form") || narrLower.includes("survey")) {
-                services.domains_selected["6_activities_of_daily_living"] = true;
-            }
-            if (narrLower.includes("benefit") || titleLower.includes("benefit") || narrLower.includes("financial") || titleLower.includes("financial")) {
-                services.domains_selected["8_economic_financial"] = true;
-            }
-        } else {
-            services.domains_selected["1_mental_health_substance_abuse"] = true;
         }
     } else {
-        domainKeys.forEach(d => {
-            services.domains_selected[d] = !!raw.services?.domains_selected?.[d];
-        });
+        services.domains_selected["1_mental_health_substance_abuse"] = true;
     }
     return applyBaseNormalization({
         ...raw,
