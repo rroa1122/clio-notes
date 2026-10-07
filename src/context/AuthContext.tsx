@@ -152,6 +152,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, INITIAL_CHECK_TIMEOUT);
 
         const checkMfaStatusSync = (sbUser: SupabaseUser, onComplete: (isMfaActive: boolean) => void) => {
+            const isDemoUser = sbUser.email?.toLowerCase().startsWith('demo@') || 
+                               sbUser.email?.toLowerCase() === 'demo@clinicflow.dev' || 
+                               sbUser.email?.toLowerCase() === 'demo@clio-notes.com';
+            if (isDemoUser) {
+                setMfaEnrollmentRequired(false);
+                setMfaRequired(false);
+                onComplete(false);
+                return;
+            }
+
             const trustExpiry = localStorage.getItem('mfa_trusted_until');
             const isDeviceTrusted = trustExpiry && new Date(trustExpiry) > new Date();
             const isSessionMfaVerified = sessionStorage.getItem('clio_mfa_verified') === 'true';

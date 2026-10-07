@@ -8,6 +8,7 @@ import { ToastContainer } from './components/Toast';
 import { Toaster } from 'sonner';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
+import { DemoLogin } from './pages/DemoLogin';
 import { MainLayout } from './layout/MainLayout';
 import { SetupLayout } from './layout/SetupLayout';
 import { Settings } from './pages/Settings';
@@ -61,8 +62,8 @@ const Root = () => {
  
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center transition-colors duration-200">
+        <div className="w-8 h-8 border-4 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -81,6 +82,7 @@ const Root = () => {
         {/* Public Routes */}
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" replace />} />
         <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" replace />} />
+        <Route path="/demo" element={<DemoLogin />} />
         <Route path="/auth/invite" element={<Invite />} />
         <Route path="/auth/reset" element={<ResetPassword />} />
         <Route path="/company" element={<Company />} />

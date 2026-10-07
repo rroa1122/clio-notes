@@ -14,10 +14,11 @@ export const SetupGuard: React.FC = () => {
     }
 
     const isSuperAdmin = user.role === 'super_admin' || user.email === 'reinier.roa2.0@gmail.com';
+    const isDemoUser = user.email?.toLowerCase().startsWith('demo@') || user.email?.toLowerCase() === 'demo@clinicflow.dev';
     const impersonatingId = sessionStorage.getItem('clio_impersonating_user_id');
     const isImpersonating = !!impersonatingId;
 
-    if (user.setup_complete === false && !(isSuperAdmin && !isImpersonating)) {
+    if (user.setup_complete === false && !(isSuperAdmin && !isImpersonating) && !isDemoUser) {
         // Deterministic redirect to setup if strictly false
         return <Navigate to="/setup" replace />;
     }

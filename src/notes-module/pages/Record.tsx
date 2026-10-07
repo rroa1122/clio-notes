@@ -1941,13 +1941,13 @@ const Record: React.FC = () => {
                                         </div>
 
                                         {isDropdownOpen && (
-                                            <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/98 dark:bg-slate-950/98 backdrop-blur-xl border border-slate-700/80 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 text-slate-100">
+                                            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-950/98 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 text-slate-800 dark:text-slate-100">
                                                 {/* Search View */}
                                                 {subTemplateSearchQuery.trim().length > 0 ? (
                                                     <div className="flex flex-col gap-1.5 max-h-[50vh] sm:max-h-[360px] overflow-y-auto custom-scrollbar p-1">
-                                                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 py-1 flex items-center justify-between border-b border-slate-800/80 pb-1.5 mb-1">
+                                                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 py-1 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-1.5 mb-1">
                                                             <span>Results</span>
-                                                            <span className="text-indigo-400 font-bold">{matchingItemsFromSearch.length} found</span>
+                                                            <span className="text-indigo-600 dark:text-indigo-400 font-bold">{matchingItemsFromSearch.length} found</span>
                                                         </div>
                                                         {matchingItemsFromSearch.length === 0 ? (
                                                             <div className="text-center py-8 text-slate-400 text-xs font-medium">
@@ -1967,32 +1967,32 @@ const Record: React.FC = () => {
                                                                         className={cn(
                                                                             "w-full text-left p-2.5 rounded-xl transition-all flex flex-col gap-1 border group/item cursor-pointer",
                                                                             isActive 
-                                                                                ? "bg-indigo-950/60 border-indigo-500/80 text-indigo-200" 
-                                                                                : "bg-slate-800/40 border-slate-800/80 hover:bg-slate-800 hover:border-slate-700 text-slate-300"
+                                                                                ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500/50 text-indigo-900 dark:text-indigo-200" 
+                                                                                : "bg-white dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300"
                                                                         )}
                                                                     >
                                                                         {/* Top row: Icon + Step Badge at Left, POS Badge at Right */}
                                                                         <div className="flex items-center justify-between gap-2 w-full">
                                                                             <div className="flex items-center gap-2 min-w-0">
-                                                                                <div className="size-5 rounded-md bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                                                                                <div className="size-5 rounded-md bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
                                                                                     {renderCategoryIcon(group.id, "size-3")}
                                                                                 </div>
                                                                                 {item.stepBadge && (
-                                                                                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-indigo-900/70 text-indigo-300 border border-indigo-700/50">
+                                                                                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700/50">
                                                                                         {item.stepBadge}
                                                                                     </span>
                                                                                 )}
-                                                                                <span className="text-[10px] text-slate-400 truncate">{group.category}</span>
+                                                                                <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{group.category}</span>
                                                                             </div>
                                                                             <div className="flex items-center gap-1.5 shrink-0">
-                                                                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/60">
+                                                                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60">
                                                                                     {item.pos}
                                                                                 </span>
-                                                                                {isActive && <Check size={14} strokeWidth={3} className="text-indigo-400" />}
+                                                                                {isActive && <Check size={14} strokeWidth={3} className="text-indigo-600 dark:text-indigo-400" />}
                                                                             </div>
                                                                         </div>
-                                                                        <span className="text-[12px] font-semibold text-slate-300 leading-tight">{item.label}</span>
-                                                                        <span className="text-[10px] text-slate-400 leading-tight">{item.desc}</span>
+                                                                        <span className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 leading-tight">{item.label}</span>
+                                                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">{item.desc}</span>
                                                                     </button>
                                                                 );
                                                             })
@@ -2005,7 +2005,7 @@ const Record: React.FC = () => {
                                                             const isExpanded = expandedCategoryIds.includes(group.id);
                                                             const hasActiveItem = group.items.some(i => i.name === selectedSubTemplate);
                                                             return (
-                                                                <div key={group.id} className="rounded-xl overflow-hidden border border-slate-800/80 bg-slate-900/90 shrink-0 transition-all">
+                                                                <div key={group.id} className="rounded-xl overflow-hidden border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/90 shrink-0 transition-all">
                                                                     {/* Category Accordion Header */}
                                                                     <button
                                                                         type="button"
@@ -2013,33 +2013,33 @@ const Record: React.FC = () => {
                                                                         className={cn(
                                                                             "w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-2 cursor-pointer group/cat",
                                                                             isExpanded 
-                                                                                ? "bg-slate-800/90 text-slate-200" 
-                                                                                : "bg-transparent text-slate-300 hover:bg-slate-800/60 hover:text-slate-200"
+                                                                                ? "bg-slate-100 dark:bg-slate-800/90 text-slate-900 dark:text-slate-200" 
+                                                                                : "bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200"
                                                                         )}
                                                                     >
                                                                         <div className="flex items-center gap-2.5 min-w-0">
                                                                             <div className={cn(
                                                                                 "size-5 rounded-md flex items-center justify-center shrink-0 transition-colors",
-                                                                                isExpanded ? "bg-indigo-500/20 text-indigo-300" : "bg-slate-800 text-slate-400 group-hover/cat:text-indigo-400"
+                                                                                isExpanded ? "bg-indigo-500/20 text-indigo-600 dark:text-indigo-300" : "bg-slate-200/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover/cat:text-indigo-600 dark:group-hover/cat:text-indigo-400"
                                                                             )}>
                                                                                 {renderCategoryIcon(group.id, "size-3")}
                                                                             </div>
-                                                                            <span className="text-[12px] font-semibold text-slate-300 tracking-tight">{group.category}</span>
+                                                                            <span className="text-[12px] font-semibold text-slate-800 dark:text-slate-300 tracking-tight">{group.category}</span>
                                                                         </div>
                                                                         <div className="flex items-center gap-1.5 shrink-0">
                                                                             {hasActiveItem && (
-                                                                                <div className="size-2 rounded-full bg-emerald-400 shadow-xs" />
+                                                                                <div className="size-2 rounded-full bg-emerald-500 shadow-xs" />
                                                                             )}
-                                                                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/50">
+                                                                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-slate-700/50">
                                                                                 {group.items.length}
                                                                             </span>
-                                                                            <ChevronDown size={13} className={cn("transition-transform duration-200 text-slate-400", isExpanded && "rotate-180 text-indigo-400")} />
+                                                                            <ChevronDown size={13} className={cn("transition-transform duration-200 text-slate-400", isExpanded && "rotate-180 text-indigo-600 dark:text-indigo-400")} />
                                                                         </div>
                                                                     </button>
 
                                                                     {/* Expanded Items */}
                                                                     {isExpanded && (
-                                                                        <div className="ml-2.5 pl-2.5 my-1 mr-1.5 border-l-2 border-indigo-500/40 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                                        <div className="ml-2.5 pl-2.5 my-1 mr-1.5 border-l-2 border-indigo-400/40 dark:border-indigo-500/40 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-150">
                                                                             {group.items.map((item) => {
                                                                                 const isActive = selectedSubTemplate === item.name;
                                                                                 return (
@@ -2053,16 +2053,16 @@ const Record: React.FC = () => {
                                                                                         className={cn(
                                                                                             "w-full text-left px-2.5 py-2 rounded-lg text-xs transition-all flex flex-col gap-1 border cursor-pointer group/item",
                                                                                             isActive 
-                                                                                                ? "bg-indigo-950/70 border-indigo-500/70 text-indigo-200 shadow-xs" 
-                                                                                                : "bg-slate-800/40 border-slate-800/80 hover:bg-slate-800 hover:border-slate-700 text-slate-300"
+                                                                                                ? "bg-indigo-50 dark:bg-indigo-950/70 border-indigo-500/50 text-indigo-900 dark:text-indigo-200 shadow-xs font-medium" 
+                                                                                                : "bg-white/80 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300"
                                                                                         )}
                                                                                     >
                                                                                         {/* Top Row: Left Step Badge + Right POS Tag (same level) */}
                                                                                         <div className="flex items-center justify-between gap-2 w-full">
                                                                                             {item.stepBadge ? (
                                                                                                 <span className={cn(
-                                                                                                    "text-[9px] font-black px-1.5 py-0.2 rounded shrink-0",
-                                                                                                    isActive ? "bg-indigo-900/80 text-indigo-200 border border-indigo-600/50" : "bg-indigo-950 text-indigo-400 border border-indigo-800/60"
+                                                                                                    "text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0",
+                                                                                                    isActive ? "bg-indigo-100 dark:bg-indigo-900/80 text-indigo-700 dark:text-indigo-200 border border-indigo-300/60 dark:border-indigo-600/50" : "bg-slate-100 dark:bg-indigo-950 text-slate-600 dark:text-indigo-400 border border-slate-200 dark:border-indigo-800/60"
                                                                                                 )}>
                                                                                                     {item.stepBadge}
                                                                                                 </span>
@@ -2070,21 +2070,21 @@ const Record: React.FC = () => {
                                                                                             <div className="flex items-center gap-1.5 shrink-0">
                                                                                                 <span className={cn(
                                                                                                     "text-[9px] font-bold px-1.5 py-0.2 rounded",
-                                                                                                    isActive ? "bg-indigo-900/60 text-indigo-200 border border-indigo-700/50" : "bg-slate-800 text-slate-400 border border-slate-700/60"
+                                                                                                    isActive ? "bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700/50" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/60"
                                                                                                 )}>
                                                                                                     {item.pos}
                                                                                                 </span>
-                                                                                                {isActive && <Check size={13} strokeWidth={3} className="text-indigo-300 shrink-0" />}
+                                                                                                {isActive && <Check size={13} strokeWidth={3} className="text-indigo-600 dark:text-indigo-300 shrink-0" />}
                                                                                             </div>
                                                                                         </div>
 
                                                                                         {/* Service Title */}
-                                                                                        <span className={cn("text-[12px] font-semibold leading-tight", isActive ? "text-indigo-200 font-bold" : "text-slate-300")}>
+                                                                                        <span className={cn("text-[12px] leading-tight", isActive ? "text-indigo-900 dark:text-indigo-200 font-bold" : "text-slate-800 dark:text-slate-300 font-semibold")}>
                                                                                             {item.label}
                                                                                         </span>
 
                                                                                         {/* Service Subtitle */}
-                                                                                        <span className={cn("text-[10px] leading-tight", isActive ? "text-indigo-300/80" : "text-slate-400")}>
+                                                                                        <span className={cn("text-[10px] leading-tight", isActive ? "text-indigo-700/80 dark:text-indigo-300/80" : "text-slate-500 dark:text-slate-400")}>
                                                                                             {item.desc}
                                                                                         </span>
                                                                                     </button>

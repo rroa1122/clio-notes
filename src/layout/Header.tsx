@@ -44,7 +44,7 @@ export function Header() {
         { icon: Mic, label: language === 'es' ? 'Nuevo encuentro' : 'New encounter', path: '/notes/new' },
         { icon: FileText, label: language === 'es' ? 'Historial clínico' : 'Clinical history', path: '/notes/history' },
         { icon: Users, label: language === 'es' ? 'Clientes' : 'Clients', path: '/patients' },
-        { icon: RefreshCw, label: language === 'es' ? 'Sincronización' : 'Amexzone Sync', path: '/sync' },
+        { icon: RefreshCw, label: 'Sync', path: '/sync' },
     ];
 
     useEffect(() => {
