@@ -14,7 +14,8 @@
     "flow:sync": "node scripts/flow.cjs sync",
     "flow:start": "node scripts/flow.cjs start",
     "flow:save": "node scripts/flow.cjs save",
-    "flow:deploy": "node scripts/flow.cjs deploy"
+    "flow:deploy": "node scripts/flow.cjs deploy",
+    "factory": "node scripts/factory-server.cjs --open"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clio Notes — Fábrica de Software IA (Mission Control)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #090d16;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .glass {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- Top Navbar -->
+  <header class="border-b border-slate-800 glass sticky top-0 z-30 px-6 py-3.5">
+    <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center font-black text-lg shadow-lg shadow-indigo-500/20">
+          🏭
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-lg font-bold tracking-tight text-white">Clio Notes — Fábrica de Software IA</h1>
+            <span class="px-2 py-0.5 text-xs rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-medium">
+              Mission Control Activo
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            Línea de ensamblaje Multi-Agente para Frontend (React), IA Clínica (n8n) y RPA Bot (Amexzone)
+          </p>
+        </div>
+      </div>
+
+      <!-- Git Status & Quick Actions -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
+          <span class="text-slate-400">Rama:</span>
+          <span id="git-branch" class="font-mono font-bold text-indigo-400">main</span>
+          <span class="text-slate-700">|</span>
+          <span id="git-sync" class="text-emerald-400">0 atrás</span>
+          <span class="text-slate-700">|</span>
+          <span id="git-mod" class="text-amber-400">0 cambios</span>
+        </div>
+
+        <button onclick="runFlow('sync')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium transition flex items-center gap-1.5">
+          🔄 Sincronizar Amigo
+        </button>
+
+        <button onclick="runGlobalQA()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium transition flex items-center gap-1.5">
+          🧪 Inspector QA (Build)
+        </button>
+
+        <button onclick="promptSaveGitHub()" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-medium transition flex items-center gap-1.5">
+          💾 Subir a GitHub
+        </button>
+
+        <button onclick="openDeployModal()" class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-medium transition flex items-center gap-1.5">
+          🚀 Desplegar VPS
+        </button>
+
+        <button onclick="openNewOrderModal()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/25 transition flex items-center gap-1.5">
+          + Nueva Orden de Fábrica
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sub-Agents Roster Bar -->
+  <section class="max-w-[1600px] w-full mx-auto px-6 pt-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-indigo-400 flex items-center gap-1.5">
+            <span>🎨</span> clio-frontend-agent
+          </div>
+          <div class="text-xs text-slate-400 mt-0.5">React + TS (`Record.tsx`, `TcmNoteShell.tsx`, `clioUtils.ts`)</div>
+        </div>
+        <span class="px-2 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Listo</span>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+            <span>🧠</span> clio-n8n-agent
+          </div>
+          <div class="text-xs text-slate-400 mt-0.5">Prompts & Workflows (`scratch/*_workflow.json`)</div>
+        </div>
+        <span class="px-2 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Listo</span>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-cyan-400 flex items-center gap-1.5">
+            <span>🤖</span> clio-rpa-agent
+          </div>
+          <div class="text-xs text-slate-400 mt-0.5">Playwright Bot (`worker.js`, `encounterService.js`)</div>
+        </div>
+        <span class="px-2 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Listo</span>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+            <span>🛡️</span> clio-qa-agent
+          </div>
+          <div class="text-xs text-slate-400 mt-0.5">Inspector de Compilación (`tsc -b && vite build`)</div>
+        </div>
+        <span class="px-2 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Listo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4-Station Kanban Board -->
+  <main class="max-w-[1600px] w-full mx-auto px-6 py-4 flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <!-- Column 1: Architect / Plan -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-sm font-bold text-indigo-400">📐 1. Estación Arquitecto</h2>
+          <p class="text-xs text-slate-400">Pedidos nuevos y diseño del plan</p>
+        </div>
+        <span id="count-plan" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300">0</span>
+      </div>
+      <div id="col-plan" class="space-y-3 flex-1"></div>
+    </div>
+
+    <!-- Column 2: Builders -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-sm font-bold text-purple-400">⚙️ 2. Estación Constructores IA</h2>
+          <p class="text-xs text-slate-400">Sub-agentes programando Web / n8n / Bot</p>
+        </div>
+        <span id="count-build" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300">0</span>
+      </div>
+      <div id="col-build" class="space-y-3 flex-1"></div>
+    </div>
+
+    <!-- Column 3: QA Inspector -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-sm font-bold text-amber-400">🧪 3. Estación Inspector QA</h2>
+          <p class="text-xs text-slate-400">Verificación de errores (`npm run build`)</p>
+        </div>
+        <span id="count-qa" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300">0</span>
+      </div>
+      <div id="col-qa" class="space-y-3 flex-1"></div>
+    </div>
+
+    <!-- Column 4: Ready & Deployed -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-col">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+        <div>
+          <h2 class="text-sm font-bold text-emerald-400">🚀 4. Listo & Publicado</h2>
+          <p class="text-xs text-slate-400">Verificado y listo para GitHub / VPS</p>
+        </div>
+        <span id="count-done" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300">0</span>
+      </div>
+      <div id="col-done" class="space-y-3 flex-1"></div>
+    </div>
+  </main>
+
+  <!-- Live Factory Console Footer -->
+  <footer class="max-w-[1600px] w-full mx-auto px-6 pb-5">
+    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+          <span id="console-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          Consola en Vivo de la Fábrica (Logs de Compilación, Git y Despliegue)
+        </span>
+        <button onclick="document.getElementById('console-output').textContent='Consola limpia.'" class="text-xs text-slate-500 hover:text-slate-300">
+          Limpiar
+        </button>
+      </div>
+      <pre id="console-output" class="font-mono text-xs text-slate-300 max-h-40 overflow-y-auto whitespace-pre-wrap">Listo. Crea una "+ Nueva Orden de Fábrica" arriba a la derecha o ejecuta cualquier estación.</pre>
+    </div>
+  </footer>
+
+  <!-- Modal: Nueva Orden -->
+  <div id="modal-new" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">+ Nueva Orden para la Fábrica de Software</h3>
+        <button onclick="closeNewOrderModal()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Título de la Orden / Funcionalidad</label>
+          <input id="inp-title" type="text" placeholder="Ej: Ajustar detalles en Template de Assessment..."
+            class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Creado por</label>
+            <select id="inp-author" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-white">
+              <option value="Reinier">Reinier</option>
+              <option value="Compañero">Compañero (Amigo)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Capas que participan</label>
+            <div class="flex items-center gap-3 pt-1.5 text-xs">
+              <label class="flex items-center gap-1"><input type="checkbox" id="chk-web" checked /> Web</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="chk-n8n" checked /> n8n</label>
+              <label class="flex items-center gap-1"><input type="checkbox" id="chk-bot" checked /> RPA Bot</label>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Instrucciones para el Equipo de Agentes</label>
+          <textarea id="inp-desc" rows="4" placeholder="Explica qué quieres cambiar o arreglar. Luego podrás copiar el comando para que Antigravity ejecute los sub-agentes..."
+            class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeNewOrderModal()" class="px-4 py-2 rounded-lg bg-slate-800 text-xs font-medium">Cancelar</button>
+        <button onclick="createOrder()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
+          Crear Orden en Estación 1
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Desplegar a Producción -->
+  <div id="modal-deploy" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">🚀 Desplegar a Producción (clinicflow.dev)</h3>
+        <button onclick="closeDeployModal()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+      <p class="text-xs text-slate-400">Selecciona qué estación deseas actualizar en el servidor real:</p>
+      <div class="grid grid-cols-1 gap-2">
+        <button onclick="triggerDeploy('all')" class="p-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-left">
+          <div class="text-xs font-bold text-emerald-300">🌟 Todo el Sistema (all)</div>
+          <div class="text-xs text-slate-400">Actualiza Frontend Web + Workflows n8n + Amexzone RPA Bot</div>
+        </button>
+        <button onclick="triggerDeploy('web')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left">
+          <div class="text-xs font-bold text-indigo-300">🎨 Solo Frontend Web (web)</div>
+          <div class="text-xs text-slate-400">Compila y sube a https://notes.clinicflow.dev</div>
+        </button>
+        <button onclick="triggerDeploy('n8n')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left">
+          <div class="text-xs font-bold text-purple-300">🧠 Solo Workflows IA (n8n)</div>
+          <div class="text-xs text-slate-400">Sincroniza plantillas en /root/n8n/database.sqlite</div>
+        </button>
+        <button onclick="triggerDeploy('bot')" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left">
+          <div class="text-xs font-bold text-cyan-300">🤖 Solo RPA Bot Amexzone (bot)</div>
+          <div class="text-xs text-slate-400">Actualiza worker.js y reinicia PM2 amexzone-worker</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let STATE = { git: {}, orders: [] };
+    let deployOrderId = null;
+
+    function logConsole(text, isBusy = false) {
+      const box = document.getElementById('console-output');
+      const dot = document.getElementById('console-dot');
+      box.textContent = text;
+      dot.className = isBusy
+        ? 'w-2 h-2 rounded-full bg-amber-400 animate-ping'
+        : 'w-2 h-2 rounded-full bg-emerald-500';
+    }
+
+    async function loadState() {
+      const res = await fetch('/api/state');
+      STATE = await res.json();
+      render();
+    }
+
+    function renderLayerBadges(layers = []) {
+      return layers.map(l => {
+        if (l === 'Web') return '<span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs">Web</span>';
+        if (l === 'n8n') return '<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs">n8n</span>';
+        return '<span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs">RPA Bot</span>';
+      }).join('');
+    }
+
+    function renderCard(order) {
+      const nextStageMap = { plan: 'build', build: 'qa', qa: 'done' };
+      const prevStageMap = { build: 'plan', qa: 'build', done: 'qa' };
+      const nextStage = nextStageMap[order.stage];
+      const prevStage = prevStageMap[order.stage];
+
+      let actionButtons = '';
+      if (order.stage === 'plan') {
+        actionButtons = `
+          <button onclick="copyAgentCommand('${order.id}')" class="w-full py-1.5 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
+            📋 Copiar Orden para Agente IA
+          </button>
+          <button onclick="moveOrder('${order.id}', 'build')" class="w-full py-1 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+            Pasar a Construcción →
+          </button>
+        `;
+      } else if (order.stage === 'build') {
+        actionButtons = `
+          <button onclick="copyAgentCommand('${order.id}')" class="w-full py-1.5 px-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition">
+            📋 Copiar Orden para Sub-Agentes
+          </button>
+          <button onclick="moveOrder('${order.id}', 'qa')" class="w-full py-1 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-semibold transition">
+            Enviar al Inspector QA →
+          </button>
+        `;
+      } else if (order.stage === 'qa') {
+        actionButtons = `
+          <button onclick="runOrderQA('${order.id}')" class="w-full py-1.5 px-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition">
+            🧪 Ejecutar Inspector QA Ahora
+          </button>
+        `;
+      } else if (order.stage === 'done') {
+        actionButtons = `
+          <button onclick="openDeployModal('${order.id}')" class="w-full py-1.5 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">
+            🚀 Publicar en clinicflow.dev
+          </button>
+        `;
+      }
+
+      return `
+        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 space-y-2.5 shadow">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-xs font-bold text-slate-400">${order.id}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs">👤 ${order.author}</span>
+              <button onclick="deleteOrder('${order.id}')" title="Eliminar" class="text-slate-600 hover:text-rose-400 text-xs px-1">✕</button>
+            </div>
+          </div>
+
+          <h3 class="text-sm font-bold text-white leading-snug">${order.title}</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">${order.description}</p>
+
+          <div class="flex flex-wrap items-center gap-1.5 pt-1">
+            ${renderLayerBadges(order.layers)}
+            ${order.qaPassed ? '<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 text-xs font-medium">✓ QA 0 Errores</span>' : ''}
+            ${order.deployed ? '<span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 text-xs font-medium">🚀 En VPS</span>' : ''}
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-800/80 rounded-lg p-2 text-xs text-slate-300">
+            <span class="text-slate-500 font-semibold">Estado IA:</span> ${order.agentNotes || ''}
+          </div>
+
+          <div class="pt-1 space-y-1.5">
+            ${actionButtons}
+            ${prevStage ? `<button onclick="moveOrder('${order.id}', '${prevStage}')" class="w-full text-center text-xs text-slate-500 hover:text-slate-300 pt-0.5">← Regresar estación</button>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function render() {
+      const { git, orders } = STATE;
+      document.getElementById('git-branch').textContent = git.branch || 'main';
+      document.getElementById('git-sync').textContent = `${git.behind || 0} atrás / ${git.ahead || 0} adelante`;
+      document.getElementById('git-mod').textContent = `${git.modifiedCount || 0} archivos editados`;
+
+      const stages = ['plan', 'build', 'qa', 'done'];
+      stages.forEach(st => {
+        const list = orders.filter(o => o.stage === st);
+        document.getElementById(`count-${st}`).textContent = list.length;
+        const col = document.getElementById(`col-${st}`);
+        col.innerHTML = list.length
+          ? list.map(renderCard).join('')
+          : '<div class="text-xs text-slate-600 text-center py-8 border border-dashed border-slate-800/80 rounded-xl">Sin órdenes en esta estación</div>';
+      });
+    }
+
+    function openNewOrderModal() {
+      document.getElementById('modal-new').classList.remove('hidden');
+      document.getElementById('modal-new').classList.add('flex');
+    }
+
+    function closeNewOrderModal() {
+      document.getElementById('modal-new').classList.add('hidden');
+      document.getElementById('modal-new').classList.remove('flex');
+    }
+
+    function openDeployModal(orderId = null) {
+      deployOrderId = orderId;
+      document.getElementById('modal-deploy').classList.remove('hidden');
+      document.getElementById('modal-deploy').classList.add('flex');
+    }
+
+    function closeDeployModal() {
+      document.getElementById('modal-deploy').classList.add('hidden');
+      document.getElementById('modal-deploy').classList.remove('flex');
+    }
+
+    async function createOrder() {
+      const title = document.getElementById('inp-title').value.trim();
+      const description = document.getElementById('inp-desc').value.trim();
+      const author = document.getElementById('inp-author').value;
+      const layers = [];
+      if (document.getElementById('chk-web').checked) layers.push('Web');
+      if (document.getElementById('chk-n8n').checked) layers.push('n8n');
+      if (document.getElementById('chk-bot').checked) layers.push('RPA Bot');
+
+      if (!title) {
+        alert('Escribe un título para la orden.');
+        return;
+      }
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, author, layers })
+      });
+      const data = await res.json();
+      closeNewOrderModal();
+      document.getElementById('inp-title').value = '';
+      document.getElementById('inp-desc').value = '';
+      await loadState();
+      logConsole(`✓ Orden ${data.order.id} ("${data.order.title}") creada en Estación 1 (Arquitecto).\nHaz clic en "📋 Copiar Orden para Agente IA" en la tarjeta y pégala en el chat de Antigravity.`);
+    }
+
+    async function moveOrder(id, stage) {
+      await fetch(`/api/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage })
+      });
+      await loadState();
+    }
+
+    async function deleteOrder(id) {
+      if (!confirm(`¿Eliminar la orden ${id}?`)) return;
+      await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+      await loadState();
+    }
+
+    function copyAgentCommand(id) {
+      const order = STATE.orders.find(o => o.id === id);
+      if (!order) return;
+      const text = `Ejecuta la Fábrica de Software para la orden ${order.id} ("${order.title}"). Capas: ${order.layers.join(', ')}. Instrucciones: ${order.description}`;
+      navigator.clipboard.writeText(text);
+      logConsole(`📋 ¡Copiado al portapapeles!\nPega esto en el chat con tu agente:\n\n"${text}"`);
+      alert('¡Comando copiado! Pégalo en el chat con tu Agente para que lance los Sub-Agentes.');
+    }
+
+    async function runOrderQA(orderId) {
+      logConsole(`🧪 Ejecutando Inspector QA (npm run build) para la orden ${orderId}... Espera unos segundos...`, true);
+      const res = await fetch('/api/run-qa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId })
+      });
+      const data = await res.json();
+      await loadState();
+      logConsole((data.ok ? '✓ INSPECTOR QA APROBADO (0 ERRORES):\n' : '✗ ERROR EN QA:\n') + data.output);
+    }
+
+    async function runGlobalQA() {
+      logConsole('🧪 Ejecutando Inspector QA global (npm run build)...', true);
+      const res = await fetch('/api/run-qa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      await loadState();
+      logConsole((data.ok ? '✓ COMPILACIÓN LIMPIA (0 ERRORES):\n' : '✗ ERROR DE COMPILACIÓN:\n') + data.output);
+    }
+
+    async function runFlow(action, arg = '', orderId = null) {
+      logConsole(`⚙️ Ejecutando: npm run flow -- ${action} ${arg}...`, true);
+      const res = await fetch('/api/flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, arg, orderId })
+      });
+      const data = await res.json();
+      await loadState();
+      logConsole(data.output || 'Comando finalizado.');
+    }
+
+    function promptSaveGitHub() {
+      const msg = prompt('Escribe una breve descripción para guardar y subir a GitHub:', 'feat: actualización desde la Fábrica de Software');
+      if (!msg) return;
+      runFlow('save', msg);
+    }
+
+    function triggerDeploy(target) {
+      closeDeployModal();
+      runFlow('deploy', target, deployOrderId);
+    }
+
+    loadState();
+    setInterval(loadState, 8000);
+  </script>
+</body>
+</html>

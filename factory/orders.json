@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ORD-101",
+    "title": "Template #1: Initial Home Visit / Develop Intake",
+    "description": "Configurar plantilla clínica de 6 párrafos con reglas anti-fabricación [CONFIRM: ...], POS 12 - Home, 98 min (7u), workflow n8n K3aJ8zeSNCBx6QFL y mapeo exacto en Amexzone RPA Bot.",
+    "author": "Reinier",
+    "layers": ["Web", "n8n", "RPA Bot"],
+    "stage": "done",
+    "qaPassed": true,
+    "deployed": true,
+    "createdAt": "2026-10-29 14:30",
+    "agentNotes": "Completado en las 3 capas (Record.tsx, clioUtils.ts, TcmNoteShell.tsx, n8n y encounterService.js) y desplegado en clinicflow.dev."
+  },
+  {
+    "id": "ORD-102",
+    "title": "Template #2: Initial Referral / Case Assignment",
+    "description": "Configurar servicio 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit', POS 11 - Office, 25 min (2u), estructura de 4 párrafos con [CONFIRM: ...] y sincronización RPA.",
+    "author": "Reinier",
+    "layers": ["Web", "n8n", "RPA Bot"],
+    "stage": "done",
+    "qaPassed": true,
+    "deployed": true,
+    "createdAt": "2026-10-29 15:45",
+    "agentNotes": "Completado en Frontend, workflow n8n K3zH8zeSNCBx6QFL y worker.js de Amexzone. Compilación verificada con 0 errores."
+  }
+]

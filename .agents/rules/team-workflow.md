@@ -35,5 +35,13 @@ Este repositorio incluye la herramienta CLI `scripts/flow.cjs` para que los desa
   - Solo Workflows n8n: `npm run flow -- deploy n8n`
   - Solo RPA Bot (`/root/amexzone-notes-bot`): `npm run flow -- deploy bot`
 
-## 4. Regla de Seguridad antes de Guardar o Desplegar
+## 4. Fábrica de Software con IA (`npm run factory` y `factory/orders.json`)
+- El tablero visual de la Fábrica de Software se abre en `http://localhost:4100` con `npm run factory` (`scripts/factory-server.cjs`).
+- Las órdenes de trabajo del equipo viven en `factory/orders.json` y pasan por 4 estaciones (`plan` -> `build` -> `qa` -> `done`).
+- Cuando el usuario pida *"Ejecuta la Fábrica de Software para la orden ORD-XXX"*:
+  1. Lee la orden en `factory/orders.json` y presenta el plan breve pidiendo confirmación.
+  2. Al confirmar, mueve la orden a `"stage": "build"` en `factory/orders.json` y delega en paralelo a los sub-agentes correspondientes (`clio-frontend-agent`, `clio-n8n-agent`, `clio-rpa-agent`).
+  3. Pasa la orden a `"stage": "qa"`, ejecuta `clio-qa-agent` (`npm run build`), y si hay 0 errores pasa la orden a `"stage": "done"` con `"qaPassed": true`.
+
+## 5. Regla de Seguridad antes de Guardar o Desplegar
 - Nunca subas código roto: ejecuta siempre `npm run build` (o usa `npm run flow -- save "<mensaje>"` que lo ejecuta automáticamente) para verificar que TypeScript y Vite compilan con 0 errores.
