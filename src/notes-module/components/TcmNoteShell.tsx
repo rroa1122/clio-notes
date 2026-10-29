@@ -63,7 +63,7 @@ const formatValueForPrint = (value: any): string | null => {
 const highlightWarnings = (text: any): React.ReactNode => {
     if (text == null) return '';
     const textStr = String(text);
-    const warningRegex = /(not reported during the visit|not reported|not documented|was not reported|were not reported|no reportado|no documentado|not available|not specified)/gi;
+    const warningRegex = /(\[CONFIRM:[^\]]+\]|not reported during the visit|not reported|not documented|was not reported|were not reported|no reportado|no documentado|not available|not specified)/gi;
     
     const parts = textStr.split(warningRegex);
     if (parts.length === 1) return textStr;
@@ -381,7 +381,8 @@ const DomainItem = ({ domain, mergedNote, isEditMode, handleUpdateField, parentT
     return (
         <div className="flex flex-col gap-1 w-full">
             <div
-                className="flex items-center gap-2.5 py-1 px-1.5 transition-all group rounded-lg cursor-default"
+                onClick={() => isEditMode && handleUpdateField && handleUpdateField(domain.path, !isChecked)}
+                className={`flex items-center gap-2.5 py-1 px-1.5 transition-all group rounded-lg ${isEditMode ? 'cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800/50' : 'cursor-default'}`}
             >
                 <div className={`size-4 flex items-center justify-center shrink-0 rounded border transition-all ${isChecked ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm' : 'bg-transparent border-slate-300 dark:border-slate-700/80 text-transparent'}`}>
                     {isChecked && <Check size={10} className="text-white stroke-[3.5]" />}
@@ -1814,7 +1815,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 const summaryNotes = extractSummaryNotes(svc);
 
                 return {
-                    service_type: svcTitle,
+                    service_type: (svc.template_id === 'tcm_initial_home_visit_note' || /^(tcm\s+)?initial\s+home\s+visit(\s*\/\s*develop\s+intake)?$/i.test(String(svcTitle).trim()))
+                        ? "Initial Home Visit / Develop Intake"
+                        : ((svc.template_id === 'tcm_case_assignment_note' || /^(tcm\s+)?case\s+assign(ed|ment)$/i.test(String(svcTitle).trim()) || /^new\s+referral\s*-\s*initial\s+telephone\s+contact/i.test(String(svcTitle).trim()))
+                            ? "New Referral - Initial Telephone Contact and Coordination of Initial Home Visit"
+                            : svcTitle),
                     encounter: {
                         dos_date: svc.encounter?.dos_date || primaryVisitDate,
                         time_in: svcTimeIn,
@@ -2679,7 +2684,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                                 if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
                                                                                 if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
                                                                                 if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
-                                                                                return rawTitle || "TCM Progress Note";
+                                                                                if (svc.template_id === 'tcm_initial_home_visit_note' || /^(tcm\s+)?initial\s+home\s+visit(\s*\/\s*develop\s+intake)?$/i.test(rawTitle.trim()) || /^(tcm\s+)?initial\s+home\s+visit(\s*\/\s*develop\s+intake)?$/i.test(subTitle)) return 'Initial Home Visit / Develop Intake';
+                                                                            if (svc.template_id === 'tcm_case_assignment_note' || /^(tcm\s+)?case\s+assign(ed|ment)$/i.test(rawTitle.trim()) || /^(tcm\s+)?case\s+assign(ed|ment)$/i.test(subTitle) || /^new\s+referral\s*-\s*initial\s+telephone\s+contact/i.test(rawTitle.trim()) || /^new\s+referral\s*-\s*initial\s+telephone\s+contact/i.test(subTitle)) return 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit';
+                                                                                if (svc.template_id === 'tcm_case_assignment_note' || /^(tcm\s+)?case\s+assign(ed|ment)$/i.test(rawTitle.trim()) || /^(tcm\s+)?case\s+assign(ed|ment)$/i.test(subTitle) || /^new\s+referral\s*-\s*initial\s+telephone\s+contact/i.test(rawTitle.trim()) || /^new\s+referral\s*-\s*initial\s+telephone\s+contact/i.test(subTitle)) return 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit';
+                                                                            return rawTitle || "TCM Progress Note";
                                                                             })()}
                                                                             onChange={(e) => handleUpdateField(`${pathPrefix}${svc.services?.service_focus_title ? 'services.service_focus_title' : 'encounter.sub_template'}`, e.target.value)}
                                                                             placeholder="Enter encounter subject..."
@@ -2695,6 +2703,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                             if (subTitle.toLowerCase().includes('otc obt') || rawTitle.toLowerCase().includes('otc obt')) return 'OTC Obt';
                                                                             if (subTitle.toLowerCase().includes('otc comp') || rawTitle.toLowerCase().includes('otc comp')) return 'OTC Comp';
                                                                             if (subTitle.toLowerCase().includes('otc sub') || rawTitle.toLowerCase().includes('otc sub')) return 'OTC Sub';
+                                                                            if (svc.template_id === 'tcm_initial_home_visit_note' || /^(tcm\s+)?initial\s+home\s+visit(\s*\/\s*develop\s+intake)?$/i.test(rawTitle.trim()) || /^(tcm\s+)?initial\s+home\s+visit(\s*\/\s*develop\s+intake)?$/i.test(subTitle)) return 'Initial Home Visit / Develop Intake';
+                                                                            if (svc.template_id === 'tcm_case_assignment_note' || /^(tcm\s+)?case\s+assign(ed|ment)$/i.test(rawTitle.trim()) || /^(tcm\s+)?case\s+assign(ed|ment)$/i.test(subTitle) || /^new\s+referral\s*-\s*initial\s+telephone\s+contact/i.test(rawTitle.trim()) || /^new\s+referral\s*-\s*initial\s+telephone\s+contact/i.test(subTitle)) return 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit';
                                                                             return rawTitle || "TCM Progress Note";
                                                                         })()}
                                                                     </span>
@@ -2973,6 +2983,64 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                         className="value-text !text-[12px] leading-relaxed"
                                                     />
                                                 </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+                            );
+                        })()}
+
+                        {/* FOR TCM REVIEW — Automatic list of pending [CONFIRM: ...] items */}
+                        {(() => {
+                            const rootTmpl = mergedNote.template_id || mergedNote.templateId || (mergedNote as any).meta?.template_id || "";
+                            const rootTitle = (mergedNote.services?.service_focus_title || mergedNote.subTemplate || mergedNote._frontend_service_title || "").toLowerCase();
+                            const isInitialHv = rootTmpl === 'tcm_initial_home_visit_note' || rootTmpl === 'tcm_case_assignment_note' || rootTitle.includes('initial home visit') || rootTitle.includes('develop intake') || rootTitle.includes('case assign') || rootTitle.includes('new referral - initial telephone contact');
+
+                            const textsToScan = [
+                                mergedNote.narrative?.summary_notes || "",
+                                mergedNote.narrative?.outcome_of_services || "",
+                                mergedNote.narrative?.next_steps || "",
+                                ...((mergedNote.joint_services || []).flatMap((s: any) => [
+                                    s.narrative?.summary_notes || "",
+                                    s.narrative?.outcome_of_services || "",
+                                    s.narrative?.next_steps || ""
+                                ]))
+                            ].join("\n");
+
+                            const confirmMatches = Array.from(textsToScan.matchAll(/\[CONFIRM:\s*([^\]]+)\]/gi)).map(m => m[0].trim());
+                            const uniqueConfirms = Array.from(new Set(confirmMatches));
+                            const explicitReview = ((mergedNote.narrative as any)?.for_tcm_review || (mergedNote as any).for_tcm_review || "").trim();
+
+                            if (!isInitialHv && uniqueConfirms.length === 0 && !explicitReview) return null;
+
+                            const hasPending = uniqueConfirms.length > 0;
+                            const reviewText = hasPending ? uniqueConfirms.map(item => `• ${item}`).join('\n') : 'None';
+
+                            return (
+                                <section className="print-section mt-2 mb-1 print-avoid no-print">
+                                    <SectionHeader
+                                        title="FOR TCM REVIEW"
+                                        icon={AlertCircle}
+                                        onCopy={() => handleCopy(reviewText, "For TCM Review", "for_tcm_review")}
+                                        isCopied={copyingSection === 'for_tcm_review'}
+                                    />
+                                    <div className={`mt-1 p-3 rounded-xl border ${hasPending ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-900/40' : 'bg-slate-50/30 dark:!bg-slate-950/40 border-slate-100/50 dark:!border-slate-800/80'}`}>
+                                        {hasPending ? (
+                                            <div className="space-y-1">
+                                                <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mb-1.5">
+                                                    Please complete the following missing fields in the note before signing or syncing:
+                                                </p>
+                                                {uniqueConfirms.map((item, idx) => (
+                                                    <div key={idx} className="text-[12px] font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                                        <span>•</span>
+                                                        <span>{highlightWarnings(item)}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-[12px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                                                <CheckCircle2 size={14} />
+                                                <span>None</span>
                                             </div>
                                         )}
                                     </div>

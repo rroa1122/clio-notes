@@ -360,11 +360,11 @@ export const normalizeClioNote = (rawResponse: any): ClioNote | null => {
  */
 export const getTemplateIdFromSubTemplate = (subTemplate: string): string => {
     const s = (subTemplate || "").trim();
-    if (s === 'Case Assigned' || s === 'Case Assignment' || s === 'TCM Case Assignment') return 'tcm_case_assignment_note';
+    if (s === 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit' || s === 'Case Assigned' || s === 'Case Assignment' || s === 'TCM Case Assignment' || s.toLowerCase().includes('new referral - initial telephone contact')) return 'tcm_case_assignment_note';
     if (s === 'TCM Initial Assessment & Certification' || s === 'Assessment' || s === 'Adult Certification') return 'tcm_assessment_note';
     if (s === 'TCM Service Plan Development' || s === 'Service Plan Development') return 'tcm_service_plan_note';
     if (s === 'TCM Service Plan Discussion' || s === 'Service Plan Discussion') return 'tcm_service_plan_discussion';
-    if (s === 'TCM Initial Home Visit' || s === 'Initial Home Visit') return 'tcm_initial_home_visit_note';
+    if (s === 'Initial Home Visit / Develop Intake' || s === 'TCM Initial Home Visit' || s === 'Initial Home Visit') return 'tcm_initial_home_visit_note';
     if (s === 'TCM Collateral & Contact Note' || s === 'Collateral & Contact Note') return 'tcm_collateral_note';
     if (s === 'TCM Gather PCP Record' || s.includes('Gather PCP Record')) return 'tcm_gather_pcp_note';
     if (s === 'TCM Gather PSY Record' || s.includes('Gather PSY Record')) return 'tcm_gather_psy_note';
@@ -631,7 +631,7 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
                 text = text.replace(pattern, ' ').trim();
             });
             // Cleanup double spaces/punctuation
-            text = text.replace(/\s+/g, ' ').replace(/\s+[\.,]/g, '.').replace(/\.{2,}/g, '.');
+            text = text.replace(/[^\S\r\n]+/g, ' ').replace(/\n{3,}/g, '\n\n').replace(/[^\S\r\n]+[\.,]/g, '.').replace(/\.{2,}/g, '.');
             if (text.length > 0) {
                 text = text.charAt(0).toUpperCase() + text.slice(1);
             }
@@ -640,7 +640,7 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     });
 
     // 9. Enforce exactly one checked domain per block/note
-    if (!services.domains_selected) services.domains_selected = {};
+    const rawDomainsSelected = { ...(services.domains_selected || {}) }; if (!services.domains_selected) services.domains_selected = {};
     const isOtc = (
         (raw.subTemplate || "").toLowerCase().includes("otc") ||
         (raw._frontend_service_title || "").toLowerCase().includes("otc") ||
@@ -677,6 +677,22 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     const isHousingAssistance = activeTemplateId === 'tcm_housing_assistance_note';
     const isSnapRecert = activeTemplateId === 'tcm_snap_recertification_note';
     const isMhv = activeTemplateId === 'tcm_mhv_note';
+    const isCaseAssignment = activeTemplateId === 'tcm_case_assignment_note' || subTitle.includes('case assign') || subTitle.includes('new referral - initial telephone contact');
+    if (isCaseAssignment) {
+        services.service_focus_title = 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit';
+        encounter.pos = '11 - Office';
+        encounter.pos_full = '11 - Office';
+        encounter.location_name = '11 - Office';
+        encounter.service_location = 'Office';
+    }
+    const isInitialHomeVisit = activeTemplateId === 'tcm_initial_home_visit_note' || subTitle.includes('initial home visit') || subTitle.includes('develop intake');
+    if (isInitialHomeVisit) {
+        services.service_focus_title = 'Initial Home Visit / Develop Intake';
+        encounter.pos = '12 - Home';
+        encounter.pos_full = '12 - Home';
+        encounter.location_name = '12 - Home';
+        encounter.service_location = 'Home';
+    }
  
     if (isHurricane) {
         services.domains_selected["12_other"] = true;
@@ -709,7 +725,33 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     } else if (isSnapRecert) {
         services.domains_selected["8_economic_financial"] = true;
     } else if (isMhv) {
-        services.domains_selected["1_mental_health_substance_abuse"] = true;
+        if (isInitialHomeVisit) {
+            const hasAnyAiDomain = domainKeys.some(k => Boolean(rawDomainsSelected[k]));
+            if (hasAnyAiDomain) {
+                domainKeys.forEach(k => {
+                    services.domains_selected[k] = Boolean(rawDomainsSelected[k]);
+                });
+            } else {
+                services.domains_selected["1_mental_health_substance_abuse"] = true;
+                services.domains_selected["2_physical_health_medical_dental"] = true;
+                services.domains_selected["5_recreational_social_support"] = true;
+                services.domains_selected["6_activities_of_daily_living"] = true;
+                services.domains_selected["7_housing_shelter"] = true;
+                services.domains_selected["8_economic_financial"] = true;
+                services.domains_selected["9_basic_needs"] = true;
+                services.domains_selected["10_transportation"] = true;
+                services.domains_selected["12_other"] = true;
+            }
+        } else if (isCaseAssignment) {
+            services.domains_selected["1_mental_health_substance_abuse"] = true;
+            domainKeys.forEach(k => {
+                if (rawDomainsSelected[k]) {
+                    services.domains_selected[k] = true;
+                }
+            });
+        } else {
+            services.domains_selected["1_mental_health_substance_abuse"] = true;
+        }
         const narrLower = (narrative.summary_notes || "").toLowerCase();
         const titleLower = (services.service_focus_title || "").toLowerCase();
         if (narrLower.includes("donation") || titleLower.includes("donation") || narrLower.includes("basic needs") || titleLower.includes("basic needs")) {
@@ -728,7 +770,33 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
             services.domains_selected["8_economic_financial"] = true;
         }
     } else {
-        services.domains_selected["1_mental_health_substance_abuse"] = true;
+        if (isInitialHomeVisit) {
+            const hasAnyAiDomain = domainKeys.some(k => Boolean(rawDomainsSelected[k]));
+            if (hasAnyAiDomain) {
+                domainKeys.forEach(k => {
+                    services.domains_selected[k] = Boolean(rawDomainsSelected[k]);
+                });
+            } else {
+                services.domains_selected["1_mental_health_substance_abuse"] = true;
+                services.domains_selected["2_physical_health_medical_dental"] = true;
+                services.domains_selected["5_recreational_social_support"] = true;
+                services.domains_selected["6_activities_of_daily_living"] = true;
+                services.domains_selected["7_housing_shelter"] = true;
+                services.domains_selected["8_economic_financial"] = true;
+                services.domains_selected["9_basic_needs"] = true;
+                services.domains_selected["10_transportation"] = true;
+                services.domains_selected["12_other"] = true;
+            }
+        } else if (isCaseAssignment) {
+            services.domains_selected["1_mental_health_substance_abuse"] = true;
+            domainKeys.forEach(k => {
+                if (rawDomainsSelected[k]) {
+                    services.domains_selected[k] = true;
+                }
+            });
+        } else {
+            services.domains_selected["1_mental_health_substance_abuse"] = true;
+        }
     }
     return applyBaseNormalization({
         ...raw,

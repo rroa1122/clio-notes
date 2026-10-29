@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { createBrowserRouter, RouterProvider, createRoutesFromElements, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -8,32 +8,37 @@ import { ToastContainer } from './components/Toast';
 import { Toaster } from 'sonner';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
-import { DemoLogin } from './pages/DemoLogin';
 import { MainLayout } from './layout/MainLayout';
 import { SetupLayout } from './layout/SetupLayout';
-import { Settings } from './pages/Settings';
-import { SyncPortal } from './pages/SyncPortal';
-import { Patients } from './pages/Patients';
-import { PatientDetail } from './pages/PatientDetail';
-import { Invite } from './pages/auth/Invite';
-import { ResetPassword } from './pages/auth/ResetPassword';
-import { Company } from './pages/Company';
-import { Setup } from './pages/Setup';
 import { SetupGuard } from './components/auth/SetupGuard';
 import { ScreenLockOverlay } from './components/auth/ScreenLockOverlay';
-import PrintAssessment from './pages/PrintAssessment';
-
-// Notes Module Pages (Real)
-import Record from './notes-module/pages/Record';
-import NotesHistory from './notes-module/pages/NotesHistory';
-import Templates from './notes-module/pages/Templates';
-import PrintNote from './notes-module/pages/PrintNote';
-import SignNote from './notes-module/pages/SignNote';
 import ErrorBoundary from './components/ErrorBoundary';
-import { AuditLogs } from './pages/AuditLogs';
 import { MfaChallenge } from './pages/MfaChallenge';
 import { MfaEnrollment } from './pages/MfaEnrollment';
-import { PlatformAdmin } from './pages/PlatformAdmin';
+
+// Lazy-loaded Route Pages for fast initial bundle
+const Record = lazy(() => import('./notes-module/pages/Record'));
+const NotesHistory = lazy(() => import('./notes-module/pages/NotesHistory'));
+const Templates = lazy(() => import('./notes-module/pages/Templates'));
+const PrintNote = lazy(() => import('./notes-module/pages/PrintNote'));
+const SignNote = lazy(() => import('./notes-module/pages/SignNote'));
+const PrintAssessment = lazy(() => import('./pages/PrintAssessment'));
+const Patients = lazy(() => import('./pages/Patients').then(m => ({ default: m.Patients })));
+const PatientDetail = lazy(() => import('./pages/PatientDetail').then(m => ({ default: m.PatientDetail })));
+const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
+const SyncPortal = lazy(() => import('./pages/SyncPortal').then(m => ({ default: m.SyncPortal })));
+const AuditLogs = lazy(() => import('./pages/AuditLogs').then(m => ({ default: m.AuditLogs })));
+const PlatformAdmin = lazy(() => import('./pages/PlatformAdmin').then(m => ({ default: m.PlatformAdmin })));
+const Setup = lazy(() => import('./pages/Setup').then(m => ({ default: m.Setup })));
+const Invite = lazy(() => import('./pages/auth/Invite').then(m => ({ default: m.Invite })));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword').then(m => ({ default: m.ResetPassword })));
+const Company = lazy(() => import('./pages/Company').then(m => ({ default: m.Company })));
+
+const PageLoader = () => (
+  <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center transition-colors duration-200">
+    <div className="w-8 h-8 border-4 border-[#6366f1] border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const PrimaryAdminRoute = () => {
   const { session, loading } = useAuth();
@@ -44,28 +49,11 @@ const PrimaryAdminRoute = () => {
   return <Outlet />;
 };
 
-const RoleProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) return null;
-
-  // For now, any authenticated user can access basic clinical notes
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Outlet />;
-};
-
 const Root = () => {
   const { user, loading, mfaRequired, mfaEnrollmentRequired, isLocked } = useAuth();
- 
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center transition-colors duration-200">
-        <div className="w-8 h-8 border-4 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (mfaRequired) {
@@ -82,7 +70,6 @@ const Root = () => {
         {/* Public Routes */}
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" replace />} />
         <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" replace />} />
-        <Route path="/demo" element={<DemoLogin />} />
         <Route path="/auth/invite" element={<Invite />} />
         <Route path="/auth/reset" element={<ResetPassword />} />
         <Route path="/company" element={<Company />} />
@@ -119,16 +106,13 @@ const Root = () => {
 
             {/* Clinical Module Routes */}
             <Route path="notes">
-              {/* Standard Clinical Access (All Auth Users) */}
               <Route index element={<Navigate to="new" replace />} />
               <Route path="history" element={<NotesHistory />} />
 
-              {/* Restricted Clinical Pages (Primary Admin Only) */}
               <Route element={<PrimaryAdminRoute />}>
                 <Route path="templates" element={<Templates />} />
               </Route>
 
-              {/* Public/Staff Accessible Notes Pages */}
               <Route path="new" element={<Record />} />
             </Route>
           </Route>
@@ -141,7 +125,9 @@ const Root = () => {
 
   return (
     <div className="relative w-full h-full">
-      <RouterProvider router={router} />
+      <Suspense fallback={<PageLoader />}>
+        <RouterProvider router={router} />
+      </Suspense>
       {isLocked && <ScreenLockOverlay />}
     </div>
   );

@@ -12,7 +12,7 @@ if not os.path.exists(db_path):
 
 workflow_files = [
     '/tmp/tcm_workflow.json',
-    '/tmp/initial_home_visit_workflow.json',
+    '/tmp/initial_home_visit_workflow.json', '/tmp/case_assignment_workflow.json',
     '/tmp/assessment_workflow.json',
     '/tmp/service_plan_workflow.json',
     '/tmp/adult_certification_workflow.json'

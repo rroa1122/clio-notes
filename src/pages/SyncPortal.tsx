@@ -14,7 +14,6 @@ import {
     ShieldCheck, 
     Play, 
     AlertTriangle,
-    Search,
     Eye,
     EyeOff,
     X,
@@ -24,13 +23,11 @@ import {
     UserPlus,
     FileText,
     Shield,
-    Activity,
     ClipboardList,
     Phone,
     Mail,
     RotateCcw,
     Sparkles,
-    Calendar,
     ChevronLeft,
     ChevronRight
 } from 'lucide-react';
@@ -59,8 +56,8 @@ export function SyncPortal() {
     const [tasks, setTasks] = useState<any[]>([]);
     const [tasksCurrentPage, setTasksCurrentPage] = useState(1);
     const tasksPageSize = 10;
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'completed' | 'failed' | 'pending' | 'processing'>('all');
+    const [searchTerm] = useState('');
+    const [statusFilter] = useState<'all' | 'completed' | 'failed' | 'pending' | 'processing'>('all');
     const [retryingTaskId, setRetryingTaskId] = useState<string | null>(null);
     
     // Selected task for detailed report view
@@ -456,11 +453,11 @@ export function SyncPortal() {
 
     if (loadingIntegration) {
         return (
-            <div className="flex-1 flex items-center justify-center min-h-[460px]">
-                <div className="flex flex-col items-center gap-4 p-8 rounded-3xl backdrop-blur-xl bg-card/60 border border-border/60 shadow-soft">
-                    <RefreshCw size={36} className="animate-spin text-primary" />
-                    <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest animate-pulse">
-                        {language === 'es' ? "Cargando Portal de Sincronización..." : "Loading Sync Portal..."}
+            <div className="flex-1 flex items-center justify-center min-h-[420px]">
+                <div className="flex flex-col items-center gap-3 p-8 rounded-3xl backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 shadow-soft">
+                    <RefreshCw size={26} className="animate-spin text-indigo-600 dark:text-indigo-400" />
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                        {language === 'es' ? "Cargando portal..." : "Loading portal..."}
                     </p>
                 </div>
             </div>
@@ -468,43 +465,39 @@ export function SyncPortal() {
     }
 
     return (
-        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 lg:px-4 pt-2 lg:pt-8 pb-16 space-y-4 md:space-y-6 lg:space-y-8">
+        <div className="flex flex-col animate-in fade-in duration-500 max-w-7xl mx-auto w-full px-2 sm:px-4 pt-2 lg:pt-8 pb-16 space-y-6 lg:space-y-8">
 
-            {/* Main Frosted Glass Connection Card */}
-            <div className="backdrop-blur-2xl bg-card/95 border border-border/60 shadow-elevated rounded-2xl sm:rounded-3xl p-4 sm:p-8 relative overflow-hidden transition-all duration-300">
-                {/* Subtle Ambient Radial Glow */}
-                <div 
-                    className={`pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl opacity-10 transition-colors duration-700 ${
-                        mfaStatus === 'connected' 
-                            ? 'bg-emerald-500' 
-                            : mfaStatus === 'processing' 
-                            ? 'bg-indigo-500' 
-                            : mfaStatus === 'expired' 
-                            ? 'bg-rose-500' 
-                            : 'bg-indigo-500'
-                    }`} 
-                />
-
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-stretch">
+            {/* Unified Two-Column Organic Glassmorphic Card */}
+            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/70 dark:border-slate-800/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.35)] rounded-3xl xl:rounded-[2.25rem] overflow-hidden transition-all">
+                <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200/60 dark:divide-slate-800/80">
                     
-                    {/* Left Column: Connection credentials & configuration */}
-                    <div className="lg:col-span-7 bg-muted/30 dark:bg-slate-900/40 p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-border/60 flex flex-col justify-between space-y-3.5 sm:space-y-5">
-                        <div className="space-y-3 sm:space-y-4">
-                            <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-border/50">
-                                <div className="flex items-center gap-2">
-                                    <Key size={14} className="text-primary" />
-                                    <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                                        {language === 'es' ? "Credenciales Amexzone" : "Amexzone Credentials"}
-                                    </h2>
+                    {/* Left Column: Credentials & Form */}
+                    <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between space-y-6">
+                        <div className="space-y-5">
+                            {/* Header */}
+                            <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800/70">
+                                <div className="flex items-center gap-3.5">
+                                    <div className="size-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 shadow-2xs">
+                                        <Key size={18} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                                            {language === 'es' ? "Credenciales Amexzone" : "Amexzone Credentials"}
+                                        </h2>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                                            {language === 'es' ? "Acceso directo al portal EMR" : "Direct EMR portal authentication"}
+                                        </p>
+                                    </div>
                                 </div>
                                 <ConnectionStatusPill status={mfaStatus} language={language} compact />
                             </div>
 
-                            <div className="grid grid-cols-12 gap-2.5 sm:gap-4">
-                                {/* Email: Full width on mobile, 6 cols on desktop */}
+                            {/* Form Grid */}
+                            <div className="grid grid-cols-12 gap-4">
+                                {/* Email */}
                                 <div className="col-span-12 sm:col-span-6">
                                     <InputField
-                                        label={language === 'es' ? "Correo Electrónico" : "Amexzone Email"}
+                                        label={language === 'es' ? "Correo Amexzone" : "Amexzone Email"}
                                         value={email}
                                         onChange={setEmail}
                                         placeholder="doctor@arcmentalhealth.com"
@@ -513,8 +506,8 @@ export function SyncPortal() {
                                     />
                                 </div>
 
-                                {/* Password: 7 cols on mobile, 6 cols on desktop */}
-                                <div className="col-span-7 sm:col-span-6">
+                                {/* Password */}
+                                <div className="col-span-12 sm:col-span-6">
                                     <InputField
                                         label={language === 'es' ? "Contraseña" : "Password"}
                                         value={password}
@@ -526,7 +519,7 @@ export function SyncPortal() {
                                     />
                                 </div>
 
-                                {/* Access PIN: 5 cols on mobile, 5 cols on desktop */}
+                                {/* Access PIN */}
                                 <div className="col-span-5 sm:col-span-5">
                                     <InputField
                                         label={language === 'es' ? "PIN de Acceso" : "Access PIN"}
@@ -539,145 +532,137 @@ export function SyncPortal() {
                                     />
                                 </div>
 
-                                {/* MFA Channel Selection: Inline row on mobile, 7 cols on desktop */}
-                                <div className="col-span-12 sm:col-span-7 flex flex-col justify-end">
-                                    <div className="h-10 sm:h-11 rounded-xl border border-slate-200 dark:border-border/80 bg-slate-100 dark:bg-slate-950/60 flex items-center justify-between p-1 pl-3 gap-2">
-                                        <span className="text-[10.5px] sm:text-[11px] font-semibold text-slate-500 dark:text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-                                            <Shield size={12} className="text-primary hidden sm:inline" />
-                                            {language === 'es' ? "Canal 2FA" : "2FA Channel"}
-                                        </span>
-                                        <div className="flex h-full gap-1 w-36 sm:w-44 shrink-0">
-                                            <button
-                                                type="button"
-                                                onClick={() => setMfaChannel('sms')}
-                                                disabled={mfaStatus !== 'not_connected'}
-                                                className={`flex-1 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                                                    mfaChannel === 'sms'
-                                                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80 font-bold"
-                                                        : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
-                                                }`}
-                                            >
-                                                <Phone size={12} />
-                                                SMS
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setMfaChannel('email')}
-                                                disabled={mfaStatus !== 'not_connected'}
-                                                className={`flex-1 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
-                                                    mfaChannel === 'email'
-                                                        ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80 font-bold"
-                                                        : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
-                                                }`}
-                                            >
-                                                <Mail size={12} />
-                                                {language === 'es' ? "Correo" : "Email"}
-                                            </button>
+                                {/* MFA Channel Selector - Organic Pill Switcher Aligned with Access PIN */}
+                                <div className="col-span-7 sm:col-span-7 space-y-1.5">
+                                    <div className="flex items-center gap-2 ml-1">
+                                        <div className="size-5 rounded-md flex items-center justify-center bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-900/30">
+                                            <Shield size={11} />
                                         </div>
+                                        <label className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider leading-none truncate">
+                                            {language === 'es' ? "Canal 2FA" : "2FA Channel"}
+                                        </label>
+                                    </div>
+                                    <div className="h-10 rounded-full border border-slate-200/80 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-950/80 p-1 grid grid-cols-2 gap-1 shadow-2xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => setMfaChannel('sms')}
+                                            disabled={mfaStatus !== 'not_connected'}
+                                            className={`flex items-center justify-center gap-1.5 rounded-full text-xs font-bold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
+                                                mfaChannel === 'sms'
+                                                    ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs border border-indigo-100 dark:border-indigo-900/40"
+                                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                                            }`}
+                                        >
+                                            <Phone size={12} />
+                                            <span>SMS</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setMfaChannel('email')}
+                                            disabled={mfaStatus !== 'not_connected'}
+                                            className={`flex items-center justify-center gap-1.5 rounded-full text-xs font-bold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
+                                                mfaChannel === 'email'
+                                                    ? "bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs border border-indigo-100 dark:border-indigo-900/40"
+                                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                                            }`}
+                                        >
+                                            <Mail size={12} />
+                                            <span>{language === 'es' ? "Correo" : "Email"}</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Session status banner message */}
-                            <div className="p-2.5 sm:p-3 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 flex items-start gap-2">
-                                <Info size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
-                                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                                    {mfaStatus === 'connected' && (language === 'es' 
-                                        ? "Sesión verificada y activa. Las notas firmadas se enviarán automáticamente a Amexzone." 
-                                        : "Session is verified and active. Signed notes are automatically dispatched and synced to Amexzone.")}
-                                    {mfaStatus === 'expired' && (language === 'es' 
-                                        ? "La sesión de Amexzone ha caducado. Desconecta y vuelve a iniciar sesión para reactivarla." 
-                                        : "Amexzone session has expired. Please disconnect and reconnect to re-authenticate.")}
-                                    {mfaStatus === 'awaiting_2fa' && (
-                                        mfaChannel === 'email' ? (
-                                            language === 'es'
-                                                ? "Código 2FA solicitado vía correo. Introdúcelo en el panel para completar el enlace."
-                                                : "2FA code requested via Email. Enter it in the side verification card to finish connecting."
-                                        ) : (
-                                            language === 'es'
-                                                ? "Código 2FA solicitado vía SMS. Introdúcelo en el panel para completar el enlace."
-                                                : "2FA code requested via SMS. Enter it in the side verification card to finish connecting."
-                                        )
-                                    )}
-                                    {mfaStatus === 'processing' && (language === 'es'
-                                        ? "El bot automatizado está validando las credenciales y conectando con el portal seguro..."
-                                        : "Automated bot is verifying credentials and linking with the secure portal...")}
-                                    {mfaStatus === 'not_connected' && (language === 'es' 
-                                        ? "Ingresa tus credenciales clínicas de Amexzone y presiona 'Conectar' para habilitar el puente." 
-                                        : "Enter your Amexzone clinical credentials and click 'Connect' to enable the synchronization bridge.")}
-                                </p>
-                            </div>
                         </div>
 
-                        {/* Action buttons */}
-                        <div className="pt-3 border-t border-border/50">
-                            {mfaStatus !== 'connected' && mfaStatus !== 'processing' && mfaStatus !== 'awaiting_2fa' && (
-                                <button
-                                    onClick={handleConnect}
-                                    disabled={saving}
-                                    className="w-full h-11 sm:h-12 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl sm:rounded-2xl font-bold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider shadow-md shadow-indigo-950/50 border border-indigo-500 active:translate-y-[1px] disabled:opacity-40 cursor-pointer select-none"
-                                >
-                                    {saving ? (
-                                        <>
-                                            <RefreshCw size={15} className="animate-spin text-white" />
-                                            <span>{language === 'es' ? "Estableciendo conexión..." : "Initiating connection..."}</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Play size={15} className="text-white fill-white" />
-                                            <span>{language === 'es' ? "Conectar e Iniciar Login" : "Connect & Verify Account"}</span>
-                                        </>
-                                    )}
-                                </button>
-                            )}
+                        {/* Footer Status & Action Button */}
+                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 min-w-0">
+                                <Info size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                                <span className="truncate font-medium">
+                                    {mfaStatus === 'connected' && (language === 'es'
+                                        ? "Sesión activa. Notas firmadas se sincronizan al instante."
+                                        : "Active session. Signed notes sync automatically.")}
+                                    {mfaStatus === 'expired' && (language === 'es'
+                                        ? "Sesión caducada. Reconecta tu cuenta."
+                                        : "Session expired. Please reconnect your account.")}
+                                    {mfaStatus === 'awaiting_2fa' && (language === 'es'
+                                        ? "Ingresa el código de 6 dígitos a la derecha."
+                                        : "Enter the 6-digit code on the right panel.")}
+                                    {mfaStatus === 'processing' && (language === 'es'
+                                        ? "Validando credenciales con Amexzone..."
+                                        : "Verifying credentials with Amexzone...")}
+                                    {mfaStatus === 'not_connected' && (language === 'es'
+                                        ? "Autorización válida por 90 días al conectar."
+                                        : "90-day session authorization upon connection.")}
+                                </span>
+                            </div>
 
-                            {(mfaStatus === 'connected' || mfaStatus === 'awaiting_2fa' || mfaStatus === 'processing' || mfaStatus === 'expired') && (
-                                <button
-                                    onClick={() => setIsDisconnectModalOpen(true)}
-                                    className="w-full h-11 sm:h-12 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-500/50 hover:text-rose-600 dark:hover:text-rose-200 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 rounded-xl sm:rounded-2xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-xs uppercase tracking-wider active:translate-y-[1px] cursor-pointer select-none"
-                                >
-                                    <Trash2 size={14} />
-                                    <span>{language === 'es' ? "Desconectar y Modificar Credenciales" : "Disconnect & Edit Credentials"}</span>
-                                </button>
-                            )}
+                            <div className="shrink-0">
+                                {mfaStatus !== 'connected' && mfaStatus !== 'processing' && mfaStatus !== 'awaiting_2fa' ? (
+                                    <button
+                                        onClick={handleConnect}
+                                        disabled={saving}
+                                        className="w-full sm:w-auto px-6 h-10 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-full font-bold text-xs uppercase tracking-wider shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer select-none"
+                                    >
+                                        {saving ? (
+                                            <>
+                                                <RefreshCw size={14} className="animate-spin text-white" />
+                                                <span>{language === 'es' ? "Conectando..." : "Connecting..."}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Play size={13} className="text-white fill-white" />
+                                                <span>{language === 'es' ? "Conectar Cuenta" : "Connect Account"}</span>
+                                            </>
+                                        )}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsDisconnectModalOpen(true)}
+                                        className="w-full sm:w-auto px-5 h-10 bg-slate-100 hover:bg-rose-50 dark:bg-slate-800/80 dark:hover:bg-rose-950/40 hover:border-rose-300 dark:hover:border-rose-500/40 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 rounded-full font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer select-none"
+                                    >
+                                        <Trash2 size={13} />
+                                        <span>{language === 'es' ? "Desconectar" : "Disconnect"}</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Right Column: 2FA Input Card or Active Status Showcase */}
-                    <div className="lg:col-span-5 flex flex-col">
+                    {/* Right Column: 2FA Verification / Progress / Status */}
+                    <div className="lg:col-span-5 bg-slate-50/50 dark:bg-slate-950/30 p-6 sm:p-8 flex flex-col justify-center">
                         {mfaStatus === 'awaiting_2fa' ? (
-                            <div className="bg-slate-900/90 dark:bg-slate-900/95 p-6 sm:p-7 rounded-2xl border border-indigo-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col justify-between h-full space-y-6 animate-in slide-in-from-top-4 duration-300">
-                                <div className="text-center space-y-3">
-                                    {/* Centered Shield Badge with Ambient Glow */}
-                                    <div className="mx-auto w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.15)]">
-                                        <ShieldCheck size={24} />
+                            <div className="flex flex-col justify-between h-full space-y-5 animate-in fade-in duration-200">
+                                <div className="text-center space-y-2.5">
+                                    <div className="mx-auto size-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-2xs">
+                                        <ShieldCheck size={22} />
                                     </div>
 
                                     <div>
-                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-300 mb-1.5 uppercase tracking-wider">
-                                            <span>{language === 'es' ? "Paso 2 de 3 • Verificación 2FA" : "Step 2 of 3 • 2FA Verification"}</span>
-                                        </div>
-                                        <h4 className="text-base font-bold text-white tracking-tight">
-                                            {language === 'es' 
-                                                ? (mfaChannel === 'email' ? "Introduce el Código de tu Correo" : "Introduce el Código SMS") 
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                                            {language === 'es' ? "Paso 2 de 3 • Código 2FA" : "Step 2 of 3 • 2FA Code"}
+                                        </span>
+                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-1.5">
+                                            {language === 'es'
+                                                ? (mfaChannel === 'email' ? "Código enviado a tu correo" : "Código enviado por SMS")
                                                 : (mfaChannel === 'email' ? "Enter Email Security Code" : "Enter SMS Security Code")}
                                         </h4>
-                                        <p className="text-xs text-slate-400 font-normal leading-relaxed mt-1 max-w-xs mx-auto">
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                             {language === 'es'
-                                                ? `Amexzone envió un código de 6 dígitos a tu ${mfaChannel === 'email' ? 'correo' : 'teléfono'}.`
-                                                : `Amexzone sent a 6-digit security code to your ${mfaChannel === 'email' ? 'email' : 'phone'}.`}
+                                                ? "Ingresa los 6 dígitos recibidos de Amexzone."
+                                                : "Enter the 6-digit code sent by Amexzone."}
                                         </p>
                                     </div>
 
                                     {/* 6-Box Segmented OTP Inputs */}
-                                    <div className="pt-2 pb-1">
-                                        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                                    <div className="pt-1">
+                                        <div className="flex items-center justify-center gap-1.5">
                                             {[0, 1, 2, 3, 4, 5].map((idx) => {
                                                 const digit = mfaCode[idx] || '';
                                                 return (
                                                     <Fragment key={idx}>
                                                         {idx === 3 && (
-                                                            <span className="text-slate-600 font-bold text-sm px-0.5 select-none">-</span>
+                                                            <span className="text-slate-300 dark:text-slate-600 font-bold text-sm px-0.5 select-none">-</span>
                                                         )}
                                                         <input
                                                             ref={(el) => { otpRefs.current[idx] = el; }}
@@ -690,10 +675,10 @@ export function SyncPortal() {
                                                             onKeyDown={(e) => handleOtpKeyDown(idx, e)}
                                                             disabled={submittingMfa}
                                                             autoFocus={idx === 0}
-                                                            className={`w-9 h-12 sm:w-11 sm:h-13 rounded-xl text-center text-xl sm:text-2xl font-black font-mono transition-all duration-200 bg-slate-950/90 border focus:outline-none select-none ${
+                                                            className={`w-9 h-11 sm:w-10 sm:h-11 rounded-2xl text-center text-base sm:text-lg font-bold font-mono transition-all bg-white dark:bg-slate-900 border focus:outline-none select-none ${
                                                                 digit
-                                                                    ? "border-indigo-500 text-white bg-indigo-950/30 shadow-[0_0_12px_rgba(99,102,241,0.3)]"
-                                                                    : "border-slate-800 text-slate-200 hover:border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                                                                    ? "border-indigo-500 text-indigo-600 dark:text-indigo-300 ring-2 ring-indigo-500/15"
+                                                                    : "border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15"
                                                             }`}
                                                         />
                                                     </Fragment>
@@ -703,145 +688,143 @@ export function SyncPortal() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-2.5">
                                     <button
                                         onClick={() => handleSubmitMfaCode()}
                                         disabled={submittingMfa || mfaCode.length < 6}
-                                        className={`w-full h-12 sm:h-13 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 select-none ${
+                                        className={`w-full h-10 rounded-full font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 select-none ${
                                             mfaCode.length === 6 && !submittingMfa
-                                                ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-950/50 border border-indigo-500 active:translate-y-[1px] cursor-pointer"
-                                                : "bg-slate-800/80 text-slate-500 border border-slate-700/60 cursor-not-allowed shadow-none"
+                                                ? "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-md shadow-indigo-500/20 cursor-pointer"
+                                                : "bg-slate-200/80 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed"
                                         }`}
                                     >
                                         {submittingMfa ? (
                                             <>
-                                                <RefreshCw size={16} className="animate-spin text-white" />
-                                                <span>{language === 'es' ? "Verificando código..." : "Verifying code..."}</span>
+                                                <RefreshCw size={14} className="animate-spin" />
+                                                <span>{language === 'es' ? "Verificando..." : "Verifying..."}</span>
                                             </>
                                         ) : (
                                             <>
-                                                <Check size={16} className={mfaCode.length === 6 ? "text-white stroke-[3]" : "text-slate-500"} />
-                                                <span>{language === 'es' ? "Verificar y Vincular (90 días)" : "Verify & Link Account (90 Days)"}</span>
+                                                <Check size={14} />
+                                                <span>{language === 'es' ? "Verificar y Conectar" : "Verify & Connect"}</span>
                                             </>
                                         )}
                                     </button>
 
-                                    {/* Resend / Request New Code Action */}
                                     <div className="text-center">
                                         <button
                                             type="button"
                                             onClick={handleConnect}
                                             disabled={saving || submittingMfa}
-                                            className="text-[11px] text-slate-400 hover:text-indigo-300 font-semibold underline underline-offset-4 transition-colors cursor-pointer disabled:opacity-50"
+                                            className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold underline underline-offset-4 transition-colors cursor-pointer disabled:opacity-50"
                                         >
-                                            {language === 'es' ? "¿No recibiste el código? Solicitar uno nuevo" : "Didn't receive the code? Request a new one"}
+                                            {language === 'es' ? "Solicitar nuevo código" : "Request a new code"}
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         ) : mfaStatus === 'processing' ? (
-                            <div className="bg-slate-900/90 dark:bg-slate-900/95 p-6 sm:p-7 rounded-2xl border border-indigo-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.4)] flex flex-col justify-between h-full space-y-6 animate-in slide-in-from-top-4 duration-300">
-                                <div className="text-center space-y-3">
-                                    {/* Pulse Radar Loader */}
-                                    <div className="mx-auto w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-                                        <RefreshCw size={22} className="animate-spin text-indigo-400" />
+                            <div className="flex flex-col justify-between h-full space-y-4 animate-in fade-in duration-200">
+                                <div className="text-center space-y-2.5">
+                                    <div className="mx-auto size-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                        <RefreshCw size={20} className="animate-spin" />
                                     </div>
 
                                     <div>
-                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-300 mb-1.5 uppercase tracking-wider">
-                                            <span>{language === 'es' ? (mfaCode ? "Paso 3 de 3 • Guardando Sesión" : "Paso 1 de 3 • Estableciendo Conexión") : (mfaCode ? "Step 3 of 3 • Saving Session" : "Step 1 of 3 • Connecting")}</span>
-                                        </div>
-                                        <h4 className="text-base font-bold text-white tracking-tight">
-                                            {mfaCode 
-                                                ? (language === 'es' ? "Validando Código y Guardando Sesión..." : "Validating Code & Saving Session...") 
+                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                                            {mfaCode
+                                                ? (language === 'es' ? "Confirmando código 2FA..." : "Confirming 2FA code...")
                                                 : (language === 'es' ? "Conectando con Amexzone..." : "Connecting to Amexzone...")}
                                         </h4>
-                                        <p className="text-xs text-slate-400 font-normal leading-relaxed mt-1 max-w-xs mx-auto">
-                                            {mfaCode 
-                                                ? (language === 'es' 
-                                                    ? "El bot está confirmando el código en Amexzone para autorizar este dispositivo por 90 días." 
-                                                    : "The bot is confirming the code with Amexzone to trust this device for 90 days.") 
-                                                : (language === 'es' 
-                                                    ? `Iniciando sesión segura y solicitando código por ${mfaChannel === 'email' ? 'correo' : 'SMS'}...`
-                                                    : `Initiating secure login and requesting code via ${mfaChannel === 'email' ? 'email' : 'SMS'}...`)}
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                            {language === 'es'
+                                                ? "Esto toma unos segundos."
+                                                : "This takes a few seconds."}
                                         </p>
                                     </div>
 
-                                    {/* 3-Step Visual Progress Timeline */}
-                                    <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2.5 text-left text-xs">
-                                        <div className="flex items-center gap-2.5">
-                                            <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-                                            <span className="text-slate-300 font-medium">
-                                                {language === 'es' ? "Credenciales verificadas" : "Credentials verified"}
+                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 space-y-2.5 text-left text-xs shadow-2xs">
+                                        <div className="flex items-center gap-2">
+                                            <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                                            <span className="text-slate-700 dark:text-slate-300 font-medium">
+                                                {language === 'es' ? "Credenciales enviadas" : "Credentials sent"}
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-2.5">
+                                        <div className="flex items-center gap-2">
                                             {mfaCode ? (
-                                                <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+                                                <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
                                             ) : (
-                                                <RefreshCw size={14} className="text-indigo-400 animate-spin shrink-0" />
+                                                <RefreshCw size={14} className="text-indigo-500 animate-spin shrink-0" />
                                             )}
-                                            <span className={mfaCode ? "text-slate-300 font-medium" : "text-indigo-300 font-bold"}>
-                                                {language === 'es' 
-                                                    ? (mfaChannel === 'email' ? "Solicitando código por Correo..." : "Solicitando código por SMS...") 
-                                                    : (mfaChannel === 'email' ? "Requesting code via Email..." : "Requesting code via SMS...")}
+                                            <span className={mfaCode ? "text-slate-700 dark:text-slate-300 font-medium" : "text-indigo-600 dark:text-indigo-400 font-semibold"}>
+                                                {language === 'es'
+                                                    ? `Solicitando código (${mfaChannel.toUpperCase()})`
+                                                    : `Requesting code (${mfaChannel.toUpperCase()})`}
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-2.5">
+                                        <div className="flex items-center gap-2">
                                             {mfaCode ? (
-                                                <RefreshCw size={14} className="text-indigo-400 animate-spin shrink-0" />
+                                                <RefreshCw size={14} className="text-indigo-500 animate-spin shrink-0" />
                                             ) : (
-                                                <Clock size={14} className="text-slate-600 shrink-0" />
+                                                <Clock size={14} className="text-slate-400 shrink-0" />
                                             )}
-                                            <span className={mfaCode ? "text-indigo-300 font-bold" : "text-slate-500 font-medium"}>
-                                                {language === 'es' ? "Autorizando dispositivo (90 días)..." : "Trusting device (90 days)..."}
+                                            <span className={mfaCode ? "text-indigo-600 dark:text-indigo-400 font-semibold" : "text-slate-400 dark:text-slate-500"}>
+                                                {language === 'es' ? "Guardando sesión (90 días)" : "Saving session (90 days)"}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Cancel / Abort Action */}
                                 <div className="text-center">
                                     <button
                                         type="button"
                                         onClick={confirmDisconnect}
-                                        className="text-[11px] text-slate-500 hover:text-rose-400 font-medium transition-colors cursor-pointer"
+                                        className="text-[11px] text-slate-500 hover:text-rose-500 font-medium transition-colors cursor-pointer"
                                     >
-                                        {language === 'es' ? "Cancelar proceso de conexión" : "Cancel connection process"}
+                                        {language === 'es' ? "Cancelar conexión" : "Cancel connection"}
                                     </button>
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-slate-50 dark:bg-slate-900/60 p-4 sm:p-7 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-slate-800 flex flex-col items-center justify-center text-center h-full space-y-3 sm:space-y-5">
-                                <div className={`size-12 sm:size-16 rounded-xl sm:rounded-2xl flex items-center justify-center border transition-all duration-300 ${
+                            <div className="flex flex-col items-center justify-center text-center h-full space-y-3.5 py-2">
+                                <div className={`size-14 rounded-2xl flex items-center justify-center border transition-all shadow-2xs ${
                                     mfaStatus === 'connected'
-                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-[0_0_25px_rgba(16,185,129,0.15)]'
+                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25'
                                         : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
                                 }`}>
-                                    {mfaStatus === 'connected' ? <ShieldCheck className="size-6 sm:size-8" /> : <Shield className="size-6 sm:size-8" />}
+                                    {mfaStatus === 'connected' ? <ShieldCheck size={26} /> : <Shield size={26} />}
                                 </div>
                                 
-                                <div className="space-y-1 sm:space-y-1.5 max-w-xs">
-                                    <h4 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">
+                                <div className="space-y-1 max-w-[270px]">
+                                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                                         {mfaStatus === 'connected' 
-                                            ? (language === 'es' ? "Conexión EMR Segura Activa" : "Secure EMR Link Active")
-                                            : (language === 'es' ? "Integración Amexzone" : "Amexzone Bot Integration")}
+                                            ? (language === 'es' ? "Puente EMR Activo" : "EMR Bridge Active")
+                                            : (language === 'es' ? "Sincronización Automática" : "Automated EMR Sync")}
                                     </h4>
-                                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                                         {mfaStatus === 'connected'
                                             ? (language === 'es' 
-                                                ? "El bot local está completamente sincronizado y autorizado por 90 días para procesar tus notas clínicas."
-                                                : "The automated local bot is authenticated and trusted for 90 days to sync clinical notes.")
+                                                ? "Tus notas firmadas e importaciones se procesan automáticamente en segundo plano."
+                                                : "Your signed notes and patient imports are automatically processed in the background.")
                                             : (language === 'es'
-                                                ? "Ingresa tus credenciales en el panel izquierdo y haz clic en Conectar para sincronizar con Amexzone."
-                                                : "Provide your portal credentials on the left and click Connect to link your clinic database.")}
+                                                ? "Conecta tu cuenta para enviar notas firmadas e importar pacientes desde Amexzone."
+                                                : "Connect your account to dispatch signed notes and import patients from Amexzone.")}
                                     </p>
                                 </div>
 
-                                {mfaStatus === 'connected' && (
-                                    <div className="inline-flex items-center gap-1.5 sm:gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider bg-emerald-500/10 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-emerald-500/20 shadow-sm">
-                                        <Sparkles size={12} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
-                                        <span>{language === 'es' ? "PUENTE LISTO PARA SINCRONIZAR" : "READY FOR NOTE DISPATCH"}</span>
+                                {mfaStatus === 'connected' ? (
+                                    <div className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-bold text-[10.5px] uppercase tracking-wider bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20">
+                                        <Sparkles size={12} className="text-emerald-500 shrink-0" />
+                                        <span>{language === 'es' ? "Listo para sincronizar" : "Ready to dispatch"}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                                        <span className="px-3 py-1 rounded-full text-[10.5px] font-semibold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                                            {language === 'es' ? "Envío de Notas" : "Note Dispatch"}
+                                        </span>
+                                        <span className="px-3 py-1 rounded-full text-[10.5px] font-semibold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                                            {language === 'es' ? "Importar Pacientes" : "Patient Import"}
+                                        </span>
                                     </div>
                                 )}
                             </div>
@@ -851,43 +834,66 @@ export function SyncPortal() {
                 </div>
             </div>
 
-            {/* Bottom Section: Bot logs and execution history */}
-            <div className="space-y-4">
-                {/* Tasks Table - Unified Minimalist Container */}
+            {/* Bottom Section: Synced Notes History */}
+            <div className="space-y-3.5">
+                <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                            {language === 'es' ? "Historial de Sincronización" : "Sync Activity History"}
+                        </h3>
+                        {tasks.length > 0 && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                {tasks.length}
+                            </span>
+                        )}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={fetchTasks}
+                        disabled={loadingTasks}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                        <RefreshCw size={12} className={loadingTasks ? "animate-spin" : ""} />
+                        <span>{language === 'es' ? "Actualizar" : "Refresh"}</span>
+                    </button>
+                </div>
+
                 {loadingTasks ? (
-                    <div className="py-20 flex flex-col items-center justify-center gap-3 bg-white dark:bg-[#0b111e]/80 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm">
-                        <RefreshCw size={24} className="animate-spin text-indigo-500 dark:text-indigo-400" />
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wide">
-                            {language === 'es' ? "Cargando historial de sincronización..." : "Loading clinical sync records..."}
+                    <div className="py-14 flex flex-col items-center justify-center gap-3 bg-white/95 dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800/80 rounded-3xl shadow-xs">
+                        <RefreshCw size={22} className="animate-spin text-indigo-500 dark:text-indigo-400" />
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            {language === 'es' ? "Cargando historial..." : "Loading sync history..."}
                         </p>
                     </div>
-                ) : tasks.length === 0 ? (
-                    <div className="py-20 text-center bg-white dark:bg-[#0b111e]/80 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-8 space-y-2 shadow-sm">
-                        <ClipboardList size={32} className="mx-auto text-slate-400 dark:text-slate-600" />
-                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                            {language === 'es' ? "No hay notas sincronizadas aún" : "No synced notes yet"}
+                ) : filteredTasks.length === 0 ? (
+                    <div className="py-14 text-center bg-white/95 dark:bg-slate-900/90 border border-slate-200/70 dark:border-slate-800/80 rounded-3xl px-6 space-y-2.5 shadow-xs">
+                        <div className="size-12 rounded-2xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center mx-auto text-slate-400 dark:text-slate-500">
+                            <ClipboardList size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                            {language === 'es' ? "Sin actividad de sincronización" : "No synced notes yet"}
                         </p>
-                        <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
                             {language === 'es' 
-                                ? "Cuando firmes una nota de progreso o importes un paciente, el bot la registrará y sincronizará automáticamente aquí." 
-                                : "When you sign a progress note or import a patient, the bot will automatically process and log it here."}
+                                ? "Las notas firmadas e importaciones de pacientes aparecerán aquí automáticamente." 
+                                : "Signed progress notes and patient imports will appear here automatically."}
                         </p>
                     </div>
                 ) : (
-                    <div className="bg-white dark:bg-[#0b111e]/90 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
+                    <div className="bg-white/95 dark:bg-slate-900/95 border border-slate-200/70 dark:border-slate-800/80 rounded-3xl overflow-hidden shadow-xs">
                         {/* Solid Minimalist Table Header (Desktop) */}
-                        <div className="hidden lg:grid grid-cols-12 gap-4 px-5 py-3 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider border-b border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-[#131d31]">
+                        <div className="hidden lg:grid grid-cols-12 gap-4 px-6 py-3.5 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40">
                             <div className="col-span-4">{language === 'es' ? "Paciente" : "Patient"}</div>
-                            <div className="col-span-4">{language === 'es' ? "Nota Clínica / Servicio" : "Clinical Note / Service"}</div>
+                            <div className="col-span-4">{language === 'es' ? "Acción / Servicio" : "Action / Service"}</div>
                             <div className="col-span-2">{language === 'es' ? "Fecha" : "Date"}</div>
-                            <div className="col-span-2 text-right">{language === 'es' ? "Estado Amexzone" : "Amexzone Status"}</div>
+                            <div className="col-span-2 text-right">{language === 'es' ? "Estado" : "Status"}</div>
                         </div>
 
                         {/* Continuous Task Rows */}
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                             {(() => {
-                                const totalTaskPages = Math.ceil(tasks.length / tasksPageSize);
-                                const paginatedTasks = tasks.slice((tasksCurrentPage - 1) * tasksPageSize, tasksCurrentPage * tasksPageSize);
+                                const totalTaskPages = Math.ceil(filteredTasks.length / tasksPageSize);
+                                const paginatedTasks = filteredTasks.slice((tasksCurrentPage - 1) * tasksPageSize, tasksCurrentPage * tasksPageSize);
 
                                 return (
                                     <>
@@ -907,17 +913,17 @@ export function SyncPortal() {
                                                     {/* Desktop View (lg+) */}
                                                     <div
                                                         onClick={() => { if (hasSummary) setSelectedTask(task); }}
-                                                        className={`hidden lg:grid lg:grid-cols-12 gap-4 px-5 py-3.5 items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-150 group ${
+                                                        className={`hidden lg:grid lg:grid-cols-12 gap-4 px-6 py-3.5 items-center hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors duration-150 group ${
                                                             hasSummary ? 'cursor-pointer' : ''
                                                         }`}
                                                     >
                                                         {/* Patient Column */}
                                                         <div className="lg:col-span-4 flex items-center gap-3 w-full min-w-0">
-                                                            <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 flex items-center justify-center text-xs font-bold shrink-0">
+                                                            <div className="size-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 flex items-center justify-center text-xs font-bold shrink-0">
                                                                 {task.patient_name ? task.patient_name.charAt(0).toUpperCase() : <User size={13} />}
                                                             </div>
                                                             <div className="min-w-0 flex-1">
-                                                                <p className="font-semibold text-slate-800 dark:text-slate-100 text-xs truncate">
+                                                                <p className="font-bold text-slate-800 dark:text-slate-100 text-xs truncate">
                                                                     {task.patient_name || (language === 'es' ? 'Paciente sin nombre' : 'Unnamed Patient')}
                                                                 </p>
                                                                 {task.patient_dob && (
@@ -928,11 +934,11 @@ export function SyncPortal() {
 
                                                         {/* Clinical Note / Service Column */}
                                                         <div className="lg:col-span-4 flex items-center gap-2.5 w-full min-w-0">
-                                                            <span className={`size-7 rounded-lg flex items-center justify-center text-xs ${details.color} shrink-0 border border-slate-200 dark:border-slate-800`}>
+                                                            <span className={`size-8 rounded-xl flex items-center justify-center text-xs ${details.color} shrink-0 border border-slate-200/80 dark:border-slate-800`}>
                                                                 {details.icon}
                                                             </span>
                                                             <div className="min-w-0 flex-1">
-                                                                <span className="font-medium text-slate-800 dark:text-slate-200 text-xs block truncate">
+                                                                <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs block truncate">
                                                                     {details.name}
                                                                 </span>
                                                                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block truncate">
@@ -947,13 +953,13 @@ export function SyncPortal() {
                                                             <span className="truncate">{taskDate}</span>
                                                         </div>
 
-                                                        {/* Amexzone Status Column */}
+                                                        {/* Status Column */}
                                                         <div className="lg:col-span-2 w-full flex items-center justify-end gap-2 shrink-0">
                                                             {task.status === 'failed' && (
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleRetryTask(task.id); }}
                                                                     disabled={retryingTaskId === task.id}
-                                                                    className="h-7 px-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30 transition-all flex items-center gap-1 text-[11px] font-medium cursor-pointer disabled:opacity-50 shrink-0"
+                                                                    className="h-7 px-3 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/25 transition-all flex items-center gap-1 text-[11px] font-bold cursor-pointer disabled:opacity-50 shrink-0"
                                                                     title={language === 'es' ? "Reintentar sincronización" : "Retry sync"}
                                                                 >
                                                                     <RotateCcw size={11} className={retryingTaskId === task.id ? "animate-spin" : ""} />
@@ -967,11 +973,10 @@ export function SyncPortal() {
                                                     {/* Mobile View (< lg) */}
                                                     <div
                                                         onClick={() => { if (hasSummary) setSelectedTask(task); }}
-                                                        className={`block lg:hidden p-3 sm:p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-150 ${
+                                                        className={`block lg:hidden p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors duration-150 ${
                                                             hasSummary ? 'cursor-pointer active:bg-slate-100 dark:active:bg-slate-800/50' : ''
                                                         }`}
                                                     >
-                                                        {/* Row 1: Left (Avatar + Name + Service Badge) & Right (Status Badge + Retry) */}
                                                         <div className="flex items-center justify-between gap-2">
                                                             <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                                                 <div className="size-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/80 flex items-center justify-center text-xs font-bold shrink-0">
@@ -981,20 +986,19 @@ export function SyncPortal() {
                                                                     <p className="font-bold text-slate-900 dark:text-slate-100 text-xs truncate max-w-[130px] sm:max-w-[200px]">
                                                                         {task.patient_name || (language === 'es' ? 'Paciente sin nombre' : 'Unnamed Patient')}
                                                                     </p>
-                                                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${details.badgeClasses} shrink-0 border`}>
+                                                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${details.badgeClasses} shrink-0 border`}>
                                                                         <span className="scale-75 origin-center -mr-0.5">{details.icon}</span>
                                                                         <span className="truncate max-w-[90px] sm:max-w-[120px]">{details.name}</span>
                                                                     </span>
                                                                 </div>
                                                             </div>
 
-                                                            {/* Status + Retry Actions */}
                                                             <div className="flex items-center gap-1.5 shrink-0">
                                                                 {task.status === 'failed' && (
                                                                     <button
                                                                         onClick={(e) => { e.stopPropagation(); handleRetryTask(task.id); }}
                                                                         disabled={retryingTaskId === task.id}
-                                                                        className="h-6 px-2 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30 transition-all flex items-center gap-1 text-[10px] font-medium cursor-pointer disabled:opacity-50"
+                                                                        className="h-6 px-2.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/30 transition-all flex items-center gap-1 text-[10px] font-bold cursor-pointer disabled:opacity-50"
                                                                         title={language === 'es' ? "Reintentar sincronización" : "Retry sync"}
                                                                     >
                                                                         <RotateCcw size={10} className={retryingTaskId === task.id ? "animate-spin" : ""} />
@@ -1008,8 +1012,7 @@ export function SyncPortal() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Row 2: Secondary info line (DOB • Timestamp • Task ID) */}
-                                                        <div className="pl-10.5 mt-1 flex items-center gap-2 text-[10.5px] text-slate-400 dark:text-slate-500 font-medium tracking-tight truncate">
+                                                        <div className="pl-10 mt-1 flex items-center gap-2 text-[10.5px] text-slate-400 dark:text-slate-500 font-medium tracking-tight truncate">
                                                             {task.patient_dob && (
                                                                 <>
                                                                     <span className="font-mono text-slate-500 dark:text-slate-400">DOB: {task.patient_dob}</span>
@@ -1030,18 +1033,18 @@ export function SyncPortal() {
 
                                         {/* Pagination Footer */}
                                         {totalTaskPages > 1 && (
-                                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-3.5 sm:px-6 py-3 sm:py-4 border-t border-slate-200/80 dark:border-slate-850 bg-slate-50/50 dark:bg-[#131d31]/40">
+                                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30">
                                                 <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                                                     {language === 'es'
-                                                        ? `Mostrando ${((tasksCurrentPage - 1) * tasksPageSize) + 1} - ${Math.min(tasksCurrentPage * tasksPageSize, tasks.length)} de ${tasks.length.toLocaleString()} notas sincronizadas`
-                                                        : `Showing ${((tasksCurrentPage - 1) * tasksPageSize) + 1} - ${Math.min(tasksCurrentPage * tasksPageSize, tasks.length)} of ${tasks.length.toLocaleString()} synced notes`}
+                                                        ? `Mostrando ${((tasksCurrentPage - 1) * tasksPageSize) + 1} - ${Math.min(tasksCurrentPage * tasksPageSize, filteredTasks.length)} de ${filteredTasks.length.toLocaleString()}`
+                                                        : `Showing ${((tasksCurrentPage - 1) * tasksPageSize) + 1} - ${Math.min(tasksCurrentPage * tasksPageSize, filteredTasks.length)} of ${filteredTasks.length.toLocaleString()}`}
                                                 </span>
 
                                                 <div className="flex items-center gap-1.5">
                                                     <button
                                                         onClick={() => setTasksCurrentPage(prev => Math.max(prev - 1, 1))}
                                                         disabled={tasksCurrentPage === 1}
-                                                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:opacity-30 disabled:hover:bg-white dark:disabled:hover:bg-slate-900 transition-all cursor-pointer shadow-2xs"
+                                                        className="p-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:opacity-30 transition-all cursor-pointer"
                                                         title={language === 'es' ? "Página anterior" : "Previous page"}
                                                     >
                                                         <ChevronLeft size={14} />
@@ -1059,10 +1062,10 @@ export function SyncPortal() {
                                                             <button
                                                                 key={pageNum}
                                                                 onClick={() => setTasksCurrentPage(pageNum)}
-                                                                className={`size-8 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                                                                className={`size-8 text-xs font-bold rounded-full border transition-all cursor-pointer ${
                                                                     isCurrent
-                                                                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
-                                                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs'
+                                                                        ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
                                                                 }`}
                                                             >
                                                                 {pageNum}
@@ -1075,7 +1078,7 @@ export function SyncPortal() {
                                                             <span className="text-slate-400 px-1 font-semibold text-xs">...</span>
                                                             <button
                                                                 onClick={() => setTasksCurrentPage(totalTaskPages)}
-                                                                className="size-8 text-xs font-semibold rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 shadow-2xs"
+                                                                className="size-8 text-xs font-bold rounded-full border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800"
                                                             >
                                                                 {totalTaskPages}
                                                             </button>
@@ -1085,7 +1088,7 @@ export function SyncPortal() {
                                                     <button
                                                         onClick={() => setTasksCurrentPage(prev => Math.min(prev + 1, totalTaskPages))}
                                                         disabled={tasksCurrentPage === totalTaskPages}
-                                                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:opacity-30 disabled:hover:bg-white dark:disabled:hover:bg-slate-900 transition-all cursor-pointer shadow-2xs"
+                                                        className="p-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:opacity-30 transition-all cursor-pointer"
                                                         title={language === 'es' ? "Página siguiente" : "Next page"}
                                                     >
                                                         <ChevronRight size={14} />
@@ -1103,51 +1106,51 @@ export function SyncPortal() {
 
             {/* Detailed Inspection Modal (View Result Summary) */}
             {selectedTask && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
-                    <div className="bg-card border border-border/80 shadow-2xl rounded-3xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xl rounded-3xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
                         
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-border/60 bg-muted/20">
-                            <div className="flex items-center gap-3">
-                                <div className="size-10 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
+                        <div className="flex items-center justify-between p-6 border-b border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                            <div className="flex items-center gap-3.5">
+                                <div className="size-10 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
                                     <ClipboardList size={18} />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-foreground tracking-tight">
-                                        {language === 'es' ? "Resumen de Ejecución del Bot" : "Bot Execution Result Summary"}
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                                        {language === 'es' ? "Resumen de Sincronización" : "Sync Execution Summary"}
                                     </h3>
-                                    <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                                         {selectedTask.patient_name || 'Amexzone Task'}
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setSelectedTask(null)}
-                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-xl transition-all cursor-pointer"
+                                className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer"
                             >
                                 <X size={18} />
                             </button>
                         </div>
 
                         {/* Modal Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-5">
                             
                             {/* Summary Status Box */}
-                            <div className={`p-4 rounded-2xl border flex items-center justify-between shadow-sm ${
+                            <div className={`p-4 rounded-2xl border flex items-center justify-between ${
                                 selectedTask.status === 'completed' 
-                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300' 
-                                    : 'bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-300'
+                                    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-800 dark:text-emerald-300' 
+                                    : 'bg-rose-500/10 border-rose-500/25 text-rose-800 dark:text-rose-300'
                             }`}>
                                 <div className="flex items-center gap-2.5">
                                     {selectedTask.status === 'completed' ? (
-                                        <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                        <CheckCircle2 size={17} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                                     ) : (
-                                        <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400 shrink-0" />
+                                        <AlertTriangle size={17} className="text-rose-600 dark:text-rose-400 shrink-0" />
                                     )}
                                     <span className="text-xs font-bold uppercase tracking-wider">
                                         {selectedTask.status === 'completed' 
-                                            ? (language === 'es' ? "OPERACIÓN COMPLETADA CON ÉXITO" : "EXECUTION SUCCESSFUL")
-                                            : (language === 'es' ? "FALLO DE EJECUCIÓN DETECTADO" : "EXECUTION ENCOUNTERED ERROR")}
+                                            ? (language === 'es' ? "Sincronización Completada" : "Execution Successful")
+                                            : (language === 'es' ? "Error de Sincronización" : "Execution Error")}
                                     </span>
                                 </div>
                                 <span className="text-[11px] font-mono font-bold opacity-80">
@@ -1159,7 +1162,7 @@ export function SyncPortal() {
                             {selectedTask.status === 'failed' && (() => {
                                 const formatted = formatSyncError(selectedTask.error_message);
                                 return (
-                                    <div className="space-y-4">
+                                    <div className="space-y-3.5">
                                         <div className="flex items-center justify-between">
                                             <h4 className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
                                                 {language === 'es' ? "Motivo del Fallo" : "Failure Reason"}
@@ -1169,22 +1172,22 @@ export function SyncPortal() {
                                             </span>
                                         </div>
 
-                                        <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 text-rose-700 dark:text-rose-300 text-xs font-semibold leading-relaxed">
+                                        <div className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 text-rose-700 dark:text-rose-300 text-xs leading-relaxed">
                                             <div className="font-bold text-sm text-rose-800 dark:text-rose-200 mb-1">
                                                 {formatted.title}
                                             </div>
-                                            <p className="font-normal opacity-90">
+                                            <p className="opacity-90">
                                                 {formatted.description}
                                             </p>
                                         </div>
 
-                                        <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed font-medium flex items-start gap-3">
-                                            <Info size={16} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+                                        <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed flex items-start gap-2.5">
+                                            <Info size={15} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
                                             <div>
                                                 <strong className="block mb-0.5 text-indigo-950 dark:text-indigo-100">
-                                                    {language === 'es' ? "¿Qué acción tomar?" : "Action to take:"}
+                                                    {language === 'es' ? "Acción recomendada:" : "Recommended action:"}
                                                 </strong>
-                                                <p className="text-indigo-800/90 dark:text-indigo-300 font-normal">
+                                                <p className="text-indigo-800/90 dark:text-indigo-300">
                                                     {formatted.actionHint}
                                                 </p>
                                             </div>
@@ -1192,10 +1195,10 @@ export function SyncPortal() {
 
                                         {formatted.rawError && (
                                             <div className="pt-1">
-                                                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider block mb-1">
-                                                    Reporte técnico original:
+                                                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block mb-1">
+                                                    {language === 'es' ? "Detalle técnico:" : "Technical log:"}
                                                 </span>
-                                                <pre className="p-3 text-[10px] font-mono text-muted-foreground bg-muted/30 rounded-xl border border-border/60 overflow-x-auto max-h-24 whitespace-pre-wrap">
+                                                <pre className="p-3 text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-950/60 rounded-2xl border border-slate-200/70 dark:border-slate-800 overflow-x-auto max-h-24 whitespace-pre-wrap">
                                                     {formatted.rawError}
                                                 </pre>
                                             </div>
@@ -1207,43 +1210,41 @@ export function SyncPortal() {
                             {/* Scraped Demographic Data Summary */}
                             {selectedTask.status === 'completed' && selectedTask.result_summary && (
                                 <div className="space-y-4">
-                                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                                        {language === 'es' ? "Datos Demográficos Extraídos" : "Extracted Demographics"}
+                                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                        {language === 'es' ? "Datos Extraídos" : "Extracted Demographics"}
                                     </h4>
                                     
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/20 p-4 rounded-2xl border border-border/60">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-800">
                                         <DetailRow label="EMR ID / Case #" value={selectedTask.result_summary.emr_id || 'N/A'} />
-                                        <DetailRow label="SSN / Seguro Social" value={selectedTask.result_summary.ssn || 'N/A'} />
-                                        <DetailRow label="Phone / Teléfono" value={selectedTask.result_summary.phone || 'N/A'} />
-                                        <DetailRow label="Gender / Género" value={selectedTask.result_summary.gender || 'N/A'} />
-                                        <DetailRow label="PCP / Médico Cabecera" value={selectedTask.result_summary.pcp_name || 'N/A'} />
-                                        <DetailRow label="Psychiatrist / Psiquiatra" value={selectedTask.result_summary.psych_name || 'N/A'} />
-                                        <DetailRow label="Marital Status / Estado Civil" value={selectedTask.result_summary.marital_status || 'N/A'} />
-                                        <DetailRow label="Emergency Contact / Contacto" value={selectedTask.result_summary.emergency_contact_name || 'N/A'} />
-                                        <div className="sm:col-span-2 border-t border-border/40 pt-3 mt-1">
-                                            <DetailRow label="Address / Dirección" value={selectedTask.result_summary.address || 'N/A'} />
+                                        <DetailRow label="SSN" value={selectedTask.result_summary.ssn || 'N/A'} />
+                                        <DetailRow label="Phone" value={selectedTask.result_summary.phone || 'N/A'} />
+                                        <DetailRow label="Gender" value={selectedTask.result_summary.gender || 'N/A'} />
+                                        <DetailRow label="PCP" value={selectedTask.result_summary.pcp_name || 'N/A'} />
+                                        <DetailRow label="Psychiatrist" value={selectedTask.result_summary.psych_name || 'N/A'} />
+                                        <DetailRow label="Marital Status" value={selectedTask.result_summary.marital_status || 'N/A'} />
+                                        <DetailRow label="Emergency Contact" value={selectedTask.result_summary.emergency_contact_name || 'N/A'} />
+                                        <div className="sm:col-span-2 border-t border-slate-200/70 dark:border-slate-800 pt-2.5 mt-0.5">
+                                            <DetailRow label="Address" value={selectedTask.result_summary.address || 'N/A'} />
                                         </div>
                                     </div>
 
-                                    {/* Clinical Diagnoses */}
                                     {selectedTask.result_summary.diagnoses && (
-                                        <div className="space-y-2">
-                                            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                                                {language === 'es' ? "Diagnósticos Clínicos (ICD-10)" : "Clinical Diagnoses (ICD-10)"}
+                                        <div className="space-y-1.5">
+                                            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                                {language === 'es' ? "Diagnósticos (ICD-10)" : "Clinical Diagnoses (ICD-10)"}
                                             </h4>
-                                            <div className="p-4 bg-muted/30 rounded-2xl border border-border/60 text-xs leading-relaxed whitespace-pre-wrap font-medium text-foreground">
+                                            <div className="p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200/70 dark:border-slate-800 text-xs leading-relaxed whitespace-pre-wrap font-medium text-slate-800 dark:text-slate-200">
                                                 {selectedTask.result_summary.diagnoses}
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Psychiatric Medications */}
                                     {selectedTask.result_summary.psych_medications && (
-                                        <div className="space-y-2">
-                                            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                                                {language === 'es' ? "Medicamentos Psiquiátricos y Análisis Clínico" : "Psychiatric Medications & Clinical History"}
+                                        <div className="space-y-1.5">
+                                            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                                                {language === 'es' ? "Medicamentos Psiquiátricos" : "Psychiatric Medications"}
                                             </h4>
-                                            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/20 text-xs leading-relaxed whitespace-pre-wrap font-medium text-foreground">
+                                            <div className="p-4 bg-indigo-500/5 rounded-2xl border border-indigo-500/20 text-xs leading-relaxed whitespace-pre-wrap font-medium text-slate-800 dark:text-slate-200">
                                                 {selectedTask.result_summary.psych_medications}
                                             </div>
                                         </div>
@@ -1254,7 +1255,7 @@ export function SyncPortal() {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="flex items-center justify-between p-4 px-6 border-t border-border/60 bg-muted/20">
+                        <div className="flex items-center justify-between p-4 px-6 border-t border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                             {selectedTask.status === 'failed' ? (
                                 <button
                                     onClick={() => {
@@ -1262,16 +1263,16 @@ export function SyncPortal() {
                                         setSelectedTask(null);
                                         handleRetryTask(id);
                                     }}
-                                    className="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                                    className="px-5 h-9 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                                 >
                                     <RotateCcw size={13} />
-                                    <span>{language === 'es' ? "Reintentar Tarea" : "Retry Task"}</span>
+                                    <span>{language === 'es' ? "Reintentar" : "Retry Task"}</span>
                                 </button>
                             ) : <div />}
 
                             <button
                                 onClick={() => setSelectedTask(null)}
-                                className="px-5 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-bold transition-all cursor-pointer"
+                                className="px-5 h-9 rounded-full bg-slate-200/80 hover:bg-slate-300/70 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer"
                             >
                                 {language === 'es' ? "Cerrar" : "Close"}
                             </button>
@@ -1282,28 +1283,28 @@ export function SyncPortal() {
 
             {/* Disconnect Confirmation Modal */}
             {isDisconnectModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
-                    <div className="bg-card w-full max-w-md rounded-3xl border border-border/80 shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200">
-                        <div className="flex flex-col items-center text-center space-y-3">
-                            <div className="size-14 rounded-2xl bg-destructive/10 text-destructive border border-destructive/20 flex items-center justify-center shadow-inner">
-                                <AlertTriangle size={28} className="text-destructive animate-pulse" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl w-full max-w-sm rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl p-6 space-y-5 animate-in zoom-in-95 duration-200">
+                        <div className="flex flex-col items-center text-center space-y-2.5">
+                            <div className="size-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center justify-center">
+                                <AlertTriangle size={22} />
                             </div>
-                            <h3 className="text-lg font-bold tracking-tight text-foreground">
-                                {language === 'es' ? "¿Desconectar cuenta de Amexzone?" : "Disconnect Amexzone Account?"}
+                            <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+                                {language === 'es' ? "¿Desconectar Amexzone?" : "Disconnect Amexzone?"}
                             </h3>
-                            <p className="text-xs text-muted-foreground leading-relaxed max-w-xs font-medium">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                                 {language === 'es'
-                                    ? "Se borrará la sesión de 90 días autorizada y las credenciales activas del bot. Deberás volver a autenticarte con 2FA para reconectar."
-                                    : "This will clear your 90-day authorization session and reset bot credentials. You will need to re-authenticate with 2FA to reconnect."}
+                                    ? "Se cerrará la sesión activa del bot. Podrás editar tus credenciales y reconectar cuando quieras."
+                                    : "This will clear the active bot session. You can edit your credentials and reconnect anytime."}
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3 pt-4 border-t border-border/60">
+                        <div className="flex items-center gap-2.5 pt-2">
                             <button
                                 type="button"
                                 onClick={() => setIsDisconnectModalOpen(false)}
                                 disabled={isDisconnecting}
-                                className="flex-1 h-11 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-semibold text-xs transition-all active:scale-[0.98] border border-border/80 cursor-pointer"
+                                className="flex-1 h-10 rounded-full bg-slate-100 hover:bg-slate-200/70 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition-all cursor-pointer"
                             >
                                 {language === 'es' ? "Cancelar" : "Cancel"}
                             </button>
@@ -1311,17 +1312,17 @@ export function SyncPortal() {
                                 type="button"
                                 onClick={confirmDisconnect}
                                 disabled={isDisconnecting}
-                                className="flex-1 h-11 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs transition-all active:scale-[0.98] shadow-md shadow-destructive/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                className="flex-1 h-10 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                             >
                                 {isDisconnecting ? (
                                     <>
-                                        <RefreshCw size={14} className="animate-spin" />
-                                        {language === 'es' ? "Desconectando..." : "Disconnecting..."}
+                                        <RefreshCw size={13} className="animate-spin" />
+                                        <span>{language === 'es' ? "Saliendo..." : "Disconnecting..."}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Trash2 size={14} />
-                                        {language === 'es' ? "Desconectar Cuenta" : "Disconnect Account"}
+                                        <Trash2 size={13} />
+                                        <span>{language === 'es' ? "Desconectar" : "Disconnect"}</span>
                                     </>
                                 )}
                             </button>
@@ -1333,7 +1334,7 @@ export function SyncPortal() {
     );
 }
 
-// Connection Status Pill with glowing indicator
+// Connection Status Pill with clean Light & Dark Mode support
 function ConnectionStatusPill({ 
     status, 
     language,
@@ -1343,12 +1344,12 @@ function ConnectionStatusPill({
     language: string;
     compact?: boolean;
 }) {
+    const sizeClasses = compact ? 'px-3 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs';
+
     if (status === 'connected') {
         return (
-            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 ${
-                compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
-            }`}>
-                <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 ${sizeClasses}`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                 <span>{language === 'es' ? "Conectado" : "Connected"}</span>
             </span>
         );
@@ -1356,10 +1357,8 @@ function ConnectionStatusPill({
 
     if (status === 'awaiting_2fa') {
         return (
-            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 ${
-                compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
-            }`}>
-                <span className="h-2 w-2 rounded-full bg-indigo-400"></span>
+            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25 ${sizeClasses}`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
                 <span>{language === 'es' ? "Esperando 2FA" : "Awaiting 2FA"}</span>
             </span>
         );
@@ -1367,31 +1366,25 @@ function ConnectionStatusPill({
 
     if (status === 'processing') {
         return (
-            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 ${
-                compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
-            }`}>
-                <RefreshCw size={11} className="animate-spin text-indigo-400" />
-                <span>{language === 'es' ? "Verificando..." : "Verifying..."}</span>
+            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25 ${sizeClasses}`}>
+                <RefreshCw size={10} className="animate-spin text-indigo-500" />
+                <span>{language === 'es' ? "Verificando" : "Verifying"}</span>
             </span>
         );
     }
 
     if (status === 'expired') {
         return (
-            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/30 ${
-                compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
-            }`}>
-                <AlertTriangle size={11} className="text-rose-400" />
-                <span>{language === 'es' ? "Sesión Expirada" : "Expired"}</span>
+            <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25 ${sizeClasses}`}>
+                <AlertTriangle size={10} className="text-rose-500" />
+                <span>{language === 'es' ? "Expirado" : "Expired"}</span>
             </span>
         );
     }
 
     return (
-        <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-slate-800/80 text-slate-400 border border-slate-700/80 ${
-            compact ? 'px-2.5 py-1 text-[10px]' : 'px-3.5 py-1.5 text-xs'
-        }`}>
-            <span className="h-2 w-2 rounded-full bg-slate-500"></span>
+        <span className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider rounded-full bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-200/90 dark:border-slate-700/80 ${sizeClasses}`}>
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500"></span>
             <span>{language === 'es' ? "Desconectado" : "Disconnected"}</span>
         </span>
     );
@@ -1434,27 +1427,31 @@ function TaskStatusBadge({ status, language }: { status: string; language: strin
     );
 }
 
-// Inline input field helper
+// Inline input field helper matching PremiumGlassField
 function InputField({ label, value, onChange, placeholder, icon: Icon, type = "text", disabled = false, className = "" }: any) {
     const [showPasswordText, setShowPasswordText] = useState(false);
     const isPasswordField = type === "password";
     const currentInputType = isPasswordField ? (showPasswordText ? "text" : "password") : type;
 
     return (
-        <div className={`group space-y-1 sm:space-y-1.5 ${className}`}>
-            <label className="block text-[10.5px] sm:text-[11px] font-semibold text-muted-foreground uppercase tracking-wider pl-1 group-focus-within:text-primary transition-colors truncate">
-                <span className="flex items-center gap-1.5">
-                    {Icon && <Icon size={12} className="text-muted-foreground group-focus-within:text-primary transition-colors shrink-0" />}
-                    <span className="truncate">{label}</span>
-                </span>
-            </label>
+        <div className={`group space-y-1.5 ${className}`}>
+            <div className="flex items-center gap-2 ml-1">
+                {Icon && (
+                    <div className="size-5 rounded-md flex items-center justify-center bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-900/30 shrink-0">
+                        <Icon size={11} />
+                    </div>
+                )}
+                <label className="text-[10.5px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider leading-none truncate">
+                    {label}
+                </label>
+            </div>
             <div className="relative flex items-center">
                 <input
                     type={currentInputType}
                     value={value || ''}
                     onChange={(e) => onChange(e.target.value)}
                     disabled={disabled}
-                    className={`w-full h-10 sm:h-11 px-3 sm:px-4 ${isPasswordField ? 'pr-9 sm:pr-10' : ''} rounded-xl border border-border/80 bg-background/80 text-xs font-semibold text-foreground placeholder:text-muted-foreground focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`w-full h-10 px-4 ${isPasswordField ? 'pr-10' : ''} rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/80 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500/60 transition-all shadow-2xs disabled:opacity-55 disabled:cursor-not-allowed`}
                     placeholder={placeholder}
                 />
                 {isPasswordField && (
@@ -1462,7 +1459,7 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
                         type="button"
                         onClick={() => setShowPasswordText(!showPasswordText)}
                         tabIndex={-1}
-                        className="absolute right-2.5 sm:right-3 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        className="absolute right-3 p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
                         title={showPasswordText ? "Hide" : "Show"}
                     >
                         {showPasswordText ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -1476,54 +1473,9 @@ function InputField({ label, value, onChange, placeholder, icon: Icon, type = "t
 // Helper row inside report modal
 function DetailRow({ label, value }: { label: string, value: string }) {
     return (
-        <div className="space-y-1">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</span>
-            <p className="text-xs font-semibold text-foreground break-words">{value}</p>
+        <div className="space-y-0.5">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</span>
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 break-words">{value}</p>
         </div>
     );
-}
-
-// Friendly error translation function for user reports
-function getFriendlyErrorMessage(errorMsg: string | null, lang: string) {
-    if (!errorMsg) return lang === 'es' ? "Detalles del error no especificados." : "Error details not specified.";
-    
-    const msg = errorMsg.toLowerCase();
-    
-    if (msg.includes("err_proxy_connection_failed") || msg.includes("proxy authentication required") || msg.includes("proxy")) {
-        return lang === 'es' 
-            ? "Fallo de conexión de red o del servidor de seguridad (Proxy). Por favor, contacta a soporte técnico." 
-            : "Network connection or security server (Proxy) failure. Please contact technical support.";
-    }
-    
-    if (msg.includes("timeout") && (msg.includes("nombre") || msg.includes("name") || msg.includes("buscador"))) {
-        return lang === 'es'
-            ? "Tiempo de espera agotado al buscar el campo de búsqueda de pacientes. Amexzone podría estar lento o la sesión ha expirado."
-            : "Timeout exceeded waiting for the patient search field. Amexzone might be slow or your session has expired.";
-    }
-
-    if (msg.includes("tiempo de espera agotado") || (msg.includes("timeout") && msg.includes("sms"))) {
-        return lang === 'es'
-            ? "El código de verificación no se ingresó a tiempo (límite de tiempo excedido)."
-            : "The verification code was not entered in time (time limit exceeded).";
-    }
-
-    if (msg.includes("conexión cancelada por el usuario") || msg.includes("canceled by the user")) {
-        return lang === 'es'
-            ? "Conexión cancelada manualmente por el usuario."
-            : "Connection manually cancelled by the user.";
-    }
-
-    if (msg.includes("no se encontró ningún paciente") || msg.includes("no patient") || msg.includes("not found")) {
-        return lang === 'es'
-            ? "No se encontró ningún paciente con el nombre indicado en Amexzone. Por favor, verifica el nombre completo."
-            : "No patient was found with the specified name in Amexzone. Please check the full name.";
-    }
-
-    if (msg.includes("credenciales") || msg.includes("password") || msg.includes("login") || msg.includes("contraseña")) {
-        return lang === 'es'
-            ? "Credenciales incorrectas o inválidas en Amexzone. Por favor, edita tus credenciales y vuelve a conectar."
-            : "Incorrect or invalid credentials in Amexzone. Please edit your credentials and try again.";
-    }
-
-    return errorMsg; // Fallback to raw error if not mapped
 }

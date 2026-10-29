@@ -147,7 +147,7 @@ export const DEFAULT_TEMPLATES: Template[] = [
     {
         id: 'tcm_case_assignment_note',
         version: '1.0',
-        name: 'Case Assignment',
+        name: 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit',
         category: 'CASE MANAGEMENT',
         content: 'CASE ASSIGNMENT:\n\nSUMMARY NOTES:',
         definition: JSON.stringify([
@@ -427,7 +427,7 @@ export const DEFAULT_TEMPLATES: Template[] = [
     {
         id: 'tcm_initial_home_visit_note',
         version: '1.0',
-        name: 'Initial Home Visit',
+        name: 'Initial Home Visit / Develop Intake',
         category: 'CASE MANAGEMENT',
         content: 'INITIAL HOME VISIT:\n\nSUMMARY NOTES:',
         definition: JSON.stringify([

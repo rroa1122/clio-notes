@@ -8,7 +8,13 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "flow": "node scripts/flow.cjs",
+    "flow:status": "node scripts/flow.cjs status",
+    "flow:sync": "node scripts/flow.cjs sync",
+    "flow:start": "node scripts/flow.cjs start",
+    "flow:save": "node scripts/flow.cjs save",
+    "flow:deploy": "node scripts/flow.cjs deploy"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

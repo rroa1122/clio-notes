@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { ArrowLeft, Mail, ShieldCheck, Eye, EyeOff, Sun, Moon, Sparkles } from 'lucide-react';
+import { ArrowLeft, Mail, ShieldCheck, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../notes-module/context/ThemeContext';
 
 export const Login: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
-    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -21,10 +20,8 @@ export const Login: React.FC = () => {
             setStatusMessage("Account activated successfully! You can now sign in with your new password.");
         } else if (searchParams.get('reset')) {
             setStatusMessage("Password updated successfully. Please sign in to verify your identity.");
-        } else if (searchParams.get('demo') === 'true' || searchParams.get('demo') === '1') {
-            navigate('/demo', { replace: true });
         }
-    }, [searchParams, navigate]);
+    }, [searchParams]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -165,7 +162,7 @@ export const Login: React.FC = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Password</label>
                                     <button
                                         type="button"
-                                        onClick={() => setView('forgot')}
+                                        tabIndex={-1} onClick={() => setView('forgot')}
                                         className="text-[9px] font-black uppercase tracking-widest text-[#6366f1] hover:text-[#6366f1]/80 transition-colors"
                                     >
                                         Forgot Password?
@@ -203,24 +200,10 @@ export const Login: React.FC = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-[#6366f1] hover:bg-[#6366f1]/90 text-white font-black py-4 rounded-xl shadow-lg shadow-[#6366f1]/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter text-sm cursor-pointer"
+                                className="w-full bg-[#6366f1] hover:bg-[#6366f1]/90 text-white font-black py-4 rounded-xl shadow-lg shadow-[#6366f1]/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter text-sm"
                             >
                                 {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
                             </button>
-
-                            <div className="relative flex py-1 items-center">
-                                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                                <span className="flex-shrink mx-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">O pruébalo sin cuenta</span>
-                                <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                            </div>
-
-                            <Link
-                                to="/demo"
-                                className="w-full h-12 bg-indigo-500/10 hover:bg-indigo-500/15 dark:bg-indigo-500/15 dark:hover:bg-indigo-500/25 border border-indigo-200 dark:border-indigo-800/80 hover:border-indigo-400 dark:hover:border-indigo-600 text-indigo-700 dark:text-indigo-300 font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-200 text-xs tracking-wide shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                            >
-                                <Sparkles className="size-4 text-indigo-500 animate-pulse" />
-                                <span>🚀 Probar Demo en Vivo (Acceso 1-Clic)</span>
-                            </Link>
                         </form>
                     ) : (
                         <form onSubmit={handleForgotPassword} className="space-y-6">

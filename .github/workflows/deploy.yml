@@ -1,0 +1,63 @@
+name: CI & Deploy to ClinicFlow
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'Qué deseas desplegar (all, web, bot)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - web
+          - bot
+
+jobs:
+  build-and-verify:
+    name: Verificar Compilación (TypeScript + Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Frontend
+        run: npm run build
+
+      - name: Deploy to VPS (if VPS_SSH_KEY secret is configured)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          DEPLOY_TARGET: ${{ github.event.inputs.deploy_target || 'web' }}
+        run: |
+          if [ -z "$VPS_SSH_KEY" ]; then
+            echo "ℹ️ Secret VPS_SSH_KEY no configurado en GitHub; omitiendo despliegue remoto automático (usa 'npm run flow -- deploy' localmente o agrega VPS_SSH_KEY en Settings > Secrets)."
+            exit 0
+          fi
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H clinicflow.dev >> ~/.ssh/known_hosts
+
+          if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "web" ]; then
+            scp -r dist/* root@clinicflow.dev:/var/www/clionotes/
+          fi
+
+          if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "bot" ]; then
+            scp amexzone-bot/worker.js root@clinicflow.dev:/root/amexzone-notes-bot/worker.js
+            scp amexzone-bot/src/amexzone/*.js root@clinicflow.dev:/root/amexzone-notes-bot/src/amexzone/
+            ssh root@clinicflow.dev "pm2 restart amexzone-worker"
+          fi

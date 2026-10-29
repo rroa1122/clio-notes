@@ -79,7 +79,7 @@ export const OtpInput: React.FC<OtpInputProps> = ({
     };
 
     return (
-        <div className="flex items-center justify-center gap-2 sm:gap-3">
+        <div className="grid grid-cols-6 gap-2.5 w-full">
             {Array.from({ length }).map((_, index) => {
                 const isFilled = Boolean(digits[index]);
                 return (
@@ -95,13 +95,14 @@ export const OtpInput: React.FC<OtpInputProps> = ({
                         onChange={(e) => handleDigitChange(index, e)}
                         onKeyDown={(e) => handleKeyDown(index, e)}
                         onPaste={handlePaste}
-                        className={`size-12 sm:size-14 text-center text-xl sm:text-2xl font-black rounded-2xl border transition-all shadow-sm outline-none ${
-                            disabled ? 'bg-slate-100 dark:bg-slate-900/50 text-slate-400 border-slate-200 dark:border-slate-800' :
-                            hasError
-                                ? 'bg-rose-50/50 border-rose-400 text-rose-600 focus:ring-4 focus:ring-rose-500/15 focus:border-rose-500'
-                                : isFilled
-                                    ? 'bg-indigo-50/40 dark:bg-indigo-950/30 border-indigo-300 dark:border-indigo-700/60 text-indigo-600 dark:text-indigo-400 shadow-indigo-500/5'
-                                    : 'bg-slate-50/80 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'
+                        className={`w-full aspect-square text-center text-lg sm:text-xl font-black rounded-[12px] border transition-all outline-none ${
+                            disabled
+                                ? 'bg-slate-100 dark:bg-slate-900/50 text-slate-400 border-slate-200 dark:border-slate-800'
+                                : hasError
+                                    ? 'bg-red-500/5 border-red-500/60 text-red-500 focus:ring-2 focus:ring-red-500/20 focus:border-red-500'
+                                    : isFilled
+                                        ? 'bg-[#6366f1]/10 dark:bg-[#6366f1]/15 border-[#6366f1] text-[#6366f1] dark:text-indigo-300 shadow-sm shadow-[#6366f1]/10'
+                                        : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/20'
                         }`}
                     />
                 );

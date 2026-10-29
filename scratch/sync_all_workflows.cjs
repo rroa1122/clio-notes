@@ -15,7 +15,7 @@ if not os.path.exists(db_path):
 
 workflow_files = [
     '/tmp/tcm_workflow.json',
-    '/tmp/initial_home_visit_workflow.json',
+    '/tmp/initial_home_visit_workflow.json', '/tmp/case_assignment_workflow.json',
     '/tmp/assessment_workflow.json',
     '/tmp/service_plan_workflow.json',
     '/tmp/adult_certification_workflow.json'
@@ -73,7 +73,7 @@ const host = 'root@clinicflow.dev';
 console.log('[1/3] Uploading workflow JSONs and sync script to server...');
 const filesToUpload = [
     'scratch/tcm_workflow.json',
-    'scratch/initial_home_visit_workflow.json',
+    'scratch/initial_home_visit_workflow.json', 'scratch/case_assignment_workflow.json',
     'scratch/assessment_workflow.json',
     'scratch/service_plan_workflow.json',
     'scratch/adult_certification_workflow.json',

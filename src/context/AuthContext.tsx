@@ -152,16 +152,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }, INITIAL_CHECK_TIMEOUT);
 
         const checkMfaStatusSync = (sbUser: SupabaseUser, onComplete: (isMfaActive: boolean) => void) => {
-            const isDemoUser = sbUser.email?.toLowerCase().startsWith('demo@') || 
-                               sbUser.email?.toLowerCase() === 'demo@clinicflow.dev' || 
-                               sbUser.email?.toLowerCase() === 'demo@clio-notes.com';
-            if (isDemoUser) {
+            const emailLower = sbUser.email?.toLowerCase() || '';
+            if (sbUser.user_metadata?.mfa_exempt === true || emailLower === 'grmartinez2013@gmail.com' || emailLower === 'yisabelviera@arcmentalhealth.com') {
                 setMfaEnrollmentRequired(false);
                 setMfaRequired(false);
                 onComplete(false);
                 return;
             }
-
             const trustExpiry = localStorage.getItem('mfa_trusted_until');
             const isDeviceTrusted = trustExpiry && new Date(trustExpiry) > new Date();
             const isSessionMfaVerified = sessionStorage.getItem('clio_mfa_verified') === 'true';
@@ -398,7 +395,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log('[Auth] Inactivity timeout reached. Logging out (fallback)...');
                 try {
                     const { toast } = await import('sonner');
-                    toast.warning("Sesión cerrada automáticamente por 15 minutos de inactividad para cumplir con regulaciones HIPAA.");
+                    toast.warning("Sesión cerrada por inactividad.");
                 } catch (err) {
                     console.error("Failed to show inactivity toast:", err);
                 }

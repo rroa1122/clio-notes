@@ -16,7 +16,6 @@ export const ScreenLockOverlay: React.FC = () => {
     const [isVerifying, setIsVerifying] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Fetch authoritative passcode and organization name on load
     useEffect(() => {
         const syncPasscodeAndClinic = async () => {
             try {
@@ -54,7 +53,6 @@ export const ScreenLockOverlay: React.FC = () => {
         syncPasscodeAndClinic();
     }, [user?.id]);
 
-    // Focus input on mount and keep it focused for physical keyboards
     useEffect(() => {
         if (inputRef.current) {
             inputRef.current.focus();
@@ -93,7 +91,6 @@ export const ScreenLockOverlay: React.FC = () => {
         setIsVerifying(true);
         let userPasscode = authoritativePasscode || user?.screen_lock_passcode || (user?.id ? localStorage.getItem(`clio_screen_lock_passcode_${user?.id}`) : null);
 
-        // If not in local state/storage, query Supabase directly
         if (!userPasscode) {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -115,7 +112,6 @@ export const ScreenLockOverlay: React.FC = () => {
             }
         }
 
-        // Master verification fallback for configured admin PIN
         const isMaster = enteredPin === '1122';
 
         if ((userPasscode && String(enteredPin).trim() === String(userPasscode).trim()) || isMaster) {
@@ -137,7 +133,6 @@ export const ScreenLockOverlay: React.FC = () => {
         }
     };
 
-    // Auto-verify on 4th digit
     useEffect(() => {
         if (pin.length === 4) {
             handleVerify(pin);
@@ -150,7 +145,7 @@ export const ScreenLockOverlay: React.FC = () => {
     };
 
     return (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300 p-4">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300 p-4">
             <style>{`
                 @keyframes shake {
                     0%, 100% { transform: translateX(0); }
@@ -162,9 +157,7 @@ export const ScreenLockOverlay: React.FC = () => {
                 }
             `}</style>
 
-            <div className={`w-full max-w-[340px] p-6 sm:p-7 bg-slate-900/95 dark:bg-slate-950/95 rounded-[2rem] border border-slate-800/80 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] text-center flex flex-col items-center gap-4 relative animate-in zoom-in-95 duration-300 ${shake ? 'animate-shake' : ''}`}>
-                
-                {/* Hidden input to capture numeric keyboard from desktop */}
+            <div className={`w-full max-w-[340px] p-7 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-[2.5rem] border border-slate-200 dark:border-slate-800/80 shadow-2xl text-center flex flex-col items-center gap-4 relative animate-in zoom-in-95 duration-300 ${shake ? 'animate-shake' : ''}`}>
                 <input
                     ref={inputRef}
                     id="screen_lock_pin_code"
@@ -184,30 +177,27 @@ export const ScreenLockOverlay: React.FC = () => {
                     autoFocus
                 />
 
-                {/* Glowing Lock Icon */}
                 <div className={`size-14 rounded-2xl bg-indigo-500/10 border flex items-center justify-center transition-colors duration-300 ${
-                    error 
-                        ? 'border-red-500/30 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.15)]' 
-                        : 'border-indigo-500/30 text-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.15)]'
+                    error
+                        ? 'border-red-500/30 text-red-500'
+                        : 'border-indigo-500/20 text-[#6366f1]'
                 }`}>
                     {isVerifying ? (
-                        <Loader2 size={24} className="stroke-[2.2] animate-spin text-indigo-400" />
+                        <Loader2 size={24} className="stroke-[2.2] animate-spin text-[#6366f1]" />
                     ) : (
-                        <Lock size={24} className="stroke-[2.2] animate-pulse" />
+                        <Lock size={24} className="stroke-[2.2]" />
                     )}
                 </div>
 
-                {/* Header */}
                 <div className="space-y-0.5">
-                    <h2 className="text-sm sm:text-base font-black text-white tracking-widest uppercase">
-                        {language === 'es' ? 'Acceso Seguro' : 'Secure Access'}
+                    <h2 className="text-base font-black text-slate-900 dark:text-white tracking-wider uppercase">
+                        {language === 'es' ? 'Pantalla Bloqueada' : 'Screen Locked'}
                     </h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                         {clinicName}
                     </p>
                 </div>
 
-                {/* 4 Passcode Dots */}
                 <div className="flex gap-4 my-1 justify-center cursor-pointer" onClick={() => inputRef.current?.focus()}>
                     {[0, 1, 2, 3].map((index) => {
                         const isFilled = pin.length > index;
@@ -217,9 +207,9 @@ export const ScreenLockOverlay: React.FC = () => {
                                 className={`size-3.5 rounded-full transition-all duration-300 ${
                                     isFilled
                                         ? error
-                                            ? 'bg-red-500 scale-110 shadow-[0_0_12px_rgba(239,68,68,0.8)]'
-                                            : 'bg-indigo-500 scale-110 shadow-[0_0_12px_rgba(99,102,241,0.8)]'
-                                        : 'bg-slate-800 border border-slate-700/60'
+                                            ? 'bg-red-500 scale-110'
+                                            : 'bg-[#6366f1] scale-110'
+                                        : 'bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700'
                                 }`}
                             />
                         );
@@ -227,19 +217,18 @@ export const ScreenLockOverlay: React.FC = () => {
                 </div>
 
                 {error && (
-                    <p className="text-[11px] font-bold text-red-400 animate-pulse leading-none">
-                        {language === 'es' ? 'Código de acceso incorrecto' : 'Incorrect passcode'}
+                    <p className="text-[11px] font-bold text-red-500 animate-pulse leading-none">
+                        {language === 'es' ? 'PIN incorrecto' : 'Incorrect PIN'}
                     </p>
                 )}
 
-                {/* Touch / On-Screen Keypad */}
-                <div className="grid grid-cols-3 gap-2 w-full max-w-[240px] my-1">
+                <div className="grid grid-cols-3 gap-2 w-full max-w-[230px] my-1">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
                         <button
                             key={digit}
                             type="button"
                             onClick={() => handleKeypadPress(String(digit))}
-                            className="h-11 rounded-xl bg-slate-800/60 hover:bg-slate-800 active:bg-indigo-600/40 text-white font-bold text-base border border-slate-700/50 shadow-sm active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                            className="h-11 rounded-[12px] bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-[#6366f1]/20 text-slate-900 dark:text-white font-bold text-base border border-slate-200 dark:border-slate-700/60 shadow-2xs active:scale-95 transition-all flex items-center justify-center cursor-pointer"
                         >
                             {digit}
                         </button>
@@ -248,50 +237,48 @@ export const ScreenLockOverlay: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => handleKeypadPress('0')}
-                        className="h-11 rounded-xl bg-slate-800/60 hover:bg-slate-800 active:bg-indigo-600/40 text-white font-bold text-base border border-slate-700/50 shadow-sm active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                        className="h-11 rounded-[12px] bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 active:bg-[#6366f1]/20 text-slate-900 dark:text-white font-bold text-base border border-slate-200 dark:border-slate-700/60 shadow-2xs active:scale-95 transition-all flex items-center justify-center cursor-pointer"
                     >
                         0
                     </button>
                     <button
                         type="button"
                         onClick={handleKeypadDelete}
-                        className="h-11 rounded-xl bg-slate-800/40 hover:bg-slate-800 active:bg-rose-500/20 text-slate-400 hover:text-white border border-slate-700/40 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                        className="h-11 rounded-[12px] bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white border border-slate-200 dark:border-slate-700/40 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
                         title="Borrar"
                     >
                         <Delete size={17} />
                     </button>
                 </div>
 
-                {/* Forgot passcode link */}
                 <div className="relative w-full flex justify-center">
                     <button
                         type="button"
                         onClick={() => setShowForgotTip(!showForgotTip)}
-                        className="text-[10px] font-bold text-slate-500 hover:text-slate-400 transition-colors uppercase tracking-wider"
+                        className="text-[10px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors uppercase tracking-wider cursor-pointer"
                     >
-                        {language === 'es' ? '¿Olvidaste tu Código?' : 'Forgot Passcode?'}
+                        {language === 'es' ? '¿Olvidaste tu PIN?' : 'Forgot PIN?'}
                     </button>
 
                     {showForgotTip && (
-                        <div className="absolute z-10 bottom-6 left-1/2 -translate-x-1/2 w-60 p-3.5 bg-slate-950 text-slate-300 border border-slate-800 text-[11px] rounded-2xl shadow-xl flex items-start gap-2 text-left font-medium leading-relaxed animate-in fade-in duration-200">
-                            <Info size={14} className="text-indigo-400 shrink-0 mt-0.5" />
+                        <div className="absolute z-10 bottom-6 left-1/2 -translate-x-1/2 w-60 p-3 bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-[11px] rounded-2xl shadow-xl flex items-start gap-2 text-left font-medium leading-relaxed">
+                            <Info size={14} className="text-[#6366f1] shrink-0 mt-0.5" />
                             <p>
-                                {language === 'es' 
-                                    ? 'Haz clic en SALIR para cerrar tu sesión, luego entra con tu correo/contraseña y crea un nuevo código en ajustes.'
-                                    : 'Click SIGN OUT to logout, then log in using your standard credentials and set a new passcode in settings.'}
+                                {language === 'es'
+                                    ? 'Cierra sesión y vuelve a entrar con tu contraseña para cambiar el PIN en ajustes.'
+                                    : 'Sign out and log back in with your password to reset your PIN in settings.'}
                             </p>
                         </div>
                     )}
                 </div>
 
-                <div className="w-full h-px bg-slate-800/60 my-0.5" />
+                <div className="w-full h-px bg-slate-200 dark:bg-slate-800/60 my-0.5" />
 
-                {/* Footer Actions */}
                 <div className="flex gap-4 w-full justify-between items-center px-1">
                     <button
                         type="button"
                         onClick={handleExit}
-                        className="text-slate-400 hover:text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 py-1.5 px-1"
+                        className="text-slate-400 hover:text-slate-700 dark:hover:text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
                     >
                         <LogOut size={13} className="stroke-[2.5]" />
                         {language === 'es' ? 'Salir' : 'Sign Out'}
@@ -300,7 +287,7 @@ export const ScreenLockOverlay: React.FC = () => {
                         type="button"
                         onClick={() => handleVerify(pin)}
                         disabled={pin.length < 4}
-                        className="px-5 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs uppercase tracking-wider hover:bg-indigo-500 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/10 disabled:opacity-30 disabled:pointer-events-none"
+                        className="px-5 py-2 rounded-xl bg-[#6366f1] text-white font-bold text-xs uppercase tracking-wider hover:bg-[#6366f1]/90 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-[#6366f1]/20 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                     >
                         <Unlock size={13} className="stroke-[2.5]" />
                         {language === 'es' ? 'Entrar' : 'Unlock'}

@@ -134,8 +134,8 @@ export const SERVICE_HIERARCHICAL_GROUPS: HierarchicalServiceGroup[] = [
         iconName: "ClipboardList",
         badge: "6 options",
         items: [
-            { id: "core-0", name: "Case Assigned", label: "Case Assigned", desc: "Initial referral review & phone contact", pos: "11 - Office", stepBadge: "Office" },
-            { id: "core-1", name: "TCM Initial Home Visit", label: "Initial Home Visit", desc: "Initial in-person face-to-face home visit", pos: "12 - Home", stepBadge: "Home" },
+            { id: "core-0", name: "New Referral - Initial Telephone Contact and Coordination of Initial Home Visit", label: "New Referral - Initial Telephone Contact and Coordination of Initial Home Visit", desc: "Initial referral review, phone contact & home visit coordination (25 min / 2u)", pos: "11 - Office", stepBadge: "Office" },
+            { id: "core-1", name: "Initial Home Visit / Develop Intake", label: "Initial Home Visit / Develop Intake", desc: "Initial face-to-face home visit & intake (98 min / 7u)", pos: "12 - Home", stepBadge: "Home" },
             { id: "core-2", name: "TCM Initial Assessment & Certification", label: "Initial Assessment & Certification", desc: "Comprehensive TCM assessment & certification", pos: "11 - Office", stepBadge: "Office" },
             { id: "core-3", name: "TCM Service Plan Development", label: "Service Plan Development", desc: "Develop individualized TCM service plan", pos: "11 - Office", stepBadge: "Plan" },
             { id: "core-4", name: "TCM Service Plan Discussion", label: "Service Plan Discussion", desc: "Discuss and sign service plan with patient", pos: "12 - Home", stepBadge: "Sign" },
@@ -530,11 +530,20 @@ const Record: React.FC = () => {
     const initialTemplateId = useRef(storage.getActiveTemplateId());
 
     useEffect(() => {
-        if (selectedSubTemplate === 'Case Assigned' || selectedSubTemplate === 'Case Assignment' || selectedSubTemplate === 'TCM Case Assignment') {
+        if (
+            selectedSubTemplate === 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit' ||
+            selectedSubTemplate === 'Case Assigned' ||
+            selectedSubTemplate === 'Case Assignment' ||
+            selectedSubTemplate === 'TCM Case Assignment'
+        ) {
             setSelectedTemplateId('tcm_case_assignment_note');
             if (!durationMin || durationMin === '0' || durationMin === '') {
-                setDurationMin('30');
+                setDurationMin('25');
                 setUnits('2');
+                const startMins = parseTimeToMinutes(timeIn);
+                if (startMins !== null) {
+                    setTimeOut(formatMinutesToTime(startMins + 25));
+                }
             }
         } else if (selectedSubTemplate === 'TCM Initial Assessment & Certification') {
             setSelectedTemplateId('tcm_assessment_note');
@@ -542,8 +551,16 @@ const Record: React.FC = () => {
             setSelectedTemplateId('tcm_service_plan_note');
         } else if (selectedSubTemplate === 'TCM Service Plan Discussion') {
             setSelectedTemplateId('tcm_service_plan_discussion');
-        } else if (selectedSubTemplate === 'TCM Initial Home Visit') {
+        } else if (selectedSubTemplate === 'Initial Home Visit / Develop Intake' || selectedSubTemplate === 'TCM Initial Home Visit' || selectedSubTemplate === 'Initial Home Visit') {
             setSelectedTemplateId('tcm_initial_home_visit_note');
+            if (!durationMin || durationMin === '0' || durationMin === '') {
+                setDurationMin('98');
+                setUnits('7');
+                const startMins = parseTimeToMinutes(timeIn);
+                if (startMins !== null) {
+                    setTimeOut(formatMinutesToTime(startMins + 98));
+                }
+            }
         } else if (selectedSubTemplate === 'TCM Collateral & Contact Note') {
             setSelectedTemplateId('tcm_collateral_note');
         } else if (selectedSubTemplate === 'TCM Hurricane Season: Addendum') {
@@ -1201,22 +1218,28 @@ const Record: React.FC = () => {
                     formData.append('custom_template_text', svc.customTemplateText);
                 }
 
+                const isInitialHomeVisitSvc = svcTemplateId === 'tcm_initial_home_visit_note';
+                const isCaseAssignmentSvc = svcTemplateId === 'tcm_case_assignment_note';
+                const isStrictConfirmSvc = isInitialHomeVisitSvc || isCaseAssignmentSvc;
+
                 if (selectedPatient) {
                     formData.append('patient_id', selectedPatient.id);
                     formData.append('patient_name', selectedPatient.full_name);
                     if (selectedPatient.dob) formData.append('patient_dob', selectedPatient.dob);
                     
                     const clinicalContextObj: any = { ...selectedPatient };
-                    if (!clinicalContextObj.pcp_medications || clinicalContextObj.pcp_medications === 'None reported' || clinicalContextObj.pcp_medications.trim() === '') {
-                        clinicalContextObj.pcp_medications = 'The client reports no current prescribed medications at the time of the assessment.';
+                    if (!isStrictConfirmSvc) {
+                        if (!clinicalContextObj.pcp_medications || clinicalContextObj.pcp_medications === 'None reported' || clinicalContextObj.pcp_medications.trim() === '') {
+                            clinicalContextObj.pcp_medications = 'The client reports no current prescribed medications at the time of the assessment.';
+                        }
+                        if (!clinicalContextObj.psych_medications || clinicalContextObj.psych_medications === 'None reported' || clinicalContextObj.psych_medications.trim() === '') {
+                            clinicalContextObj.psych_medications = 'The client reports no current psychotropic medications.';
+                        }
+                        if (!clinicalContextObj.physical_conditions || clinicalContextObj.physical_conditions.trim() === '') {
+                            clinicalContextObj.physical_conditions = 'No acute physical medical conditions reported.';
+                        }
+                        clinicalContextObj.clinical_directives = 'Document all findings affirmatively. Do not use phrases like "not available", "not documented", or "not reported". If no medications or symptoms exist, state that client reports none.';
                     }
-                    if (!clinicalContextObj.psych_medications || clinicalContextObj.psych_medications === 'None reported' || clinicalContextObj.psych_medications.trim() === '') {
-                        clinicalContextObj.psych_medications = 'The client reports no current psychotropic medications.';
-                    }
-                    if (!clinicalContextObj.physical_conditions || clinicalContextObj.physical_conditions.trim() === '') {
-                        clinicalContextObj.physical_conditions = 'No acute physical medical conditions reported.';
-                    }
-                    clinicalContextObj.clinical_directives = 'Document all findings affirmatively. Do not use phrases like "not available", "not documented", or "not reported". If no medications or symptoms exist, state that client reports none.';
 
                     const clinicalContext = JSON.stringify(clinicalContextObj);
                     formData.append('patient_clinical_context', clinicalContext);
@@ -1226,10 +1249,13 @@ const Record: React.FC = () => {
                 }
 
                 // If it's a manual text service, use that as the primary context
-                const medInstruction = (!selectedPatient?.pcp_medications || selectedPatient?.pcp_medications === 'None reported')
+                const medInstruction = (!isStrictConfirmSvc && (!selectedPatient?.pcp_medications || selectedPatient?.pcp_medications === 'None reported'))
                     ? '\nMedications: The client reports no current prescribed medications.'
                     : '';
-                const enrichedContext = `Encounter Context:\n${svc.manualText || patientInfo.context}\n\nDate: ${svcDate}\nTime In: ${svcTimeIn || 'Not specified'}\nTime Out: ${svcTimeOut || 'Not specified'}${medInstruction}\nClinical Documentation Directive: Document all findings affirmatively. Do not use phrases like 'not available', 'not documented', or 'not reported'. If no medications exist, document that client reports none.`;
+                const directiveLine = isStrictConfirmSvc
+                    ? ''
+                    : `\nClinical Documentation Directive: Document all findings affirmatively. Do not use phrases like 'not available', 'not documented', or 'not reported'. If no medications exist, document that client reports none.`;
+                const enrichedContext = `Encounter Context:\n${svc.manualText || patientInfo.context}\n\nDate: ${svcDate}\nTime In: ${svcTimeIn || 'Not specified'}\nTime Out: ${svcTimeOut || 'Not specified'}${medInstruction}${directiveLine}`;
                 formData.append('patient_context', enrichedContext);
                 
                 // Add unique identifiers so n8n can process them completely separately
@@ -1238,14 +1264,26 @@ const Record: React.FC = () => {
                 formData.append('joint_note_total', allServicesToProcess.length.toString());
                 formData.append('is_joint_note', allServicesToProcess.length > 1 ? 'true' : 'false');
 
-                if (clinicSettings) {
-                    formData.append('agency_name', clinicSettings.clinicName || '');
-                    formData.append('facility_name', clinicSettings.clinicName || '');
-                    formData.append('facility_address', clinicSettings.physicalAddress || '');
-                    formData.append('facility_phone', clinicSettings.mainPhone || '');
-                    formData.append('facility_fax', clinicSettings.faxNumber || '');
-                    formData.append('facility_email', clinicSettings.clinicEmail || '');
-                }
+                const resolvedAgencyName = clinicSettings?.clinicName || userClinic?.name || '';
+                const resolvedAddress = clinicSettings?.physicalAddress || (clinicSettings as any)?.address || userClinic?.address || '';
+                const resolvedPhone = clinicSettings?.mainPhone || (clinicSettings as any)?.phone || userClinic?.phone || '';
+                const resolvedFax = clinicSettings?.faxNumber || (clinicSettings as any)?.fax || userClinic?.fax || '';
+                const resolvedEmail = clinicSettings?.clinicEmail || (clinicSettings as any)?.email || userClinic?.email || '';
+                const resolvedCmName = userProfile?.full_name || (user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.name) || '';
+                const resolvedCmLic = userProfile?.license_id || '';
+                const resolvedSupName = clinicSettings?.supervisorName || userClinic?.supervisor_name || '';
+                const resolvedSupLic = clinicSettings?.supervisorNpi || userClinic?.supervisor_license || '';
+
+                formData.append('agency_name', resolvedAgencyName);
+                formData.append('facility_name', resolvedAgencyName);
+                formData.append('facility_address', resolvedAddress);
+                formData.append('facility_phone', resolvedPhone);
+                formData.append('facility_fax', resolvedFax);
+                formData.append('facility_email', resolvedEmail);
+                formData.append('case_manager_name', resolvedCmName);
+                formData.append('case_manager_lic', resolvedCmLic);
+                formData.append('supervisor_name', resolvedSupName);
+                formData.append('supervisor_lic', resolvedSupLic);
 
                 // Compute a unique service title to avoid n8n deduplicating multiple identical templates 
                 const sameTypeBefore = allServicesToProcess.slice(0, i).filter(s => s.subTemplate === svc.subTemplate).length;
@@ -1342,10 +1380,10 @@ const Record: React.FC = () => {
                         calcDuration = diff;
                     }
                     if (calcDuration === 0 && svcUnits) {
-                        calcDuration = parseInt(svcUnits) * 15;
+                        calcDuration = isInitialHomeVisitSvc && svcUnits === '7' ? 98 : (isCaseAssignmentSvc && svcUnits === '2' ? 25 : parseInt(svcUnits) * 15);
                     }
                     if (calcDuration === 0) {
-                        calcDuration = Math.round(svc.duration / 60) || 15;
+                        calcDuration = Math.round(svc.duration / 60) || (isInitialHomeVisitSvc ? 98 : (isCaseAssignmentSvc ? 25 : 15));
                     }
                     
                     const calcUnits = Math.floor(calcDuration / 15) + (calcDuration % 15 >= 8 ? 1 : 0);

@@ -1,34 +1,36 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../notes-module/context/ThemeContext';
 import { OtpInput } from '../components/ui/OtpInput';
-import { Lock, LogOut, ShieldAlert, ShieldCheck, ArrowRight, Smartphone } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Sun, Moon } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const MfaChallenge: React.FC = () => {
     const { verifyMfaCode, signOut } = useAuth();
     const { language } = useLanguage();
+    const { theme, toggleTheme } = useTheme();
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [trustDevice, setTrustDevice] = useState(false);
+    const [trustDevice, setTrustDevice] = useState(true);
 
     const isEs = language === 'es';
 
     const handleVerify = async (codeToVerify?: string) => {
         const targetCode = codeToVerify || code;
         if (targetCode.length !== 6) {
-            setError(isEs ? "Por favor ingrese un código de 6 dígitos." : "Please enter a 6-digit code.");
+            setError(isEs ? "Ingresa el código de 6 dígitos." : "Enter the 6-digit code.");
             return;
         }
         setLoading(true);
         setError(null);
         try {
             await verifyMfaCode(targetCode, trustDevice);
-            toast.success(isEs ? "¡Identidad verificada con éxito!" : "Identity verified successfully!");
+            toast.success(isEs ? "Sesión verificada" : "Session verified");
         } catch (err: any) {
             console.error("MFA verification error:", err);
-            setError(err.message || (isEs ? "Código inválido. Verifique su app autenticadora." : "Invalid verification code. Please check your authenticator app."));
+            setError(err.message || (isEs ? "Código inválido." : "Invalid code."));
         } finally {
             setLoading(false);
         }
@@ -40,119 +42,127 @@ export const MfaChallenge: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-indigo-500 selection:text-white">
-            {/* Ambient Background Blur Glows */}
-            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none" />
-            <div className="absolute bottom-10 right-10 w-80 h-80 bg-violet-600/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
+            {/* Premium Canvas Overlay */}
+            <div className="absolute inset-0 bg-[#0B1020]/[0.025] dark:bg-[#0B1020]/[0.4] pointer-events-none" />
 
-            <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-2xl border border-slate-800/80 rounded-[2.5rem] p-6 sm:p-9 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] relative overflow-hidden group z-10 animate-in fade-in zoom-in-95 duration-300">
-                {/* Top border accent */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent rounded-full opacity-70" />
+            {/* Floating Theme Toggle */}
+            <button
+                type="button"
+                onClick={toggleTheme}
+                className="absolute top-6 right-6 p-3 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 shadow-md backdrop-blur-md hover:scale-105 active:scale-95 transition-all z-50 cursor-pointer"
+                title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+                {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
+            </button>
 
-                <div className="flex flex-col items-center text-center">
-                    {/* Security Badge Icon */}
-                    <div className="flex size-16 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 shadow-[0_0_25px_rgba(99,102,241,0.2)] mb-5">
-                        <Lock size={30} className="stroke-[2.2] animate-pulse" />
-                    </div>
+            <div className="max-w-md w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800/60 rounded-[2.5rem] p-10 shadow-2xl shadow-black/[0.03] dark:shadow-black/[0.3] relative overflow-hidden group transition-all duration-300">
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#6366f1]/20 rounded-full blur-[100px] group-hover:bg-[#6366f1]/30 transition-all duration-700" />
 
-                    <h1 className="text-2xl font-black text-white tracking-tight mb-2">
-                        {isEs ? "Verificación de 2 Factores" : "Two-Factor Verification"}
-                    </h1>
-                    <p className="text-xs font-medium text-slate-400 max-w-xs mb-6 leading-relaxed">
-                        {isEs 
-                            ? "Para garantizar la seguridad e integridad HIPAA de los datos clínicos, ingrese el código de 6 dígitos de su app autenticadora."
-                            : "To maintain HIPAA data protection standards, please enter the 6-digit security code generated by your authenticator app."}
-                    </p>
-
-                    <form onSubmit={handleSubmit} className="w-full space-y-6">
-                        {/* OTP Input Segmented */}
-                        <div className="bg-slate-950/70 p-5 rounded-2xl border border-slate-800/80 space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-center gap-1.5">
-                                <Smartphone size={12} className="text-indigo-400" />
-                                {isEs ? "Código Autenticador" : "Authenticator Code"}
-                            </label>
-                            
-                            <div className="py-2">
-                                <OtpInput
-                                    length={6}
-                                    value={code}
-                                    onChange={(val) => {
-                                        setCode(val);
-                                        if (error) setError(null);
-                                    }}
-                                    disabled={loading}
-                                    hasError={Boolean(error)}
-                                    autoFocus={true}
-                                    onComplete={(completedCode) => handleVerify(completedCode)}
-                                />
-                            </div>
-
-                            {error && (
-                                <p className="text-xs font-bold text-rose-400 flex items-center justify-center gap-1.5 pt-1 animate-bounce">
-                                    <ShieldAlert size={14} className="shrink-0" /> {error}
-                                </p>
-                            )}
+                <div className="relative z-10">
+                    <div className="flex flex-col items-center mb-8 text-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shadow-lg shadow-indigo-500/5 mb-4 overflow-hidden">
+                            <svg
+                                viewBox="0 0 24 24"
+                                className="size-10"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <defs>
+                                    <linearGradient id="mfa-g4" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#3b82f6" />
+                                        <stop offset="50%" stopColor="#4f46e5" />
+                                        <stop offset="100%" stopColor="#6366f1" />
+                                    </linearGradient>
+                                </defs>
+                                <g transform="rotate(0 12 12)">
+                                    <path fill="url(#mfa-g4)" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
+                                </g>
+                                <g transform="rotate(180 12 12)">
+                                    <path fill="url(#mfa-g4)" d="M12 2C10.5 2 9 3.5 8 5L12 12L16 5C15 3.5 13.5 2 12 2Z" />
+                                </g>
+                            </svg>
                         </div>
 
-                        {/* Custom Trust Device Card Toggle */}
-                        <div 
+                        <h1 className="text-2xl sm:text-3xl font-black tracking-[0.08em] bg-gradient-to-r from-[#3b82f6] via-[#4f46e5] to-[#6366f1] bg-clip-text text-transparent uppercase select-none">
+                            {isEs ? "Código 2FA" : "2FA Code"}
+                        </h1>
+                        <p className="text-slate-400 dark:text-slate-500 text-sm mt-1.5 font-medium">
+                            {isEs ? "Ingresa el código de 6 dígitos de tu app" : "Enter the 6-digit code from your authenticator"}
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-2">
+                            <OtpInput
+                                length={6}
+                                value={code}
+                                onChange={(val) => {
+                                    setCode(val);
+                                    if (error) setError(null);
+                                }}
+                                disabled={loading}
+                                hasError={Boolean(error)}
+                                autoFocus={true}
+                                onComplete={(completedCode) => handleVerify(completedCode)}
+                            />
+                        </div>
+
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-xs py-2.5 px-4 rounded-xl font-bold text-center">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Clean Trust Device Toggle */}
+                        <div
                             onClick={() => setTrustDevice(!trustDevice)}
-                            className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${
-                                trustDevice 
-                                    ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-200' 
-                                    : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                            className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-all cursor-pointer select-none ${
+                                trustDevice
+                                    ? 'bg-[#6366f1]/5 dark:bg-[#6366f1]/10 border-[#6366f1]/40 text-slate-800 dark:text-slate-100'
+                                    : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                             }`}
                         >
-                            <div className="flex items-center gap-3 text-left">
-                                <ShieldCheck size={18} className={trustDevice ? 'text-indigo-400' : 'text-slate-500'} />
-                                <div className="space-y-0.5">
-                                    <p className="text-xs font-bold leading-tight">
-                                        {isEs ? "Confiar en este dispositivo" : "Trust this device"}
-                                    </p>
-                                    <p className="text-[10px] text-slate-500 font-medium">
-                                        {isEs ? "Válido por 90 días en este equipo" : "Valid for 90 days on this machine"}
-                                    </p>
-                                </div>
+                            <div className="flex items-center gap-2.5">
+                                <ShieldCheck className={`size-4 shrink-0 ${trustDevice ? 'text-[#6366f1]' : 'text-slate-400'}`} />
+                                <span className="text-xs font-bold">
+                                    {isEs ? "Recordar este dispositivo (90 días)" : "Remember this device (90 days)"}
+                                </span>
                             </div>
                             <input
                                 type="checkbox"
                                 checked={trustDevice}
                                 onChange={(e) => setTrustDevice(e.target.checked)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="size-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer accent-indigo-500"
+                                className="size-4 rounded border-slate-300 dark:border-slate-700 text-[#6366f1] focus:ring-[#6366f1] cursor-pointer accent-[#6366f1]"
                             />
                         </div>
 
-                        {/* Verify Button */}
-                        <button
-                            type="submit"
-                            disabled={loading || code.length !== 6}
-                            className="w-full h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-40 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/20 active:scale-98 flex items-center justify-center gap-2"
-                        >
-                            {loading ? (
-                                <>
-                                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    {isEs ? "Verificando..." : "Verifying..."}
-                                </>
-                            ) : (
-                                <>
-                                    {isEs ? "Verificar Sesión" : "Verify Session"}
-                                    <ArrowRight size={14} />
-                                </>
-                            )}
-                        </button>
+                        <div className="space-y-3 pt-1">
+                            <button
+                                type="submit"
+                                disabled={loading || code.length !== 6}
+                                className="w-full bg-[#6366f1] hover:bg-[#6366f1]/90 text-white font-black py-4 rounded-xl shadow-lg shadow-[#6366f1]/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-tighter text-sm cursor-pointer"
+                            >
+                                {loading
+                                    ? (isEs ? "Verificando..." : "Verifying...")
+                                    : (isEs ? "Continuar al Panel" : "Verify & Continue")}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => signOut('voluntary')}
+                                className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors py-2 text-[10px] font-black uppercase tracking-widest cursor-pointer"
+                            >
+                                <ArrowLeft className="size-3" />
+                                {isEs ? "Volver al Inicio de Sesión" : "Return to Authentication"}
+                            </button>
+                        </div>
                     </form>
 
-                    <div className="h-px w-full bg-slate-800/80 my-6" />
-
-                    <button
-                        type="button"
-                        onClick={() => signOut('voluntary')}
-                        className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors uppercase tracking-wider py-1.5 px-3 rounded-lg hover:bg-slate-800/50"
-                    >
-                        <LogOut size={14} />
-                        {isEs ? "Cancelar y Cerrar Sesión" : "Cancel & Sign Out"}
-                    </button>
+                    <div className="mt-6 text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
+                        Protected by Clio Security Infrastructure
+                    </div>
                 </div>
             </div>
         </div>
