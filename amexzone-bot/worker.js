@@ -3188,6 +3188,10 @@ async function run() {
             });
             console.log("🎉 Vinculación y login completados con éxito.");
         } else if (task.note_text.startsWith('[TCM_PROGRESS_NOTE]')) {
+            // Manual review gate: never push a note with unresolved [CONFIRM: ...] items to Amexzone.
+            if (/\[CONFIRM:/i.test(task.note_text)) {
+                throw new Error('Nota pendiente de revisión (Pending TCM Review): contiene campos [CONFIRM] sin resolver. Resuélvelos en Clio antes de sincronizar.');
+            }
             console.log("📝 Procesando nota de progreso...");
             await processProgressNoteTask(task, integration);
             await supabase.rpc('update_note_task_status', {

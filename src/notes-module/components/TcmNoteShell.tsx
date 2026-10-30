@@ -867,6 +867,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     }, [loadSyncStatus]);
 
     const handleRequestSignature = async () => {
+        if (blockIfPendingReview('sign')) return;
         if (!supervisorEmailInput || !supervisorEmailInput.includes('@')) {
             toast.error("Please enter a valid supervisor email");
             return;
@@ -963,6 +964,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     };
 
     const handleSignatureClick = (type: 'cm' | 'sup') => {
+        if (blockIfPendingReview('sign')) return;
         const today = getMiamiTodayString();
         if (type === 'cm' && (user as any)?.signature_url) {
             setCmSignatureImg((user as any).signature_url);
@@ -1048,6 +1050,38 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     const isSigned = useMemo(() => {
         return (mergedNote as any).signature_status === 'signed';
     }, [mergedNote]);
+
+    // Manual review gate: a note with unresolved [CONFIRM: ...] items can be saved
+    // (as "Pending TCM Review") but cannot be signed or synced to Amexzone.
+    const findPendingConfirms = (n: any): string[] => {
+        const texts = [
+            n?.narrative?.summary_notes || "",
+            n?.narrative?.outcome_of_services || "",
+            n?.narrative?.next_steps || "",
+            ...((n?.joint_services || []).flatMap((s: any) => [
+                s?.narrative?.summary_notes || "",
+                s?.narrative?.outcome_of_services || "",
+                s?.narrative?.next_steps || ""
+            ]))
+        ].join("\n");
+        const matches = Array.from(texts.matchAll(/\[CONFIRM:\s*([^\]]+)\]/gi)).map(m => m[0].trim());
+        return Array.from(new Set(matches));
+    };
+
+    const pendingConfirms = useMemo(() => findPendingConfirms(mergedNote), [mergedNote]);
+
+    const blockIfPendingReview = (action: 'sign' | 'sync', items: string[] = pendingConfirms): boolean => {
+        if (items.length === 0) return false;
+        const verbEs = action === 'sign' ? 'firmar' : 'sincronizar con Amexzone';
+        const verbEn = action === 'sign' ? 'signed' : 'synced to Amexzone';
+        toast.error(
+            language === 'es'
+                ? `Nota pendiente de revisión: resuelve ${items.length} campo(s) [CONFIRM] antes de ${verbEs}.`
+                : `Pending TCM Review: resolve ${items.length} [CONFIRM] item(s) before this note can be ${verbEn}.`,
+            { duration: 6000 }
+        );
+        return true;
+    };
 
     useEffect(() => {
         if (isSigned && isEditMode) {
@@ -1298,13 +1332,28 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
             if (lastSavedId) {
                 noteToSave.id = lastSavedId;
             }
+            const isPendingReview = pendingConfirms.length > 0;
+            (noteToSave as any).meta = {
+                ...((noteToSave as any).meta || {}),
+                review_status: isPendingReview ? 'pending_tcm_review' : 'complete',
+                pending_confirm_items: pendingConfirms
+            };
             const savedNoteResult = await storage.saveAnalyzedNote(noteToSave);
             if (savedNoteResult && savedNoteResult.id) {
                 setLastSavedId(savedNoteResult.id);
             }
             setIsSaved(true);
             if (onSaveComplete) onSaveComplete(true);
-            toast.success("Saved to Clinical History");
+            if (isPendingReview) {
+                toast.success(
+                    language === 'es'
+                        ? `Guardada como "Pending TCM Review" (${pendingConfirms.length} campo(s) [CONFIRM] por resolver antes de firmar o sincronizar).`
+                        : `Saved as "Pending TCM Review" (${pendingConfirms.length} [CONFIRM] item(s) to resolve before signing or syncing).`,
+                    { duration: 6000 }
+                );
+            } else {
+                toast.success("Saved to Clinical History");
+            }
         } catch (err) {
             toast.error("Failed to save note");
         } finally {
@@ -1446,6 +1495,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         const isEvent = overrideNote && (overrideNote.nativeEvent || overrideNote.target || typeof overrideNote.preventDefault === 'function');
         const effectiveOverride = (isEvent || !overrideNote || typeof overrideNote !== 'object') ? null : overrideNote;
         const note = (effectiveOverride || mergedNote) as any;
+        if (blockIfPendingReview('sync', findPendingConfirms(note))) return;
         let noteIdToSync = note.id || lastSavedId;
 
         // Auto-save using duplicate-safe saveAnalyzedNote if no ID is present yet
@@ -3028,7 +3078,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                         {hasPending ? (
                                             <div className="space-y-1">
                                                 <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 mb-1.5">
-                                                    Please complete the following missing fields in the note before signing or syncing:
+                                                    Pending TCM Review — signing and Amexzone sync are locked until these items are resolved in edit mode:
                                                 </p>
                                                 {uniqueConfirms.map((item, idx) => (
                                                     <div key={idx} className="text-[12px] font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">

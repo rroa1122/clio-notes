@@ -9,6 +9,9 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
    - Nunca inventar datos clínicos que no estén en el audio, transcripción o formulario.
    - En `Record.tsx`, **NO inyectar medicamentos sintéticos de relleno** (como `Fluoxetine`, `Buspirone`, `Hydroxyzine`) cuando se usan plantillas estrictas con `[CONFIRM: ...]`.
    - En `TcmNoteShell.tsx`, cualquier etiqueta `[CONFIRM: ...]` se resalta en ámbar y se lista automáticamente en la tarjeta final `FOR TCM REVIEW` (mostrando `None` cuando todas fueron resueltas).
+   - **Nunca rellenar con datos ficticios** para "completar" una nota: estas notas se facturan a Medicaid y se auditan. La nota se escribe completa (todos los párrafos del template) y solo el dato faltante queda como `[CONFIRM: ...]` dentro de una oración completa.
+   - **Revisión manual (Pending TCM Review):** una nota con `[CONFIRM: ...]` se puede guardar (`content.meta.review_status = 'pending_tcm_review'`, `meta.pending_confirm_items`), pero firmar, solicitar firma y sincronizar a Amexzone quedan bloqueados en `TcmNoteShell.tsx`, y el bot rechaza cualquier `[TCM_PROGRESS_NOTE]` que contenga `[CONFIRM:` (`amexzone-bot/worker.js`).
+   - **Notas cortas = datos que no llegan al prompt:** el frontend envía el paciente completo (incluye `tcm_social_needs`, el form TCM Social), pero cada workflow n8n debe leerlo explícitamente en su prompt (`patient_full_object.tcm_social_needs?.campo`). Un dominio sin datos no se omite: se escribe con `[CONFIRM: ...]`.
 2. **Preservación de Formato Multi-Párrafo (`clioUtils.ts`):**
    - `normalizeTcmNote` no debe colapsar saltos de línea dobles (`\n\n`) ni viñetas (`•`) en plantillas estructuradas por párrafos (`tcm_initial_home_visit_note`, `tcm_case_assignment_note`, etc.).
 3. **Múltiples Dominios Seleccionados:**

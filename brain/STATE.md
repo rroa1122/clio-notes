@@ -28,5 +28,14 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 
 ---
 
+## En Curso — Rama `feat/tcm-templates-v2` (2026-10-29)
+**Objetivo:** que Clio use los templates TCM v2 (notas completas y largas) en vez de notas cortas, con revisión manual en lugar de datos ficticios.
+- **Fase 1 (hecha en la rama, pendiente de deploy y prueba):**
+  - n8n `initial_home_visit_workflow.json` y `case_assignment_workflow.json`: el prompt ahora lee el form TCM Social (`tcm_social_needs`), escribe siempre todos los párrafos, mínimos de largo (IHV ≥ 900 palabras, Referral ≥ 350), `[CONFIRM: ...]` en línea en vez de omitir dominios, dominios desde Services Needed, y corrige la clave `emergency_contact_relationship`.
+  - `TcmNoteShell.tsx`: estado "Pending TCM Review" al guardar (`meta.review_status`), y bloqueo de firma, solicitud de firma y sync a Amexzone mientras haya `[CONFIRM: ...]`.
+  - `amexzone-bot/worker.js`: rechaza notas TCM con `[CONFIRM:` como segunda barrera.
+- **Fase 2 (siguiente):** templates v2 para Assessment, Adult Certification (separar de `tcm_assessment_note`), Initial Service Plan Development, Discuss and Sign Initial Services Plan, Psychiatric Medical Records Retrieval, PCP Medical Records Retrieval y Emergency Contact / Gather Information.
+- **Fase 3:** cola de revisión manual (filtrar notas con `meta.review_status = 'pending_tcm_review'`).
+
 ## Próximos Pasos / Pendientes
 - Continuar con cualquier otro template TCM o ajuste funcional que Reinier o su compañero indiquen.
