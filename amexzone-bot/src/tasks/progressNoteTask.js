@@ -20,6 +20,23 @@ const processProgressNoteTask = async (task, integration) => {
         throw new Error("Payload inválido.");
     }
 
+    // Manual review gate: notes can be saved incomplete in Clio ("Pending TCM Review"),
+    // but they must never reach Amexzone without the required fields.
+    const missingForSync = [];
+    if (!payload.visit_date || !String(payload.visit_date).trim()) missingForSync.push('Date of Service (DOS)');
+    if (payload.review) {
+        // Payloads from current Clio versions carry the full required-field check.
+        if (!String(payload.case_manager_name || '').trim()) missingForSync.push('Case Manager');
+        if (!String(payload.supervisor_name || '').trim()) missingForSync.push('Supervisor');
+        (payload.review.missing_required_fields || []).forEach((f) => {
+            if (!missingForSync.includes(f)) missingForSync.push(f);
+        });
+        if ((payload.review.pending_confirm_items || []).length > 0) missingForSync.push('[CONFIRM] items');
+    }
+    if (missingForSync.length > 0) {
+        throw new Error(`Nota pendiente de revisión (Pending TCM Review). Falta: ${missingForSync.join(', ')}. Complétala en Clio antes de sincronizar.`);
+    }
+
     const userId = task.user_id;
     let pin = '';
     try {

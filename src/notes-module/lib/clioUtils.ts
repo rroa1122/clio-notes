@@ -67,6 +67,56 @@ export const mergePatientIntoNote = (note: ClioNote, patient: Patient): ClioNote
  * Merges User Profile and Clinic data into the ClioNote structure.
  * Pre-fills Facility details and Staff signatures.
  */
+/**
+ * Replaces [CONFIRM: ...] placeholders for data Clio always knows (TCM, supervisor,
+ * agency, session language, client phone, linked Initial Home Visit date/time).
+ * Only replaces when a real value is available; never invents data.
+ */
+export interface KnownNoteValues {
+    caseManagerName?: string;
+    supervisorName?: string;
+    agencyName?: string;
+    language?: string;
+    clientPhone?: string;
+    initialHomeVisitDateTime?: string;
+}
+
+export const resolveKnownConfirms = (note: any, values: KnownNoteValues): any => {
+    if (!note || typeof note !== 'object') return note;
+    const rules: Array<{ re: RegExp; value?: string }> = [
+        { re: /\[CONFIRM:\s*(?:the\s+)?(?:TCM|case manager|targeted case manager)(?:'s)?\s*(?:full\s*)?name[^\]]*\]/gi, value: values.caseManagerName },
+        { re: /\[CONFIRM:\s*(?:the\s+)?(?:TCM\s+)?supervisor(?:'s)?\s*(?:full\s*)?name[^\]]*\]/gi, value: values.supervisorName },
+        { re: /\[CONFIRM:\s*agency(?:\s*\/\s*clinic)?\s*name\s*\]/gi, value: values.agencyName },
+        { re: /\[CONFIRM:\s*(?:client'?s?\s*)?(?:preferred\s+language|language\s+of\s+(?:the\s+)?session|session\s+language|language)\s*\]/gi, value: values.language },
+        { re: /\[CONFIRM:\s*(?:the\s+)?client(?:'s)?\s*(?:tele)?phone(?:\s*number)?\s*\]/gi, value: values.clientPhone },
+        { re: /\[CONFIRM:[^\]]*(?:initial home visit|IHV)[^\]]*(?:date|time)[^\]]*\]/gi, value: values.initialHomeVisitDateTime },
+        { re: /\[CONFIRM:[^\]]*(?:date|time)[^\]]*(?:initial home visit|IHV)[^\]]*\]/gi, value: values.initialHomeVisitDateTime },
+    ];
+    const resolveText = (text: any) => {
+        if (typeof text !== 'string' || !text.includes('[CONFIRM')) return text;
+        let out = text;
+        for (const { re, value } of rules) {
+            if (value && String(value).trim()) out = out.replace(re, String(value).trim());
+        }
+        return out;
+    };
+    const resolveNarrative = (n: any) => {
+        if (!n || typeof n !== 'object') return;
+        ['summary_notes', 'outcome_of_services', 'next_steps', 'for_tcm_review'].forEach(k => {
+            if (k in n) n[k] = resolveText(n[k]);
+        });
+    };
+    resolveNarrative(note.narrative);
+    (note.joint_services || []).forEach((s: any) => resolveNarrative(s?.narrative));
+    if (Array.isArray(note.meta?.missing_fields)) {
+        note.meta.missing_fields = note.meta.missing_fields.filter((f: any) => {
+            const asTag = String(f).startsWith('[') ? String(f) : `[CONFIRM: ${f}]`;
+            return resolveText(asTag) === asTag;
+        });
+    }
+    return note;
+};
+
 export const mergeProfileIntoNote = (note: ClioNote, profile: any, clinic: any): ClioNote => {
     if (!note.facility) note.facility = {} as any;
     if (!note.staff) note.staff = {} as any;

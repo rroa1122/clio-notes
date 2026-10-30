@@ -13,7 +13,7 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate } from '../lib/clioUtils';
+import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
@@ -69,6 +69,28 @@ const parseTimeToMinutes = (timeStr: string): number | null => {
     if (period === 'am' && hours === 12) hours = 0;
     if (!period && hours >= 24) return null;
     return hours * 60 + minutes;
+};
+
+// Templates whose notes are built from the TCM Social form; warn before generating if it is empty.
+const TCM_SOCIAL_DEPENDENT_TEMPLATES = ['tcm_initial_home_visit_note', 'tcm_assessment_note', 'tcm_adult_certification_note', 'tcm_service_plan_note', 'tcm_service_plan_discussion'];
+const TCM_SOCIAL_KEY_FIELDS: Array<[string, string]> = [
+    ['origin_country', 'Country of Origin'],
+    ['marital_status', 'Marital Status'],
+    ['co_habitants', 'Who they live with'],
+    ['housing_type', 'Living Situation'],
+    ['rent_payment', 'Rent Amount'],
+    ['medicaid_details', 'Medicaid'],
+    ['medicare_details', 'Medicare'],
+    ['ssi_details', 'SSI Details'],
+    ['food_stamps_amount', 'Food Stamps Amount'],
+    ['drives', 'Drives?'],
+];
+
+const formatServiceDateLong = (dateStr: string): string => {
+    const m = (dateStr || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return (dateStr || '').trim();
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
 const formatMinutesToTime = (minutes: number): string => {
@@ -1149,6 +1171,23 @@ const Record: React.FC = () => {
             return;
         }
 
+        // Preflight: warn when the TCM Social form is empty for templates that depend on it.
+        const plannedTemplateIds = (recordedServices.length > 0
+            ? recordedServices.map((s: any) => s.templateId || getTemplateIdFromSubTemplate(s.subTemplate))
+            : [getTemplateIdFromSubTemplate(selectedSubTemplate)]);
+        if (selectedPatient && plannedTemplateIds.some(id => TCM_SOCIAL_DEPENDENT_TEMPLATES.includes(id))) {
+            const social: any = (selectedPatient as any).tcm_social_needs || {};
+            const missingSocial = TCM_SOCIAL_KEY_FIELDS
+                .filter(([key]) => social[key] === undefined || social[key] === null || String(social[key]).trim() === '')
+                .map(([, label]) => label);
+            if (missingSocial.length > 0) {
+                const msg = language === 'es'
+                    ? `El formulario TCM Social de este cliente está incompleto. Faltan: ${missingSocial.join(', ')}.\n\nSin estos datos la nota omitirá esa información o la marcará para revisión.\n\n¿Generar la nota de todas formas?`
+                    : `This client's TCM Social form is incomplete. Missing: ${missingSocial.join(', ')}.\n\nWithout this data the note will omit that information or flag it for review.\n\nGenerate the note anyway?`;
+                if (!window.confirm(msg)) return;
+            }
+        }
+
         const currentTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
         const isTcm = ['tcm_progress_note', 'tcm_assessment_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_mhv_provide_donation_note', 'tcm_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note'].includes(selectedTemplateId);
 
@@ -1172,6 +1211,17 @@ const Record: React.FC = () => {
 
         const generatedNotes: ClioNote[] = [];
         let lastPdfResult: PDFResponse | null = null;
+
+        // If this batch includes an Initial Home Visit, the Referral note can cite its real date/time.
+        const linkedIhvSvc: any = allServicesToProcess.find((s: any) => (s.templateId || getTemplateIdFromSubTemplate(s.subTemplate)) === 'tcm_initial_home_visit_note');
+        const linkedIhvLabel = (() => {
+            if (!linkedIhvSvc) return '';
+            const d = formatServiceDateLong(linkedIhvSvc.serviceDate || serviceDate);
+            const tMins = parseTimeToMinutes(linkedIhvSvc.timeIn || '');
+            const t = tMins !== null ? formatMinutesToTime(tMins) : (linkedIhvSvc.timeIn || '');
+            return [d, t].filter(Boolean).join(' at ');
+        })();
+        const sessionLanguage = ((selectedPatient as any)?.preferred_language || '').trim() || 'Spanish';
         
         try {
             for (let i = 0; i < allServicesToProcess.length; i++) {
@@ -1228,6 +1278,7 @@ const Record: React.FC = () => {
                     if (selectedPatient.dob) formData.append('patient_dob', selectedPatient.dob);
                     
                     const clinicalContextObj: any = { ...selectedPatient };
+                    clinicalContextObj.preferred_language = sessionLanguage;
                     if (!isStrictConfirmSvc) {
                         if (!clinicalContextObj.pcp_medications || clinicalContextObj.pcp_medications === 'None reported' || clinicalContextObj.pcp_medications.trim() === '') {
                             clinicalContextObj.pcp_medications = 'The client reports no current prescribed medications at the time of the assessment.';
@@ -1284,6 +1335,10 @@ const Record: React.FC = () => {
                 formData.append('case_manager_lic', resolvedCmLic);
                 formData.append('supervisor_name', resolvedSupName);
                 formData.append('supervisor_lic', resolvedSupLic);
+                formData.append('session_language', sessionLanguage);
+                if (linkedIhvLabel && svcTemplateId === 'tcm_case_assignment_note') {
+                    formData.append('linked_initial_home_visit', linkedIhvLabel);
+                }
 
                 // Compute a unique service title to avoid n8n deduplicating multiple identical templates 
                 const sameTypeBefore = allServicesToProcess.slice(0, i).filter(s => s.subTemplate === svc.subTemplate).length;
@@ -1363,6 +1418,15 @@ const Record: React.FC = () => {
 
                     if (selectedPatient) mergePatientIntoNote(normalized, selectedPatient);
                     if (userProfile || userClinic) mergeProfileIntoNote(normalized, userProfile, userClinic);
+
+                    resolveKnownConfirms(normalized, {
+                        caseManagerName: resolvedCmName,
+                        supervisorName: resolvedSupName,
+                        agencyName: resolvedAgencyName,
+                        language: sessionLanguage,
+                        clientPhone: (selectedPatient as any)?.phone || '',
+                        initialHomeVisitDateTime: svcTemplateId === 'tcm_case_assignment_note' ? linkedIhvLabel : ''
+                    });
                     
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations
                     if (!normalized.encounter) normalized.encounter = {} as any;

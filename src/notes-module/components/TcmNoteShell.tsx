@@ -1070,15 +1070,49 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
     const pendingConfirms = useMemo(() => findPendingConfirms(mergedNote), [mergedNote]);
 
-    const blockIfPendingReview = (action: 'sign' | 'sync', items: string[] = pendingConfirms): boolean => {
-        if (items.length === 0) return false;
+    // Required fields no longer block saving: a note missing any of them is saved as
+    // "Pending TCM Review" and only signing / Amexzone sync are blocked.
+    const findMissingRequired = (n: any): string[] => {
+        const missing: string[] = [];
+        const isBlank = (v: any) => !v || String(v).trim() === '' || String(v).trim() === '—';
+        const dosVal = n?.encounter?.dos_date || n?.meta?.dos_date || n?.meta?.visitDate;
+        if (isBlank(dosVal)) missing.push('Date of Service (DOS)');
+        const cmVal = n?.signatures?.cm_name || n?.signatures?.case_manager?.name || n?.staff?.case_manager_name;
+        if (isBlank(cmVal)) missing.push('Case Manager');
+        const supVal = n?.signatures?.sup_name || n?.signatures?.supervisor?.name || n?.staff?.supervisor_name;
+        if (isBlank(supVal)) missing.push('Supervisor');
+        const hasDomain = Object.values(n?.services?.domains_selected || {}).some(Boolean) ||
+            (n?.joint_services && n.joint_services.some((s: any) => Object.values(s?.services?.domains_selected || {}).some(Boolean)));
+        if (!hasDomain) missing.push('At least one domain');
+        const diags = n?.diagnoses || n?.diagnosis;
+        const hasDiag = Array.isArray(diags) ? diags.some((d: any) => (d?.name && String(d.name).trim()) || (d?.icd10 && String(d.icd10).trim())) : (diags && typeof diags === 'object' && Object.keys(diags).length > 0);
+        if (!hasDiag) missing.push('At least one diagnosis');
+        return missing;
+    };
+
+    const missingRequired = useMemo(() => findMissingRequired(mergedNote), [mergedNote]);
+
+    const blockIfPendingReview = (action: 'sign' | 'sync', targetNote: any = mergedNote): boolean => {
+        const confirms = findPendingConfirms(targetNote);
+        const required = findMissingRequired(targetNote);
+        if (confirms.length === 0 && required.length === 0) return false;
         const verbEs = action === 'sign' ? 'firmar' : 'sincronizar con Amexzone';
         const verbEn = action === 'sign' ? 'signed' : 'synced to Amexzone';
+        const partsEs: string[] = [];
+        const partsEn: string[] = [];
+        if (required.length > 0) {
+            partsEs.push(`completa: ${required.join(', ')}`);
+            partsEn.push(`complete: ${required.join(', ')}`);
+        }
+        if (confirms.length > 0) {
+            partsEs.push(`resuelve ${confirms.length} campo(s) [CONFIRM]`);
+            partsEn.push(`resolve ${confirms.length} [CONFIRM] item(s)`);
+        }
         toast.error(
             language === 'es'
-                ? `Nota pendiente de revisión: resuelve ${items.length} campo(s) [CONFIRM] antes de ${verbEs}.`
-                : `Pending TCM Review: resolve ${items.length} [CONFIRM] item(s) before this note can be ${verbEn}.`,
-            { duration: 6000 }
+                ? `Nota pendiente de revisión: ${partsEs.join(' y ')} antes de ${verbEs}.`
+                : `Pending TCM Review: ${partsEn.join(' and ')} before this note can be ${verbEn}.`,
+            { duration: 7000 }
         );
         return true;
     };
@@ -1293,50 +1327,20 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
             return;
         }
 
-        // Mandatory validations: DOS, Case Manager, Supervisor, at least 1 domain, at least 1 diagnosis
-        const dosVal = mergedNote.encounter?.dos_date || (mergedNote as any).meta?.dos_date || (mergedNote as any).meta?.visitDate;
-        if (!dosVal || dosVal === '—' || dosVal.trim() === '') {
-            toast.error("Cannot save note: Date of Service (DOS) is required.");
-            return;
-        }
-
-        const cmVal = mergedNote.signatures?.cm_name || mergedNote.signatures?.case_manager?.name || mergedNote.staff?.case_manager_name;
-        if (!cmVal || cmVal.trim() === '' || cmVal === '—') {
-            toast.error("Cannot save note: Case Manager is required.");
-            return;
-        }
-
-        const supVal = mergedNote.signatures?.sup_name || mergedNote.signatures?.supervisor?.name || mergedNote.staff?.supervisor_name;
-        if (!supVal || supVal.trim() === '' || supVal === '—') {
-            toast.error("Cannot save note: Supervisor is required.");
-            return;
-        }
-
-        const hasDomain = Object.values(mergedNote.services?.domains_selected || {}).some(Boolean) ||
-            (mergedNote.joint_services && mergedNote.joint_services.some((s: any) => Object.values(s.services?.domains_selected || {}).some(Boolean)));
-        if (!hasDomain) {
-            toast.error("Cannot save note: At least one domain must be selected.");
-            return;
-        }
-
-        const diags = mergedNote.diagnoses || mergedNote.diagnosis;
-        const hasDiag = Array.isArray(diags) ? diags.some((d: any) => (d.name && d.name.trim()) || (d.icd10 && d.icd10.trim())) : (diags && typeof diags === 'object' && Object.keys(diags).length > 0);
-        if (!hasDiag) {
-            toast.error("Cannot save note: At least one diagnosis is required.");
-            return;
-        }
-
+        // Required fields (DOS, Case Manager, Supervisor, domain, diagnosis) no longer block saving.
+        // Missing ones mark the note "Pending TCM Review"; signing and Amexzone sync stay blocked.
         setIsSaving(true);
         try {
             const noteToSave = { ...mergedNote };
             if (lastSavedId) {
                 noteToSave.id = lastSavedId;
             }
-            const isPendingReview = pendingConfirms.length > 0;
+            const isPendingReview = pendingConfirms.length > 0 || missingRequired.length > 0;
             (noteToSave as any).meta = {
                 ...((noteToSave as any).meta || {}),
                 review_status: isPendingReview ? 'pending_tcm_review' : 'complete',
-                pending_confirm_items: pendingConfirms
+                pending_confirm_items: pendingConfirms,
+                missing_required_fields: missingRequired
             };
             const savedNoteResult = await storage.saveAnalyzedNote(noteToSave);
             if (savedNoteResult && savedNoteResult.id) {
@@ -1345,11 +1349,19 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
             setIsSaved(true);
             if (onSaveComplete) onSaveComplete(true);
             if (isPendingReview) {
+                const detailEs = [
+                    missingRequired.length > 0 ? `falta: ${missingRequired.join(', ')}` : '',
+                    pendingConfirms.length > 0 ? `${pendingConfirms.length} campo(s) [CONFIRM]` : ''
+                ].filter(Boolean).join('; ');
+                const detailEn = [
+                    missingRequired.length > 0 ? `missing: ${missingRequired.join(', ')}` : '',
+                    pendingConfirms.length > 0 ? `${pendingConfirms.length} [CONFIRM] item(s)` : ''
+                ].filter(Boolean).join('; ');
                 toast.success(
                     language === 'es'
-                        ? `Guardada como "Pending TCM Review" (${pendingConfirms.length} campo(s) [CONFIRM] por resolver antes de firmar o sincronizar).`
-                        : `Saved as "Pending TCM Review" (${pendingConfirms.length} [CONFIRM] item(s) to resolve before signing or syncing).`,
-                    { duration: 6000 }
+                        ? `Guardada como "Pending TCM Review" (${detailEs}). Resuélvelo antes de firmar o sincronizar.`
+                        : `Saved as "Pending TCM Review" (${detailEn}). Resolve before signing or syncing.`,
+                    { duration: 7000 }
                 );
             } else {
                 toast.success("Saved to Clinical History");
@@ -1495,7 +1507,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         const isEvent = overrideNote && (overrideNote.nativeEvent || overrideNote.target || typeof overrideNote.preventDefault === 'function');
         const effectiveOverride = (isEvent || !overrideNote || typeof overrideNote !== 'object') ? null : overrideNote;
         const note = (effectiveOverride || mergedNote) as any;
-        if (blockIfPendingReview('sync', findPendingConfirms(note))) return;
+        if (blockIfPendingReview('sync', note)) return;
         let noteIdToSync = note.id || lastSavedId;
 
         // Auto-save using duplicate-safe saveAnalyzedNote if no ID is present yet
@@ -1919,7 +1931,14 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     next_steps: globalNextStepsText
                 },
                 domains: compiledServices[0]?.domains || activeDomains,
-                service_type: compiledServices[0]?.service_type || ""
+                service_type: compiledServices[0]?.service_type || "",
+                // Manual review gate data, re-checked by the RPA bot before touching Amexzone
+                case_manager_name: note.signatures?.cm_name || note.signatures?.case_manager?.name || note.staff?.case_manager_name || "",
+                supervisor_name: note.signatures?.sup_name || note.signatures?.supervisor?.name || note.staff?.supervisor_name || "",
+                review: {
+                    missing_required_fields: findMissingRequired(note),
+                    pending_confirm_items: findPendingConfirms(note)
+                }
             };
 
             const { error: insertError } = await supabase
@@ -3058,7 +3077,10 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             ].join("\n");
 
                             const confirmMatches = Array.from(textsToScan.matchAll(/\[CONFIRM:\s*([^\]]+)\]/gi)).map(m => m[0].trim());
-                            const uniqueConfirms = Array.from(new Set(confirmMatches));
+                            const uniqueConfirms = [
+                                ...missingRequired.map(r => `[REQUIRED: ${r}]`),
+                                ...Array.from(new Set(confirmMatches))
+                            ];
                             const explicitReview = ((mergedNote.narrative as any)?.for_tcm_review || (mergedNote as any).for_tcm_review || "").trim();
 
                             if (!isInitialHv && uniqueConfirms.length === 0 && !explicitReview) return null;
