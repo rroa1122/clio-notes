@@ -1,63 +1,94 @@
-# 🧠 CEREBRO DEL PROYECTO: Mapa del Sistema (`SYSTEM_MAP.md`)
+# 🧠 PROJECT BRAIN: Complete System Map (`SYSTEM_MAP.md`)
 
-Este archivo es la **Memoria de Largo Plazo** de **Clio Notes (`clio-suite`)**. Todo agente de IA debe consultar este mapa para conocer al instante dónde vive cada componente sin tener que explorar desde cero.
-
----
-
-## 1. Infraestructura y Servidores
-- **Repositorio GitHub:** `https://github.com/rroa1122/clio-notes.git` (Rama principal: `main`).
-- **Servidor VPS Producción:** `root@clinicflow.dev` (Llave SSH local: `C:\Users\REINIER\.ssh\id_rsa_clinicflow`).
-  - **Frontend Producción:** `/var/www/clionotes` -> `https://notes.clinicflow.dev`
-  - **Base de Datos n8n:** `/root/n8n/database.sqlite` (Contenedor Docker: `n8n`, Webhook principal: `https://n8n.clinicflow.dev/webhook/medical-note`).
-  - **RPA Bot Producción:** `/root/amexzone-notes-bot/` (Proceso PM2: `amexzone-worker`).
-- **Supabase:** `https://toisvwdmscmnogzcpeyj.supabase.co` (`src/lib/supabaseClient.ts`). Cola de sincronización RPA: tabla `ehr_sync_jobs`.
+This file is the **Long-Term Architectural Memory** of **Clio Notes (`clio-suite`)**. Every AI agent (both Reinier's agent and his teammate's agent) must read this map to immediately understand the entire system without guessing or searching from scratch.
 
 ---
 
-## 2. Mapa de las 3 Capas Sincronizadas
-
-Cada vez que se crea o ajusta un **Template TCM**, intervienen exactamente estos archivos:
-
-### Capa 1: Frontend Web (`src/notes-module/`)
-1. `src/notes-module/pages/Record.tsx`:
-   - Selector de servicio (`subTemplate`), valores por defecto de **POS** (`place_of_service`), **minutos** (`duration_minutes`) y **unidades**.
-   - Construcción del payload que se envía al webhook de n8n (`https://n8n.clinicflow.dev/webhook/medical-note`).
-2. `src/notes-module/lib/clioUtils.ts`:
-   - `getTemplateIdFromSubTemplate`: Mapea el nombre del servicio seleccionado al `template_id` interno.
-   - `normalizeTcmNote`: Normaliza el JSON que devuelve n8n (respeta saltos de párrafo `\n\n`, viñetas `•`, múltiples dominios seleccionados y títulos exactos de servicio).
-3. `src/notes-module/lib/constants.ts`:
-   - `DEFAULT_TEMPLATES`: Catálogo de plantillas y sus campos (`TCM_DOMAINS`, `Progress Note`, `Facility`, `Summary`).
-4. `src/notes-module/components/TcmNoteShell.tsx`:
-   - Vista previa y modo edición de la nota generada.
-   - Resalta etiquetas `[CONFIRM: ...]` en color ámbar y muestra la tarjeta automática **`FOR TCM REVIEW`** al final.
-   - Envía el trabajo a Supabase (`ehr_sync_jobs`) al presionar sincronizar con Amexzone.
-
-### Capa 2: Workflows de IA Clínica en n8n (`scratch/`)
-- Script de despliegue a n8n: `node scratch/sync_all_workflows.cjs` (sube los JSON a `/tmp/`, actualiza `/root/n8n/database.sqlite` con Python y reinicia el contenedor `n8n`).
-- Archivos de Workflows:
-  - `scratch/tcm_workflow.json` -> Router principal y notas generales TCM.
-  - `scratch/initial_home_visit_workflow.json` (`ID: K3aJ8zeSNCBx6QFL`) -> Template #1 (`Initial Home Visit / Develop Intake`).
-  - `scratch/case_assignment_workflow.json` (`ID: K3zH8zeSNCBx6QFL`) -> Template #2 (`New Referral - Initial Telephone Contact and Coordination of Initial Home Visit`).
-  - `scratch/assessment_workflow.json` -> Template de `Assessment`.
-  - `scratch/service_plan_workflow.json` -> Template de `Service Plan Development`.
-  - `scratch/adult_certification_workflow.json` -> Template de `Adult Certification`.
-
-### Capa 3: Amexzone RPA Bot (`amexzone-bot/`)
-1. `amexzone-bot/worker.js`:
-   - Escucha `ehr_sync_jobs` en Supabase.
-   - `mapClioServiceToAmexzone`: Traduce o pasa literal el nombre del servicio hacia Amexzone EHR.
-2. `amexzone-bot/src/amexzone/encounterService.js`:
-   - `fillServiceModal`: Selecciona el servicio exacto en el modal de Amexzone, marca los dominios (`1` al `12`), el POS, el tiempo/unidades y pega el `summary_notes`.
+## 1. Infrastructure, URLs & Servers
+- **GitHub Repository:** `https://github.com/rroa1122/clio-notes.git` (Main branch: `main`).
+- **Production Web App:** `https://notes.clinicflow.dev` (hosted on VPS `root@clinicflow.dev` at `/var/www/clionotes`).
+- **n8n AI Engine:** `https://n8n.clinicflow.dev` (Webhook: `/webhook/medical-note`, SQLite DB on VPS: `/root/n8n/database.sqlite`, Docker container: `n8n`).
+- **Amexzone RPA Bot (Production):** `/root/amexzone-notes-bot/` on VPS (managed by PM2 process `amexzone-worker`). Local source code: `amexzone-bot/`.
+- **Supabase Project:** `https://toisvwdmscmnogzcpeyj.supabase.co` (configured in `src/lib/supabaseClient.ts`).
 
 ---
 
-## 3. Tabla Maestra de Templates TCM Configurados
+## 2. Supabase Database Tables
+All data persistence and RPA queues run through Supabase:
+- **`notes`**: Clinical notes (TCM & Psychiatry), JSON content, signature status, and metadata.
+- **`patients`**: Patient demographics, EMR ID, Case No, diagnoses, medications, and intake documents.
+- **`amexzone_note_tasks`**: RPA queue table connecting Clio Notes (`TcmNoteShell.tsx` / `SyncPortal.tsx`) with the Playwright worker (`amexzone-bot/worker.js`).
+- **`profiles`**: User profiles, roles, setup completion status, and clinic membership.
+- **`clinics`**: Clinic/agency details and multi-tenant configuration.
+- **`provider_integrations`**: Encrypted EHR credentials (Amexzone username/password per provider) used by the RPA bot and `SyncPortal.tsx`.
+- **`audit_logs`**: HIPAA/security audit trail (`src/services/auditService.ts`, `src/pages/AuditLogs.tsx`).
+- **`calendars` & `events`**: Provider scheduling and appointment conflict detection (`src/services/calendarService.ts`).
+- **`clinic_call_intakes`**: Call intake records.
 
-| # | Nombre del Servicio (UI & Amexzone) | `template_id` | POS por Defecto | Tiempo / Unidades | Workflow n8n | Estado |
+---
+
+## 3. Complete Frontend Route & Module Map (`src/App.tsx`)
+
+### A. Authentication, MFA & Security (`src/context/AuthContext.tsx`)
+- `/login` (`src/pages/Login.tsx`) & `/signup` (`src/pages/Signup.tsx`)
+- `/auth/invite` (`src/pages/auth/Invite.tsx`) & `/auth/reset` (`src/pages/auth/ResetPassword.tsx`)
+- **MFA Flow:** `src/pages/MfaEnrollment.tsx` and `src/pages/MfaChallenge.tsx` (uses `src/components/ui/OtpInput.tsx`).
+- **Onboarding Guard:** `src/components/auth/SetupGuard.tsx` -> redirects new users to `/setup` (`src/pages/Setup.tsx`).
+- **Inactivity Lock:** `src/components/auth/ScreenLockOverlay.tsx`.
+
+### B. Patients & Amexzone Intake (`src/pages/`)
+- `/patients` (`src/pages/Patients.tsx`): Patient directory, creation (`src/notes-module/components/PatientCreateModal.tsx`), and editing (`PatientEditModal.tsx`).
+- `/patients/:id` (`src/pages/PatientDetail.tsx`): Full patient chart, history calendar (`PatientHistoryCalendar.tsx`), and intake data.
+- **Intake Processor:** `src/lib/services/amexzoneIntakeProcessor.ts` and `src/lib/services/patientIntakeService.ts` parse uploaded Amexzone intake/assessment documents to auto-populate patient demographics and clinical fields.
+
+### C. Clinical Notes Module (`src/notes-module/`)
+- `/notes/new` (`src/notes-module/pages/Record.tsx`):
+  - Audio recording/dictation (`RecorderCard.tsx`), patient selector (`PatientSelector.tsx`), service/subTemplate selector, POS, time/units spinner, and TCM domain checkboxes.
+  - Sends payload to n8n webhook (`https://n8n.clinicflow.dev/webhook/medical-note`).
+- `/notes/history` (`src/notes-module/pages/NotesHistory.tsx`): List of all generated notes, filters, and sync statuses.
+- `/notes/templates` (`src/notes-module/pages/Templates.tsx`): Template management (restricted to primary admin).
+- **Note Rendering & Editing:**
+  - `src/notes-module/components/TcmNoteShell.tsx`: Renders TCM notes, interactive edit mode, `[CONFIRM: ...]` amber badges, automatic `FOR TCM REVIEW` card, signature capture, and "Sync to Amexzone" trigger.
+  - `src/notes-module/components/ClioNoteViewer.tsx`: Renders Psychiatry notes (`TabHPI.tsx`, `TabMeds.tsx`, `TabExam.tsx`, `TabROS.tsx`, `TabAssessment.tsx`, `TabScreenings.tsx`).
+- **Printing & Signatures:**
+  - `/notes/print/:id` (`src/notes-module/pages/PrintNote.tsx`, `src/notes-module/components/EcwPrintNote.tsx`, `NotePrintPreview.tsx`, `src/notes-module/lib/PDFService.ts`).
+  - `/patients/print-assessment/:id` (`src/pages/PrintAssessment.tsx`).
+  - `/sign-note/:token` (`src/notes-module/pages/SignNote.tsx`, `SignatureModal.tsx`, `SignaturePad.tsx`).
+
+### D. EHR Sync Portal, Settings & Admin (`src/pages/`)
+- `/sync` (`src/pages/SyncPortal.tsx`): Live dashboard for Amexzone RPA tasks (`amexzone_note_tasks`), credential status (`provider_integrations`), error formatting (`src/lib/services/syncErrorFormatter.ts`), and retry controls.
+- `/settings` (`src/pages/Settings.tsx`): User and clinic settings.
+- `/audit-logs` (`src/pages/AuditLogs.tsx`): Security and activity logs.
+- `/platform-admin` (`src/pages/PlatformAdmin.tsx`): Super-admin portal.
+
+---
+
+## 4. The 3 Synchronized Layers for TCM Templates
+
+Whenever creating or modifying a **TCM Template**, these 3 layers must stay in sync:
+
+1. **Layer 1 — Frontend (`src/notes-module/`):**
+   - `src/notes-module/pages/Record.tsx` (service selector, default POS, minutes/units, webhook payload).
+   - `src/notes-module/lib/clioUtils.ts` (`getTemplateIdFromSubTemplate`, `normalizeTcmNote`).
+   - `src/notes-module/lib/constants.ts` (`DEFAULT_TEMPLATES` catalog).
+   - `src/notes-module/components/TcmNoteShell.tsx` (display, edit mode, `[CONFIRM: ...]` badges, and RPA task creation).
+2. **Layer 2 — n8n AI Workflows (`scratch/`):**
+   - Workflow JSONs: `scratch/*_workflow.json`.
+   - Deployment script: `node scratch/sync_all_workflows.cjs` (uploads JSONs to VPS `/tmp/`, updates `/root/n8n/database.sqlite`, and restarts Docker `n8n`).
+3. **Layer 3 — Amexzone RPA Bot (`amexzone-bot/`):**
+   - `amexzone-bot/worker.js`: Polls `amexzone_note_tasks`, maps service names via `mapClioServiceToAmexzone`, and launches Playwright tasks (`src/tasks/progressNoteTask.js`).
+   - `amexzone-bot/src/amexzone/encounterService.js`: Automates Amexzone EHR modal (`fillServiceModal`), selects service, POS, time/units, domains `1-12`, and pastes `summary_notes`.
+   - Supporting RPA modules: `authService.js`, `sessionManager.js`, `browser.js`, `patientService.js`, `appointmentService.js`, `availabilityService.js`.
+
+---
+
+## 5. Master Table of TCM Templates
+
+| # | Service Name (UI & Amexzone) | `template_id` | Default POS | Default Time / Units | n8n Workflow File & ID | Status |
 |---|---|---|---|---|---|---|
-| 1 | `Initial Home Visit / Develop Intake` | `tcm_initial_home_visit_note` | `12 - Home` | `98 min` (`7u`) | `initial_home_visit_workflow.json` (`K3aJ8zeSNCBx6QFL`) | ✅ Perfeccionado y en Producción |
-| 2 | `New Referral - Initial Telephone Contact and Coordination of Initial Home Visit` | `tcm_case_assignment_note` | `11 - Office` | `25 min` (`2u`) | `case_assignment_workflow.json` (`K3zH8zeSNCBx6QFL`) | ✅ Perfeccionado y en Producción |
-| 3 | `Assessment` | `tcm_assessment_note` | `12 - Home` / `11 - Office` | Variable | `assessment_workflow.json` | ⏳ Disponible para ajustes |
-| 4 | `TCM Service Plan Development` | `tcm_service_plan_note` | `11 - Office` | Variable | `service_plan_workflow.json` | ⏳ Disponible para ajustes |
-| 5 | `Adult Certification` | `tcm_adult_certification_note` | `11 - Office` | Variable | `adult_certification_workflow.json` | ⏳ Disponible para ajustes |
-| 6 | `TCM Progress Note` (Spaced / General) | `tcm_progress_note` | Variable | Variable | `tcm_workflow.json` | ⏳ Disponible para ajustes |
+| 1 | `Initial Home Visit / Develop Intake` | `tcm_initial_home_visit_note` | `12 - Home` | `98 min` (`7u`) | `initial_home_visit_workflow.json` (`K3aJ8zeSNCBx6QFL`) | ✅ Live in Production |
+| 2 | `New Referral - Initial Telephone Contact and Coordination of Initial Home Visit` | `tcm_case_assignment_note` | `11 - Office` | `25 min` (`2u`) | `case_assignment_workflow.json` (`K3zH8zeSNCBx6QFL`) | ✅ Live in Production |
+| 3 | `Assessment` | `tcm_assessment_note` | `12 - Home` / `11 - Office` | Variable | `assessment_workflow.json` | ⏳ Ready for adjustments |
+| 4 | `TCM Service Plan Development` | `tcm_service_plan_note` | `11 - Office` | Variable | `service_plan_workflow.json` | ⏳ Ready for adjustments |
+| 5 | `Adult Certification` | `tcm_adult_certification_note` | `11 - Office` | Variable | `adult_certification_workflow.json` | ⏳ Ready for adjustments |
+| 6 | `TCM Progress Note` (Spaced / General) | `tcm_progress_note` | Variable | Variable | `tcm_workflow.json` | ⏳ Ready for adjustments |
