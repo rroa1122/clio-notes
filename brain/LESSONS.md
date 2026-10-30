@@ -33,3 +33,6 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
    - Algunos archivos del repositorio usan saltos de línea Windows (`CRLF`). Al usar `edit_file`, emplear bloques cortos y exactos para evitar fallos de coincidencia.
 3. **Verificación Obligatoria Antes de Subir:**
    - Siempre ejecutar `npm run build` (`tsc -b && vite build`) y confirmar **0 errores** antes de hacer commit o desplegar.
+4. **Convivencia en Equipo (Idioma y Bloqueo de Alcance / Scope Lock):**
+   - Nunca guardar preferencias personales de un desarrollador (como forzar español o inglés) en las reglas compartidas de GitHub (`AGENTS.md`, `GEMINI.md`, `.agents/rules/`). El agente responde en el idioma en que le escriba cada desarrollador (respetando la regla local `user_global` de cada máquina).
+   - **Scope Lock estricto:** Ningún agente puede modificar templates, pantallas o funciones que no pertenezcan a la tarea pedida por el usuario en ese momento.

@@ -1,31 +1,28 @@
-# Clio Notes (`clio-suite`) — Guía para Agentes de IA y Desarrolladores
+# Clio Notes (`clio-suite`) — Guide for AI Agents & Developers
 
-Este repositorio contiene el sistema completo de **Clio Notes** (`https://notes.clinicflow.dev`), incluyendo el Frontend, los workflows de generación clínica en **n8n** y el **RPA Bot de sincronización con Amexzone EHR**.
+This repository contains the complete **Clio Notes** system (`https://notes.clinicflow.dev`), including the React Frontend, the clinical AI workflows in **n8n**, and the **Amexzone EHR RPA Sync Bot**.
 
-## Reglas Principales para el Agente
-1. **Idioma:** Responde y explica siempre los cambios en **español corto, claro y sencillo**.
-2. **Confirmación:** Antes de empezar a implementar código o desplegar, explica tu plan y **pide confirmación al usuario**.
-3. **Verificación:** Siempre verifica que `npm run build` compile sin errores antes de hacer commit o subir cambios.
+## Core Rules for AI Agents
+1. **Language:** Respond in the **same language the user writes in** (English or Spanish), while respecting any machine-local `user_global` rules.
+2. **Confirmation:** Before implementing code changes or deploying, explain your plan briefly and **ask the user for confirmation**.
+3. **Scope Lock (Team Safety):** Only touch the files and templates relevant to the user's current request. Do not alter or refactor unrelated templates or features created by the other developer.
+4. **Build Verification:** Always verify that `npm run build` compiles with 0 errors before committing or pushing changes.
 
-## Estructura del Proyecto
-- **`src/`** — Aplicación Frontend (React 19 + TypeScript + Vite + Tailwind + Supabase).
-  - `src/notes-module/pages/Record.tsx`: Grabación/dictado de notas TCM y selector de servicios/plantillas.
-  - `src/notes-module/lib/clioUtils.ts`: Normalización de notas TCM (`normalizeTcmNote`) y mapeo de plantillas.
-  - `src/notes-module/lib/constants.ts`: Catálogo de plantillas TCM.
-  - `src/notes-module/components/TcmNoteShell.tsx`: Vista y edición interactiva de notas TCM y envío a la cola de sincronización EHR (`ehr_sync_jobs`).
-- **`scratch/*_workflow.json` y `scratch/sync_all_workflows.cjs`** — Workflows de IA en n8n para cada plantilla TCM y script de sincronización a `/root/n8n/database.sqlite`.
-- **`amexzone-bot/`** — Worker RPA en Node.js + Playwright (`worker.js` y `src/amexzone/encounterService.js`) que toma trabajos de Supabase y los registra automáticamente en Amexzone EHR.
-- **`scripts/flow.cjs`** — Programa CLI unificado para el trabajo en equipo entre desarrolladores y agentes.
+## Project Brain (`brain/`)
+Before starting any task, read the persistent Project Brain:
+- `brain/STATE.md` — Current project status and recent changes.
+- `brain/SYSTEM_MAP.md` — Exact map of the 3 layers (Frontend, n8n, RPA Bot) and TCM templates table.
+- `brain/LESSONS.md` — Clinical and technical rules that must never be violated.
+- `brain/AGENTS_CATALOG.md` — Specialized sub-agents to invoke for each layer.
 
-## Cómo Usar el Programa de Flujo de Trabajo (`npm run flow`)
-Tanto el usuario (menú interactivo con `npm run flow`) como el agente de IA pueden ejecutar estos comandos:
-
-- **Ver estado:** `npm run flow -- status`
-- **Sincronizar cambios del compañero:** `npm run flow -- sync`
-- **Crear rama para nueva tarea:** `npm run flow -- start <nombre-tarea>`
-- **Compilar, guardar commit y subir a GitHub:** `npm run flow -- save "<mensaje>"`
-- **Desplegar a producción (`clinicflow.dev`):**
+## Team Workflow CLI (`npm run flow`)
+Both developers and AI agents can run these commands (`scripts/flow.cjs`):
+- **Check status:** `npm run flow -- status`
+- **Sync teammate's latest changes:** `npm run flow -- sync`
+- **Create clean branch for a new task:** `npm run flow -- start <task-name>`
+- **Build, commit, and push to GitHub:** `npm run flow -- save "<message>"`
+- **Deploy to production (`clinicflow.dev`):**
   - `npm run flow -- deploy all` (Frontend + n8n + RPA Bot)
-  - `npm run flow -- deploy web` (Solo Frontend)
-  - `npm run flow -- deploy n8n` (Solo Workflows n8n)
-  - `npm run flow -- deploy bot` (Solo RPA Bot Amexzone)
+  - `npm run flow -- deploy web` (Frontend only)
+  - `npm run flow -- deploy n8n` (n8n Workflows only)
+  - `npm run flow -- deploy bot` (Amexzone RPA Bot only)

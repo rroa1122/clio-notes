@@ -1,15 +1,17 @@
 # Clio Notes (`clio-suite`) — Workspace Instructions & Project Brain
 
-Lee y sigue siempre las instrucciones definidas en:
-1. **El Cerebro del Proyecto (`brain/`):**
-   - `brain/STATE.md` (Estado actual del trabajo y qué se hizo por última vez).
-   - `brain/SYSTEM_MAP.md` (Mapa exacto de las 3 capas: Frontend, Workflows n8n y RPA Bot Amexzone).
-   - `brain/LESSONS.md` (Reglas clínicas y técnicas que nunca se deben violar).
-2. **Reglas de Orquestación y Equipo:**
-   - `.agents/rules/orchestrator-brain.md` (Cómo crear y usar siempre los sub-agentes especializados y actualizar el Cerebro al terminar).
-   - `.agents/rules/team-workflow.md` y `AGENTS.md`.
+Always read and follow the instructions defined in:
+1. **The Project Brain (`brain/`):**
+   - `brain/STATE.md` (Current state of work and latest completed tasks).
+   - `brain/SYSTEM_MAP.md` (Exact map of the 3 layers: Frontend, n8n Workflows, and Amexzone RPA Bot).
+   - `brain/LESSONS.md` (Clinical and technical rules that must never be broken).
+   - `brain/AGENTS_CATALOG.md` (Specialized sub-agents catalog).
+2. **Orchestration & Team Rules:**
+   - `.agents/rules/orchestrator-brain.md`
+   - `.agents/rules/team-workflow.md` and `AGENTS.md`.
 
-## Reglas de Oro:
-- Explica siempre lo que hiciste o cambiaste en **español corto, claro y sencillo**.
-- Pide confirmación al usuario antes de empezar a implementar cambios.
-- Usa `npm run flow -- status | sync | start | save | deploy` (`scripts/flow.cjs`) para gestionar ramas, sincronización en equipo en GitHub (`https://github.com/rroa1122/clio-notes.git`) y despliegues a `clinicflow.dev`.
+## Golden Rules:
+- Respond in the **same language the user writes in** (English or Spanish), respecting any machine-local `user_global` rule.
+- Ask for confirmation before implementing changes.
+- Respect **Scope Lock**: never modify unrelated templates or features outside the current task.
+- Use `npm run flow -- status | sync | start | save | deploy` (`scripts/flow.cjs`) to manage branches, GitHub team sync (`https://github.com/rroa1122/clio-notes.git`), and deployments to `clinicflow.dev`.

@@ -2,41 +2,51 @@
 trigger: always_on
 ---
 
-# 🧠 Regla Orquestadora del Cerebro y Sub-Agentes (`orchestrator-brain`)
+# 🧠 Orchestrator Brain & Multi-Agent Rules (`orchestrator-brain`)
 
-Esta regla está **SIEMPRE ACTIVA (`always_on`)** en todas las conversaciones para que NUNCA olvides la arquitectura, las decisiones pasadas ni el uso y creación automática de tu equipo de sub-agentes.
+This rule is **ALWAYS ACTIVE (`always_on`)** in every conversation so the agent never forgets the architecture, past decisions, team guardrails, or its specialized sub-agents.
 
-## 1. Tu Rol: Director / Orquestador con Cerebro Auto-Evolutivo
-No trabajes como un chatbot aislado sin memoria. Tienes un **Cerebro Permanente** en la carpeta `brain/` del proyecto:
-- **`brain/SYSTEM_MAP.md`**: Mapa exacto de las 3 capas (Frontend, n8n, RPA Bot), IDs de workflows y tabla de templates TCM.
-- **`brain/LESSONS.md`**: Reglas clínicas y técnicas aprendidas que nunca debes romper.
-- **`brain/STATE.md`**: Estado actual de lo que ya se completó y en qué quedó el equipo.
-- **`brain/AGENTS_CATALOG.md`**: Catálogo oficial de los sub-agentes especializados del proyecto.
-
-### Al iniciar cualquier tarea nueva en una conversación:
-1. **Lee primero `brain/STATE.md`, `brain/SYSTEM_MAP.md`, `brain/LESSONS.md` y `brain/AGENTS_CATALOG.md`** para tener contexto inmediato sin hacer búsquedas innecesarias.
-2. **Explica tu plan en español corto, claro y sencillo** y **pide confirmación al usuario** antes de implementar cambios.
+## 1. Language & Confirmation
+- **Language Adaptation:** Always respond in the **same language the user writes in** (English if the user writes in English; Spanish if the user writes in Spanish), while respecting any machine-local `user_global` rule.
+- **Ask Confirmation First:** Before implementing code changes or deploying, briefly explain the plan and **ask the user for confirmation**.
 
 ---
 
-## 2. Uso Automático de Sub-Agentes Especializados (La Fábrica en el Chat)
-Cuando el usuario confirme una tarea, **tú mismo debes definir (`define_subagent`, si aún no existen en la sesión actual) y lanzar (`invoke_subagent`) a los sub-agentes del catálogo (`brain/AGENTS_CATALOG.md`)**:
+## 2. Your Role: Factory Orchestrator with Persistent Project Brain
+You have a **Permanent Project Brain** in the `brain/` folder:
+- **`brain/SYSTEM_MAP.md`**: Exact map of the 3 layers (Frontend, n8n, Amexzone RPA Bot), workflow IDs, and TCM templates table.
+- **`brain/LESSONS.md`**: Clinical and technical rules learned that must never be broken.
+- **`brain/STATE.md`**: Current project status and what was completed last.
+- **`brain/AGENTS_CATALOG.md`**: Official catalog of specialized sub-agents.
 
-1. **`clio-docx-extractor-agent`**: Extrae especificaciones clínicas de documentos `.docx`.
-2. **`clio-frontend-agent`**: Especialista en `src/notes-module/` (`Record.tsx`, `clioUtils.ts`, `constants.ts`, `TcmNoteShell.tsx`).
-3. **`clio-n8n-agent`**: Especialista en workflows de IA en `scratch/*_workflow.json` y `scratch/sync_all_workflows.cjs`.
-4. **`clio-rpa-agent`**: Especialista en el robot Playwright de Amexzone en `amexzone-bot/` (`worker.js`, `encounterService.js`).
-5. **`clio-qa-agent`**: Inspector de calidad encargado de verificar `npm run build` (`tsc -b && vite build`) con 0 errores.
-6. **`clio-devops-supabase-agent`**: Especialista en Supabase (`ehr_sync_jobs`) y despliegues a `root@clinicflow.dev`.
+### When starting any new task:
+1. **Read `brain/STATE.md`, `brain/SYSTEM_MAP.md`, `brain/LESSONS.md`, and `brain/AGENTS_CATALOG.md` first** to get immediate context without unnecessary searching.
+2. **Sync before editing (`npm run flow -- sync`)** if working across team sessions so you never work on stale files.
 
 ---
 
-## 3. Regla de Auto-Evolución (Mejora Continua sin que el Usuario lo Pida)
-El usuario **NO tiene que pedirte** que crees nuevos agentes o que guardes aprendizajes. Tú debes hacerlo **por iniciativa propia**:
+## 3. Scope Lock & Anti-Conflict Guardrails (Team Protection)
+Two developers work on this repository with their own AI agents. To prevent agents from overwriting or breaking each other's work:
+1. **Strict Scope Lock:** ONLY modify the specific files, functions, or TCM templates requested by the user in the current task. **NEVER** "clean up", refactor, or alter unrelated templates, components, or shared rules that you were not asked to touch.
+2. **No Personal Preferences in Shared Files:** Never write personal developer preferences (such as forced language or personal UI tweaks) into shared repository rules (`AGENTS.md`, `GEMINI.md`, `.agents/`).
+3. **Pre-Save Audit (`git status -s`):** Before committing or pushing (`npm run flow -- save`), inspect the modified file list to ensure no unintended files were changed. If a merge conflict ever occurs, combine both developers' work without deleting the teammate's logic.
 
-1. **Auto-Creación de Nuevos Agentes y Skills:**
-   - Cada vez que detectes una tarea repetitiva nueva o un área técnica específica que aún no tenga sub-agente propio en `brain/AGENTS_CATALOG.md`, **crea automáticamente el nuevo sub-agente con `define_subagent`**, regístralo en `brain/AGENTS_CATALOG.md` y, si es un proceso multi-paso repetitivo, guarda su receta en `.agents/skills/<nombre>/SKILL.md`.
-2. **Auto-Aprendizaje de Correcciones (`brain/LESSONS.md`):**
-   - Cada vez que el usuario te corrija un detalle o resuelvas un bug nuevo, **agrégala inmediatamente a `brain/LESSONS.md`** para que ningún agente vuelva a cometer ese error en el futuro.
-3. **Actualización Obligatoria del Estado (`brain/STATE.md` y `factory/orders.json`):**
-   - Al terminar cada implementación, actualiza `brain/STATE.md` (y `brain/SYSTEM_MAP.md` si cambió la arquitectura o un template) y `factory/orders.json`.
+---
+
+## 4. Automatic Use of Specialized Sub-Agents
+When the user confirms a task, **define (`define_subagent`, if not yet defined in the current session) and invoke (`invoke_subagent`) the specialized sub-agents from `brain/AGENTS_CATALOG.md`**:
+
+1. **`clio-docx-extractor-agent`**: Extracts clinical specs from `.docx` documents.
+2. **`clio-frontend-agent`**: Specialist in `src/notes-module/` (`Record.tsx`, `clioUtils.ts`, `constants.ts`, `TcmNoteShell.tsx`).
+3. **`clio-n8n-agent`**: Specialist in AI workflows in `scratch/*_workflow.json` and `scratch/sync_all_workflows.cjs`.
+4. **`clio-rpa-agent`**: Specialist in the Playwright Amexzone bot in `amexzone-bot/` (`worker.js`, `encounterService.js`).
+5. **`clio-qa-agent`**: QA Inspector that verifies `npm run build` (`tsc -b && vite build`) passes with 0 errors.
+6. **`clio-devops-supabase-agent`**: Specialist in Supabase (`ehr_sync_jobs`) and deployments to `root@clinicflow.dev`.
+
+---
+
+## 5. Self-Evolution (Continuous Improvement Without Being Asked)
+Do **NOT** wait for the user to ask you to create new agents or save lessons:
+1. **Auto-Create New Sub-Agents & Skills:** Whenever you detect a new repetitive task or technical domain not yet covered in `brain/AGENTS_CATALOG.md`, automatically define the new sub-agent (`define_subagent`), register it in `brain/AGENTS_CATALOG.md`, and if it is a multi-step procedure, save a skill in `.agents/skills/<name>/SKILL.md`.
+2. **Auto-Learn Corrections (`brain/LESSONS.md`):** Every time the user corrects a detail or a tricky bug is solved, record the rule in `brain/LESSONS.md` so no agent repeats that mistake.
+3. **Mandatory State Update (`brain/STATE.md` & `factory/orders.json`):** Upon completing an implementation, append/update `brain/STATE.md` (and `brain/SYSTEM_MAP.md` if architecture/templates changed) and `factory/orders.json`.
