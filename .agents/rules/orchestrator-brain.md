@@ -41,7 +41,10 @@ When the user confirms a task, **define (`define_subagent`, if not yet defined i
 3. **`clio-n8n-agent`**: Specialist in AI workflows in `scratch/*_workflow.json` and `scratch/sync_all_workflows.cjs`.
 4. **`clio-rpa-agent`**: Specialist in the Playwright Amexzone bot in `amexzone-bot/` (`worker.js`, `encounterService.js`).
 5. **`clio-qa-agent`**: QA Inspector that verifies `npm run build` (`tsc -b && vite build`) passes with 0 errors.
-6. **`clio-devops-supabase-agent`**: Specialist in Supabase (`ehr_sync_jobs`) and deployments to `root@clinicflow.dev`.
+6. **`clio-code-reviewer-agent`**: The Guardian that inspects `git diff` / `git status -s` to enforce Scope Lock and security before saving.
+7. **`clio-debugger-agent`**: The Detective that diagnoses live errors in PM2 (`amexzone-worker`), Docker (`n8n`), and Supabase (`ehr_sync_jobs`).
+8. **`clio-visual-verifier-agent`**: Visual Browser Inspector that verifies UI rendering and layouts with Playwright.
+9. **`clio-devops-supabase-agent`**: Specialist in Supabase (`ehr_sync_jobs`) and deployments to `root@clinicflow.dev`.
 
 ---
 
