@@ -1102,11 +1102,10 @@ export const mergeJointNotes = (notes: ClioNote[]): ClioNote => {
                 jointOutcome += jointOutcome ? `\n${currentOutcome}` : currentOutcome;
             }
         }
+        // CM house style (Amexzone): one Next Step(s) per encounter = what follows the LAST service
         if (note.narrative?.next_steps && note.narrative.next_steps !== "—") {
             const currentNextSteps = note.narrative.next_steps.trim();
-            if (currentNextSteps && !jointNextSteps.includes(currentNextSteps)) {
-                jointNextSteps += jointNextSteps ? `\n${currentNextSteps}` : currentNextSteps;
-            }
+            if (currentNextSteps) jointNextSteps = currentNextSteps;
         }
         
         // Merge diagnoses uniquely
@@ -1198,7 +1197,7 @@ export const stripNarrativeLabels = (note: any): any => {
             const purpose = line.match(/^(\s*)Purpose\s*:\s*(.*)$/i);
             if (purpose) {
                 const rest = purpose[2].trim();
-                if (/^to\s/i.test(rest)) return `${purpose[1]}This service was provided to ${rest.replace(/^to\s+/i, '')}`;
+                // CMs open with the purpose sentence itself ("To obtain and review ..."), without a label
                 return purpose[1] + rest.charAt(0).toUpperCase() + rest.slice(1);
             }
             const m = line.match(SECTION_LABEL_RE);
@@ -1209,15 +1208,9 @@ export const stripNarrativeLabels = (note: any): any => {
             return line;
         }).join('\n');
     };
-    // A purpose written without its label ("To obtain and review ...") is a fragment: make it a sentence
-    const fixOpening = (text: any) => {
-        if (typeof text !== 'string' || !text) return text;
-        return text.replace(/^(\s*)To\s+([a-z])/, (_m, sp, ch) => `${sp}This service was provided to ${ch}`);
-    };
     const fixNarr = (n: any) => {
         if (!n || typeof n !== 'object') return;
         ['summary_notes', 'outcome_of_services', 'next_steps'].forEach(k => { if (k in n) n[k] = fix(n[k]); });
-        if ('summary_notes' in n) n.summary_notes = fixOpening(n.summary_notes);
     };
     fixNarr(note.narrative);
     (note.joint_services || []).forEach((s: any) => fixNarr(s?.narrative));

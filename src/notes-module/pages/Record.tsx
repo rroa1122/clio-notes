@@ -1364,6 +1364,8 @@ const Record: React.FC = () => {
                 const resolvedSupLic = clinicSettings?.supervisorNpi || userClinic?.supervisor_license || '';
 
                 formData.append('agency_name', resolvedAgencyName);
+                // Legal name (NPI registry) for the TCM introduction, as the CMs write it
+                formData.append('agency_legal_name', (clinicSettings as any)?.legalName || (userClinic as any)?.settings?.legal_name || '');
                 formData.append('facility_name', resolvedAgencyName);
                 formData.append('facility_address', resolvedAddress);
                 formData.append('facility_phone', resolvedPhone);
