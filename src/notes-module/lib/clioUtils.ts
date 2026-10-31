@@ -126,6 +126,41 @@ export const resolveKnownConfirms = (note: any, values: KnownNoteValues): any =>
     return note;
 };
 
+/**
+ * Removes "gap narration" sentences (e.g. "No allergies were provided in the available
+ * information.") that state an item is missing from the record instead of omitting it.
+ * Conservative: a sentence is removed only if it BOTH says something was not available/
+ * provided/listed/reported AND refers to the record/inputs/materials/transcript.
+ */
+const GAP_STATEMENT = /\b(?:no|not)\b[^.]*\b(?:available|provided|listed|reported|documented|identified|given)\b/i;
+const GAP_SOURCE = /\b(?:available (?:information|record|records|materials|inputs|data|documentation)|(?:the )?inputs?\b|(?:the )?materials? reviewed|(?:information|record|records) reviewed|reviewed for this (?:note|intake)|for this (?:note|intake)|in the record\b|transcript)/i;
+
+export const stripGapNarration = (note: any): any => {
+    if (!note || typeof note !== 'object') return note;
+    const cleanText = (text: any) => {
+        if (typeof text !== 'string' || !text.trim()) return text;
+        return text
+            .split('\n')
+            .map(line => {
+                if (/^\s*•/.test(line)) return line;
+                const sentences = line.match(/[^.!?]+(?:[.!?]+|$)\s*/g) || [line];
+                const kept = sentences.filter(s => !(GAP_STATEMENT.test(s) && GAP_SOURCE.test(s) && !s.includes('[CONFIRM')));
+                return kept.join('').replace(/\s{2,}/g, ' ').trim();
+            })
+            .filter(line => line.length > 0)
+            .join('\n');
+    };
+    const cleanNarrative = (n: any) => {
+        if (!n || typeof n !== 'object') return;
+        ['summary_notes', 'outcome_of_services', 'next_steps'].forEach(k => {
+            if (k in n) n[k] = cleanText(n[k]);
+        });
+    };
+    cleanNarrative(note.narrative);
+    (note.joint_services || []).forEach((s: any) => cleanNarrative(s?.narrative));
+    return note;
+};
+
 export const mergeProfileIntoNote = (note: ClioNote, profile: any, clinic: any): ClioNote => {
     if (!note.facility) note.facility = {} as any;
     if (!note.staff) note.staff = {} as any;

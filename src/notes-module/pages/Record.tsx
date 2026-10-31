@@ -13,7 +13,7 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms } from '../lib/clioUtils';
+import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
@@ -376,6 +376,19 @@ const Record: React.FC = () => {
     const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
     const [isTimeOutPopoverOpen, setIsTimeOutPopoverOpen] = useState(false);
     const [mobileTimeModal, setMobileTimeModal] = useState<'in' | 'out' | null>(null);
+    const [tcmSocialGate, setTcmSocialGate] = useState<{ missing: string[] } | null>(null);
+    const [isRecheckingSocial, setIsRecheckingSocial] = useState(false);
+    const tcmSocialGateResolver = useRef<((proceed: boolean) => void) | null>(null);
+    const askTcmSocialGate = (missing: string[]) => new Promise<boolean>(resolve => {
+        tcmSocialGateResolver.current = resolve;
+        setTcmSocialGate({ missing });
+    });
+    const closeTcmSocialGate = (proceed: boolean) => {
+        setTcmSocialGate(null);
+        const resolve = tcmSocialGateResolver.current;
+        tcmSocialGateResolver.current = null;
+        if (resolve) resolve(proceed);
+    };
     const [isMobileServiceModalOpen, setIsMobileServiceModalOpen] = useState(false);
 
     const [subTemplateSearchQuery, setSubTemplateSearchQuery] = useState('');
@@ -1181,10 +1194,7 @@ const Record: React.FC = () => {
                 .filter(([key]) => social[key] === undefined || social[key] === null || String(social[key]).trim() === '')
                 .map(([, label]) => label);
             if (missingSocial.length > 0) {
-                const msg = language === 'es'
-                    ? `El formulario TCM Social de este cliente está incompleto. Faltan: ${missingSocial.join(', ')}.\n\nSin estos datos la nota omitirá esa información o la marcará para revisión.\n\n¿Generar la nota de todas formas?`
-                    : `This client's TCM Social form is incomplete. Missing: ${missingSocial.join(', ')}.\n\nWithout this data the note will omit that information or flag it for review.\n\nGenerate the note anyway?`;
-                if (!window.confirm(msg)) return;
+                if (!(await askTcmSocialGate(missingSocial))) return;
             }
         }
 
@@ -1427,6 +1437,7 @@ const Record: React.FC = () => {
                         clientPhone: (selectedPatient as any)?.phone || '',
                         initialHomeVisitDateTime: svcTemplateId === 'tcm_case_assignment_note' ? linkedIhvLabel : ''
                     });
+                    if (isSvcTcm) stripGapNarration(normalized);
                     
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations
                     if (!normalized.encounter) normalized.encounter = {} as any;
@@ -2745,6 +2756,94 @@ const Record: React.FC = () => {
             />
 
             {/* Mobile Time Selection Dialog */}
+            {/* TCM Social completeness gate (replaces the browser confirm) */}
+            <Dialog open={tcmSocialGate !== null} onOpenChange={(open) => { if (!open) closeTcmSocialGate(false); }}>
+                <DialogContent className="max-w-[440px] p-6 rounded-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl">
+                    <DialogHeader className="pb-1 text-left">
+                        <div className="flex items-center gap-2.5">
+                            <div className="size-9 rounded-2xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center shrink-0">
+                                <ClipboardList size={18} className="text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <DialogTitle className="text-base font-bold text-slate-800 dark:text-slate-100">
+                                {language === 'es' ? 'TCM Social incompleto' : 'TCM Social is incomplete'}
+                            </DialogTitle>
+                        </div>
+                        <DialogDescription className="text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400 pt-2">
+                            {language === 'es'
+                                ? 'Sin estos datos la nota omitirá esa información o la dejará marcada para revisión del TCM.'
+                                : 'Without this data the note will omit that information or flag it for TCM review.'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-2 rounded-2xl border border-amber-200/70 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-2">
+                            {language === 'es' ? 'Campos que faltan' : 'Missing fields'}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {(tcmSocialGate?.missing || []).map(field => (
+                                <span key={field} className="text-[11.5px] font-semibold px-2 py-0.5 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300">
+                                    {field}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="mt-4 flex flex-col gap-2">
+                        <button
+                            type="button"
+                            onClick={() => { if (selectedPatient?.id) window.open(`/patients/${selectedPatient.id}`, '_blank', 'noopener'); }}
+                            className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold transition-colors"
+                        >
+                            {language === 'es' ? 'Completar TCM Social' : 'Complete TCM Social'}
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isRecheckingSocial}
+                            onClick={async () => {
+                                if (!selectedPatient?.id) return;
+                                setIsRecheckingSocial(true);
+                                try {
+                                    const fresh = await storage.getPatient(selectedPatient.id);
+                                    if (fresh) {
+                                        setSelectedPatient(fresh);
+                                        const social: any = (fresh as any).tcm_social_needs || {};
+                                        const stillMissing = TCM_SOCIAL_KEY_FIELDS
+                                            .filter(([key]) => social[key] === undefined || social[key] === null || String(social[key]).trim() === '')
+                                            .map(([, label]) => label);
+                                        if (stillMissing.length === 0) {
+                                            closeTcmSocialGate(false);
+                                            toast.success(language === 'es' ? 'TCM Social completo. Presiona Generar de nuevo.' : 'TCM Social complete. Press Generate again.');
+                                        } else {
+                                            setTcmSocialGate({ missing: stillMissing });
+                                        }
+                                    }
+                                } finally {
+                                    setIsRecheckingSocial(false);
+                                }
+                            }}
+                            className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                        >
+                            {isRecheckingSocial && <Loader2 size={14} className="animate-spin" />}
+                            {language === 'es' ? 'Ya lo completé, verificar de nuevo' : "I've completed it, check again"}
+                        </button>
+                        <div className="flex gap-2 pt-1">
+                            <button
+                                type="button"
+                                onClick={() => closeTcmSocialGate(false)}
+                                className="flex-1 h-9 rounded-xl text-[12.5px] font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+                            >
+                                {language === 'es' ? 'Cancelar' : 'Cancel'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => closeTcmSocialGate(true)}
+                                className="flex-1 h-9 rounded-xl text-[12.5px] font-semibold text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30 transition-colors"
+                            >
+                                {language === 'es' ? 'Generar de todas formas' : 'Generate anyway'}
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             <Dialog open={mobileTimeModal !== null} onOpenChange={(open) => { if (!open) setMobileTimeModal(null); }}>
                 <DialogContent className="max-w-[320px] p-5 rounded-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl">
                     <DialogHeader className="pb-2 text-center items-center">
