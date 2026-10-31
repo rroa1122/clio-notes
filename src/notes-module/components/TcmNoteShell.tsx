@@ -64,14 +64,37 @@ const formatValueForPrint = (value: any): string | null => {
 
 // Inline [CONFIRM] resolver: which inputs to show, how to phrase the value in the note,
 // and which patient-chart fields to update so future notes already have the data.
-type ConfirmKind = 'emergency_contact' | 'pcp' | 'residence' | 'income' | 'allergies' | 'pharmacy' | 'suggestion' | 'generic';
+type ConfirmKind = 'emergency_contact' | 'pcp' | 'residence' | 'income' | 'allergies' | 'pharmacy' | 'suggestion' | 'example' | 'generic';
 
 // [CONFIRM: label || suggested text]: the model proposes the agency's standard wording; the TCM accepts it with one click or edits it.
-const parseConfirmTag = (tag: string): { label: string; suggestion: string } => {
+// "|| e.g. ..." marks an example for a client-specific fact: shown as a guide, never prefilled.
+const EXAMPLE_PREFIX = /^(?:e\.g\.|eg\.|ej\.|example:|ejemplo:)\s*/i;
+const parseConfirmTag = (tag: string): { label: string; suggestion: string; example: string } => {
     const inner = String(tag || '').replace(/^\[CONFIRM:\s*/i, '').replace(/\]$/, '');
     const idx = inner.indexOf('||');
-    if (idx === -1) return { label: inner.trim(), suggestion: '' };
-    return { label: inner.slice(0, idx).trim(), suggestion: inner.slice(idx + 2).trim() };
+    if (idx === -1) return { label: inner.trim(), suggestion: '', example: '' };
+    const extra = inner.slice(idx + 2).trim();
+    if (EXAMPLE_PREFIX.test(extra)) return { label: inner.slice(0, idx).trim(), suggestion: '', example: extra.replace(EXAMPLE_PREFIX, '').trim() };
+    return { label: inner.slice(0, idx).trim(), suggestion: extra, example: '' };
+};
+
+// Removes the sentence (or bullet line) that holds a [CONFIRM] tag: used when the TCM omits that part.
+const removeSentenceWithTag = (text: string, tag: string): string => {
+    if (typeof text !== 'string' || !text.includes(tag)) return text;
+    const TOKEN = '\u0000CONFIRMTOKEN\u0000';
+    // Hide every [CONFIRM ...] (they can contain periods) so the sentence split is not fooled
+    const hidden: string[] = [];
+    const masked = text.split(tag).join(TOKEN).replace(/\[CONFIRM:[^\]]*\]/gi, (m) => { hidden.push(m); return `\u0001${hidden.length - 1}\u0001`; });
+    const out = masked
+        .split('\n')
+        .map(line => {
+            if (!line.includes(TOKEN)) return line;
+            const sentences = line.match(/[^.!?]+[.!?]+["')]*\s*|[^.!?]+$/g) || [line];
+            return sentences.filter(x => !x.includes(TOKEN)).join('').trim();
+        })
+        .filter(line => line.trim() !== '' && line.trim() !== '•')
+        .join('\n');
+    return out.replace(/\u0001(\d+)\u0001/g, (_m, i) => hidden[Number(i)]);
 };
 const confirmLabelTag = (tag: string) => `[CONFIRM: ${parseConfirmTag(tag).label}]`;
 type ConfirmField = { key: string; label: string; placeholder?: string };
@@ -99,6 +122,7 @@ const CONFIRM_KIND_FIELDS: Record<ConfirmKind, ConfirmField[]> = {
     allergies: [{ key: 'value', label: 'Allergies', placeholder: 'Penicillin (anaphylaxis)' }],
     pharmacy: [{ key: 'value', label: 'Pharmacy', placeholder: 'Salus Pharmacy' }],
     suggestion: [{ key: 'value', label: 'Suggested text (edit if needed)', placeholder: '' }],
+    example: [{ key: 'value', label: 'Text', placeholder: '' }],
     generic: [{ key: 'value', label: 'Value', placeholder: '' }],
 };
 
@@ -203,7 +227,7 @@ const highlightWarnings = (text: any, onConfirmClick?: ((tag: string) => void) |
                             title="Click to complete this item"
                             className="confirm-badge no-print-link bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-300/80 dark:border-amber-800/60 px-1.5 py-0.5 rounded font-semibold italic text-[11px] inline-flex items-center gap-0.5 mx-0.5 leading-none underline decoration-dotted underline-offset-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 cursor-pointer transition-colors"
                         >
-                            ⚠️ {confirmLabelTag(part)}{parseConfirmTag(part).suggestion ? ' ✎' : ''}
+                            ⚠️ {confirmLabelTag(part)}{parseConfirmTag(part).suggestion || parseConfirmTag(part).example ? ' ✎' : ''}
                         </button>
                     );
                 }
@@ -1209,18 +1233,23 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     const pendingConfirms = useMemo(() => findPendingConfirms(mergedNote), [mergedNote]);
 
     // Inline [CONFIRM] resolver state
-    const [confirmEditor, setConfirmEditor] = useState<{ tag: string; kind: ConfirmKind } | null>(null);
+    const [confirmEditor, setConfirmEditor] = useState<{ tag: string; kind: ConfirmKind; example?: string } | null>(null);
     const [confirmValues, setConfirmValues] = useState<Record<string, string>>({});
     const [confirmSaveToChart, setConfirmSaveToChart] = useState(true);
     const [isApplyingConfirm, setIsApplyingConfirm] = useState(false);
 
     const openConfirmEditor = (tag: string) => {
         if (isSigned) return;
-        const { label, suggestion } = parseConfirmTag(tag);
+        const { label, suggestion, example } = parseConfirmTag(tag);
         setConfirmSaveToChart(true);
         if (suggestion) {
             setConfirmValues({ value: suggestion });
             setConfirmEditor({ tag, kind: 'suggestion' });
+            return;
+        }
+        if (example) {
+            setConfirmValues({});
+            setConfirmEditor({ tag, kind: 'example', example });
             return;
         }
         const kind = detectConfirmKind(label);
@@ -1257,11 +1286,39 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         }
     };
 
+    // The TCM leaves the item out: the sentence with the [CONFIRM] is removed from the note.
+    const omitConfirmItem = () => {
+        if (!confirmEditor) return;
+        const { tag } = confirmEditor;
+        const { label } = parseConfirmTag(tag);
+        const omitIn = (path: string, value: any) => {
+            if (typeof value === 'string' && value.includes(tag)) handleUpdateField(path, removeSentenceWithTag(value, tag));
+        };
+        ['summary_notes', 'outcome_of_services', 'next_steps'].forEach(k => omitIn(`narrative.${k}`, (mergedNote.narrative as any)?.[k]));
+        (mergedNote.joint_services || []).forEach((svc: any, i: number) => {
+            ['summary_notes', 'outcome_of_services', 'next_steps'].forEach(k => omitIn(`joint_services.${i}.narrative.${k}`, svc?.narrative?.[k]));
+        });
+        const review = (mergedNote.narrative as any)?.for_tcm_review;
+        if (typeof review === 'string' && review.includes(label)) {
+            const rest = review.split('\n').filter((l: string) => !l.includes(label)).join('\n').trim();
+            handleUpdateField('narrative.for_tcm_review', rest || 'None');
+        }
+        const prev = Array.isArray((mergedNote.meta as any)?.accepted_suggestions) ? (mergedNote.meta as any).accepted_suggestions : [];
+        handleUpdateField('meta.accepted_suggestions', [...prev, { item: label, omitted: true, at: new Date().toISOString() }]);
+        toast.success(language === 'es' ? 'Se omitió esa parte de la nota.' : 'That part was left out of the note.');
+        setIsSaved(false);
+        setConfirmEditor(null);
+    };
+
     const applyConfirmEditor = async () => {
         if (!confirmEditor) return;
         const { tag, kind } = confirmEditor;
         const text = composeConfirmText(kind, confirmValues);
         if (!text) {
+            if (kind === 'suggestion' || kind === 'example' || kind === 'generic') {
+                omitConfirmItem();
+                return;
+            }
             toast.error(language === 'es' ? 'Escribe el dato antes de aplicar.' : 'Enter a value before applying.');
             return;
         }
@@ -1275,15 +1332,16 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         });
 
         // Audit trail: which suggested wordings the TCM accepted (unchanged or edited)
-        if (kind === 'suggestion') {
-            const { label, suggestion } = parseConfirmTag(tag);
+        if (kind === 'suggestion' || kind === 'example') {
+            const { label, suggestion, example } = parseConfirmTag(tag);
             const prev = Array.isArray((mergedNote.meta as any)?.accepted_suggestions) ? (mergedNote.meta as any).accepted_suggestions : [];
-            handleUpdateField('meta.accepted_suggestions', [...prev, { item: label, text, edited: text.trim() !== suggestion.trim(), at: new Date().toISOString() }]);
+            const base = (suggestion || example).trim();
+            handleUpdateField('meta.accepted_suggestions', [...prev, { item: label, text, from_example: kind === 'example', edited: text.trim() !== base, at: new Date().toISOString() }]);
         }
 
         // 2) Optionally persist the data in the patient chart for future notes
         const patientId = (mergedNote as any).patient_id || (mergedNote.patient as any)?.id;
-        if (confirmSaveToChart && patientId && kind !== 'generic' && kind !== 'suggestion') {
+        if (confirmSaveToChart && patientId && kind !== 'generic' && kind !== 'suggestion' && kind !== 'example') {
             setIsApplyingConfirm(true);
             try {
                 const current = await storage.getPatient(patientId);
@@ -3620,7 +3678,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         </DialogDescription>
                     </DialogHeader>
                     <div className="mt-2 space-y-2.5">
-                        {(confirmEditor?.kind === 'suggestion' || confirmEditor?.kind === 'generic') && (
+                        {(confirmEditor?.kind === 'suggestion' || confirmEditor?.kind === 'generic' || confirmEditor?.kind === 'example') && (
                             <label className="block">
                                 <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                     {confirmEditor?.kind === 'suggestion'
@@ -3631,12 +3689,28 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                     autoFocus
                                     rows={4}
                                     value={confirmValues.value || ''}
+                                    placeholder={confirmEditor?.example || ''}
                                     onChange={(e) => setConfirmValues({ value: e.target.value })}
                                     className="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-[13px] leading-snug text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
                                 />
                             </label>
                         )}
-                        {(confirmEditor && confirmEditor.kind !== 'suggestion' && confirmEditor.kind !== 'generic' ? CONFIRM_KIND_FIELDS[confirmEditor.kind] : []).map((field, i) => (
+                        {confirmEditor?.kind === 'example' && confirmEditor.example && (
+                            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/60 p-2.5">
+                                <p className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    {language === 'es' ? 'Ejemplo de otros casos (guía, adáptalo a este cliente)' : 'Example from other cases (guide; adapt it to this client)'}
+                                </p>
+                                <p className="mt-1 text-[12px] italic leading-snug text-slate-600 dark:text-slate-300">{confirmEditor.example}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => setConfirmValues({ value: confirmEditor.example || '' })}
+                                    className="mt-1.5 text-[11.5px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                >
+                                    {language === 'es' ? 'Usar ejemplo y editarlo' : 'Use example and edit it'}
+                                </button>
+                            </div>
+                        )}
+                        {(confirmEditor && !['suggestion', 'generic', 'example'].includes(confirmEditor.kind) ? CONFIRM_KIND_FIELDS[confirmEditor.kind] : []).map((field, i) => (
                             <label key={field.key} className="block">
                                 <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{field.label}</span>
                                 <input
@@ -3649,13 +3723,13 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 />
                             </label>
                         ))}
-                        {confirmEditor && confirmEditor.kind !== 'suggestion' && confirmEditor.kind !== 'generic' && composeConfirmText(confirmEditor.kind, confirmValues) && (
+                        {confirmEditor && !['suggestion', 'generic', 'example'].includes(confirmEditor.kind) && composeConfirmText(confirmEditor.kind, confirmValues) && (
                             <p className="text-[11.5px] text-slate-500 dark:text-slate-400 leading-snug">
                                 <span className="font-semibold">{language === 'es' ? 'Quedará en la nota: ' : 'Will read in the note: '}</span>
                                 {composeConfirmText(confirmEditor.kind, confirmValues)}
                             </p>
                         )}
-                        {confirmEditor && confirmEditor.kind !== 'generic' && confirmEditor.kind !== 'suggestion' && ((mergedNote as any).patient_id || (mergedNote.patient as any)?.id) && (
+                        {confirmEditor && !['suggestion', 'generic', 'example'].includes(confirmEditor.kind) && ((mergedNote as any).patient_id || (mergedNote.patient as any)?.id) && (
                             <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
                                 <input type="checkbox" checked={confirmSaveToChart} onChange={(e) => setConfirmSaveToChart(e.target.checked)} className="size-4 accent-indigo-600" />
                                 <span className="text-[12.5px] text-slate-600 dark:text-slate-300">
@@ -3676,6 +3750,16 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                             </button>
                         ) : <span />}
                         <div className="flex gap-2">
+                            {confirmEditor && ['suggestion', 'generic', 'example'].includes(confirmEditor.kind) && (
+                                <button
+                                    type="button"
+                                    onClick={omitConfirmItem}
+                                    title={language === 'es' ? 'Quita esa oración de la nota' : 'Removes that sentence from the note'}
+                                    className="h-9 px-3 rounded-xl text-[12.5px] font-semibold text-rose-500 hover:text-rose-600"
+                                >
+                                    {language === 'es' ? 'Omitir' : 'Omit'}
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => setConfirmEditor(null)}

@@ -95,9 +95,9 @@ export const resolveKnownConfirms = (note: any, values: KnownNoteValues): any =>
     const rules: Array<{ re: RegExp; value?: string }> = [
         { re: /\[CONFIRM:\s*(?:the\s+)?(?:TCM|case manager|targeted case manager)(?:'s)?\s*(?:full\s*)?name[^\]]*\]/gi, value: values.caseManagerName },
         { re: /\[CONFIRM:\s*(?:the\s+)?(?:TCM\s+)?supervisor(?:'s)?\s*(?:full\s*)?name[^\]]*\]/gi, value: values.supervisorName },
-        { re: /\[CONFIRM:\s*agency(?:\s*\/\s*clinic)?\s*name\s*\]/gi, value: values.agencyName },
-        { re: /\[CONFIRM:\s*(?:client'?s?\s*)?(?:preferred\s+language|language\s+of\s+(?:the\s+)?session|session\s+language|language)\s*\]/gi, value: values.language },
-        { re: /\[CONFIRM:\s*(?:the\s+)?client(?:'s)?\s*(?:tele)?phone(?:\s*number)?\s*\]/gi, value: values.clientPhone },
+        { re: /\[CONFIRM:\s*agency(?:\s*\/\s*clinic)?\s*name\s*(?:\|\|[^\]]*)?\]/gi, value: values.agencyName },
+        { re: /\[CONFIRM:\s*(?:client'?s?\s*)?(?:preferred\s+language|language\s+of\s+(?:the\s+)?session|session\s+language|language)\s*(?:\|\|[^\]]*)?\]/gi, value: values.language },
+        { re: /\[CONFIRM:\s*(?:the\s+)?client(?:'s)?\s*(?:tele)?phone(?:\s*number)?\s*(?:\|\|[^\]]*)?\]/gi, value: values.clientPhone },
         { re: /\[CONFIRM:[^\]]*(?:initial home visit|IHV)[^\]]*(?:date|time)[^\]]*\]/gi, value: values.initialHomeVisitDateTime },
         { re: /\[CONFIRM:[^\]]*(?:date|time)[^\]]*(?:initial home visit|IHV)[^\]]*\]/gi, value: values.initialHomeVisitDateTime },
     ];
