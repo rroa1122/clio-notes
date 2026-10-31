@@ -24,6 +24,9 @@ All data persistence and RPA queues run through Supabase:
 - **`audit_logs`**: HIPAA/security audit trail (`src/services/auditService.ts`, `src/pages/AuditLogs.tsx`).
 - **`calendars` & `events`**: Provider scheduling and appointment conflict detection (`src/services/calendarService.ts`).
 - **`clinic_call_intakes`**: Call intake records.
+- **`supervisor_feedback`**: Supervisor comments pasted by CMs with AI categorization, proposed note corrections, and link to learned documentation rules.
+- **`documentation_rules`**: Learned clinical documentation rules by profile (CM), clinic (agency), or global scope, with admin approval workflow (`pending`, `approved`, `rejected`).
+- **`supervisor_feedback_panel`**: Aggregated SQL view analyzing rejection trends by template and category.
 
 ---
 
