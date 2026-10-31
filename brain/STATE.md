@@ -15,7 +15,7 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 ## Lo que ya está Completado y Desplegado en Producción
 - **Rediseño Premium de TimeSpinner (Solución 1):**
   - Mantenida la estructura clásica de popovers independientes para `In`, `Out` y minutos en `Record.tsx`.
-  - Rediseño limpio del selector de hora con números digitales nítidos, segmented control AM/PM, botón "Ahora", presets simétricos y proporciones elegantes `rounded-2xl` a 280px. Desplegado a producción.
+  - Rediseño estilizado del selector de hora gemelo al calendario: fondo oscuro profundo `bg-card`, borde `border-border/50`, `shadow-xl`, segmented AM/PM, cabecera limpia y presets a 270px. Desplegado a producción.
 1. **Templates TCM v2 (Commits hasta `81168b1` de Claude / alegidos):**
    - **Formato determinista de nombres de pacientes:** "First Last" en la primera mención y luego primer nombre.
    - **Badges `[CONFIRM]` clickeables interactivos:** Permiten al clínico resolver y completar los datos directamente en la nota y sincronizar con la ficha del paciente.
