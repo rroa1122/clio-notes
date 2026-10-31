@@ -31,7 +31,11 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 4. **Exportación e Integración de los 10 Workflows de n8n:**
    - Todos los 10 workflows ahora residen formalmente en `scratch/`.
    - Se configuró [`scratch/sync_all_workflows.cjs`](scratch/sync_all_workflows.cjs) de forma multiplataforma (Windows y Linux en GitHub Actions) para inyectar los 10 workflows en la base de datos de n8n.
-5. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
+5. **Selector Unificado de Encuentro (Calendario + Horas Inicio y Fin):**
+   - Creado `src/components/ui/calendar-with-time-presets.tsx` (y alias `calendar-with-time-pressets.tsx`).
+   - Integra calendario y selector de horas completamente armonizado con la paleta Slate / Azul Noche de Clio Notes (`dark:bg-slate-900`, `dark:bg-slate-950`, `border-slate-800`), con selector de día refinado de 32px, dos columnas de hora (Inicio y Fin) de 08:00 a 18:00, y footer directo (`Date • 09:00 – 09:45 (45 min)`) con botón Continuar.
+   - Integrado en desktop y mobile en `src/notes-module/pages/Record.tsx`.
+6. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
    - Configurado para escuchar ramas `main` y `feat/**` / `feat/*`, desplegando automáticamente en cada push de Claude o el equipo.
 6. **Protocolo de Colaboración Multi-Agente (Anti-Conflicto):**
    - Documentado en `brain/SYSTEM_MAP.md` sección 6 para evitar bloqueos y colisiones entre Claude y Antigravity.

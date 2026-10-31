@@ -35,6 +35,7 @@ import { TimeSpinner } from '../../components/ui/time-spinner';
 import { Badge } from '../../components/ui/badge';
 import { Label } from '../../components/ui/label';
 import { DatePicker } from '../../components/ui/date-picker';
+import { CalendarWithTimePresets } from '../../components/ui/calendar-with-time-presets';
 import { TiltCard } from '../../components/ui/tilt-card';
 
 const getLocalDateString = () => {
@@ -386,6 +387,8 @@ const Record: React.FC = () => {
     const [showGuide, setShowGuide] = useState(() => localStorage.getItem('clio_hide_guide') !== 'true');
     const [isTemplatesLoading, setIsTemplatesLoading] = useState(true);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isEncounterPickerOpen, setIsEncounterPickerOpen] = useState(false);
+    const [isMobileEncounterPickerOpen, setIsMobileEncounterPickerOpen] = useState(false);
     const [isTimePopoverOpen, setIsTimePopoverOpen] = useState(false);
     const [isTimeOutPopoverOpen, setIsTimeOutPopoverOpen] = useState(false);
     const [mobileTimeModal, setMobileTimeModal] = useState<'in' | 'out' | null>(null);
@@ -2288,92 +2291,90 @@ const Record: React.FC = () => {
                                         {serviceDate && timeIn && <Check size={12} className="text-emerald-400 shrink-0" />}
                                     </div>
                                     {/* Desktop Date & Time Pill (hidden md:flex) */}
-                                    <div className="hidden md:flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-indigo-500/40 focus-within:ring-4 focus-within:ring-indigo-500/5 overflow-hidden mt-1 h-11 items-center">
-                                        {/* Date */}
-                                        <div className="flex-[1.0] min-w-[105px] border-r border-slate-100 dark:border-slate-800">
-                                            <DatePicker 
-                                                date={serviceDate} 
-                                                setDate={setServiceDate} 
-                                                className="h-11 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 px-2.5 font-medium text-slate-600 dark:text-slate-300 tracking-tight text-[13px]"
-                                            />
-                                        </div>
-                                        {/* Time In */}
-                                        <div className="border-r border-slate-100 dark:border-slate-800 h-full flex items-center pr-1">
-                                            <Popover open={isTimePopoverOpen} onOpenChange={setIsTimePopoverOpen}>
+                                    <Popover open={isEncounterPickerOpen} onOpenChange={setIsEncounterPickerOpen}>
+                                        <div className="hidden md:flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-indigo-500/40 focus-within:ring-4 focus-within:ring-indigo-500/5 overflow-hidden mt-1 h-11 items-center">
+                                            {/* Date */}
+                                            <div className="flex-[1.0] min-w-[110px] border-r border-slate-100 dark:border-slate-800 h-full">
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 dark:hover:bg-slate-800 px-2.5 font-semibold text-slate-500 dark:text-slate-300 min-w-[90px] w-auto flex items-center gap-1.5 justify-center transition-colors tracking-tight">
+                                                    <button
+                                                        type="button"
+                                                        className="h-full w-full px-3 font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer flex items-center justify-between text-[13px] tracking-tight group"
+                                                    >
+                                                        <span className="truncate">
+                                                            {serviceDate ? formatServiceDate(serviceDate, language) : (language === 'es' ? 'Fecha...' : 'Date...')}
+                                                        </span>
+                                                        <Calendar size={13} className="text-slate-400 group-hover:text-primary transition-colors shrink-0 ml-1.5" />
+                                                    </button>
+                                                </PopoverTrigger>
+                                            </div>
+                                            {/* Time In */}
+                                            <div className="border-r border-slate-100 dark:border-slate-800 h-full flex items-center">
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 dark:hover:bg-slate-800 px-2.5 font-semibold text-slate-500 dark:text-slate-300 min-w-[90px] w-auto flex items-center gap-1.5 justify-center transition-colors tracking-tight cursor-pointer">
                                                         <Clock size={14} className="text-slate-400 dark:text-slate-400 shrink-0" />
-                                                        <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeIn ? `In: ${timeIn}` : (language === 'es' ? 'Inicio' : 'Start')}</span>
+                                                        <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeIn || (language === 'es' ? 'Inicio' : 'Start')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card backdrop-blur-xl" side="bottom" align="center" sideOffset={8}>
-                                                    <TimeSpinner 
-                                                        initialTimeStr={timeIn}
-                                                        label={language === 'es' ? 'Inicio del encuentro' : 'Encounter Start'}
-                                                        onConfirm={(timeStr) => {
-                                                            handleTimeInChange(timeStr);
-                                                            setIsTimePopoverOpen(false);
-                                                        }} 
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                        </div>
-                                        {/* Time Out */}
-                                        <div className="border-r border-slate-100 dark:border-slate-800 h-full flex items-center pr-1">
-                                            <Popover open={isTimeOutPopoverOpen} onOpenChange={setIsTimeOutPopoverOpen}>
+                                            </div>
+                                            {/* Time Out */}
+                                            <div className="border-r border-slate-100 dark:border-slate-800 h-full flex items-center">
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 dark:hover:bg-slate-800 px-2.5 font-semibold text-slate-500 dark:text-slate-300 min-w-[90px] w-auto flex items-center gap-1.5 justify-center transition-colors tracking-tight">
+                                                    <Button variant="ghost" className="h-11 rounded-none hover:bg-slate-100 dark:hover:bg-slate-800 px-2.5 font-semibold text-slate-500 dark:text-slate-300 min-w-[90px] w-auto flex items-center gap-1.5 justify-center transition-colors tracking-tight cursor-pointer">
                                                         <Clock size={14} className="text-slate-400 dark:text-slate-400 shrink-0" />
-                                                        <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeOut ? `Out: ${timeOut}` : (language === 'es' ? 'Fin' : 'End')}</span>
+                                                        <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeOut || (language === 'es' ? 'Fin' : 'End')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card backdrop-blur-xl" side="bottom" align="center" sideOffset={8}>
-                                                    <TimeSpinner 
-                                                        initialTimeStr={timeOut}
-                                                        label={language === 'es' ? 'Fin del encuentro' : 'Encounter End'}
-                                                        onConfirm={(timeStr) => {
-                                                            handleTimeOutChange(timeStr);
-                                                            setIsTimeOutPopoverOpen(false);
-                                                        }} 
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
+                                            </div>
+                                            {/* Duration in Minutes */}
+                                            <div className="w-[90px] h-full flex items-center px-2 shrink-0">
+                                                <input 
+                                                    type="number"
+                                                    min="0"
+                                                    autoComplete="off"
+                                                    placeholder={language === 'es' ? "Min." : "Min"}
+                                                    value={durationMin}
+                                                    onChange={(e) => handleDurationMinChange(e.target.value)}
+                                                    style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                                                    className="h-full !border-0 focus:!border-0 focus:!border-transparent focus-visible:!border-0 focus-visible:!border-transparent bg-transparent text-slate-700 dark:text-slate-200 font-semibold focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none outline-none text-center text-[13px] w-full px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-pointer"
+                                                />
+                                            </div>
                                         </div>
-                                        {/* Duration in Minutes */}
-                                        <div className="w-[90px] h-full flex items-center px-2 shrink-0">
-                                            <input 
-                                                type="number"
-                                                min="0"
-                                                autoComplete="off"
-                                                placeholder={language === 'es' ? "Min." : "Min"}
-                                                value={durationMin}
-                                                onChange={(e) => handleDurationMinChange(e.target.value)}
-                                                style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
-                                                className="h-full !border-0 focus:!border-0 focus:!border-transparent focus-visible:!border-0 focus-visible:!border-transparent bg-transparent text-slate-700 dark:text-slate-200 font-semibold focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none outline-none text-center text-[13px] w-full px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-pointer"
+
+                                        <PopoverContent className="w-auto p-0 border-0 bg-transparent shadow-none overflow-visible rounded-2xl" align="start" sideOffset={8}>
+                                            <CalendarWithTimePresets
+                                                date={serviceDate}
+                                                onDateChange={setServiceDate}
+                                                timeIn={timeIn}
+                                                onTimeInChange={handleTimeInChange}
+                                                timeOut={timeOut}
+                                                onTimeOutChange={handleTimeOutChange}
+                                                durationMin={durationMin}
+                                                onDurationChange={handleDurationMinChange}
+                                                onConfirm={() => setIsEncounterPickerOpen(false)}
                                             />
-                                        </div>
-                                    </div>
+                                        </PopoverContent>
+                                    </Popover>
 
                                     {/* Mobile Date & Time 4-in-1 Row (grid md:hidden) */}
                                     <div className="grid grid-cols-4 gap-1.5 mt-1 md:hidden">
                                         {/* 1. Date */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-1 flex flex-col items-center justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden text-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsMobileEncounterPickerOpen(true)}
+                                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-1 flex flex-col items-center justify-center shadow-xs transition-colors hover:border-slate-350 dark:hover:border-slate-700 overflow-hidden text-center cursor-pointer"
+                                        >
                                             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate text-center w-full">
                                                 {language === 'es' ? 'Fecha' : 'Date'}
                                             </span>
-                                            <DatePicker 
-                                                date={serviceDate} 
-                                                setDate={setServiceDate} 
-                                                dateFormat="dd/MM/yy"
-                                                icon={<span className="hidden" />}
-                                                className="h-5 rounded-none border-0 shadow-none bg-transparent w-full focus-visible:ring-0 !px-0 font-bold text-slate-800 dark:text-slate-100 text-[11px] !justify-center text-center cursor-pointer"
-                                            />
-                                        </div>
+                                            <span className="text-[11px] font-bold text-slate-800 dark:text-slate-100 truncate">
+                                                {serviceDate ? formatServiceDate(serviceDate, language) : '--/--'}
+                                            </span>
+                                        </button>
 
                                         {/* 2. Start Time */}
                                         <button
                                             type="button"
-                                            onClick={() => setMobileTimeModal('in')}
+                                            onClick={() => setIsMobileEncounterPickerOpen(true)}
                                             className={cn(
                                                 "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1 flex flex-col items-center justify-center shadow-xs active:scale-[0.98] transition-all cursor-pointer text-center overflow-hidden",
                                                 timeIn ? "border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/10" : ""
@@ -2396,7 +2397,7 @@ const Record: React.FC = () => {
                                         {/* 3. End Time */}
                                         <button
                                             type="button"
-                                            onClick={() => setMobileTimeModal('out')}
+                                            onClick={() => setIsMobileEncounterPickerOpen(true)}
                                             className={cn(
                                                 "h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-1 flex flex-col items-center justify-center shadow-xs active:scale-[0.98] transition-all cursor-pointer text-center overflow-hidden",
                                                 timeOut ? "border-purple-500/30 bg-purple-50/20 dark:bg-purple-950/10" : ""
@@ -2417,7 +2418,7 @@ const Record: React.FC = () => {
                                         </button>
 
                                         {/* 4. Duration */}
-                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-1 flex flex-col items-center justify-center shadow-xs transition-colors hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden text-center">
+                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl h-11 px-1 flex flex-col items-center justify-center shadow-xs transition-colors hover:border-slate-350 dark:hover:border-slate-700 overflow-hidden text-center">
                                             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 truncate text-center w-full">
                                                 {language === 'es' ? 'Duración' : 'Duration'}
                                             </span>
@@ -2892,6 +2893,23 @@ const Record: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Mobile Unified Encounter Date & Time Dialog */}
+            <Dialog open={isMobileEncounterPickerOpen} onOpenChange={setIsMobileEncounterPickerOpen}>
+                <DialogContent className="max-w-[95vw] sm:max-w-[560px] p-0 border-0 bg-transparent shadow-none rounded-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+                    <CalendarWithTimePresets
+                        date={serviceDate}
+                        onDateChange={setServiceDate}
+                        timeIn={timeIn}
+                        onTimeInChange={handleTimeInChange}
+                        timeOut={timeOut}
+                        onTimeOutChange={handleTimeOutChange}
+                        durationMin={durationMin}
+                        onDurationChange={handleDurationMinChange}
+                        onConfirm={() => setIsMobileEncounterPickerOpen(false)}
+                    />
                 </DialogContent>
             </Dialog>
 
