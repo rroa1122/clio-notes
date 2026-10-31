@@ -1,0 +1,240 @@
+{
+  "id": "RvtViS0iE8lV67yf",
+  "name": "NOTA MEDICA SERVICE PLAN DISCUSSION",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1008,
+        -416
+      ],
+      "id": "6e589162-6443-479d-8e72-2c0c5d5f441e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tcm-service-plan-discussion",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "audio"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -416
+      ],
+      "id": "e99fb69a-39eb-4379-92f7-2c0a3753fed7",
+      "name": "Webhook",
+      "webhookId": "2c3c7f49-0b4c-4dd8-b148-aab2531947ac"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "=audio0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -416
+      ],
+      "id": "e5fde99f-8745-43b0-9c7a-f6285eec8eec",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a Targeted Case Manager (TCM) generating a structured clinical note for the **Fifth Encounter (Day 5 - Service Plan Discussion)**.\n\n### INPUT CONTEXT HEADER (DO NOT REMOVE OR EDIT THESE EXPRESSIONS)\n- Primary service provided: {{ $('Code in JavaScript2').item.json.body.primary_service_provided }}\n- Service Date: {{ $('Code in JavaScript4').item.json.body.service_date }}\n- Time In: {{ $('Code in JavaScript4').item.json.body.time_in }}\n- Time Out: {{ $('Code in JavaScript4').item.json.body.time_out }}\n- Patient Name: {{ $('Code in JavaScript2').item.json.patient_full_name }}\n- Patient DOB: {{ $('Code in JavaScript2').item.json.patient_dob }}\n- Patient Gender: {{ $('Code in JavaScript2').item.json.patient_gender }}\n- Patient Address: {{ $('Code in JavaScript2').item.json.patient_address }}\n- Patient Phone: {{ $('Code in JavaScript2').item.json.patient_phone }}\n- Preferred Language: {{ $('Code in JavaScript2').item.json.patient_full_object.preferred_language }}\n- Ethnicity: {{ $('Code in JavaScript2').item.json.patient_full_object.ethnicity }}\n- Patient Context: {{ $('Code in JavaScript4').item.json.body.patient_context }}\n- Clinical Context/History: {{ $('Code in JavaScript4').item.json.body.patient_clinical_context }}\n- Diagnoses: {{ $('Code in JavaScript2').item.json.patient_diagnoses }}\n- Presenting Problems: {{ $('Code in JavaScript2').item.json.patient_presenting_problems }}\n\n- PCP Name: {{ $('Code in JavaScript2').item.json.patient_pcp_name }}\n- PCP Phone: {{ $('Code in JavaScript2').item.json.patient_pcp_phone }}\n- PCP Address: {{ $('Code in JavaScript2').item.json.patient_pcp_address }}\n\n- Psych Name: {{ $('Code in JavaScript2').item.json.patient_psych_name }}\n- Psych Phone: {{ $('Code in JavaScript2').item.json.patient_psych_phone }}\n- Psych Address: {{ $('Code in JavaScript2').item.json.patient_psych_address }}\n- Psych Meds: {{ $('Code in JavaScript2').item.json.patient_psych_medications }}\n\n- Emergency Contact Name: {{ $('Code in JavaScript2').item.json.patient_full_object.emergency_contact_name }}\n- Emergency Contact Relation: {{ $('Code in JavaScript2').item.json.patient_full_object.emergency_contact_relation }}\n- Emergency Contact Phone: {{ $('Code in JavaScript2').item.json.patient_full_object.emergency_contact_phone }}\n\n- Agency Name: {{ $('Code in JavaScript4').item.json.body.agency_name }}\n- Facility Name: {{ $('Code in JavaScript4').item.json.body.facility_name }}\n- Facility Address: {{ $('Code in JavaScript4').item.json.body.facility_address }}\n- Facility Phone: {{ $('Code in JavaScript4').item.json.body.facility_phone }}\n- Facility Fax: {{ $('Code in JavaScript4').item.json.body.facility_fax }}\n- Facility Email: {{ $('Code in JavaScript4').item.json.body.facility_email }}\n\nTranscript / Notes details:\n{{ $json.text }}\n\n------------------------------------------------\n\n### GLOBAL RULES (CRITICAL)\n1) NO HALLUCINATIONS: Never invent factual data, except when strictly applying the Mandatory Default Stability rule below.\n2) MANDATORY DEFAULT STABILITY: If the input context/history or transcript DOES NOT mention a specific mandatory clinical point (such as insight, judgment, compliance, or psychiatric symptoms), you MUST describe the patient as stable, functional, safe, and compliant by default. NEVER state \"not described\", \"not mentioned\", or \"not documented\". Apply this stability assumption silently and seamlessly as if you observed it yourself (e.g., \"Insight and judgment were observed to be fair, and the client remained compliant with all prescribed regimens\").\n3) NO META-COMMENTARY (CRITICAL): You are writing a final, official medical record. NEVER refer to your system instructions, the 'transcript', 'patient context', 'source material', or 'default stability rules' in your text. Act entirely as the authoring clinician. DO NOT write meta-commentary like \"Source material did not provide a documented...\" or \"The transcript does not mention...\". Instead, either use the Mandatory Default Stability rule to describe the client as stable and compliant, or omit the sentence completely.\n4) TIME AND DURATION STRICT ISOLATION: Any mention in the input regarding start time, end time, duration of the service, or billing units MUST be used EXCLUSIVELY to populate the `encounter` fields. You are STRICTLY PROHIBITED from including any time, duration, scheduling, or unit details in the `summary_notes`, `outcome_of_services`, or any other narrative text.\n5) THIRD-PERSON NARRATIVE: ALWAYS write in the third person (e.g., \"The TCM arrived...\", \"He/She stated...\"). Do NOT use first-person.\n6) PROFESSIONAL CLINICAL TONE: Maintain a strict, objective clinical style. You are strictly PROHIBITED from quoting casual conversational filler.\n7) DOMAINS CHECKLIST RULE (HARD RULE): In `services.domains_selected`, you MUST check ONLY `1_mental_health_substance_abuse` as true. You MUST set all other 11 domains to false. The narrative prose breakdown is independent of the checklist; the checklist stays at #1 only.\n8) DIAGNOSES RULE (HARD RULE): Include EXACTLY ONE entry in the main diagnoses block: the referral diagnosis. The type MUST be exactly \"Rule-Out\". Never promote other diagnoses found in records to the main diagnoses block.\n9) NO GOALS/DATES/FREQUENCIES: Do NOT include any full goals, objectives, target dates, or frequencies. This note records that they were discussed and reviewed, it is not a copy of the plan.\n10) DATES CEILING: Any date you extract from records/inputs MUST NOT be later than the Date of Service (DOS). If a date is after DOS, do NOT output it.\n\n------------------------------------------------\n\n### PLACEHOLDER RESOLUTION RULES (CRITICAL)\nYou MUST substitute all bracketed placeholders (such as `[Client Full Name]`, `[PCP Facility Name]`, `[Psychiatric Provider Facility]`, `[medications]`, `[relationship]`, etc.) with the actual values provided in the \"INPUT CONTEXT HEADER\" above:\n- `[Client Full Name]` or `[Full Name]` -> Use the exact text of `Patient Name`.\n- `[First Name]` or `[First]` or `[Client First Name]` -> Use the exact text of `Patient First Name`.\n- `[Agency Legal Name]` -> Use the exact text of `Agency Name` (if empty, use \"ARC Mental Health\").\n- `[PCP Facility Name]` -> Use the clinic name where PCP practices (from the `Clinical Context/History` JSON, e.g. `Hialeah Medical Center` or similar, or `PCP Name` if clinic name is not specified).\n- `[full address]` (in PCP record context) -> Use the exact text of `PCP Address`.\n- `[name the specialties]` -> Use `primary care and psychiatric care`.\n- `[risk factors]` -> Use actual risk factors (e.g., `severe hypertension and Type 2 diabetes` or `chronic anxiety`).\n- `[medical diagnosis with ICD-10]` -> Use the medical diagnoses listed under `Diagnoses` or `Clinical Context/History` (e.g., `Type 2 diabetes mellitus without complications (E11.9)`).\n- `[transcribe medications exactly...]` -> Use the medications listed under PCP meds in `Clinical Context/History` (e.g., `Lisinopril 10mg QD, Metformina 850mg BID`).\n- `[labs/imaging/referrals/follow-up recommendations exactly as documented]` -> Extract any recommended tests or follow-ups, or if none are listed in the records, omit this sentence entirely.\n- `[Psychiatric Provider Facility]` -> Use Dra. Elena Rostova's office at `Psych Address`.\n- `[Provider Full Name, Credentials]` -> Use `Dra. Elena Rostova`.\n- `[psychiatric diagnosis with ICD-10]` -> Use `Generalized Anxiety Disorder (F41.1)` or `Trastorno de Ansiedad Generalizada (F41.1)`.\n- `[substance use diagnosis with ICD-10 if applicable]` -> Omit if not applicable in the patient context.\n- `[medications]` (in PSY block) -> Use the exact text of `Psych Meds` (e.g., `Sertralina 50mg QD`).\n- `[adjustment]` -> Describe any recent medication adjustments, or if none are listed, omit this sentence entirely.\n- `[reason documented by provider]` -> Omit if not documented.\n- `[depression/anxiety/mood instability/psychosis/insomnia/impaired concentration/irritability/trauma symptoms/substance use symptoms as documented]` -> Use the symptoms (e.g., `severe anxiety, worry, and panic`).\n- `[denied/reported]` -> Use `denied` or `reported` based on the transcript/notes.\n- `[documented level]` -> e.g., `fair` or `intact`.\n- `[documented adherence]` -> e.g., `adherent` or `compliant`.\n- `[date not after DOS]` -> Print a valid date before DOS or omit the sentence if no date is specified.\n- `[PHQ-9/GAD-7/other score]` -> Omit if not specified.\n- `[interval]` -> e.g., `monthly` or `every 3 months`.\n- `[relationship]` -> Use `Emergency Contact Relation` (e.g., `Wife` / `Esposa`).\n- `[Contact Full Name]` -> Use `Emergency Contact Name` (e.g., `Maria Caridad Prueba`).\n- `[phone]` -> Use `Emergency Contact Phone` (e.g., `786-555-9988`).\n- `[services]` -> Use `Targeted Case Management services`.\n- `[income, bills, food, transportation, medical costs, housing, or insurance concerns]` -> Use the specific financial/social needs (e.g., `high rental cost of $1800/month, and assistance with electricity bills`).\n- `[specific factors]` -> e.g., `lack of independent transportation, visual restrictions, financial strain, and limited family support`.\n\nCRITICAL: Do NOT leave any bracketed placeholder or literal `[...]` in the final output. If a piece of information is completely missing and there is no value provided for a placeholder, you MUST rewrite or omit that sentence entirely. Do NOT output sentences like \"Source material did not provide...\". Use the Mandatory Default Stability rules to make clinical observations where facts are missing.\n\n------------------------------------------------\n\n### STRUCTURE OF THE NOTE\nA single clinical note containing ONE service block (NOT joint). The narrative must follow this chronological order:\n\n1. **Fixed Opening (three sentences, verbatim)**:\n   \"The Targeted Case Manager (TCM) conducted a home visit with [Full Name] to review and discuss [his/her] Service Plan. The TCM explained the plan in detail, reviewing the identified goals, objectives, and tasks developed based on [First Name]'s assessed needs. [First Name] actively participated in the discussion and was encouraged to ask questions throughout the review.\" (Replace pronouns to match patient gender).\n2. **Domain Sections**: A series of headers (one section per domain checked on the Assessment/Day 4, following domain number order).\n   CRITICAL FORMATTING RULES:\n   - The entire narrative MUST be generated as a single continuous paragraph block. Do NOT use newlines (`\n` or `\n\n`) to separate the sections. Combine everything together inline, with each domain and section separated simply by a space.\n   - You MUST include the domain breakdown for **Mental Health**, **Physical Health**, and **Activities of Daily Living (ADLs)** (all three are checked and mandatory \u2014 do NOT skip the Activities of Daily Living (ADLs) section).\n   - Write headers inline as part of the single continuous paragraph, followed immediately by their body text (e.g. \"Mental Health: [text] Physical Health: [text] Activities of Daily Living (ADLs): [text]\").\n\n   Headers to use (written inline):\n   - `Mental Health:` [Clinical status of symptoms and mood restated from Assessment. TCM commitment to coordinate psychiatric follow-ups and monitor symptoms restated from Day 4.]\n   - `Physical Health:` [Clinical status of chronic medical conditions restated from Assessment. TCM commitment to coordinate appointments, monitor medication regimen, and support adherence restated from Day 4.]\n   - `Activities of Daily Living (ADLs):` [ADL independence level and IADL difficulties/limitations restated from Assessment. TCM commitment to assist with organizing medical documentation and understanding provider correspondence restated from Day 4.]\n   - `Housing:` [Housing status and safety restated from Assessment. TCM commitment to monitor housing stability and link to housing support resources restated from Day 4.]\n   - `Recreational / Social Support:` [Social isolation status and support limits restated from Assessment. TCM commitment to encourage participation in community programs to reduce isolation restated from Day 4.]\n   - `Economic Stability:` [Financial status, income, and bills restated from Assessment. TCM commitment to support benefits maintenance and insurance coordination restated from Day 4.]\n   - `Basic Needs:` [Food security and basic needs status restated from Assessment. TCM commitment to provide linkage to food assistance and basic needs resources restated from Day 4.]\n   - `Transportation:` [Transportation barriers and driving status restated from Assessment. TCM commitment to coordinate transportation services (e.g. ModivCare, STS, Golden Passport) restated from Day 4.]\n   - `Legal / Immigration:` [Legal/documentation status restated from Assessment. TCM commitment to assist with permanent resident card or identification renewal restated from Day 4.]\n\n3. **Closing Attestation Block (four elements, verbatim, in order)**:\n   - \"The TCM emphasized the importance of [First Name]'s active participation in Service Plan tasks and interventions.\"\n   - \"[First Name] verbalized understanding of the plan [in Spanish/in English], agreed with the outlined goals and interventions, and signed the Service Plan.\" (Include language if non-English primary language, e.g. \"verbalized understanding of the plan in Spanish\").\n   - \"A copy of the plan was offered in accordance with agency procedures.\"\n   - \"Authorization forms were obtained to allow the TCM to advocate on [his/her] behalf with healthcare providers and community agencies.\"\n\n------------------------------------------------\n\n### OUTCOME / NEXT STEPS (COMMON)\n- outcome_of_services: \"TCM discussed the service plan with {{ $('Code in JavaScript2').item.json.patient_first_name }}.\"\n- next_steps: \"TCM will start providing services to {{ $('Code in JavaScript2').item.json.patient_first_name }}.\"\n\n### OUTPUT JSON SCHEMA\n{\n  \"template_id\": \"tcm_service_plan_discussion\",\n  \"encounter\": {\n    \"dos_date\": \"{{ $('Code in JavaScript4').item.json.body.service_date }}\",\n    \"pos\": \"12 - Home\",\n    \"service_location\": \"Home\",\n    \"time_in\": \"{{ $('Code in JavaScript4').item.json.body.time_in }}\",\n    \"time_out\": \"{{ $('Code in JavaScript4').item.json.body.time_out }}\",\n    \"duration_minutes\": \"{{ $('Code in JavaScript4').item.json.body.duration }}\",\n    \"units\": \"{{ $('Code in JavaScript4').item.json.body.units }}\"\n  },\n  \"patient\": {\n    \"full_name\": \"{{ $('Code in JavaScript2').item.json.patient_full_name }}\",\n    \"dob\": \"{{ $('Code in JavaScript2').item.json.patient_dob }}\",\n    \"sex\": \"{{ $('Code in JavaScript2').item.json.patient_gender }}\",\n    \"emr\": \"{{ $('Code in JavaScript2').item.json.patient_emr_id }}\",\n    \"case_no\": \"{{ $('Code in JavaScript2').item.json.patient_case_number }}\",\n    \"mobile\": \"{{ $('Code in JavaScript2').item.json.patient_phone }}\"\n  },\n  \"facility\": { \"name\": \"{{ $('Code in JavaScript4').item.json.body.facility_name }}\", \"address\": \"{{ $('Code in JavaScript4').item.json.body.facility_address }}\", \"phone\": \"{{ $('Code in JavaScript4').item.json.body.facility_phone }}\", \"fax\": \"{{ $('Code in JavaScript4').item.json.body.facility_fax }}\", \"email\": \"{{ $('Code in JavaScript4').item.json.body.facility_email }}\" },\n  \"staff\": { \"case_manager_name\": \"\", \"case_manager_lic\": \"\", \"supervisor_name\": \"\", \"supervisor_lic\": \"\" },\n  \"services\": {\n    \"service_focus_title\": \"TCM Service Plan: Collaborative Care Plan and Intervention Design\",\n    \"domains_selected\": {\n      \"1_mental_health_substance_abuse\": true,\n      \"2_physical_health_medical_dental\": false,\n      \"3_vocational_employment_job_training\": false,\n      \"4_school_education\": false,\n      \"5_recreational_social_support\": false,\n      \"6_activities_of_daily_living\": false,\n      \"7_housing_shelter\": false,\n      \"8_economic_financial\": false,\n      \"9_basic_needs\": false,\n      \"10_transportation\": false,\n      \"11_legal_immigration\": false,\n      \"12_other\": false\n    },\n    \"other_specify\": \"\"\n  },\n  \"narrative\": { \n    \"summary_notes\": \"\",\n    \"outcome_of_services\": \"\", \n    \"next_steps\": \"\" \n  },\n  \"diagnosis\": {\n    \"primary_diagnosis_name\": \"{{ $('Code in JavaScript2').item.json.patient_diagnoses.split(' - ')[1] }}\",\n    \"icd10_code\": \"{{ $('Code in JavaScript2').item.json.patient_diagnoses.split(' - ')[0] }}\",\n    \"icd10_description\": \"{{ $('Code in JavaScript2').item.json.patient_diagnoses.split(' - ')[1] }}\",\n    \"type\": \"Rule-Out\"\n  },\n  \"signatures\": { \"case_manager_signature_date\": \"\", \"supervisor_signature_date\": \"\" },\n  \"evidence\": { \"key_facts_quotes\": [] },\n  \"meta\": { \"confidence_overall\": \"\", \"missing_fields\": [], \"warnings\": [] }\n}\n"
+            },
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -416
+      ],
+      "id": "48704574-2e0c-4e2b-b467-47612f3f1555",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node - enforce correct metadata for webm recordings\nfor (const item of items) {\n  if (item.binary?.audio0) {\n    const b = item.binary.audio0;\n\n    // Force consistent filename\n    b.fileName = \"recording.webm\";\n\n    // Force correct mimetype for webm\n    b.mimeType = \"audio/webm\";\n  }\n}\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -416
+      ],
+      "id": "a616b10e-1df3-410d-b944-c099c977ad99",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node \u2014 Parse OpenAI \"Message a model\" output (new Responses shape)\n * Extracts: item.json.output[0].content[0].text\n * Returns: parsed note JSON at root, plus ok/meta helpers\n */\n\nfunction extractJsonString(raw) {\n  if (raw == null) return null;\n\n  let s = String(raw).trim();\n\n  // Remove ```json fences if present\n  s = s.replace(/^```(?:json)?\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\n  // Try direct object extraction\n  const firstBrace = s.indexOf(\"{\");\n  const lastBrace = s.lastIndexOf(\"}\");\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    return s.slice(firstBrace, lastBrace + 1).trim();\n  }\n\n  // Try array extraction\n  const firstBracket = s.indexOf(\"[\");\n  const lastBracket = s.lastIndexOf(\"]\");\n  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {\n    return s.slice(firstBracket, lastBracket + 1).trim();\n  }\n\n  return null;\n}\n\nfunction safeJsonParseFromText(text) {\n  const jsonStr = extractJsonString(text);\n  if (!jsonStr) throw new Error(\"Could not locate JSON in model output text.\");\n  return JSON.parse(jsonStr);\n}\n\nreturn items.map((item) => {\n  // \u2705 This is the actual model text in your screenshot\n  const text =\n    item.json?.output?.[0]?.content?.[0]?.text ??\n    item.json?.output?.[0]?.content?.find?.((c) => c?.type === \"output_text\")?.text ??\n    item.json?.content ??\n    item.json?.message?.content ??\n    item.json?.text;\n\n  try {\n    const note = safeJsonParseFromText(text);\n\n    return {\n      json: {\n        ok: true,\n        ...note, // <-- IMPORTANT: put the note fields at the root for the UI\n        meta: {\n          ...(note.meta || {}),\n          confidence_overall: note.meta?.confidence_overall || \"\",\n        },\n      },\n    };\n  } catch (e) {\n    return {\n      json: {\n        ok: false,\n        error: e.message,\n        raw_preview: (text ? String(text).slice(0, 2000) : null),\n      },\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "47a060c5-6092-4e8c-9e61-8a747bfdbb61",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize webhook payload AND preserve binary (audio0)\n\nreturn items.map((item) => {\n  const j = item.json ?? {};\n  const outerBody = j.body ?? {};\n\n  let inner = null;\n\n  // If body.body is a JSON string, parse it\n  if (typeof outerBody.body === \"string\") {\n    try {\n      inner = JSON.parse(outerBody.body);\n    } catch (e) {\n      inner = null;\n    }\n  } else if (typeof outerBody.body === \"object\" && outerBody.body) {\n    inner = outerBody.body;\n  }\n\n  // Build normalized payload\n  const normalized = {\n    ...j,\n    body: {\n      ...outerBody,\n      ...(inner ?? {}),\n    },\n  };\n\n  // Ensure transcript field exists consistently\n  normalized.text =\n    j.text ??\n    normalized.body?.text ??\n    normalized.body?.transcript ??\n    normalized.body?.transcription ??\n    \"not_provided\";\n\n  // \u2705 IMPORTANT: preserve binary (audio0, etc.)\n  return {\n    json: normalized,\n    binary: item.binary, // keeps audio0 for Transcribe a recording\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -416
+      ],
+      "id": "32cd2a18-d0c2-49ff-818c-8b4cbb4ade37",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Iteramos por cada elemento que llega (normalmente es 1, pero n8n maneja arrays de items)\nfor (const item of $input.all()) {\n  try {\n    // Obtenemos el texto original que viene en 'patient_clinical_context'\n    const contextString = item.json.body.patient_clinical_context;\n\n    if (contextString) {\n      // Parseamos el texto a un objeto JSON\n      const patientData = JSON.parse(contextString);\n\n      // Ahora asignamos TODOS los campos principales a nuevas variables en el item.json\n      // para que sean f\u00e1cilmente accesibles en los siguientes nodos.\n      \n      // -- Datos Generales del Paciente --\n      item.json.patient_full_name = patientData.full_name;\n      item.json.patient_first_name = patientData.first_name;\n      item.json.patient_last_name = patientData.last_name;\n      item.json.patient_dob = patientData.dob;\n      item.json.patient_gender = patientData.gender;\n      item.json.patient_phone = patientData.phone;\n      item.json.patient_email = patientData.email;\n      item.json.patient_ssn = patientData.ssn;\n      item.json.patient_emr_id = patientData.emr_id;\n      item.json.patient_address = patientData.address;\n      item.json.patient_citizenship = patientData.citizenship;\n      \n      // -- Seguro y Coordinaci\u00f3n --\n      item.json.patient_case_manager = patientData.case_manager;\n      item.json.patient_insurance_company = patientData.insurance_company;\n      item.json.patient_diagnoses = patientData.diagnoses;\n      item.json.patient_presenting_problems = patientData.presenting_problems;\n\n      // -- Datos del PCP (Primary Care Physician) --\n      item.json.patient_pcp_name = patientData.pcp_name;\n      item.json.patient_pcp_phone = patientData.pcp_phone;\n      item.json.patient_pcp_address = patientData.pcp_address;\n      item.json.patient_pcp_conditions = patientData.pcp_conditions;\n      item.json.patient_pcp_medications = patientData.pcp_medications;\n\n      // -- Datos Psiqui\u00e1tricos --\n      item.json.patient_psych_name = patientData.psych_name;\n      item.json.patient_psych_phone = patientData.psych_phone;\n      item.json.patient_psych_address = patientData.psych_address;\n      item.json.patient_psych_conditions = patientData.psych_conditions;\n      item.json.patient_psych_medications = patientData.psych_medications;\n\n      // -- Datos de Farmacia --\n      item.json.patient_pharmacy_name = patientData.pharmacy_name;\n      item.json.patient_pharmacy_phone = patientData.pharmacy_phone;\n      item.json.patient_pharmacy_fax = patientData.pharmacy_fax;\n      item.json.patient_pharmacy_address = patientData.pharmacy_address;\n      \n      // Opcional: Tambi\u00e9n puedes guardar todo el objeto parseado directamente si quieres\n      item.json.patient_full_object = patientData;\n    }\n    \n  } catch (error) {\n    // Si hay un error al parsear el JSON, imprimimos el error pero no rompemos el flujo\n    console.error(\"Error parseando patient_clinical_context:\", error.message);\n    item.json.parsing_error = error.message;\n  }\n}\n\n// Retornamos el item modificado a n8n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -416
+      ],
+      "id": "f53cced0-ab61-400d-9bd3-fe35363d1653",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

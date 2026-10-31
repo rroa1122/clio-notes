@@ -6,7 +6,7 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 
 ## Última Actualización
 - **Fecha:** 2026-10-30
-- **Rama Actual:** `feat/tcm-templates-v2` (commit `81168b1`)
+- **Rama Actual:** `feat/tcm-templates-v2`
 - **Estado de Compilación (`npm run build`):** ✅ Limpio (0 errores)
 - **Estado de Producción (`clinicflow.dev`):** ✅ Desplegado al 100% (Frontend + n8n + RPA Bot)
 
@@ -21,15 +21,18 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
    - **Seguridad y Orientación:** Restauración de reglas de orientación y seguridad por excepción.
    - **Eliminación de narración de vacíos (Gap Narration):** Se eliminaron frases redundantes de datos faltantes en los prompts y en el frontend (`stripGapNarration`).
    - **Modal de confirmación interactivo en Clio:** Diálogo propio con opciones para completar TCM Social o continuar.
-2. **Capas Sincronizadas en Producción (`clinicflow.dev`):**
-   - **Frontend:** Desplegado en `/var/www/clionotes` (`https://notes.clinicflow.dev`).
-   - **n8n:** Base de datos SQLite actualizada con los 6 workflows y contenedor reiniciado.
-   - **Amexzone RPA Bot:** Actualizados `worker.js` y `encounterService.js`, reiniciado en PM2 (`online`).
+2. **Exportación de los 4 Workflows Restantes de n8n:**
+   - Se exportaron directamente desde la base de datos de n8n en el VPS y se agregaron a `scratch/`:
+     - `scratch/gather_pcp_record_workflow.json` (`tcm-gather-pcp-note` - ID: `K3rH8zeSNCBx6QFL`)
+     - `scratch/gather_psy_record_workflow.json` (`tcm-gather-psy-note` - ID: `K3sH8zeSNCBx6QFL`)
+     - `scratch/pc_emergency_contact_workflow.json` (`tcm-pc-emergency-contact-note` - ID: `K3tH8zeSNCBx6QFL`)
+     - `scratch/service_plan_discussion_workflow.json` (`tcm-service-plan-discussion` - ID: `RvtViS0iE8lV67yf`)
+   - Se actualizaron en `scratch/sync_all_workflows.cjs` para sincronización automática continua.
 3. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
-   - Se configuró el trigger para que escuche tanto `main` como `feat/**` / `feat/*`, de modo que cada push en cualquier rama de trabajo despliegue automáticamente en `clinicflow.dev`.
+   - Configurado para escuchar ramas `main` y `feat/**` / `feat/*`, desplegando automáticamente en cada push.
 
 ---
 
 ## Próximos Pasos (Fase 2)
-- Templates v2 para Initial Service Plan Development, Discuss and Sign Initial Services Plan, Psychiatric Records Retrieval, PCP Records Retrieval y Emergency Contact.
-- Pruebas reales de generación de notas de Home Visit, Assessment y Referral en `https://notes.clinicflow.dev`.
+- Ajustes de prompts v2 en los 4 nuevos workflows para estandarizarlos a TCM v2.
+- Pruebas reales de notas en `https://notes.clinicflow.dev`.

@@ -15,10 +15,15 @@ if not os.path.exists(db_path):
 
 workflow_files = [
     '/tmp/tcm_workflow.json',
-    '/tmp/initial_home_visit_workflow.json', '/tmp/case_assignment_workflow.json',
+    '/tmp/initial_home_visit_workflow.json',
+    '/tmp/case_assignment_workflow.json',
     '/tmp/assessment_workflow.json',
     '/tmp/service_plan_workflow.json',
-    '/tmp/adult_certification_workflow.json'
+    '/tmp/adult_certification_workflow.json',
+    '/tmp/gather_pcp_record_workflow.json',
+    '/tmp/gather_psy_record_workflow.json',
+    '/tmp/pc_emergency_contact_workflow.json',
+    '/tmp/service_plan_discussion_workflow.json'
 ]
 
 db = sqlite3.connect(db_path)
@@ -73,10 +78,15 @@ const host = 'root@clinicflow.dev';
 console.log('[1/3] Uploading workflow JSONs and sync script to server...');
 const filesToUpload = [
     'scratch/tcm_workflow.json',
-    'scratch/initial_home_visit_workflow.json', 'scratch/case_assignment_workflow.json',
+    'scratch/initial_home_visit_workflow.json',
+    'scratch/case_assignment_workflow.json',
     'scratch/assessment_workflow.json',
     'scratch/service_plan_workflow.json',
     'scratch/adult_certification_workflow.json',
+    'scratch/gather_pcp_record_workflow.json',
+    'scratch/gather_psy_record_workflow.json',
+    'scratch/pc_emergency_contact_workflow.json',
+    'scratch/service_plan_discussion_workflow.json',
     'scratch/remote_sync_script.py'
 ].join(' ');
 
@@ -88,4 +98,4 @@ execSync(`ssh -i ${sshKey} -o StrictHostKeyChecking=no ${host} "python3 /tmp/rem
 console.log('\n[3/3] Restarting n8n docker container to load new workflows...');
 execSync(`ssh -i ${sshKey} -o StrictHostKeyChecking=no ${host} "docker restart n8n"`, { stdio: 'inherit' });
 
-console.log('\n✅ Phase 1 n8n workflow deployment complete!');
+console.log('\n✅ All 10 n8n workflows synchronized and container restarted!');
