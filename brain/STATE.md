@@ -47,6 +47,11 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 
 ---
 
+6. **Alta de Cuenta Super Admin para Asley Legidos:**
+   - Creado usuario en Supabase Auth (`asleylegidos@gmail.com`) con rol `super_admin`, email confirmado y membresía a `CLIO Health`.
+
+---
+
 ## Próximos Pasos
 - Implementar en Frontend (`TcmNoteShell.tsx` o modal) la acción para que el CM pegue el feedback del supervisor y solicite la corrección + propuesta de regla.
 - Inyectar reglas aprobadas de `documentation_rules` en el payload de `Record.tsx` hacia n8n.

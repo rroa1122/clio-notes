@@ -218,17 +218,17 @@ export function TimeSpinner({ onConfirm, initialTimeStr, label }: TimeSpinnerPro
             </div>
 
             {/* Main Digital Clock Inputs & Steppers */}
-            <div className="flex items-center justify-center gap-2 py-1">
+            <div className="flex items-center justify-center gap-2.5 py-1">
                 
                 {/* Hours Box with Stepper */}
                 <div className="flex flex-col items-center">
                     <button 
                         type="button" 
                         onClick={incrementHour} 
-                        className="h-4.5 w-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        className="h-5 w-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                         title="Aumentar hora"
                     >
-                        <ChevronUp size={14} />
+                        <ChevronUp size={15} />
                     </button>
                     
                     <input 
@@ -239,32 +239,32 @@ export function TimeSpinner({ onConfirm, initialTimeStr, label }: TimeSpinnerPro
                         onChange={handleHourChange}
                         onBlur={handleHourBlur}
                         onKeyDown={handleHourKeyDown}
-                        className="w-13 h-11 text-center text-xl font-mono font-bold text-foreground bg-secondary/50 border border-border/60 focus:border-indigo-500 focus:bg-background rounded-xl p-0 m-0 tracking-tight transition-all shadow-xs"
-                        style={{ outline: 'none', WebkitAppearance: 'none' }}
+                        className="text-center text-2xl font-mono font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 rounded-xl p-0 m-0 tracking-tight transition-all shadow-xs"
+                        style={{ outline: 'none', WebkitAppearance: 'none', width: '56px', height: '44px', minWidth: '56px', maxWidth: '56px' }}
                     />
                     
                     <button 
                         type="button" 
                         onClick={decrementHour} 
-                        className="h-4.5 w-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        className="h-5 w-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                         title="Disminuir hora"
                     >
-                        <ChevronDown size={14} />
+                        <ChevronDown size={15} />
                     </button>
                 </div>
 
                 {/* Center Colon */}
-                <span className="text-xl font-bold text-muted-foreground select-none pb-0.5">:</span>
+                <span className="text-2xl font-bold text-slate-400 dark:text-slate-500 select-none pb-1">:</span>
 
                 {/* Minutes Box with Stepper */}
                 <div className="flex flex-col items-center">
                     <button 
                         type="button" 
                         onClick={incrementMinute} 
-                        className="h-4.5 w-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        className="h-5 w-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                         title="Aumentar minuto"
                     >
-                        <ChevronUp size={14} />
+                        <ChevronUp size={15} />
                     </button>
                     
                     <input 
@@ -275,30 +275,30 @@ export function TimeSpinner({ onConfirm, initialTimeStr, label }: TimeSpinnerPro
                         onChange={handleMinuteChange}
                         onBlur={handleMinuteBlur}
                         onKeyDown={handleMinuteKeyDown}
-                        className="w-13 h-11 text-center text-xl font-mono font-bold text-foreground bg-secondary/50 border border-border/60 focus:border-indigo-500 focus:bg-background rounded-xl p-0 m-0 tracking-tight transition-all shadow-xs"
-                        style={{ outline: 'none', WebkitAppearance: 'none' }}
+                        className="text-center text-2xl font-mono font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 rounded-xl p-0 m-0 tracking-tight transition-all shadow-xs"
+                        style={{ outline: 'none', WebkitAppearance: 'none', width: '56px', height: '44px', minWidth: '56px', maxWidth: '56px' }}
                     />
                     
                     <button 
                         type="button" 
                         onClick={decrementMinute} 
-                        className="h-4.5 w-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        className="h-5 w-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                         title="Disminuir minuto"
                     >
-                        <ChevronDown size={14} />
+                        <ChevronDown size={15} />
                     </button>
                 </div>
 
                 {/* Segmented AM / PM Vertical Pill */}
-                <div className="flex flex-col p-0.5 rounded-xl bg-secondary/60 border border-border/60 shrink-0">
+                <div className="flex flex-col p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 shrink-0" style={{ width: '48px' }}>
                     <button 
                         type="button"
                         onClick={() => setP('AM')}
                         className={cn(
-                            "px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer",
+                            "w-full py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer text-center",
                             p === 'AM'
                                 ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-xs"
-                                : "text-muted-foreground hover:text-foreground"
+                                : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                         )}
                     >
                         AM
@@ -307,10 +307,10 @@ export function TimeSpinner({ onConfirm, initialTimeStr, label }: TimeSpinnerPro
                         type="button"
                         onClick={() => setP('PM')}
                         className={cn(
-                            "px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer",
+                            "w-full py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer text-center",
                             p === 'PM'
                                 ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-xs"
-                                : "text-muted-foreground hover:text-foreground"
+                                : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                         )}
                     >
                         PM
