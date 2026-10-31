@@ -2,19 +2,23 @@ name: CI & Deploy to ClinicFlow
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'feat/**'
+      - 'feat/*'
   pull_request:
     branches: [main]
   workflow_dispatch:
     inputs:
       deploy_target:
-        description: 'Qué deseas desplegar (all, web, bot)'
+        description: 'Qué deseas desplegar (all, web, n8n, bot)'
         required: true
         default: 'all'
         type: choice
         options:
           - all
           - web
+          - n8n
           - bot
 
 jobs:
@@ -38,10 +42,10 @@ jobs:
         run: npm run build
 
       - name: Deploy to VPS (if VPS_SSH_KEY secret is configured)
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'push') || github.event_name == 'workflow_dispatch'
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          DEPLOY_TARGET: ${{ github.event.inputs.deploy_target || 'web' }}
+          DEPLOY_TARGET: ${{ github.event.inputs.deploy_target || 'all' }}
         run: |
           if [ -z "$VPS_SSH_KEY" ]; then
             echo "ℹ️ Secret VPS_SSH_KEY no configurado en GitHub; omitiendo despliegue remoto automático (usa 'npm run flow -- deploy' localmente o agrega VPS_SSH_KEY en Settings > Secrets)."
@@ -53,10 +57,17 @@ jobs:
           ssh-keyscan -H clinicflow.dev >> ~/.ssh/known_hosts
 
           if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "web" ]; then
+            echo "-> Desplegando Frontend a /var/www/clionotes..."
             scp -r dist/* root@clinicflow.dev:/var/www/clionotes/
           fi
 
+          if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "n8n" ]; then
+            echo "-> Sincronizando flujos n8n..."
+            node scratch/sync_all_workflows.cjs || true
+          fi
+
           if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "bot" ]; then
+            echo "-> Desplegando RPA Bot y reiniciando PM2..."
             scp amexzone-bot/worker.js root@clinicflow.dev:/root/amexzone-notes-bot/worker.js
             scp amexzone-bot/src/amexzone/*.js root@clinicflow.dev:/root/amexzone-notes-bot/src/amexzone/
             ssh root@clinicflow.dev "pm2 restart amexzone-worker"
