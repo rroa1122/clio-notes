@@ -534,14 +534,44 @@ export const normalizeClioNote = (rawResponse: any): ClioNote | null => {
 };
 
 /**
+ * Official service titles (identical in Clio, the note and Amexzone). Never rephrased.
+ */
+export const TCM_CANONICAL_TITLES: Record<string, string> = {
+    tcm_case_assignment_note: 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit',
+    tcm_initial_home_visit_note: 'Initial Home Visit / Develop Intake',
+    tcm_gather_psy_note: 'Psychiatric Medical Records Retrieval and Coordination of Care',
+    tcm_gather_pcp_note: 'PCP Medical Records Retrieval and Coordination of Care',
+    tcm_pc_emergency_contact_note: 'Emergency Contact / Gather Information',
+    tcm_assessment_note: 'Develop Assessment',
+    tcm_adult_certification_note: 'Adult Certification',
+    tcm_service_plan_note: 'Initial Service Plan Development',
+    tcm_service_plan_discussion: 'Discuss and Sign Initial Services Plan',
+};
+
+/** Forces the official title on a generated note (and its joint services) by template id. */
+export const enforceCanonicalTitle = (note: any, templateId: string): any => {
+    const title = TCM_CANONICAL_TITLES[templateId];
+    if (!note || !title) return note;
+    if (!note.services) note.services = {};
+    note.services.service_focus_title = title;
+    note.subTemplate = title;
+    note._frontend_service_title = title;
+    return note;
+};
+
+/**
  * Maps subtemplate titles to their respective template IDs.
  */
 export const getTemplateIdFromSubTemplate = (subTemplate: string): string => {
     const s = (subTemplate || "").trim();
     if (s === 'New Referral - Initial Telephone Contact and Coordination of Initial Home Visit' || s === 'Case Assigned' || s === 'Case Assignment' || s === 'TCM Case Assignment' || s.toLowerCase().includes('new referral - initial telephone contact')) return 'tcm_case_assignment_note';
-    if (s === 'TCM Initial Assessment & Certification' || s === 'Assessment' || s === 'Adult Certification') return 'tcm_assessment_note';
-    if (s === 'TCM Service Plan Development' || s === 'Service Plan Development') return 'tcm_service_plan_note';
-    if (s === 'TCM Service Plan Discussion' || s === 'Service Plan Discussion') return 'tcm_service_plan_discussion';
+    if (s === 'Develop Assessment' || s === 'TCM Initial Assessment & Certification' || s === 'Assessment') return 'tcm_assessment_note';
+    if (s === 'Adult Certification' || s === 'Medicaid Certification') return 'tcm_adult_certification_note';
+    if (s === 'Initial Service Plan Development' || s === 'TCM Service Plan Development' || s === 'Service Plan Development') return 'tcm_service_plan_note';
+    if (s === 'Discuss and Sign Initial Services Plan' || s === 'TCM Service Plan Discussion' || s === 'Service Plan Discussion') return 'tcm_service_plan_discussion';
+    if (s === 'Psychiatric Medical Records Retrieval and Coordination of Care') return 'tcm_gather_psy_note';
+    if (s === 'PCP Medical Records Retrieval and Coordination of Care') return 'tcm_gather_pcp_note';
+    if (s === 'Emergency Contact / Gather Information') return 'tcm_pc_emergency_contact_note';
     if (s === 'Initial Home Visit / Develop Intake' || s === 'TCM Initial Home Visit' || s === 'Initial Home Visit') return 'tcm_initial_home_visit_note';
     if (s === 'TCM Collateral & Contact Note' || s === 'Collateral & Contact Note') return 'tcm_collateral_note';
     if (s === 'TCM Gather PCP Record' || s.includes('Gather PCP Record')) return 'tcm_gather_pcp_note';

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { ClioNote, Template } from '../types';
 import { storage } from '../lib/storage';
+import { TCM_CANONICAL_TITLES } from '../lib/clioUtils';
 import { DEFAULT_TEMPLATES, TCM_DOMAINS } from '../lib/constants';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -2056,8 +2057,9 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                 const summaryNotes = extractSummaryNotes(svc);
 
+                const canonicalTitle = TCM_CANONICAL_TITLES[svc.template_id || svc.meta?.template_id || ''];
                 return {
-                    service_type: (svc.template_id === 'tcm_initial_home_visit_note' || /^(tcm\s+)?initial\s+home\s+visit(\s*\/\s*develop\s+intake)?$/i.test(String(svcTitle).trim()))
+                    service_type: canonicalTitle ? canonicalTitle : (svc.template_id === 'tcm_initial_home_visit_note' || /^(tcm\s+)?initial\s+home\s+visit(\s*\/\s*develop\s+intake)?$/i.test(String(svcTitle).trim()))
                         ? "Initial Home Visit / Develop Intake"
                         : ((svc.template_id === 'tcm_case_assignment_note' || /^(tcm\s+)?case\s+assign(ed|ment)$/i.test(String(svcTitle).trim()) || /^new\s+referral\s*-\s*initial\s+telephone\s+contact/i.test(String(svcTitle).trim()))
                             ? "New Referral - Initial Telephone Contact and Coordination of Initial Home Visit"

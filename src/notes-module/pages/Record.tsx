@@ -13,7 +13,7 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis, getClientDisplayName, normalizeClientNameInNarrative } from '../lib/clioUtils';
+import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis, getClientDisplayName, normalizeClientNameInNarrative, enforceCanonicalTitle } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
@@ -69,6 +69,17 @@ const parseTimeToMinutes = (timeStr: string): number | null => {
     if (period === 'am' && hours === 12) hours = 0;
     if (!period && hours >= 24) return null;
     return hours * 60 + minutes;
+};
+
+// Default duration per v2 template (typical values from Amexzone, last 30 days).
+const TCM_V2_DEFAULTS: Record<string, { minutes: number; units: number }> = {
+    tcm_assessment_note: { minutes: 113, units: 8 },
+    tcm_adult_certification_note: { minutes: 33, units: 2 },
+    tcm_service_plan_note: { minutes: 100, units: 7 },
+    tcm_service_plan_discussion: { minutes: 68, units: 5 },
+    tcm_gather_psy_note: { minutes: 41, units: 3 },
+    tcm_gather_pcp_note: { minutes: 41, units: 3 },
+    tcm_pc_emergency_contact_note: { minutes: 23, units: 2 },
 };
 
 // Templates whose notes are built from the TCM Social form; warn before generating if it is empty.
@@ -154,13 +165,14 @@ export const SERVICE_HIERARCHICAL_GROUPS: HierarchicalServiceGroup[] = [
         category: "Core Case Management",
         categoryEs: "Core Case Management",
         iconName: "ClipboardList",
-        badge: "6 options",
+        badge: "7 options",
         items: [
             { id: "core-0", name: "New Referral - Initial Telephone Contact and Coordination of Initial Home Visit", label: "New Referral - Initial Telephone Contact and Coordination of Initial Home Visit", desc: "Initial referral review, phone contact & home visit coordination (25 min / 2u)", pos: "11 - Office", stepBadge: "Office" },
             { id: "core-1", name: "Initial Home Visit / Develop Intake", label: "Initial Home Visit / Develop Intake", desc: "Initial face-to-face home visit & intake (98 min / 7u)", pos: "12 - Home", stepBadge: "Home" },
-            { id: "core-2", name: "TCM Initial Assessment & Certification", label: "Initial Assessment & Certification", desc: "Comprehensive TCM assessment & certification", pos: "11 - Office", stepBadge: "Office" },
-            { id: "core-3", name: "TCM Service Plan Development", label: "Service Plan Development", desc: "Develop individualized TCM service plan", pos: "11 - Office", stepBadge: "Plan" },
-            { id: "core-4", name: "TCM Service Plan Discussion", label: "Service Plan Discussion", desc: "Discuss and sign service plan with patient", pos: "12 - Home", stepBadge: "Sign" },
+            { id: "core-2", name: "Develop Assessment", label: "Develop Assessment", desc: "Comprehensive Assessment at home (113 min / 8u)", pos: "12 - Home", stepBadge: "Home" },
+            { id: "core-2b", name: "Adult Certification", label: "Adult Certification", desc: "Adult Certification / Appendix J (33 min / 2u)", pos: "11 - Office", stepBadge: "Office" },
+            { id: "core-3", name: "Initial Service Plan Development", label: "Initial Service Plan Development", desc: "Develop the individualized Initial Service Plan (100 min / 7u)", pos: "11 - Office", stepBadge: "Plan" },
+            { id: "core-4", name: "Discuss and Sign Initial Services Plan", label: "Discuss and Sign Initial Services Plan", desc: "Review and sign the Service Plan at home (68 min / 5u)", pos: "12 - Home", stepBadge: "Sign" },
             { id: "core-5", name: "Monthly Home Visit", label: "Monthly Home Visit (MHV)", desc: "Monthly face-to-face follow-up visit at home", pos: "12 - Home", stepBadge: "Monthly" },
         ]
     },
@@ -208,9 +220,9 @@ export const SERVICE_HIERARCHICAL_GROUPS: HierarchicalServiceGroup[] = [
         iconName: "Users",
         badge: "3 options",
         items: [
-            { id: "col-1", name: "TCM Gather PCP Record", label: "Gather PCP Records", desc: "Request and obtain medical records from PCP", pos: "11 - Office", stepBadge: "PCP" },
-            { id: "col-2", name: "TCM Gather PSY Record", label: "Gather Psychiatrist Records", desc: "Request and obtain psychiatric records", pos: "11 - Office", stepBadge: "PSY" },
-            { id: "col-3", name: "TCM PC Emergency Contact", label: "Phone Contact: Emergency Contact", desc: "Coordination with patient emergency contact", pos: "11 - Office", stepBadge: "Contact" },
+            { id: "col-1", name: "PCP Medical Records Retrieval and Coordination of Care", label: "PCP Medical Records Retrieval", desc: "Obtain and review PCP records (41 min / 3u)", pos: "11 - Office", stepBadge: "PCP" },
+            { id: "col-2", name: "Psychiatric Medical Records Retrieval and Coordination of Care", label: "Psychiatric Medical Records Retrieval", desc: "Obtain and review psychiatric records (41 min / 3u)", pos: "11 - Office", stepBadge: "PSY" },
+            { id: "col-3", name: "Emergency Contact / Gather Information", label: "Emergency Contact / Gather Information", desc: "Collateral contact with the emergency contact (23 min / 2u)", pos: "11 - Office", stepBadge: "Contact" },
         ]
     },
     {
@@ -580,12 +592,19 @@ const Record: React.FC = () => {
                     setTimeOut(formatMinutesToTime(startMins + 25));
                 }
             }
-        } else if (selectedSubTemplate === 'TCM Initial Assessment & Certification') {
-            setSelectedTemplateId('tcm_assessment_note');
-        } else if (selectedSubTemplate === 'TCM Service Plan Development') {
-            setSelectedTemplateId('tcm_service_plan_note');
-        } else if (selectedSubTemplate === 'TCM Service Plan Discussion') {
-            setSelectedTemplateId('tcm_service_plan_discussion');
+        } else if (TCM_V2_DEFAULTS[getTemplateIdFromSubTemplate(selectedSubTemplate)] && getTemplateIdFromSubTemplate(selectedSubTemplate) !== 'tcm_progress_note') {
+            // v2 templates: official title -> template id + default minutes/units
+            const v2Id = getTemplateIdFromSubTemplate(selectedSubTemplate);
+            setSelectedTemplateId(v2Id);
+            const def = TCM_V2_DEFAULTS[v2Id];
+            if (!durationMin || durationMin === '0' || durationMin === '') {
+                setDurationMin(String(def.minutes));
+                setUnits(String(def.units));
+                const startMins = parseTimeToMinutes(timeIn);
+                if (startMins !== null) {
+                    setTimeOut(formatMinutesToTime(startMins + def.minutes));
+                }
+            }
         } else if (selectedSubTemplate === 'Initial Home Visit / Develop Intake' || selectedSubTemplate === 'TCM Initial Home Visit' || selectedSubTemplate === 'Initial Home Visit') {
             setSelectedTemplateId('tcm_initial_home_visit_note');
             if (!durationMin || durationMin === '0' || durationMin === '') {
@@ -1446,6 +1465,7 @@ const Record: React.FC = () => {
                         initialHomeVisitDateTime: svcTemplateId === 'tcm_case_assignment_note' ? linkedIhvLabel : ''
                     });
                     if (isSvcTcm) {
+                        enforceCanonicalTitle(normalized, svcTemplateId);
                         stripGapNarration(normalized);
                         enforcePrimaryBehavioralDiagnosis(normalized);
                         if (selectedPatient?.full_name) normalizeClientNameInNarrative(normalized, selectedPatient.full_name);

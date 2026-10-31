@@ -84,11 +84,17 @@ Whenever creating or modifying a **TCM Template**, these 3 layers must stay in s
 
 ## 5. Master Table of TCM Templates
 
-| # | Service Name (UI & Amexzone) | `template_id` | Default POS | Default Time / Units | n8n Workflow File & ID | Status |
+Official titles live in `TCM_CANONICAL_TITLES` (`clioUtils.ts`); Record forces them on every generated note and the Amexzone sync uses them literally. All v2 prompts follow the Documentation Standards v2 in `brain/LESSONS.md`.
+
+| # | Service Name (UI, note & Amexzone) | `template_id` | Default POS | Default Time / Units | n8n Workflow File & ID | Status |
 |---|---|---|---|---|---|---|
-| 1 | `Initial Home Visit / Develop Intake` | `tcm_initial_home_visit_note` | `12 - Home` | `98 min` (`7u`) | `initial_home_visit_workflow.json` (`K3aJ8zeSNCBx6QFL`) | ✅ Live in Production |
-| 2 | `New Referral - Initial Telephone Contact and Coordination of Initial Home Visit` | `tcm_case_assignment_note` | `11 - Office` | `25 min` (`2u`) | `case_assignment_workflow.json` (`K3zH8zeSNCBx6QFL`) | ✅ Live in Production |
-| 3 | `Assessment` | `tcm_assessment_note` | `12 - Home` / `11 - Office` | Variable | `assessment_workflow.json` | ⏳ Ready for adjustments |
-| 4 | `TCM Service Plan Development` | `tcm_service_plan_note` | `11 - Office` | Variable | `service_plan_workflow.json` | ⏳ Ready for adjustments |
-| 5 | `Adult Certification` | `tcm_adult_certification_note` | `11 - Office` | Variable | `adult_certification_workflow.json` | ⏳ Ready for adjustments |
-| 6 | `TCM Progress Note` (Spaced / General) | `tcm_progress_note` | Variable | Variable | `tcm_workflow.json` | ⏳ Ready for adjustments |
+| 1 | `Initial Home Visit / Develop Intake` | `tcm_initial_home_visit_note` | `12 - Home` | `98 min` (`7u`) | `initial_home_visit_workflow.json` (`K3aJ8zeSNCBx6QFL`) | ✅ v2 |
+| 2 | `New Referral - Initial Telephone Contact and Coordination of Initial Home Visit` | `tcm_case_assignment_note` | `11 - Office` | `25 min` (`2u`) | `case_assignment_workflow.json` (`K3zH8zeSNCBx6QFL`) | ✅ v2 |
+| 3 | `Develop Assessment` | `tcm_assessment_note` | `12 - Home` | `113 min` (`8u`) | `assessment_workflow.json` (`GppDFTdj19n9o3Q2`) | ✅ v2 (branch) |
+| 4 | `Adult Certification` | `tcm_adult_certification_note` | `11 - Office` | `33 min` (`2u`) | `adult_certification_workflow.json` (`K3vH8zeSNCBx6QFL`) | ✅ v2 (branch) |
+| 5 | `Initial Service Plan Development` | `tcm_service_plan_note` | `11 - Office` | `100 min` (`7u`) | `service_plan_workflow.json` (`RvtViS0iE8lV67ye`) | ⏳ v2 pending |
+| 6 | `Discuss and Sign Initial Services Plan` | `tcm_service_plan_discussion` | `12 - Home` | `68 min` (`5u`) | webhook `tcm-service-plan-discussion` — **workflow not in repo** | ⏳ needs prod export |
+| 7 | `Psychiatric Medical Records Retrieval and Coordination of Care` | `tcm_gather_psy_note` | `11 - Office` | `41 min` (`3u`) | webhook `tcm-gather-psy-note` — **workflow not in repo** | ⏳ needs prod export |
+| 8 | `PCP Medical Records Retrieval and Coordination of Care` | `tcm_gather_pcp_note` | `11 - Office` | `41 min` (`3u`) | webhook `tcm-gather-pcp-note` — **workflow not in repo** | ⏳ needs prod export |
+| 9 | `Emergency Contact / Gather Information` | `tcm_pc_emergency_contact_note` | `11 - Office` | `23 min` (`2u`) | webhook `tcm-pc-emergency-contact-note` — **workflow not in repo** | ⏳ needs prod export |
+| 10 | `TCM Progress Note` (Spaced / General) | `tcm_progress_note` | Variable | Variable | `tcm_workflow.json` (`edM28zeSNCBx6QFI`) | — |
