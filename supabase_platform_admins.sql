@@ -46,6 +46,13 @@ DROP TRIGGER IF EXISTS profiles_protect_platform_admin ON public.profiles;
 CREATE TRIGGER profiles_protect_platform_admin BEFORE UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.protect_platform_admin_flag();
 
+-- Los admins de Clio pueden leer los perfiles (nombres de los CMs en la pantalla de reglas)
+DROP POLICY IF EXISTS "Admins de Clio leen perfiles" ON public.profiles;
+CREATE POLICY "Admins de Clio leen perfiles"
+ON public.profiles
+FOR SELECT
+USING (public.is_clio_admin());
+
 -- Verificación: debe devolver las 2 cuentas
 SELECT u.email, p.full_name, p.role, p.is_platform_admin
 FROM public.profiles p JOIN auth.users u ON u.id = p.id

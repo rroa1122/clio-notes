@@ -19,6 +19,7 @@ import {
     RefreshCw
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { supabase } from '../lib/supabaseClient';
 
 export function Header() {
     const { signOut, user } = useAuth();
@@ -38,6 +39,12 @@ export function Header() {
         : user?.name ? user.name.trim().split(/\s+/).slice(0, 2).join(' ') : 'User';
 
     const isAuthorized = user?.role === 'admin' || user?.email === 'reinier.roa2.0@gmail.com';
+    // Clio platform admins (profiles.is_platform_admin) see the documentation rules page
+    const [isClioAdmin, setIsClioAdmin] = useState(false);
+    useEffect(() => {
+        if (!user) return;
+        supabase.rpc('is_clio_admin').then(({ data }) => setIsClioAdmin(Boolean(data)), () => setIsClioAdmin(false));
+    }, [user]);
 
     // Desktop center navigation items (Only Encounters, History, Clients, Sync)
     const navItems = [
@@ -210,6 +217,17 @@ export function Header() {
                                         {t('nav.settings', 'Settings')}
                                     </NavLink>
                                     
+                                    {isClioAdmin && (
+                                        <NavLink
+                                            to="/documentation-rules"
+                                            onClick={() => setIsDropdownOpen(false)}
+                                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-all"
+                                        >
+                                            <Shield size={14} className="opacity-75" />
+                                            {language === 'es' ? 'Reglas de documentación' : 'Documentation rules'}
+                                        </NavLink>
+                                    )}
+
                                     {isAuthorized && (
                                         <NavLink
                                             to="/audit-logs"

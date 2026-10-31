@@ -29,6 +29,7 @@ const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.S
 const SyncPortal = lazy(() => import('./pages/SyncPortal').then(m => ({ default: m.SyncPortal })));
 const AuditLogs = lazy(() => import('./pages/AuditLogs').then(m => ({ default: m.AuditLogs })));
 const PlatformAdmin = lazy(() => import('./pages/PlatformAdmin').then(m => ({ default: m.PlatformAdmin })));
+const DocumentationRules = lazy(() => import('./pages/DocumentationRules').then(m => ({ default: m.DocumentationRules })));
 const Setup = lazy(() => import('./pages/Setup').then(m => ({ default: m.Setup })));
 const Invite = lazy(() => import('./pages/auth/Invite').then(m => ({ default: m.Invite })));
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword').then(m => ({ default: m.ResetPassword })));
@@ -98,6 +99,8 @@ const Root = () => {
             <Route path="settings" element={<Settings />} />
             <Route path="sync" element={<SyncPortal />} />
             <Route path="audit-logs" element={<AuditLogs />} />
+            {/* Clio admins only (checked with is_clio_admin() + RLS) */}
+            <Route path="documentation-rules" element={<DocumentationRules />} />
 
             {/* Platform Admin Route */}
             <Route element={<PrimaryAdminRoute />}>
