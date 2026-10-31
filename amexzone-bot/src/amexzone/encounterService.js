@@ -847,8 +847,11 @@ async function fillClinicalData(page, tabIndex, svcItem, mappedService) {
         const parts = svcItem.joint_services.map(sub => {
             return sub.narrative?.summary_notes || sub.narrative?.clinical_narrative || sub.summary_notes || sub.clinical_narrative || '';
         }).filter(Boolean);
-        if (parts.length > 0) narrativeText = parts.join('\n\n');
+        if (parts.length > 0) narrativeText = parts.join('\n');
     }
+
+    // Amexzone style: paragraphs separated by a single line break, never a blank line.
+    if (narrativeText) narrativeText = String(narrativeText).replace(/[ \t]*\n[ \t\r\n]*\n[ \t]*/g, '\n').trim();
 
     if (narrativeText) {
         console.log(`📝 Escribiendo narrativa para el Servicio #${tabIndex + 1} (${narrativeText.length} caracteres)...`);

@@ -869,7 +869,7 @@ const Record: React.FC = () => {
                     if (pId) {
                         const patient = await storage.getPatient(pId);
                         if (patient) {
-                            mergePatientIntoNote(normalized, patient);
+                            mergePatientIntoNote(normalized, patient, { primaryBehavioralOnly: String((note as any).template_id || normalized.meta?.template_id || '').startsWith('tcm_') });
 
                             // Sync UI state
                             setSelectedPatient(patient);
@@ -1243,7 +1243,7 @@ const Record: React.FC = () => {
                         normalized.meta.template_id = svcTemplateId;
                         normalized.patient_id = selectedPatient?.id;
                         (normalized as any)._frontend_service_title = svc.subTemplate;
-                        if (selectedPatient) mergePatientIntoNote(normalized, selectedPatient);
+                        if (selectedPatient) mergePatientIntoNote(normalized, selectedPatient, { primaryBehavioralOnly: svcTemplateId.startsWith('tcm_') });
                         if (userProfile || userClinic) mergeProfileIntoNote(normalized, userProfile, userClinic);
                         generatedNotes.push(normalized);
                         lastPdfResult = { success: true, data: normalized } as any;
@@ -1416,7 +1416,7 @@ const Record: React.FC = () => {
                     
                     (normalized as any)._frontend_service_title = svc.subTemplate;
 
-                    if (selectedPatient) mergePatientIntoNote(normalized, selectedPatient);
+                    if (selectedPatient) mergePatientIntoNote(normalized, selectedPatient, { primaryBehavioralOnly: svcTemplateId.startsWith('tcm_') });
                     if (userProfile || userClinic) mergeProfileIntoNote(normalized, userProfile, userClinic);
 
                     resolveKnownConfirms(normalized, {

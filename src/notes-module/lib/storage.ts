@@ -829,6 +829,11 @@ export const storage = {
             if (sanitizedPatient.dob === '') {
                 sanitizedPatient.dob = null;
             }
+            // Miami agencies: preferred language defaults to Spanish unless explicitly specified.
+            if ('preferred_language' in sanitizedPatient || !isUpdate) {
+                const lang = String((sanitizedPatient as any).preferred_language || '').trim();
+                if (!lang) (sanitizedPatient as any).preferred_language = 'Spanish';
+            }
 
             const { data, error } = await supabase
                 .from('patients')

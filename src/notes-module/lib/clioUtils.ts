@@ -5,7 +5,7 @@ import type { Patient } from './storage';
  * Merges Supabase patient data into the CloNote structure.
  * Ensures fields like emr_id -> account_number, gender -> sex_at_birth are mapped correctly.
  */
-export const mergePatientIntoNote = (note: ClioNote, patient: Patient): ClioNote => {
+export const mergePatientIntoNote = (note: ClioNote, patient: Patient, options: { primaryBehavioralOnly?: boolean } = {}): ClioNote => {
     if (!note.patient) note.patient = {} as any;
 
     // Root level linkage
@@ -55,9 +55,18 @@ export const mergePatientIntoNote = (note: ClioNote, patient: Patient): ClioNote
             });
 
         if (cleanList.length > 0) {
-            // Authoritative EMR overwrite: Note diagnoses must strictly match official patient records
-            note.diagnoses = cleanList;
-            note.diagnosis = cleanList;
+            if (options.primaryBehavioralOnly) {
+                // TCM: the encounter carries ONE diagnosis, the primary behavioral health one (ICD-10 chapter F).
+                // Every other diagnosis/condition stays only for the medical record and the narrative.
+                const primary = cleanList.find(d => /^F\d/i.test(d.icd10)) || cleanList.find(d => d.icd10) || cleanList[0];
+                note.diagnoses = [primary];
+                note.diagnosis = [primary] as any;
+                (note as any).medical_record_diagnoses = cleanList.filter(d => d !== primary);
+            } else {
+                // Authoritative EMR overwrite: Note diagnoses must strictly match official patient records
+                note.diagnoses = cleanList;
+                note.diagnosis = cleanList;
+            }
         }
     }
     return note;
@@ -681,7 +690,8 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
                 text = text.replace(pattern, ' ').trim();
             });
             // Cleanup double spaces/punctuation
-            text = text.replace(/[^\S\r\n]+/g, ' ').replace(/\n{3,}/g, '\n\n').replace(/[^\S\r\n]+[\.,]/g, '.').replace(/\.{2,}/g, '.');
+            // Paragraphs are separated by a single line break, never a blank line (Amexzone textarea style)
+            text = text.replace(/[^\S\r\n]+/g, ' ').replace(/[ \t]*\n[ \t\r\n]*\n[ \t]*/g, '\n').replace(/[^\S\r\n]+[\.,]/g, '.').replace(/\.{2,}/g, '.');
             if (text.length > 0) {
                 text = text.charAt(0).toUpperCase() + text.slice(1);
             }
@@ -926,13 +936,13 @@ export const mergeJointNotes = (notes: ClioNote[]): ClioNote => {
         if (note.narrative?.outcome_of_services && note.narrative.outcome_of_services !== "—") {
             const currentOutcome = note.narrative.outcome_of_services.trim();
             if (currentOutcome && !jointOutcome.includes(currentOutcome)) {
-                jointOutcome += jointOutcome ? `\n\n${currentOutcome}` : currentOutcome;
+                jointOutcome += jointOutcome ? `\n${currentOutcome}` : currentOutcome;
             }
         }
         if (note.narrative?.next_steps && note.narrative.next_steps !== "—") {
             const currentNextSteps = note.narrative.next_steps.trim();
             if (currentNextSteps && !jointNextSteps.includes(currentNextSteps)) {
-                jointNextSteps += jointNextSteps ? `\n\n${currentNextSteps}` : currentNextSteps;
+                jointNextSteps += jointNextSteps ? `\n${currentNextSteps}` : currentNextSteps;
             }
         }
         

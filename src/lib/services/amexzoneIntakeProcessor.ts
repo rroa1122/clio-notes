@@ -502,7 +502,7 @@ export function processAmexzoneData(data: RawAmexzoneData, prev: any = {}) {
         insurance_id: data.insurance_id || prev.insurance_id || '',
         emr_id: data.emr_id || prev.emr_id || '',
         ssn: data.ssn || prev.ssn || '',
-        preferred_language: data.preferred_language || prev.preferred_language || 'English',
+        preferred_language: data.preferred_language || prev.preferred_language || 'Spanish',
         case_manager: data.case_manager || prev.case_manager || '',
         emergency_contact_name: data.emergency_contact_name || prev.emergency_contact_name || '',
         emergency_contact_phone: data.emergency_contact_phone || prev.emergency_contact_phone || '',

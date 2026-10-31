@@ -19,8 +19,12 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
      - **Datos que Clio nunca pide:** solo del transcript; si no están, se reformula como acción del TCM sin afirmar resultados, o se omite (frecuencia de citas, reserva de medicamentos, suministros, detalles del vecindario).
      - **Por excepción (solo visitas cara a cara):** si el TCM no menciona problemas, el hogar está limpio y adecuado y el vecindario es seguro; el cliente estuvo cooperativo y participó. **Nunca** por excepción: SI/HI, ADLs, adherencia, transporte, plan de huracán, asuntos legales.
      - Ignorar frases viejas guardadas en el paciente ("reports no current prescribed medications", "no acute physical conditions") si contradicen los datos reales. Nunca "themselves" ni "he/she" para el TCM.
-2. **Preservación de Formato Multi-Párrafo (`clioUtils.ts`):**
-   - `normalizeTcmNote` no debe colapsar saltos de línea dobles (`\n\n`) ni viñetas (`•`) en plantillas estructuradas por párrafos (`tcm_initial_home_visit_note`, `tcm_case_assignment_note`, etc.).
+2. **Formato de párrafos (estilo Amexzone):**
+   - En Amexzone la narrativa es un textarea: cada párrafo empieza en una línea nueva **sin línea en blanco** entre párrafos. Los prompts piden un solo `\n` entre párrafos, `normalizeTcmNote` colapsa cualquier `\n\n` a `\n` (sin perder viñetas `•`), `mergeJointNotes` une Outcome/Next Steps con `\n`, y el bot (`encounterService.js`) vuelve a colapsar antes de pegar el texto.
+   - **Diagnósticos TCM:** el encuentro lleva **un solo** diagnóstico, el primario de salud mental (ICD-10 capítulo F). `mergePatientIntoNote(..., { primaryBehavioralOnly: true })` lo selecciona y deja el resto en `medical_record_diagnoses`; esas condiciones solo se mencionan en la narrativa con fines de récord médico.
+   - **Respetar los datos documentados:** no "corregir" ni marcar valores válidos aunque parezcan raros (p. ej., el teléfono del psiquiatra igual al de la agencia en referidos internos).
+   - **Idioma:** `storage.upsertPatient` guarda Spanish cuando no se especifica otro idioma (crear, editar e importar).
+
 3. **Múltiples Dominios Seleccionados:**
    - Respetar los dominios marcados por el usuario en `Record.tsx` y permitir activarlos/desactivarlos interactivamente en el modo edición de `TcmNoteShell.tsx`.
 
