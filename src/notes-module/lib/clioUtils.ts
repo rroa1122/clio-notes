@@ -1209,11 +1209,30 @@ export const stripNarrativeLabels = (note: any): any => {
             return line;
         }).join('\n');
     };
+    // A purpose written without its label ("To obtain and review ...") is a fragment: make it a sentence
+    const fixOpening = (text: any) => {
+        if (typeof text !== 'string' || !text) return text;
+        return text.replace(/^(\s*)To\s+([a-z])/, (_m, sp, ch) => `${sp}This service was provided to ${ch}`);
+    };
     const fixNarr = (n: any) => {
         if (!n || typeof n !== 'object') return;
         ['summary_notes', 'outcome_of_services', 'next_steps'].forEach(k => { if (k in n) n[k] = fix(n[k]); });
+        if ('summary_notes' in n) n.summary_notes = fixOpening(n.summary_notes);
     };
     fixNarr(note.narrative);
     (note.joint_services || []).forEach((s: any) => fixNarr(s?.narrative));
+    return note;
+};
+
+/** PSY Records: domain #2 too when the records list medical (non-psychiatric) conditions. */
+export const applyPsyRecordsMedicalDomain = (note: any): any => {
+    if (!note || typeof note !== 'object') return note;
+    const medical = (Array.isArray(note.medical_record_diagnoses) ? note.medical_record_diagnoses : [])
+        .some((d: any) => !/^F\d/i.test(String(d?.icd10 || '')) && String(d?.name || d?.icd10 || '').trim());
+    if (medical) {
+        if (!note.services) note.services = {};
+        if (!note.services.domains_selected) note.services.domains_selected = {};
+        note.services.domains_selected['2_physical_health_medical_dental'] = true;
+    }
     return note;
 };
