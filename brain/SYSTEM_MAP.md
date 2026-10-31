@@ -92,7 +92,7 @@ Official titles live in `TCM_CANONICAL_TITLES` (`clioUtils.ts`); Record forces t
 | 2 | `New Referral - Initial Telephone Contact and Coordination of Initial Home Visit` | `tcm_case_assignment_note` | `11 - Office` | `25 min` (`2u`) | `case_assignment_workflow.json` (`K3zH8zeSNCBx6QFL`) | ✅ v2 |
 | 3 | `Develop Assessment` | `tcm_assessment_note` | `12 - Home` | `113 min` (`8u`) | `assessment_workflow.json` (`GppDFTdj19n9o3Q2`) | ✅ v2 (branch) |
 | 4 | `Adult Certification` | `tcm_adult_certification_note` | `11 - Office` | `33 min` (`2u`) | `adult_certification_workflow.json` (`K3vH8zeSNCBx6QFL`) | ✅ v2 (branch) |
-| 5 | `Initial Service Plan Development` | `tcm_service_plan_note` | `11 - Office` | `100 min` (`7u`) | `service_plan_workflow.json` (`RvtViS0iE8lV67ye`) | ⏳ v2 pending |
+| 5 | `Initial Service Plan Development` | `tcm_service_plan_note` | `11 - Office` | `100 min` (`7u`) | `service_plan_workflow.json` (`RvtViS0iE8lV67ye`) | ✅ v2 (guía SP, `servicePlanGuide.ts`) |
 | 6 | `Discuss and Sign Initial Services Plan` | `tcm_service_plan_discussion` | `12 - Home` | `68 min` (`5u`) | `service_plan_discussion_workflow.json` (`RvtViS0iE8lV67yf`) | ✅ Exported in repo |
 | 7 | `Psychiatric Medical Records Retrieval and Coordination of Care` | `tcm_gather_psy_note` | `11 - Office` | `41 min` (`3u`) | `gather_psy_record_workflow.json` (`K3sH8zeSNCBx6QFL`) | ✅ Exported in repo |
 | 8 | `PCP Medical Records Retrieval and Coordination of Care` | `tcm_gather_pcp_note` | `11 - Office` | `41 min` (`3u`) | `gather_pcp_record_workflow.json` (`K3rH8zeSNCBx6QFL`) | ✅ Exported in repo |

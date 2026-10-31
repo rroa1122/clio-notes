@@ -63,6 +63,19 @@ import { searchDiagnoses, type DiagnosisCode } from '../notes-module/lib/diagnos
 import { getNoteServiceDate } from '../notes-module/lib/clioUtils';
 import { cn } from '@/lib/utils';
 import { supabase } from '../lib/supabaseClient';
+import {
+    SERVICE_PLAN_DOMAIN_KEYS,
+    SERVICE_PLAN_DOMAIN_LABELS,
+    SERVICE_PLAN_GUIDE_BY_KEY,
+    getServicePlanBlockKeys,
+    renderGuideBlock,
+    resolveClientGender,
+    resolveServicePlan,
+    isServicePlanValueUnedited,
+    getServicePlanDomainNumber,
+    getClientFirstName,
+    getServicePlanDischargeCriteria
+} from '../lib/tcm/servicePlanGuide';
 import { useAuth } from '../context/AuthContext';
 
 interface TimelineItem {
@@ -173,85 +186,40 @@ const DOMAIN_DEFAULTS: Record<string, { label: string, goal: string, obj1: strin
     }
 };
 
-const getActiveSubBlocks = (domainKey: string, socialNeeds: any) => {
-    const list: { key: string; label: string; defaultDesc: string; defaultGoal: string; defaultObj1: string; defaultObj2: string; defaultObj3: string }[] = [];
-    if (domainKey === 'domain_physical_health') {
-        list.push({
-            key: 'domain_physical_health',
-            label: 'Physical Health / Medical / Dental (PCP)',
-            defaultDesc: 'DESCRIPTION: Medical services. Specialists. Vaccination Compliance.',
-            defaultGoal: DOMAIN_DEFAULTS.domain_physical_health.goal,
-            defaultObj1: DOMAIN_DEFAULTS.domain_physical_health.obj1,
-            defaultObj2: DOMAIN_DEFAULTS.domain_physical_health.obj2,
-            defaultObj3: DOMAIN_DEFAULTS.domain_physical_health.obj3
-        });
-        if (socialNeeds.medicaid_recipient === true || socialNeeds.medicaid_recipient === 'Yes') {
-            list.push({
-                key: 'domain_physical_health_otc',
-                label: 'OTC Medications',
-                defaultDesc: 'DESCRIPTION: Over-the-counter (OTC) medications.',
-                defaultGoal: '"I want to obtain my OTC medicines every month". Client will be able to obtain his/her over-the-counter medications with the assistance of the Case Manager.',
-                defaultObj1: 'Client will be assisted by the TCM at the pharmacy in gathering information about his/her medication in the PCP office. TCM will visit the PCP office to obtain the application form on client\'s behalf.',
-                defaultObj2: 'Client will complete the OTC form with the TCM\'s assistance and will be able to submit his/her application form.',
-                defaultObj3: 'The TCM will monitor if client receives his/her medication through the contact parties involved.'
-            });
-        }
-        if (socialNeeds.emergency_alarm_needed === true || socialNeeds.emergency_alarm_needed === 'Yes') {
-            list.push({
-                key: 'domain_physical_health_alarm',
-                label: 'Emergency Alarm',
-                defaultDesc: 'DESCRIPTION: Emergency Alarm.',
-                defaultGoal: 'Client stated, "I want to have an emergency alarm system so I can feel safe at home." Client will obtain an Emergency Alarm System with the assistance of the Targeted Case Manager (TCM) during the next six months to enhance his/her safety, promote independence, and ensure quick access to emergency support.',
-                defaultObj1: 'Client will obtain information about emergency alarm systems and programs with the assistance of the TCM.',
-                defaultObj2: 'TCM will assist client in completing and submitting the emergency alarm application forms.',
-                defaultObj3: 'TCM will coordinate linkage and monitor that the emergency alarm system is correctly installed and functioning.'
-            });
-        }
-    } else if (domainKey === 'domain_transportation') {
-        list.push({
-            key: 'domain_transportation',
-            label: 'Transportation Services',
-            defaultDesc: 'DESCRIPTION: Transportation.',
-            defaultGoal: DOMAIN_DEFAULTS.domain_transportation.goal,
-            defaultObj1: DOMAIN_DEFAULTS.domain_transportation.obj1,
-            defaultObj2: DOMAIN_DEFAULTS.domain_transportation.obj2,
-            defaultObj3: DOMAIN_DEFAULTS.domain_transportation.obj3
-        });
-        if (socialNeeds.sts_needed === true || socialNeeds.sts_needed === 'Yes') {
-            list.push({
-                key: 'domain_transportation_sts',
-                label: 'Special Transportation Services (STS)',
-                defaultDesc: 'DESCRIPTION: Special Transportation Services (STS).',
-                defaultGoal: 'Client will obtain Special Transportation Services (STS) to facilitate door-to-door paratransit mobility.',
-                defaultObj1: 'TCM will assist client in obtaining, completing, and submitting the STS application form.',
-                defaultObj2: 'TCM will schedule required doctor verification appointment and coordinate transportation for the evaluation.',
-                defaultObj3: 'TCM will monitor STS application status and assist with scheduling rides once approved.'
-            });
-        }
-        if (socialNeeds.parking_permit_needed === true || socialNeeds.parking_permit_needed === 'Yes') {
-            list.push({
-                key: 'domain_transportation_dpp',
-                label: 'Handicap Parking Permit (DPP)',
-                defaultDesc: 'DESCRIPTION: Handicap Parking Permit.',
-                defaultGoal: 'Client will obtain a Handicap Parking Permit to facilitate accessible parking access.',
-                defaultObj1: 'TCM will assist client in obtaining the disabled parking permit application form.',
-                defaultObj2: 'TCM will coordinate with PCP to complete the medical certification section of the DPP form.',
-                defaultObj3: 'TCM will submit the completed DPP application to the DMV and monitor permit delivery.'
-            });
-        }
-    } else {
-        list.push({
-            key: domainKey,
-            label: DOMAIN_DEFAULTS[domainKey].label,
-            defaultDesc: `DESCRIPTION: ${DOMAIN_DEFAULTS[domainKey].label} services / Coordinate appointments.`,
-            defaultGoal: DOMAIN_DEFAULTS[domainKey].goal,
-            defaultObj1: DOMAIN_DEFAULTS[domainKey].obj1,
-            defaultObj2: DOMAIN_DEFAULTS[domainKey].obj2,
-            defaultObj3: DOMAIN_DEFAULTS[domainKey].obj3
-        });
-    }
-    return list;
+type SpSubBlock = {
+    key: string;
+    label: string;
+    domainNumber: number;
+    defaultDesc: string;
+    defaultNeeds: string;
+    defaultGoal: string;
+    defaultObj1: string;
+    defaultObj2: string;
+    defaultObj3: string;
 };
+
+// Service Plan sub-blocks come from the agency SP guide (src/lib/tcm/servicePlanGuide.ts).
+const getActiveSubBlocks = (domainKey: string, socialNeeds: any, patient?: any): SpSubBlock[] => {
+    const gender = resolveClientGender(patient);
+    const first = getClientFirstName(patient);
+    return getServicePlanBlockKeys(domainKey, socialNeeds || {}).map(key => {
+        const g = renderGuideBlock(SERVICE_PLAN_GUIDE_BY_KEY[key], first, gender);
+        return {
+            key,
+            label: g.label,
+            domainNumber: g.domainNumber,
+            defaultDesc: g.description,
+            defaultNeeds: g.needs,
+            defaultGoal: g.goal,
+            defaultObj1: g.objectives[0],
+            defaultObj2: g.objectives[1],
+            defaultObj3: g.objectives[2]
+        };
+    });
+};
+
+// Saved value unless it is empty or an old Clio default; then the guide text.
+const spValue = (saved: any, fallback: string): string => (isServicePlanValueUnedited(saved) ? fallback : String(saved));
 
 export function PatientDetail() {
     const { t, language } = useLanguage();
@@ -671,25 +639,24 @@ export function PatientDetail() {
                 service_plan_certification_date: socialNeeds.service_plan_certification_date || defaultCertDate
             };
 
-            // Populate active domain fields cleanly without synthetic filler strings
-            Object.keys(DOMAIN_DEFAULTS).forEach(key => {
-                if (updatedSocialNeeds[key] === true) {
-                    updatedSocialNeeds[`service_plan_date_${key}`] = updatedSocialNeeds[`service_plan_date_${key}`] || updatedSocialNeeds.service_plan_date || '';
-                    updatedSocialNeeds[`service_plan_description_${key}`] = updatedSocialNeeds[`service_plan_description_${key}`] || (DOMAIN_DEFAULTS[key]?.label ? `DESCRIPTION: ${DOMAIN_DEFAULTS[key].label} services / Coordinate appointments.` : '');
-                    updatedSocialNeeds[`service_plan_needs_${key}`] = updatedSocialNeeds[`service_plan_needs_${key}`] || updatedSocialNeeds[`${key}_needs`] || '';
-                    updatedSocialNeeds[`service_plan_status_${key}`] = updatedSocialNeeds[`service_plan_status_${key}`] || 'New';
-                    updatedSocialNeeds[`service_plan_goal_${key}`] = updatedSocialNeeds[`service_plan_goal_${key}`] || DOMAIN_DEFAULTS[key]?.goal || '';
-                    updatedSocialNeeds[`service_plan_obj1_${key}`] = updatedSocialNeeds[`service_plan_obj1_${key}`] || DOMAIN_DEFAULTS[key]?.obj1 || '';
-                    updatedSocialNeeds[`service_plan_obj1_date_${key}`] = updatedSocialNeeds[`service_plan_obj1_date_${key}`] || updatedSocialNeeds.service_plan_target_date || '';
-                    updatedSocialNeeds[`service_plan_obj2_${key}`] = updatedSocialNeeds[`service_plan_obj2_${key}`] || DOMAIN_DEFAULTS[key]?.obj2 || '';
-                    updatedSocialNeeds[`service_plan_obj2_date_${key}`] = updatedSocialNeeds[`service_plan_obj2_date_${key}`] || updatedSocialNeeds.service_plan_target_date || '';
-                    updatedSocialNeeds[`service_plan_obj3_${key}`] = updatedSocialNeeds[`service_plan_obj3_${key}`] || DOMAIN_DEFAULTS[key]?.obj3 || '';
-                    updatedSocialNeeds[`service_plan_obj3_date_${key}`] = updatedSocialNeeds[`service_plan_obj3_date_${key}`] || updatedSocialNeeds.service_plan_target_date || '';
-                }
+            // Populate Service Plan fields from the agency SP guide; TCM-edited values are kept.
+            resolveServicePlan({ ...patient, ...editData, tcm_social_needs: updatedSocialNeeds }).forEach(entry => {
+                const k = entry.key;
+                updatedSocialNeeds[`service_plan_date_${k}`] = entry.dateIdentified;
+                updatedSocialNeeds[`service_plan_description_${k}`] = entry.description;
+                if (k !== entry.domainKey) updatedSocialNeeds[`service_plan_needs_${k}`] = entry.needs;
+                updatedSocialNeeds[`service_plan_status_${k}`] = entry.status;
+                updatedSocialNeeds[`service_plan_goal_${k}`] = entry.goal;
+                updatedSocialNeeds[`service_plan_obj1_${k}`] = entry.objectives[0];
+                updatedSocialNeeds[`service_plan_obj2_${k}`] = entry.objectives[1];
+                updatedSocialNeeds[`service_plan_obj3_${k}`] = entry.objectives[2];
+                updatedSocialNeeds[`service_plan_obj1_date_${k}`] = entry.objectiveDates[0];
+                updatedSocialNeeds[`service_plan_obj2_date_${k}`] = entry.objectiveDates[1];
+                updatedSocialNeeds[`service_plan_obj3_date_${k}`] = entry.objectiveDates[2];
             });
 
             updatedSocialNeeds.service_plan_client_agreement = updatedSocialNeeds.service_plan_client_agreement || 'agreed';
-            updatedSocialNeeds.service_plan_discharge_criteria = updatedSocialNeeds.service_plan_discharge_criteria || '';
+            updatedSocialNeeds.service_plan_discharge_criteria = getServicePlanDischargeCriteria({ ...patient, ...editData, tcm_social_needs: updatedSocialNeeds });
 
             const rel = editData.emergency_contact_relation || updatedSocialNeeds.emergency_contact_relationship;
             if (rel) {
@@ -1042,38 +1009,24 @@ export function PatientDetail() {
             const defaultAssessmentDate = socialNeeds.service_plan_assessment_date || '';
             const defaultCertDate = socialNeeds.service_plan_certification_date || '';
 
+            // Same resolution as the document and the Initial Service Plan Development note.
             const activeDomainsData: Record<string, any> = {};
-            Object.keys(DOMAIN_DEFAULTS).forEach(key => {
-                if (socialNeeds[key] === true) {
-                    const subBlocks = getActiveSubBlocks(key, socialNeeds);
-                    subBlocks.forEach(sub => {
-                        const needsName = sub.key === key ? `${key}_needs` : `service_plan_needs_${sub.key}`;
-                        const descName = `service_plan_description_${sub.key}`;
-                        const goalName = `service_plan_goal_${sub.key}`;
-                        const obj1Name = `service_plan_obj1_${sub.key}`;
-                        const obj1DateName = `service_plan_obj1_date_${sub.key}`;
-                        const obj2Name = `service_plan_obj2_${sub.key}`;
-                        const obj2DateName = `service_plan_obj2_date_${sub.key}`;
-                        const obj3Name = `service_plan_obj3_${sub.key}`;
-                        const obj3DateName = `service_plan_obj3_date_${sub.key}`;
-                        const statusName = `service_plan_status_${sub.key}`;
-
-                        activeDomainsData[sub.key] = {
-                            domain_label: sub.label,
-                            date_identified: socialNeeds[`service_plan_date_${sub.key}`] || socialNeeds[`service_plan_date_${key}`] || defaultPlanDate,
-                            description: socialNeeds[descName] || '',
-                            needs_identified: socialNeeds[needsName] || socialNeeds[`service_plan_needs_${sub.key}`] || '',
-                            status: socialNeeds[statusName] || 'New',
-                            long_term_goal: socialNeeds[goalName] || '',
-                            objective_1: socialNeeds[obj1Name] || '',
-                            objective_1_date: socialNeeds[obj1DateName] || defaultTargetDate,
-                            objective_2: socialNeeds[obj2Name] || '',
-                            objective_2_date: socialNeeds[obj2DateName] || defaultTargetDate,
-                            objective_3: socialNeeds[obj3Name] || '',
-                            objective_3_date: socialNeeds[obj3DateName] || defaultTargetDate
-                        };
-                    });
-                }
+            resolveServicePlan(patient).forEach(entry => {
+                activeDomainsData[entry.key] = {
+                    domain_label: entry.label,
+                    date_identified: entry.dateIdentified,
+                    description: entry.description,
+                    needs_identified: entry.needs,
+                    status: entry.status,
+                    long_term_goal: entry.goal,
+                    objective_1: entry.objectives[0],
+                    objective_1_date: entry.objectiveDates[0],
+                    objective_2: entry.objectives[1],
+                    objective_2_date: entry.objectiveDates[1],
+                    objective_3: entry.objectives[2],
+                    objective_3_date: entry.objectiveDates[2],
+                    responsible: entry.responsible
+                };
             });
 
             const payload = {
@@ -1095,7 +1048,7 @@ export function PatientDetail() {
                 service_plan_data: {
                     service_plan_date: defaultPlanDate,
                     service_plan_target_date: defaultTargetDate,
-                    service_plan_discharge_criteria: socialNeeds.service_plan_discharge_criteria || '',
+                    service_plan_discharge_criteria: getServicePlanDischargeCriteria(patient),
                     service_plan_client_agreement: socialNeeds.service_plan_client_agreement || 'agreed',
                     service_plan_intake_date: defaultIntakeDate,
                     service_plan_records_date: defaultRecordsDate,
@@ -1498,6 +1451,13 @@ export function PatientDetail() {
             if (!tcm_social_needs || Object.keys(tcm_social_needs).length === 0 || !tcm_social_needs.service_plan_discharge_criteria) {
                 throw new Error(language === 'es' ? "La IA no devolvió un plan de servicio estructurado." : "AI did not return a structured service plan.");
             }
+
+            // Goals and objectives are formulated only from the agency SP guide: drop AI-written ones
+            // so the document, the Amexzone sync and the Initial Service Plan Development note match.
+            Object.keys(tcm_social_needs).forEach(field => {
+                const m = field.match(/^service_plan_(goal|obj1|obj2|obj3)_(domain_[a-z_]+)$/);
+                if (m && SERVICE_PLAN_GUIDE_BY_KEY[m[2]]) delete tcm_social_needs[field];
+            });
 
             setEditData(prev => ({
                 ...prev,
@@ -4527,8 +4487,9 @@ export function PatientDetail() {
                                                 </div>
 
                                                 <div className="space-y-6">
-                                                    {Object.keys(DOMAIN_DEFAULTS).map((key, idx) => {
-                                                        const item = DOMAIN_DEFAULTS[key];
+                                                    {SERVICE_PLAN_DOMAIN_KEYS.map((key) => {
+                                                        const domainNumber = getServicePlanDomainNumber(key);
+                                                        const item = { label: DOMAIN_DEFAULTS[key]?.label || SERVICE_PLAN_DOMAIN_LABELS[domainNumber] || key };
                                                         const isChecked = socialNeeds[key] === true;
 
                                                         return (
@@ -4541,20 +4502,20 @@ export function PatientDetail() {
                                                                         className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
                                                                     />
                                                                     <span className="text-sm font-black text-slate-800 dark:text-slate-200">
-                                                                        #{idx + 1} {item.label}
+                                                                        #{domainNumber} {item.label}
                                                                     </span>
                                                                 </div>
 
                                                                 {isChecked && (
                                                                     <div className="pl-7 space-y-6 divide-y divide-slate-100 dark:divide-slate-850">
-                                                                        {getActiveSubBlocks(key, socialNeeds).map((sub, sIdx) => {
+                                                                        {getActiveSubBlocks(key, socialNeeds, patient).map((sub, sIdx) => {
                                                                             const needsName = sub.key === key ? `${key}_needs` : `service_plan_needs_${sub.key}`;
-                                                                            const needsValue = socialNeeds[needsName] || socialNeeds[`service_plan_needs_${sub.key}`] || `${patient?.full_name || 'Client'} needs assistance with ${sub.label.toLowerCase()}.`;
-                                                                            const descriptionValue = socialNeeds[`service_plan_description_${sub.key}`] || sub.defaultDesc;
+                                                                            const needsValue = spValue(socialNeeds[needsName] || socialNeeds[`service_plan_needs_${sub.key}`], sub.defaultNeeds);
+                                                                            const descriptionValue = spValue(socialNeeds[`service_plan_description_${sub.key}`], sub.defaultDesc);
 
                                                                             return (
                                                                                 <div key={sub.key} className={`space-y-4 ${sIdx > 0 ? 'pt-4 border-t border-slate-100 dark:border-slate-800' : ''}`}>
-                                                                                    {getActiveSubBlocks(key, socialNeeds).length > 1 && (
+                                                                                    {getActiveSubBlocks(key, socialNeeds, patient).length > 1 && (
                                                                                         <h5 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2">
                                                                                             {sub.label}
                                                                                         </h5>
@@ -4616,7 +4577,7 @@ export function PatientDetail() {
                                                 </div>
 
                                                 {(() => {
-                                                    const activeKeys = Object.keys(DOMAIN_DEFAULTS).filter(k => socialNeeds[k] === true);
+                                                    const activeKeys = SERVICE_PLAN_DOMAIN_KEYS.filter(k => socialNeeds[k] === true);
                                                     if (activeKeys.length === 0) {
                                                         return (
                                                             <div className="text-center py-6 text-slate-400 font-medium text-xs">
@@ -4628,14 +4589,15 @@ export function PatientDetail() {
                                                     return (
                                                         <div className="space-y-6">
                                                             {activeKeys.map((key, idx) => {
-                                                                return getActiveSubBlocks(key, socialNeeds).map((sub, sIdx) => {
-                                                                    const customDesc = socialNeeds[`service_plan_description_${sub.key}`];
+                                                                return getActiveSubBlocks(key, socialNeeds, patient).map((sub, sIdx) => {
+                                                                    const customDesc = isServicePlanValueUnedited(socialNeeds[`service_plan_description_${sub.key}`]) ? '' : socialNeeds[`service_plan_description_${sub.key}`];
                                                                     const needsName = sub.key === key ? `${key}_needs` : `service_plan_needs_${sub.key}`;
-                                                                    const customNeeds = socialNeeds[`service_plan_needs_${sub.key}`] || socialNeeds[needsName];
-                                                                    const customGoal = socialNeeds[`service_plan_goal_${sub.key}`];
-                                                                    const customObj1 = socialNeeds[`service_plan_obj1_${sub.key}`];
-                                                                    const customObj2 = socialNeeds[`service_plan_obj2_${sub.key}`];
-                                                                    const customObj3 = socialNeeds[`service_plan_obj3_${sub.key}`];
+                                                                    const customNeedsRaw = socialNeeds[`service_plan_needs_${sub.key}`] || socialNeeds[needsName];
+                                                                    const customNeeds = isServicePlanValueUnedited(customNeedsRaw) ? sub.defaultNeeds : customNeedsRaw;
+                                                                    const customGoal = isServicePlanValueUnedited(socialNeeds[`service_plan_goal_${sub.key}`]) ? '' : socialNeeds[`service_plan_goal_${sub.key}`];
+                                                                    const customObj1 = isServicePlanValueUnedited(socialNeeds[`service_plan_obj1_${sub.key}`]) ? '' : socialNeeds[`service_plan_obj1_${sub.key}`];
+                                                                    const customObj2 = isServicePlanValueUnedited(socialNeeds[`service_plan_obj2_${sub.key}`]) ? '' : socialNeeds[`service_plan_obj2_${sub.key}`];
+                                                                    const customObj3 = isServicePlanValueUnedited(socialNeeds[`service_plan_obj3_${sub.key}`]) ? '' : socialNeeds[`service_plan_obj3_${sub.key}`];
 
                                                                     const obj1Date = socialNeeds[`service_plan_obj1_date_${sub.key}`] || socialNeeds[`service_plan_obj1_date_${key}`] || defaultTargetDate;
                                                                     const obj2Date = socialNeeds[`service_plan_obj2_date_${sub.key}`] || socialNeeds[`service_plan_obj2_date_${key}`] || defaultTargetDate;
@@ -4647,7 +4609,7 @@ export function PatientDetail() {
                                                                         <div key={sub.key} className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-5">
                                                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
                                                                                 <h5 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                                                                                    DOMAIN #{idx + 1}: {sub.label}
+                                                                                    DOMAIN #{sub.domainNumber}: {sub.label}
                                                                                 </h5>
                                                                                 
                                                                                 <div className="flex items-center gap-2">
@@ -4804,7 +4766,7 @@ export function PatientDetail() {
                                                         icon={FileText} 
                                                         label="Discharge Criteria Description" 
                                                         name="service_plan_discharge_criteria" 
-                                                        value={socialNeeds.service_plan_discharge_criteria || ''} 
+                                                        value={socialNeeds.service_plan_discharge_criteria || getServicePlanDischargeCriteria(patient)} 
                                                         isEditing={isEditing} 
                                                         onChange={handleSocialNeedsTextChange} 
                                                         isTextarea 

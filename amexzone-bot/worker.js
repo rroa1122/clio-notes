@@ -28,6 +28,30 @@ const {
 } = require('./src/core/sessionManager');
 const { performAmexzoneLogin } = require('./src/core/authService');
 
+// Maps an approved Amexzone SP block (by name) to the Clio Service Plan key (src/lib/tcm/servicePlanGuide.ts).
+function mapSpBlockToClioKey(domainKey, blockName) {
+    const n = String(blockName || '').toLowerCase();
+    if (domainKey === 'domain_physical_health') {
+        if (n.includes('otc')) return 'domain_physical_health_otc';
+        if (n.includes('alarm')) return 'domain_physical_health_alarm';
+        return 'domain_physical_health';
+    }
+    if (domainKey === 'domain_housing') return n.includes('recertif') ? 'domain_housing_recert' : 'domain_housing';
+    if (domainKey === 'domain_financial') {
+        if (n.includes('phone')) return 'domain_financial_lifeline';
+        if (n.includes('food stamps') || n.includes('snap')) return 'domain_financial_snap';
+        return 'domain_financial';
+    }
+    if (domainKey === 'domain_transportation') {
+        if (n.includes('special') || n.includes('sts')) return 'domain_transportation_sts';
+        if (n.includes('permit') || n.includes('dpp')) return 'domain_transportation_dpp';
+        if (n.includes('golden')) return 'domain_transportation_golden';
+        if (n.includes('modivcare')) return 'domain_transportation_modivcare';
+        return 'domain_transportation';
+    }
+    return domainKey;
+}
+
 async function processTask(task, integration) {
     console.log(`\n⚙️  PROCESANDO TAREA: ${task.id}`);
     console.log(`👤 Paciente: ${task.patient_name}`);
@@ -1069,7 +1093,8 @@ async function processTask(task, integration) {
                     
                     const cb = fields.checkbox;
                     let isChecked = await cb.isChecked().catch(() => false);
-                    const shouldBeActive = caseAnalysis.activeDomains[domainKey] || (spData.domains && spData.domains[domainKey]);
+                    const clioDomainEntry = spData.domains?.[domainKey] || Object.entries(spData.domains || {}).find(([k]) => k.startsWith(`${domainKey}_`))?.[1];
+                    const shouldBeActive = caseAnalysis.activeDomains[domainKey] || clioDomainEntry;
                     if (!isChecked && shouldBeActive) {
                         console.log(`   ☑️ Domain ${domainKey} active based on case necessity matching. Enabling and checking Section II checkbox...`);
                         await setCheckbox(cb, true);
@@ -1084,7 +1109,7 @@ async function processTask(task, integration) {
                         }
                         
                         // Get Needs Identified text
-                        const customDomain = spData.domains?.[domainKey];
+                        const customDomain = clioDomainEntry;
                         let needsText = customDomain?.needs_identified || domainTemplates[domainKey];
                         if (needsText !== undefined) {
                             let resolvedText = replacePronouns(needsText);
@@ -1512,6 +1537,16 @@ async function processTask(task, integration) {
                     }
                 }
 
+                // Clio's Service Plan document decides which guide blocks exist for this domain,
+                // so Amexzone matches the document and the Initial Service Plan Development note.
+                const clioKeys = Object.keys(spData.domains || {});
+                const clioBlocks = blocks.filter(bl => clioKeys.includes(mapSpBlockToClioKey(domainKey, bl.name)));
+                if (clioBlocks.length > 0) {
+                    blocksToBuild.length = 0;
+                    clioBlocks.forEach(bl => blocksToBuild.push(bl));
+                    console.log(`   📄 Using Clio SP document blocks for ${domainKey}: ${clioBlocks.map(bl => bl.name).join(', ')}`);
+                }
+
                 if (blocksToBuild.length === 0) {
                     console.log(`   ℹ️ All blocks for ${domainKey} were skipped.`);
                     continue;
@@ -1585,20 +1620,7 @@ async function processTask(task, integration) {
                         blockData.objectives = [...blockData.objectives];
                     }
                     // Determine which sub-block key from Clio corresponds to this EMR block
-                    let subBlockKey = domainKey;
-                    if (domainKey === 'domain_physical_health') {
-                        if (blockData.name.toLowerCase().includes('otc')) {
-                            subBlockKey = 'domain_physical_health_otc';
-                        } else if (blockData.name.toLowerCase().includes('alarm')) {
-                            subBlockKey = 'domain_physical_health_alarm';
-                        }
-                    } else if (domainKey === 'domain_transportation') {
-                        if (blockData.name.toLowerCase().includes('special') || blockData.name.toLowerCase().includes('sts')) {
-                            subBlockKey = 'domain_transportation_sts';
-                        } else if (blockData.name.toLowerCase().includes('permit') || blockData.name.toLowerCase().includes('dpp')) {
-                            subBlockKey = 'domain_transportation_dpp';
-                        }
-                    }
+                    const subBlockKey = mapSpBlockToClioKey(domainKey, blockData.name);
 
                     const customDomain = spData.domains?.[subBlockKey];
                     if (customDomain) {
