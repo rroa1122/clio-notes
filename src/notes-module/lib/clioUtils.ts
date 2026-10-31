@@ -196,8 +196,9 @@ export const enforcePrimaryBehavioralDiagnosis = (note: any): any => {
     const list = toList(Array.isArray(note.diagnoses) && note.diagnoses.length ? note.diagnoses : note.diagnosis);
     if (list.length === 0) return note;
     const found = list.find(d => /^F\d/i.test(d.icd10)) || list.find(d => d.icd10) || list[0];
-    // TCM uses one diagnosis, the principal, for both the service note and the claim
-    const primary: any = { ...found, type: 'Principal' };
+    // TCM uses one diagnosis, the principal, for both the service note and the claim.
+    // Amexzone labels it "Type: Rule-Out" on the note, so Clio shows the same label.
+    const primary: any = { ...found, type: 'Rule-Out' };
     const rest = list.filter(d => d !== found);
     note.diagnoses = [primary];
     note.diagnosis = [primary];
@@ -1227,5 +1228,30 @@ export const applyPsyRecordsMedicalDomain = (note: any): any => {
         if (!note.services.domains_selected) note.services.domains_selected = {};
         note.services.domains_selected['2_physical_health_medical_dental'] = true;
     }
+    return note;
+};
+
+
+/**
+ * Outcome and Next Steps summarize the service: they never carry [CONFIRM] items (those belong in
+ * the narrative). Any tag left there by the model is replaced with neutral wording.
+ */
+export const removeConfirmsFromOutcome = (note: any): any => {
+    if (!note || typeof note !== 'object') return note;
+    const clean = (text: any) => {
+        if (typeof text !== 'string' || !text.includes('[CONFIRM')) return text;
+        return text
+            .replace(/(\bappropriate)\s+\[CONFIRM:[^\]]*\]/gi, '$1 services')
+            .replace(/(\bregarding|\babout|\bassess|\bwith)\s+\[CONFIRM:[^\]]*\]/gi, '$1 the identified needs')
+            .replace(/\s*\[CONFIRM:[^\]]*\]/gi, '')
+            .replace(/\s+([,.])/g, '$1')
+            .replace(/,\s*,/g, ',');
+    };
+    const fix = (n: any) => {
+        if (!n || typeof n !== 'object') return;
+        ['outcome_of_services', 'next_steps'].forEach(k => { if (k in n) n[k] = clean(n[k]); });
+    };
+    fix(note.narrative);
+    (note.joint_services || []).forEach((sv: any) => fix(sv?.narrative));
     return note;
 };

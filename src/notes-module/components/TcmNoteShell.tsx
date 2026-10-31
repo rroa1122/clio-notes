@@ -3512,7 +3512,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                                 placeholder="Diagnosis name..."
                                                             />
                                                             <span className="text-[10px] text-slate-400 font-bold tracking-tight select-none">
-                                                                Type: Principal (service and billing)
+                                                                Type: Rule-Out
                                                             </span>
                                                         </div>
                                                     </div>
