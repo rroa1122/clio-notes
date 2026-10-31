@@ -2193,6 +2193,16 @@ export function PatientDetail() {
                                 theme="purple"
                             />
                             <PremiumGlassField
+                                icon={Calendar}
+                                label="Psych Record Date (note used to create the client)"
+                                name="psych_record_date"
+                                value={(isEditing ? (editData.tcm_social_needs as any) : (patient.tcm_social_needs as any))?.psych_record_date || ''}
+                                isEditing={isEditing}
+                                onChange={handleSocialNeedsTextChange}
+                                className="col-span-2"
+                                theme="purple"
+                            />
+                            <PremiumGlassField
                                 icon={Activity}
                                 label="Mental Conditions"
                                 name="psych_conditions"

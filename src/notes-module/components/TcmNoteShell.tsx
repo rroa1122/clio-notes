@@ -188,7 +188,7 @@ const highlightWarnings = (text: any, onConfirmClick?: ((tag: string) => void) |
                             type="button"
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onConfirmClick(part.trim()); }}
                             title="Click to complete this item"
-                            className="no-print-link bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-300/80 dark:border-amber-800/60 px-1.5 py-0.5 rounded font-semibold italic text-[11px] inline-flex items-center gap-0.5 mx-0.5 leading-none underline decoration-dotted underline-offset-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 cursor-pointer transition-colors"
+                            className="confirm-badge no-print-link bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-300/80 dark:border-amber-800/60 px-1.5 py-0.5 rounded font-semibold italic text-[11px] inline-flex items-center gap-0.5 mx-0.5 leading-none underline decoration-dotted underline-offset-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 cursor-pointer transition-colors"
                         >
                             ⚠️ {part}
                         </button>

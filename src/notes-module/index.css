@@ -3804,6 +3804,15 @@ input.medical-input {
     display: none !important;
   }
 
+  /* [CONFIRM] badges are buttons but are part of the note text: keep them in the PDF */
+  button.confirm-badge {
+    display: inline !important;
+    border: none !important;
+    background: none !important;
+    padding: 0 !important;
+    font-style: italic;
+  }
+
   /* Reset text colors */
   p,
   h1,
@@ -4182,4 +4191,4 @@ input.medical-input {
 
 .animate-sound-bar-4 {
   animation: sound-bar-rhythm-4 0.8s ease-in-out infinite 0.1s;
-}
+}

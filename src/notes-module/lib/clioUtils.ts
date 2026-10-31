@@ -154,8 +154,9 @@ export const normalizeClientNameInNarrative = (note: any, storedFullName: string
     const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const lastEsc = esc(m[1].trim());
     const firstEsc = esc(m[2].trim().split(/\s+/)[0]);
-    // Matches "POIRIER, Stephane" / "Poirier, Stephane M." in any case
-    const re = new RegExp(`\\b${lastEsc},\\s*${firstEsc}(?:\\s+[A-Z]\\.)?`, 'gi');
+    // Matches the stored "POIRIER, Stephane" (any case) / "Poirier, Stephane M.", but not when the last name
+    // belongs to another person ("Marie Poirier, Stephane's mother") or is followed by a possessive.
+    const re = new RegExp(`\\b${lastEsc},\\s*${firstEsc}(?:\\s+[A-Z]\\.)?(?![A-Za-zÀ-ÿ'’])`, 'gi');
     const fix = (text: any, isFirstField: boolean) => {
         if (typeof text !== 'string' || !re.test(text)) return text;
         re.lastIndex = 0;
@@ -738,7 +739,8 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
 
     if (encounter.pos && encounter.pos !== "—") {
         const desc = encounter.pos_description || encounter.service_location;
-        if (desc && desc !== "—" && desc !== encounter.pos) {
+        // pos may already come as "11 - Office": never append the description twice
+        if (desc && desc !== "—" && desc !== encounter.pos && !String(encounter.pos).includes(' - ')) {
             encounter.pos_full = `${encounter.pos} - ${desc}`;
         } else {
             encounter.pos_full = encounter.pos;
@@ -902,6 +904,16 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         encounter.location_name = '12 - Home';
         encounter.service_location = 'Home';
     }
+    // v2 templates: domains that always apply to the service (the model may add others)
+    const V2_REQUIRED_DOMAINS: Record<string, string[]> = {
+        tcm_gather_psy_note: ['1_mental_health_substance_abuse'],
+        tcm_gather_pcp_note: ['2_physical_health_medical_dental'],
+        tcm_pc_emergency_contact_note: ['1_mental_health_substance_abuse', '5_recreational_social_support'],
+        tcm_adult_certification_note: ['1_mental_health_substance_abuse'],
+        tcm_service_plan_note: ['1_mental_health_substance_abuse'],
+        tcm_service_plan_discussion: ['1_mental_health_substance_abuse'],
+    };
+    (V2_REQUIRED_DOMAINS[activeTemplateId] || []).forEach(k => { services.domains_selected[k] = true; });
  
     if (isHurricane) {
         services.domains_selected["12_other"] = true;

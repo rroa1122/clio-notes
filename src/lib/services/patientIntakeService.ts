@@ -299,6 +299,14 @@ export async function extractPatientData(file: File): Promise<Partial<Patient>> 
         }
     }
 
+    // Fecha de servicio de la nota psiquiátrica usada para crear al paciente (Psych Record Date)
+    const dos = content.encounter?.date_of_service;
+    const isPsychDoc = psychConditions.length > 0 || psychMeds.length > 0 || Boolean(patientData.psych_name) ||
+        String(content.encounter?.note_type || content.encounter?.encounter_type || '').toLowerCase().includes('psych');
+    if (dos && isPsychDoc) {
+        (patientData as any).psych_record_date = String(dos).trim();
+    }
+
     // Guardar las condiciones y medicaciones separadas inteligentemente
     if (psychConditions.length > 0) patientData.psych_conditions = psychConditions.join('\n');
     if (pcpConditions.length > 0) patientData.pcp_conditions = pcpConditions.join('\n');

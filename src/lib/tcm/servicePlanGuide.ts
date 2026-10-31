@@ -780,3 +780,33 @@ export const injectServicePlanGoalReview = (note: any, patient: any): void => {
     apply(note.narrative);
     if (Array.isArray(note.joint_services)) note.joint_services.forEach((s: any) => apply(s?.narrative));
 };
+
+const DOMAIN_SELECTED_KEYS: Record<number, string> = {
+    1: '1_mental_health_substance_abuse',
+    2: '2_physical_health_medical_dental',
+    3: '3_vocational_employment_job_training',
+    4: '4_school_education',
+    5: '5_recreational_social_support',
+    6: '6_activities_of_daily_living',
+    7: '7_housing_shelter',
+    8: '8_economic_financial',
+    9: '9_basic_needs',
+    10: '10_transportation',
+    11: '11_legal_immigration',
+    12: '12_other',
+};
+
+/** SP notes: the domains checked are exactly #1 plus the domains of the Service Plan document. */
+export const applyServicePlanDomains = (note: any, patient: any): void => {
+    if (!note || !patient) return;
+    const numbers = new Set<number>([1, ...buildServicePlanDocumentPayload(patient).entries.map(e => e.domain_number)]);
+    const apply = (svc: any) => {
+        if (!svc) return;
+        if (!svc.services) svc.services = {};
+        const sel: Record<string, boolean> = {};
+        Object.entries(DOMAIN_SELECTED_KEYS).forEach(([n, k]) => { sel[k] = numbers.has(Number(n)); });
+        svc.services.domains_selected = sel;
+    };
+    apply(note);
+    if (Array.isArray(note.joint_services)) note.joint_services.forEach(apply);
+};

@@ -13,7 +13,7 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { buildServicePlanDocumentPayload, injectServicePlanGoals, injectServicePlanGoalReview } from '../../lib/tcm/servicePlanGuide';
+import { buildServicePlanDocumentPayload, injectServicePlanGoals, injectServicePlanGoalReview, applyServicePlanDomains } from '../../lib/tcm/servicePlanGuide';
 import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis, getClientDisplayName, normalizeClientNameInNarrative, enforceCanonicalTitle } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
@@ -1476,6 +1476,7 @@ const Record: React.FC = () => {
                         if (selectedPatient?.full_name) normalizeClientNameInNarrative(normalized, selectedPatient.full_name);
                         if (svcTemplateId === 'tcm_service_plan_note' && selectedPatient) injectServicePlanGoals(normalized, selectedPatient);
                         if (svcTemplateId === 'tcm_service_plan_discussion' && selectedPatient) injectServicePlanGoalReview(normalized, selectedPatient);
+                        if ((svcTemplateId === 'tcm_service_plan_note' || svcTemplateId === 'tcm_service_plan_discussion') && selectedPatient) applyServicePlanDomains(normalized, selectedPatient);
                     }
                     
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations
