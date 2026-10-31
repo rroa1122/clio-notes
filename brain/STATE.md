@@ -21,18 +21,26 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
    - **Seguridad y Orientación:** Restauración de reglas de orientación y seguridad por excepción.
    - **Eliminación de narración de vacíos (Gap Narration):** Se eliminaron frases redundantes de datos faltantes en los prompts y en el frontend (`stripGapNarration`).
    - **Modal de confirmación interactivo en Clio:** Diálogo propio con opciones para completar TCM Social o continuar.
-2. **Exportación de los 4 Workflows Restantes de n8n:**
-   - Se exportaron directamente desde la base de datos de n8n en el VPS y se agregaron a `scratch/`:
-     - `scratch/gather_pcp_record_workflow.json` (`tcm-gather-pcp-note` - ID: `K3rH8zeSNCBx6QFL`)
-     - `scratch/gather_psy_record_workflow.json` (`tcm-gather-psy-note` - ID: `K3sH8zeSNCBx6QFL`)
-     - `scratch/pc_emergency_contact_workflow.json` (`tcm-pc-emergency-contact-note` - ID: `K3tH8zeSNCBx6QFL`)
-     - `scratch/service_plan_discussion_workflow.json` (`tcm-service-plan-discussion` - ID: `RvtViS0iE8lV67yf`)
-   - Se actualizaron en `scratch/sync_all_workflows.cjs` para sincronización automática continua.
+2. **Exportación e Integración de los 10 Workflows de n8n:**
+   - Todos los 10 workflows ahora residen formalmente en `scratch/`:
+     - `initial_home_visit_workflow.json`
+     - `case_assignment_workflow.json`
+     - `assessment_workflow.json`
+     - `adult_certification_workflow.json`
+     - `service_plan_workflow.json`
+     - `gather_pcp_record_workflow.json`
+     - `gather_psy_record_workflow.json`
+     - `pc_emergency_contact_workflow.json`
+     - `service_plan_discussion_workflow.json`
+     - `tcm_workflow.json`
+   - Se configuró [`scratch/sync_all_workflows.cjs`](scratch/sync_all_workflows.cjs) de forma multiplataforma (Windows y Linux en GitHub Actions) para inyectar los 10 workflows en la base de datos de n8n.
 3. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
-   - Configurado para escuchar ramas `main` y `feat/**` / `feat/*`, desplegando automáticamente en cada push.
+   - Configurado para escuchar ramas `main` y `feat/**` / `feat/*`, desplegando automáticamente en cada push de Claude o el equipo.
+4. **Protocolo de Colaboración Multi-Agente (Anti-Conflicto):**
+   - Documentado en `brain/SYSTEM_MAP.md` sección 6 para evitar bloqueos y colisiones entre Claude y Antigravity.
 
 ---
 
-## Próximos Pasos (Fase 2)
-- Ajustes de prompts v2 en los 4 nuevos workflows para estandarizarlos a TCM v2.
-- Pruebas reales de notas en `https://notes.clinicflow.dev`.
+## Próximos Pasos
+- Claude puede actualizar los prompts de los 4 nuevos workflows para estandarizarlos a v2.
+- Actualizar el mapeo de servicios en `amexzone-bot/worker.js` cuando se definan los nombres finales de los nuevos templates para Amexzone EHR.

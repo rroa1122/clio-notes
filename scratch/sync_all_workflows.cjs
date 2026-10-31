@@ -72,8 +72,18 @@ print("All workflows successfully synchronized to n8n database!")
 
 fs.writeFileSync('scratch/remote_sync_script.py', remotePythonScript, 'utf8');
 
-const sshKey = 'C:\\Users\\REINIER\\.ssh\\id_rsa_clinicflow';
 const host = 'root@clinicflow.dev';
+
+// Dynamic SSH Key resolution (Windows local vs Linux/GitHub Actions runner)
+let sshKeyOption = '';
+const winKey = 'C:\\Users\\REINIER\\.ssh\\id_rsa_clinicflow';
+const linuxKey = process.env.SSH_KEY_PATH || `${process.env.HOME || ''}/.ssh/id_ed25519`;
+
+if (process.platform === 'win32' && fs.existsSync(winKey)) {
+    sshKeyOption = `-i "${winKey}"`;
+} else if (fs.existsSync(linuxKey)) {
+    sshKeyOption = `-i "${linuxKey}"`;
+}
 
 console.log('[1/3] Uploading workflow JSONs and sync script to server...');
 const filesToUpload = [
@@ -90,12 +100,12 @@ const filesToUpload = [
     'scratch/remote_sync_script.py'
 ].join(' ');
 
-execSync(`scp -i ${sshKey} -o StrictHostKeyChecking=no ${filesToUpload} ${host}:/tmp/`, { stdio: 'inherit' });
+execSync(`scp ${sshKeyOption} -o StrictHostKeyChecking=no ${filesToUpload} ${host}:/tmp/`, { stdio: 'inherit' });
 
 console.log('\n[2/3] Executing database update script on server...');
-execSync(`ssh -i ${sshKey} -o StrictHostKeyChecking=no ${host} "python3 /tmp/remote_sync_script.py"`, { stdio: 'inherit' });
+execSync(`ssh ${sshKeyOption} -o StrictHostKeyChecking=no ${host} "python3 /tmp/remote_sync_script.py"`, { stdio: 'inherit' });
 
 console.log('\n[3/3] Restarting n8n docker container to load new workflows...');
-execSync(`ssh -i ${sshKey} -o StrictHostKeyChecking=no ${host} "docker restart n8n"`, { stdio: 'inherit' });
+execSync(`ssh ${sshKeyOption} -o StrictHostKeyChecking=no ${host} "docker restart n8n"`, { stdio: 'inherit' });
 
 console.log('\n✅ All 10 n8n workflows synchronized and container restarted!');

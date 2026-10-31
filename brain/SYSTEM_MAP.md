@@ -73,8 +73,8 @@ Whenever creating or modifying a **TCM Template**, these 3 layers must stay in s
    - `src/notes-module/lib/constants.ts` (`DEFAULT_TEMPLATES` catalog).
    - `src/notes-module/components/TcmNoteShell.tsx` (display, edit mode, `[CONFIRM: ...]` badges, and RPA task creation).
 2. **Layer 2 — n8n AI Workflows (`scratch/`):**
-   - Workflow JSONs: `scratch/*_workflow.json`.
-   - Deployment script: `node scratch/sync_all_workflows.cjs` (uploads JSONs to VPS `/tmp/`, updates `/root/n8n/database.sqlite`, and restarts Docker `n8n`).
+   - Workflow JSONs: `scratch/*_workflow.json` (all 10 workflows are now in the repo).
+   - Deployment script: `node scratch/sync_all_workflows.cjs` (cross-platform, uploads JSONs to VPS `/tmp/`, updates `/root/n8n/database.sqlite`, and restarts Docker `n8n`).
 3. **Layer 3 — Amexzone RPA Bot (`amexzone-bot/`):**
    - `amexzone-bot/worker.js`: Polls `amexzone_note_tasks`, maps service names via `mapClioServiceToAmexzone`, and launches Playwright tasks (`src/tasks/progressNoteTask.js`).
    - `amexzone-bot/src/amexzone/encounterService.js`: Automates Amexzone EHR modal (`fillServiceModal`), selects service, POS, time/units, domains `1-12`, and pastes `summary_notes`.
@@ -93,8 +93,17 @@ Official titles live in `TCM_CANONICAL_TITLES` (`clioUtils.ts`); Record forces t
 | 3 | `Develop Assessment` | `tcm_assessment_note` | `12 - Home` | `113 min` (`8u`) | `assessment_workflow.json` (`GppDFTdj19n9o3Q2`) | ✅ v2 (branch) |
 | 4 | `Adult Certification` | `tcm_adult_certification_note` | `11 - Office` | `33 min` (`2u`) | `adult_certification_workflow.json` (`K3vH8zeSNCBx6QFL`) | ✅ v2 (branch) |
 | 5 | `Initial Service Plan Development` | `tcm_service_plan_note` | `11 - Office` | `100 min` (`7u`) | `service_plan_workflow.json` (`RvtViS0iE8lV67ye`) | ⏳ v2 pending |
-| 6 | `Discuss and Sign Initial Services Plan` | `tcm_service_plan_discussion` | `12 - Home` | `68 min` (`5u`) | webhook `tcm-service-plan-discussion` — **workflow not in repo** | ⏳ needs prod export |
-| 7 | `Psychiatric Medical Records Retrieval and Coordination of Care` | `tcm_gather_psy_note` | `11 - Office` | `41 min` (`3u`) | webhook `tcm-gather-psy-note` — **workflow not in repo** | ⏳ needs prod export |
-| 8 | `PCP Medical Records Retrieval and Coordination of Care` | `tcm_gather_pcp_note` | `11 - Office` | `41 min` (`3u`) | webhook `tcm-gather-pcp-note` — **workflow not in repo** | ⏳ needs prod export |
-| 9 | `Emergency Contact / Gather Information` | `tcm_pc_emergency_contact_note` | `11 - Office` | `23 min` (`2u`) | webhook `tcm-pc-emergency-contact-note` — **workflow not in repo** | ⏳ needs prod export |
+| 6 | `Discuss and Sign Initial Services Plan` | `tcm_service_plan_discussion` | `12 - Home` | `68 min` (`5u`) | `service_plan_discussion_workflow.json` (`RvtViS0iE8lV67yf`) | ✅ Exported in repo |
+| 7 | `Psychiatric Medical Records Retrieval and Coordination of Care` | `tcm_gather_psy_note` | `11 - Office` | `41 min` (`3u`) | `gather_psy_record_workflow.json` (`K3sH8zeSNCBx6QFL`) | ✅ Exported in repo |
+| 8 | `PCP Medical Records Retrieval and Coordination of Care` | `tcm_gather_pcp_note` | `11 - Office` | `41 min` (`3u`) | `gather_pcp_record_workflow.json` (`K3rH8zeSNCBx6QFL`) | ✅ Exported in repo |
+| 9 | `Emergency Contact / Gather Information` | `tcm_pc_emergency_contact_note` | `11 - Office` | `23 min` (`2u`) | `pc_emergency_contact_workflow.json` (`K3tH8zeSNCBx6QFL`) | ✅ Exported in repo |
 | 10 | `TCM Progress Note` (Spaced / General) | `tcm_progress_note` | Variable | Variable | `tcm_workflow.json` (`edM28zeSNCBx6QFI`) | — |
+
+---
+
+## 6. Team & Multi-Agent Collaboration Protocol (Anti-Conflict)
+To maintain smooth collaboration between developers and AI agents (Claude & Antigravity):
+1. **Division of Responsibility:**
+   - **Claude (alegidos):** Clinical prompt engineering (`scratch/*_workflow.json`) and TCM UI components (`Record.tsx`, `TcmNoteShell.tsx`).
+   - **Antigravity (Reinier):** Infrastructure, cross-platform CI/CD (`deploy.yml`), server synchronization (`sync_all_workflows.cjs`), RPA bot automation, and production deployment.
+2. **Git Hygiene:** Always run `git pull` before starting edits. CI/CD auto-deploys all pushes to `feat/*` and `main` directly to production (`clinicflow.dev`).
