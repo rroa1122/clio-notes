@@ -2114,7 +2114,7 @@ const Record: React.FC = () => {
                                         </div>
 
                                         {isDropdownOpen && (
-                                            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-950/98 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 text-slate-800 dark:text-slate-100">
+                                            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-slate-950 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 text-slate-800 dark:text-slate-100">
                                                 {/* Search View */}
                                                 {subTemplateSearchQuery.trim().length > 0 ? (
                                                     <div className="flex flex-col gap-1.5 max-h-[50vh] sm:max-h-[360px] overflow-y-auto custom-scrollbar p-1">

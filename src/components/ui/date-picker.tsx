@@ -96,7 +96,7 @@ export function DatePicker({
             {icon || <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card/98 backdrop-blur-xl" align="start" sideOffset={8}>
+        <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card backdrop-blur-xl" align="start" sideOffset={8}>
           <Calendar
             selected={selectedDate}
             onSelect={(newDate) => {
@@ -134,7 +134,7 @@ export function DatePicker({
             {icon || <CalendarIcon className="h-4 w-4" />}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card/98 backdrop-blur-xl" align="end" sideOffset={8}>
+        <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card backdrop-blur-xl" align="end" sideOffset={8}>
           <Calendar
             selected={selectedDate}
             onSelect={(newDate) => {
