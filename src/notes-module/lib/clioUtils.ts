@@ -127,6 +127,52 @@ export const resolveKnownConfirms = (note: any, values: KnownNoteValues): any =>
 };
 
 /**
+ * Client names are often stored as "LAST, First". Notes (like Amexzone) use "First Last"
+ * on first mention and the first name afterwards.
+ */
+const titleCaseName = (s: string) => s.toLowerCase().replace(/(^|[\s'-])([a-zà-ÿ])/g, (_m, p1, p2) => p1 + p2.toUpperCase());
+
+export const getClientDisplayName = (fullName: string): { full: string; first: string; last: string } => {
+    const raw = String(fullName || '').trim().replace(/\s+/g, ' ');
+    const m = raw.match(/^([^,]+),\s*(.+)$/);
+    if (m) {
+        const last = /[a-z]/.test(m[1]) ? m[1].trim() : titleCaseName(m[1].trim());
+        const firstPart = /[a-z]/.test(m[2]) ? m[2].trim() : titleCaseName(m[2].trim());
+        const first = firstPart.split(' ')[0];
+        return { full: `${firstPart} ${last}`, first, last };
+    }
+    const parts = raw.split(' ');
+    return { full: raw, first: parts[0] || raw, last: parts.slice(1).join(' ') };
+};
+
+export const normalizeClientNameInNarrative = (note: any, storedFullName: string): any => {
+    if (!note || typeof note !== 'object') return note;
+    const raw = String(storedFullName || '').trim();
+    const m = raw.match(/^([^,]+),\s*(.+)$/);
+    if (!m) return note;
+    const { full, first } = getClientDisplayName(raw);
+    const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const lastEsc = esc(m[1].trim());
+    const firstEsc = esc(m[2].trim().split(/\s+/)[0]);
+    // Matches "POIRIER, Stephane" / "Poirier, Stephane M." in any case
+    const re = new RegExp(`\\b${lastEsc},\\s*${firstEsc}(?:\\s+[A-Z]\\.)?`, 'gi');
+    const fix = (text: any, isFirstField: boolean) => {
+        if (typeof text !== 'string' || !re.test(text)) return text;
+        re.lastIndex = 0;
+        let seen = !isFirstField;
+        return text.replace(re, () => { if (!seen) { seen = true; return full; } return first; });
+    };
+    const fixNarr = (n: any) => {
+        if (!n || typeof n !== 'object') return;
+        n.summary_notes = fix(n.summary_notes, true);
+        ['outcome_of_services', 'next_steps'].forEach(k => { if (k in n) n[k] = fix(n[k], true); });
+    };
+    fixNarr(note.narrative);
+    (note.joint_services || []).forEach((s: any) => fixNarr(s?.narrative));
+    return note;
+};
+
+/**
  * TCM rule: the encounter carries ONE diagnosis — the primary behavioral health one
  * (ICD-10 chapter F). Works whatever the source of the list (patient chart or AI output,
  * array or single object). Everything else is kept in medical_record_diagnoses.

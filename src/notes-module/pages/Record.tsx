@@ -13,7 +13,7 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis } from '../lib/clioUtils';
+import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis, getClientDisplayName, normalizeClientNameInNarrative } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
@@ -1285,11 +1285,18 @@ const Record: React.FC = () => {
 
                 if (selectedPatient) {
                     formData.append('patient_id', selectedPatient.id);
-                    formData.append('patient_name', selectedPatient.full_name);
+                    formData.append('patient_name', isSvcTcm ? getClientDisplayName(selectedPatient.full_name || '').full : selectedPatient.full_name);
                     if (selectedPatient.dob) formData.append('patient_dob', selectedPatient.dob);
                     
                     const clinicalContextObj: any = { ...selectedPatient };
                     clinicalContextObj.preferred_language = sessionLanguage;
+                    if (isSvcTcm) {
+                        // Give the AI the name as written in notes ("First Last"), not "LAST, First"
+                        const dn = getClientDisplayName(selectedPatient.full_name || '');
+                        clinicalContextObj.full_name = dn.full;
+                        clinicalContextObj.first_name = dn.first;
+                        clinicalContextObj.last_name = dn.last;
+                    }
                     if (!isStrictConfirmSvc) {
                         if (!clinicalContextObj.pcp_medications || clinicalContextObj.pcp_medications === 'None reported' || clinicalContextObj.pcp_medications.trim() === '') {
                             clinicalContextObj.pcp_medications = 'The client reports no current prescribed medications at the time of the assessment.';
@@ -1441,6 +1448,7 @@ const Record: React.FC = () => {
                     if (isSvcTcm) {
                         stripGapNarration(normalized);
                         enforcePrimaryBehavioralDiagnosis(normalized);
+                        if (selectedPatient?.full_name) normalizeClientNameInNarrative(normalized, selectedPatient.full_name);
                     }
                     
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations
