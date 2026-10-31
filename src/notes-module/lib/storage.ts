@@ -835,18 +835,23 @@ export const storage = {
                 if (!lang) (sanitizedPatient as any).preferred_language = 'Spanish';
             }
 
-            // psych_record_date (date of the psychiatric note used to create the patient) lives in tcm_social_needs
-            if ('psych_record_date' in (sanitizedPatient as any)) {
-                const psychDate = String((sanitizedPatient as any).psych_record_date || '').trim();
-                delete (sanitizedPatient as any).psych_record_date;
-                if (psychDate) {
-                    let social = (sanitizedPatient as any).tcm_social_needs;
-                    if (!social && isUpdate) {
-                        const { data: existing } = await supabase.from('patients').select('tcm_social_needs').eq('id', targetId).maybeSingle();
-                        social = existing?.tcm_social_needs || {};
-                    }
-                    (sanitizedPatient as any).tcm_social_needs = { ...(social || {}), psych_record_date: psychDate };
+            // Facts of the psychiatric note used to create the patient live in tcm_social_needs
+            const PSYCH_RECORD_KEYS = ['psych_record_date', 'psych_record_type', 'psych_clinic_name'];
+            const psychFacts: Record<string, string> = {};
+            PSYCH_RECORD_KEYS.forEach(k => {
+                if (k in (sanitizedPatient as any)) {
+                    const v = String((sanitizedPatient as any)[k] || '').trim();
+                    delete (sanitizedPatient as any)[k];
+                    if (v) psychFacts[k] = v;
                 }
+            });
+            if (Object.keys(psychFacts).length > 0) {
+                let social = (sanitizedPatient as any).tcm_social_needs;
+                if (!social && isUpdate) {
+                    const { data: existing } = await supabase.from('patients').select('tcm_social_needs').eq('id', targetId).maybeSingle();
+                    social = existing?.tcm_social_needs || {};
+                }
+                (sanitizedPatient as any).tcm_social_needs = { ...(social || {}), ...psychFacts };
             }
 
             const { data, error } = await supabase

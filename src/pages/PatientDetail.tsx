@@ -2193,6 +2193,24 @@ export function PatientDetail() {
                                 theme="purple"
                             />
                             <PremiumGlassField
+                                icon={Briefcase}
+                                label="Psych Clinic Name"
+                                name="psych_clinic_name"
+                                value={(isEditing ? (editData.tcm_social_needs as any) : (patient.tcm_social_needs as any))?.psych_clinic_name || ''}
+                                isEditing={isEditing}
+                                onChange={handleSocialNeedsTextChange}
+                                theme="purple"
+                            />
+                            <PremiumGlassField
+                                icon={FileText}
+                                label="Psych Record Type (evaluation, progress note...)"
+                                name="psych_record_type"
+                                value={(isEditing ? (editData.tcm_social_needs as any) : (patient.tcm_social_needs as any))?.psych_record_type || ''}
+                                isEditing={isEditing}
+                                onChange={handleSocialNeedsTextChange}
+                                theme="purple"
+                            />
+                            <PremiumGlassField
                                 icon={Calendar}
                                 label="Psych Record Date (note used to create the client)"
                                 name="psych_record_date"

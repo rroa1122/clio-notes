@@ -306,6 +306,12 @@ export async function extractPatientData(file: File): Promise<Partial<Patient>> 
     if (dos && isPsychDoc) {
         (patientData as any).psych_record_date = String(dos).trim();
     }
+    // Type of that document (evaluation, progress note...) and the clinic where the psychiatrist practices
+    if (isPsychDoc) {
+        const docType = content.encounter?.note_type || content.encounter?.encounter_type;
+        if (docType) (patientData as any).psych_record_type = String(docType).trim();
+        if (content.facility?.name) (patientData as any).psych_clinic_name = String(content.facility.name).trim();
+    }
 
     // Guardar las condiciones y medicaciones separadas inteligentemente
     if (psychConditions.length > 0) patientData.psych_conditions = psychConditions.join('\n');
