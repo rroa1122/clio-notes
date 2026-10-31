@@ -104,6 +104,9 @@ const CONFIRM_KIND_FIELDS: Record<ConfirmKind, ConfirmField[]> = {
 
 const detectConfirmKind = (tag: string): ConfirmKind => {
     const t = tag.toLowerCase();
+    // Chart forms only for the chart value itself. Anything about what someone reported, support,
+    // concerns, dates or reviews is free text (e.g., "support the emergency contact can provide").
+    if (/report|support|concern|said|stated|provide|date|review|visit|agree|refus|sign/.test(t)) return 'generic';
     if (t.includes('emergency contact')) return 'emergency_contact';
     if (/\bpcp\b|primary care/.test(t)) return 'pcp';
     if (/residence|household|lives with|living situation/.test(t)) return 'residence';
@@ -3617,10 +3620,12 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                         </DialogDescription>
                     </DialogHeader>
                     <div className="mt-2 space-y-2.5">
-                        {confirmEditor?.kind === 'suggestion' && (
+                        {(confirmEditor?.kind === 'suggestion' || confirmEditor?.kind === 'generic') && (
                             <label className="block">
                                 <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                    {language === 'es' ? 'Texto sugerido por el template (edítalo si hace falta)' : 'Template suggestion (edit if needed)'}
+                                    {confirmEditor?.kind === 'suggestion'
+                                        ? (language === 'es' ? 'Texto sugerido por el template (edítalo si hace falta)' : 'Template suggestion (edit if needed)')
+                                        : (language === 'es' ? 'Escribe cómo debe quedar en la nota' : 'Write how it should read in the note')}
                                 </span>
                                 <textarea
                                     autoFocus
@@ -3631,7 +3636,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 />
                             </label>
                         )}
-                        {(confirmEditor && confirmEditor.kind !== 'suggestion' ? CONFIRM_KIND_FIELDS[confirmEditor.kind] : []).map((field, i) => (
+                        {(confirmEditor && confirmEditor.kind !== 'suggestion' && confirmEditor.kind !== 'generic' ? CONFIRM_KIND_FIELDS[confirmEditor.kind] : []).map((field, i) => (
                             <label key={field.key} className="block">
                                 <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{field.label}</span>
                                 <input
@@ -3644,7 +3649,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                 />
                             </label>
                         ))}
-                        {confirmEditor && confirmEditor.kind !== 'suggestion' && composeConfirmText(confirmEditor.kind, confirmValues) && (
+                        {confirmEditor && confirmEditor.kind !== 'suggestion' && confirmEditor.kind !== 'generic' && composeConfirmText(confirmEditor.kind, confirmValues) && (
                             <p className="text-[11.5px] text-slate-500 dark:text-slate-400 leading-snug">
                                 <span className="font-semibold">{language === 'es' ? 'Quedará en la nota: ' : 'Will read in the note: '}</span>
                                 {composeConfirmText(confirmEditor.kind, confirmValues)}
