@@ -1374,6 +1374,21 @@ const Record: React.FC = () => {
                 formData.append('supervisor_name', resolvedSupName);
                 formData.append('supervisor_lic', resolvedSupLic);
                 formData.append('session_language', sessionLanguage);
+                // Approved supervisor-feedback rules for this TCM (profile), agency and global; never pending ones
+                if (isSvcTcm) {
+                    try {
+                        const { data: rules } = await supabase
+                            .from('documentation_rules')
+                            .select('rule_text, template_id')
+                            .eq('status', 'approved');
+                        const applicable = (rules || []).filter((r: any) => !r.template_id || r.template_id === svcTemplateId);
+                        if (applicable.length > 0) {
+                            formData.append('profile_rules', applicable.map((r: any) => `- ${r.rule_text}`).join('\n'));
+                        }
+                    } catch (rulesErr) {
+                        console.warn('Could not load documentation rules', rulesErr);
+                    }
+                }
                 // Same structure and key phrases, wording rotates among 3 agency-style variants
                 formData.append('wording_variant', String(1 + Math.floor(Math.random() * 3)));
                 if (linkedIhvLabel && svcTemplateId === 'tcm_case_assignment_note') {

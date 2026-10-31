@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { 
     Save, CheckCircle2, CheckCircle, X, PenTool, Plus, Trash2, Copy, Check, AlertCircle, Lock,
     Calendar, Printer, Edit3, FileText, User, Activity, ClipboardList, MapPin, Clock, 
-    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw, ArrowLeft, Building2, ExternalLink, Loader2
+    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw, ArrowLeft, Building2, ExternalLink, Loader2, MessageSquareWarning
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +24,7 @@ import { TimeConflictModal } from './TimeConflictModal';
 import { areOverlapping, extractNormalizedTimeRange } from '../lib/conflictUtils';
 import { settingsService, type ClinicSettings } from '../../services/settingsService';
 import { SyncErrorModal } from './SyncErrorModal';
+import { SupervisorFeedbackDialog } from './SupervisorFeedbackDialog';
 import { formatSyncError } from '../../lib/services/syncErrorFormatter';
 
 const getValueByPath = (obj: any, path: string) => {
@@ -946,6 +947,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         !!((note as any)?.id || (note as any)?._id || (note as any)?.noteId)
     );
     const [clinicSettings, setClinicSettings] = useState<ClinicSettings | null>(null);
+    const [showSupervisorFeedback, setShowSupervisorFeedback] = useState(false);
 
     const [cmSignatureImg, setCmSignatureImg] = useState<string | null>(null);
     const [supSignatureImg, setSupSignatureImg] = useState<string | null>(null);
@@ -2338,6 +2340,16 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
                         <div className="w-[1px] h-4 sm:h-5 bg-border/80 mx-0.5" />
 
+                        <button
+                            type="button"
+                            onClick={() => setShowSupervisorFeedback(true)}
+                            title={language === 'es' ? 'Comentario del supervisor' : 'Supervisor feedback'}
+                            className="size-9 sm:size-auto flex items-center justify-center gap-1.5 sm:px-4 sm:py-2 rounded-full bg-transparent text-foreground hover:bg-secondary hover:text-indigo-500 font-bold whitespace-nowrap text-[11px] uppercase tracking-wider transition-all duration-200 border border-transparent hover:border-border/60 active:scale-95 cursor-pointer group shrink-0"
+                        >
+                            <MessageSquareWarning size={15} className="text-indigo-500" />
+                            <span className="hidden sm:inline">{language === 'es' ? 'Supervisor' : 'Supervisor'}</span>
+                        </button>
+
                         {(() => {
                             const isPending = syncTask?.status === 'pending';
                             const isProcessing = isSyncing || syncTask?.status === 'processing';
@@ -3684,6 +3696,19 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 isOpen={isTimeConflictModalOpen}
                 onClose={() => setIsTimeConflictModalOpen(false)}
                 conflicts={conflicts || []}
+            />
+
+            <SupervisorFeedbackDialog
+                open={showSupervisorFeedback}
+                onClose={() => setShowSupervisorFeedback(false)}
+                note={mergedNote}
+                noteId={lastSavedId || (mergedNote as any).id || null}
+                patientId={(mergedNote as any).patient_id || (mergedNote.patient as any)?.id || null}
+                userId={(user as any)?.id || null}
+                clinicId={(user as any)?.clinic_id || null}
+                defaultSupervisorName={clinicSettings?.supervisorName || ''}
+                language={language}
+                onApply={(updates) => { updates.forEach(u => handleUpdateField(u.path, u.value)); setIsSaved(false); }}
             />
 
             {/* Inline [CONFIRM] resolver */}

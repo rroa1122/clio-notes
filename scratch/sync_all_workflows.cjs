@@ -24,7 +24,8 @@ workflow_files = [
     '/tmp/gather_psy_record_workflow.json',
     '/tmp/pc_emergency_contact_workflow.json',
     '/tmp/service_plan_discussion_workflow.json',
-    '/tmp/agency_npi_lookup_workflow.json'
+    '/tmp/agency_npi_lookup_workflow.json',
+    '/tmp/supervisor_feedback_workflow.json'
 ]
 
 db = sqlite3.connect(db_path)
@@ -110,6 +111,7 @@ const filesToUpload = [
     'scratch/pc_emergency_contact_workflow.json',
     'scratch/service_plan_discussion_workflow.json',
     'scratch/agency_npi_lookup_workflow.json',
+    'scratch/supervisor_feedback_workflow.json',
     'scratch/remote_sync_script.py'
 ].join(' ');
 
