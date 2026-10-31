@@ -13,6 +13,9 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 ---
 
 ## Lo que ya está Completado y Desplegado en Producción
+- **Selector Unificado de Encuentro Clínico (`UnifiedTimePicker`):**
+  - Componente unificado para hora de inicio (`In`), hora de fin (`Out`), duración y unidades clínicas TCM con chips de 1 toque (`15m`, `30m`, `45m`, `60m`, `90m`, `120m`).
+  - Segmented control AM/PM, botón "Ahora", auto-sincronización en vivo sin botón redundante de confirmación, y desplegado a producción.
 1. **Templates TCM v2 (Commits hasta `81168b1` de Claude / alegidos):**
    - **Formato determinista de nombres de pacientes:** "First Last" en la primera mención y luego primer nombre.
    - **Badges `[CONFIRM]` clickeables interactivos:** Permiten al clínico resolver y completar los datos directamente en la nota y sincronizar con la ficha del paciente.
