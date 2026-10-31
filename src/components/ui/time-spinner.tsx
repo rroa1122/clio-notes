@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { ChevronUp, ChevronDown, Check, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function TimeSpinner({ onConfirm, initialTimeStr }: { onConfirm: (timeStr: string) => void, initialTimeStr?: string }) {
@@ -76,11 +76,6 @@ export function TimeSpinner({ onConfirm, initialTimeStr }: { onConfirm: (timeStr
         if (isNaN(cur)) cur = 0;
         const next = cur === 0 ? 59 : cur - 1;
         setMStr(String(next).padStart(2, '0'));
-    };
-
-    // Toggle AM / PM
-    const togglePeriod = () => {
-        setP(prev => prev === 'AM' ? 'PM' : 'AM');
     };
 
     // Direct input editing
@@ -198,18 +193,19 @@ export function TimeSpinner({ onConfirm, initialTimeStr }: { onConfirm: (timeStr
     };
 
     return (
-        <div className="flex flex-col gap-3 w-full max-w-[210px] mx-auto select-none text-slate-800 dark:text-slate-100">
-            {/* Harmonious Time Controls Row */}
-            <div className="flex items-center justify-between w-full">
-                {/* Hours Block */}
+        <div className="flex flex-col gap-3.5 w-full select-none text-slate-800 dark:text-slate-100">
+            {/* Digital Clock Row with Steppers and AM/PM Toggle */}
+            <div className="flex items-center justify-center gap-2.5 w-full">
+                
+                {/* Hours Box & Stepper */}
                 <div className="flex flex-col items-center">
                     <button 
                         type="button" 
                         onClick={incrementHour} 
-                        className="h-4 w-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                        title="Increment hour"
+                        className="h-5 w-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                        title="Aumentar hora"
                     >
-                        <ChevronUp size={14} />
+                        <ChevronUp size={15} />
                     </button>
                     
                     <input 
@@ -220,32 +216,32 @@ export function TimeSpinner({ onConfirm, initialTimeStr }: { onConfirm: (timeStr
                         onChange={handleHourChange}
                         onBlur={handleHourBlur}
                         onKeyDown={handleHourKeyDown}
-                        className="text-center text-xl font-mono font-medium text-slate-900 dark:text-slate-50 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl p-0 m-0 tracking-tight transition-all"
-                        style={{ outline: 'none', WebkitAppearance: 'none', width: '54px', height: '44px' }}
+                        className="w-14 h-11 text-center text-xl font-mono font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 rounded-xl p-0 m-0 tracking-tight transition-all shadow-xs"
+                        style={{ outline: 'none', WebkitAppearance: 'none' }}
                     />
                     
                     <button 
                         type="button" 
                         onClick={decrementHour} 
-                        className="h-4 w-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                        title="Decrement hour"
+                        className="h-5 w-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                        title="Disminuir hora"
                     >
-                        <ChevronDown size={14} />
+                        <ChevronDown size={15} />
                     </button>
                 </div>
 
                 {/* Center Colon */}
-                <div className="text-xl font-light text-slate-400 dark:text-slate-500 select-none self-center pb-0.5 px-0.5">:</div>
+                <span className="text-xl font-bold text-slate-400 dark:text-slate-500 select-none pb-0.5">:</span>
 
-                {/* Minutes Block */}
+                {/* Minutes Box & Stepper */}
                 <div className="flex flex-col items-center">
                     <button 
                         type="button" 
                         onClick={incrementMinute} 
-                        className="h-4 w-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                        title="Increment minute"
+                        className="h-5 w-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                        title="Aumentar minuto"
                     >
-                        <ChevronUp size={14} />
+                        <ChevronUp size={15} />
                     </button>
                     
                     <input 
@@ -256,72 +252,87 @@ export function TimeSpinner({ onConfirm, initialTimeStr }: { onConfirm: (timeStr
                         onChange={handleMinuteChange}
                         onBlur={handleMinuteBlur}
                         onKeyDown={handleMinuteKeyDown}
-                        className="text-center text-xl font-mono font-medium text-slate-900 dark:text-slate-50 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 rounded-xl p-0 m-0 tracking-tight transition-all"
-                        style={{ outline: 'none', WebkitAppearance: 'none', width: '54px', height: '44px' }}
+                        className="w-14 h-11 text-center text-xl font-mono font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 rounded-xl p-0 m-0 tracking-tight transition-all shadow-xs"
+                        style={{ outline: 'none', WebkitAppearance: 'none' }}
                     />
                     
                     <button 
                         type="button" 
                         onClick={decrementMinute} 
-                        className="h-4 w-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                        title="Decrement minute"
+                        className="h-5 w-full flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                        title="Disminuir minuto"
                     >
-                        <ChevronDown size={14} />
+                        <ChevronDown size={15} />
                     </button>
                 </div>
 
-                {/* Minimalist, Ultra-Clean AM/PM Card */}
-                <div className="flex flex-col items-center">
-                    <div className="h-4" /> {/* Alignment spacer */}
+                {/* Segmented AM / PM Switcher */}
+                <div className="flex flex-col p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shrink-0">
                     <button 
                         type="button"
-                        onClick={togglePeriod}
-                        title={`Click to switch to ${p === 'AM' ? 'PM' : 'AM'}`}
-                        className="rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-95 shadow-xs border bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 text-slate-900 dark:text-slate-100"
-                        style={{ width: '50px', height: '44px' }}
+                        onClick={() => setP('AM')}
+                        className={cn(
+                            "px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer",
+                            p === 'AM'
+                                ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-xs"
+                                : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                        )}
                     >
-                        <span className="text-sm font-semibold font-mono tracking-wider">
-                            {p}
-                        </span>
+                        AM
                     </button>
-                    <div className="h-4" /> {/* Alignment spacer */}
+                    <button 
+                        type="button"
+                        onClick={() => setP('PM')}
+                        className={cn(
+                            "px-2.5 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer",
+                            p === 'PM'
+                                ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-xs"
+                                : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+                        )}
+                    >
+                        PM
+                    </button>
                 </div>
             </div>
 
-            {/* Symmetrical 5-Column Grid for Presets */}
-            <div className="grid grid-cols-5 gap-1 w-full">
+            {/* Quick Presets Row */}
+            <div className="grid grid-cols-5 gap-1.5 w-full">
                 <button
                     type="button"
                     onClick={setCurrentTime}
-                    className="h-7 rounded-lg text-[10px] font-medium bg-slate-100 dark:bg-slate-800/70 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all cursor-pointer border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-center"
+                    className="h-7 rounded-lg text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-400 transition-all cursor-pointer border border-indigo-200/70 dark:border-indigo-800/60 flex items-center justify-center gap-0.5"
                 >
-                    Now
+                    <Sparkles size={10} />
+                    <span>Ahora</span>
                 </button>
-                {[0, 15, 30, 45].map((m) => (
-                    <button
-                        key={m}
-                        type="button"
-                        onClick={() => setQuickTime(m)}
-                        className={cn(
-                            "h-7 rounded-lg text-[10px] font-mono transition-all cursor-pointer border flex items-center justify-center",
-                            parseInt(mStr, 10) === m
-                                ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/60 font-medium"
-                                : "bg-slate-100 dark:bg-slate-800/70 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 border-slate-200/60 dark:border-slate-700/60 font-normal"
-                        )}
-                    >
-                        :{String(m).padStart(2, '0')}
-                    </button>
-                ))}
+                {[0, 15, 30, 45].map((m) => {
+                    const isSelected = parseInt(mStr, 10) === m;
+                    return (
+                        <button
+                            key={m}
+                            type="button"
+                            onClick={() => setQuickTime(m)}
+                            className={cn(
+                                "h-7 rounded-lg text-[11px] font-mono transition-all cursor-pointer border flex items-center justify-center",
+                                isSelected
+                                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white font-bold shadow-xs"
+                                    : "bg-slate-100 dark:bg-slate-800/70 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-200/70 dark:border-slate-700/60"
+                            )}
+                        >
+                            :{String(m).padStart(2, '0')}
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Confirm Time Button - Matching proportions */}
+            {/* Clean Confirm Button */}
             <button 
                 type="button"
                 onClick={handleConfirm}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-xl h-9 font-medium text-xs shadow-xs active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 cursor-pointer border-0 mt-0.5"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl h-9 font-semibold text-xs shadow-xs active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 cursor-pointer border-0 mt-0.5"
             >
-                <Check size={14} className="opacity-90" />
-                <span>Confirm</span>
+                <Check size={14} className="opacity-95" />
+                <span>Confirmar hora</span>
             </button>
         </div>
     );
