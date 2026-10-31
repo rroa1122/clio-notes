@@ -12,10 +12,16 @@ if not os.path.exists(db_path):
 
 workflow_files = [
     '/tmp/tcm_workflow.json',
-    '/tmp/initial_home_visit_workflow.json', '/tmp/case_assignment_workflow.json',
+    '/tmp/initial_home_visit_workflow.json',
+    '/tmp/case_assignment_workflow.json',
     '/tmp/assessment_workflow.json',
     '/tmp/service_plan_workflow.json',
-    '/tmp/adult_certification_workflow.json'
+    '/tmp/adult_certification_workflow.json',
+    '/tmp/gather_pcp_record_workflow.json',
+    '/tmp/gather_psy_record_workflow.json',
+    '/tmp/pc_emergency_contact_workflow.json',
+    '/tmp/service_plan_discussion_workflow.json',
+    '/tmp/agency_npi_lookup_workflow.json'
 ]
 
 db = sqlite3.connect(db_path)
@@ -56,6 +62,17 @@ for wf_file in workflow_files:
             INSERT INTO workflow_entity (id, name, active, nodes, connections, settings, createdAt, updatedAt, versionId)
             VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?)
         """, (wf_id, name, nodes_str, connections_str, settings_str, now, now, str(uuid.uuid4())))
+        # n8n 1.x: a workflow needs an owner project, or it is not listed/activated
+        try:
+            cursor.execute("SELECT projectId FROM shared_workflow WHERE role = 'workflow:owner' LIMIT 1")
+            row = cursor.fetchone()
+            if row:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO shared_workflow (workflowId, projectId, role, createdAt, updatedAt)
+                    VALUES (?, ?, 'workflow:owner', ?, ?)
+                """, (wf_id, row[0], now, now))
+        except Exception as e:
+            print(f"Warning: could not set owner for {wf_id}: {e}")
 
 db.commit()
 db.close()
