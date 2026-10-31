@@ -1374,6 +1374,8 @@ const Record: React.FC = () => {
                 formData.append('supervisor_name', resolvedSupName);
                 formData.append('supervisor_lic', resolvedSupLic);
                 formData.append('session_language', sessionLanguage);
+                // Same structure and key phrases, wording rotates among 3 agency-style variants
+                formData.append('wording_variant', String(1 + Math.floor(Math.random() * 3)));
                 if (linkedIhvLabel && svcTemplateId === 'tcm_case_assignment_note') {
                     formData.append('linked_initial_home_visit', linkedIhvLabel);
                 }
