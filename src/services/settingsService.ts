@@ -37,6 +37,7 @@ export interface ClinicSettings {
     timezone: string;
     tax_id: string;
     npi_group: string;
+    legalName?: string; // legal name from the NPI registry (clinicName is the name used in notes)
     supervisorName?: string;
     supervisorLicense?: string;
     supervisorNpi?: string;
@@ -154,6 +155,7 @@ export const settingsService = {
                 supervisorLicense: clinic.settings?.supervisor_license || '',
                 supervisorNpi: clinic.settings?.supervisor_npi || '',
                 supervisorEmail: clinic.settings?.supervisor_email || '',
+                legalName: clinic.settings?.legal_name || '',
                 supervisorSignatureUrl: clinic.settings?.supervisor_signature_url || '',
                 // Hybrid: merge with mocks
                 businessHours: DEFAULT_BUSINESS_HOURS,
@@ -183,7 +185,7 @@ export const settingsService = {
             if (settings.npi_group !== undefined) dbUpdates.npi_group = settings.npi_group;
 
             // Handle supervisor and logo fields in JSONB settings
-            if (settings.supervisorName !== undefined || settings.supervisorLicense !== undefined || settings.supervisorNpi !== undefined || settings.supervisorEmail !== undefined || settings.supervisorSignatureUrl !== undefined || settings.timezone !== undefined || settings.logoUrl !== undefined) {
+            if (settings.supervisorName !== undefined || settings.supervisorLicense !== undefined || settings.supervisorNpi !== undefined || settings.supervisorEmail !== undefined || settings.supervisorSignatureUrl !== undefined || settings.timezone !== undefined || settings.logoUrl !== undefined || settings.legalName !== undefined) {
                 // We need the current settings to merge
                 const { data: current } = await supabase.from('clinics').select('settings').eq('id', clinicId).single();
                 dbUpdates.settings = {
@@ -194,7 +196,8 @@ export const settingsService = {
                     ...(settings.supervisorEmail !== undefined && { supervisor_email: settings.supervisorEmail }),
                     ...(settings.supervisorSignatureUrl !== undefined && { supervisor_signature_url: settings.supervisorSignatureUrl }),
                     ...(settings.timezone !== undefined && { timezone: settings.timezone }),
-                    ...(settings.logoUrl !== undefined && { logo_url: settings.logoUrl })
+                    ...(settings.logoUrl !== undefined && { logo_url: settings.logoUrl }),
+                    ...(settings.legalName !== undefined && { legal_name: settings.legalName })
                 };
             }
 

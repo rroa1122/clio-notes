@@ -1,0 +1,134 @@
+{
+  "id": "AgNpiLkp8zeSNCBx",
+  "name": "AGENCY NPI LOOKUP (NPPES)",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agency-npi-lookup",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "005b351d-c726-43b0-be65-bd60959be28e",
+      "name": "Webhook",
+      "webhookId": "c24593c4-fa97-4dd8-a8e9-108de0709aac"
+    },
+    {
+      "parameters": {
+        "url": "https://npiregistry.cms.hhs.gov/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "version",
+              "value": "2.1"
+            },
+            {
+              "name": "number",
+              "value": "={{ String($json.body.npi || '').replace(/\\D/g, '') }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -150,
+        0
+      ],
+      "id": "d48e19db-2529-491e-bd2f-fbb921f94935",
+      "name": "NPPES Registry"
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = ($input.first().json.results || [])[0];\nif (!r) return [{ json: { found: false } }];\nconst basic = r.basic || {};\nconst loc = (r.addresses || []).find(a => a.address_purpose === 'LOCATION') || (r.addresses || [])[0] || {};\nconst fmtPhone = (p) => {\n  const d = String(p || '').replace(/\\D/g, '');\n  return d.length === 10 ? `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}` : String(p || '');\n};\nconst zip = String(loc.postal_code || '');\nconst zip5 = zip.length > 5 ? zip.slice(0, 5) : zip;\nconst street = [loc.address_1, loc.address_2].filter(Boolean).join(' ');\nconst title = (s) => String(s || '').toLowerCase().replace(/\\b([a-z])/g, (m) => m.toUpperCase()).replace(/\\b(Nw|Ne|Sw|Se|Llc|Inc|Pa|Ste)\\b/g, (m) => ({Nw:'NW',Ne:'NE',Sw:'SW',Se:'SE',Llc:'LLC',Inc:'Inc',Pa:'PA',Ste:'Ste'})[m]);\nconst dba = (r.other_names || []).find(o => String(o.code) === '3' || /doing business/i.test(String(o.type || '')));\nconst tax = (r.taxonomies || []).find(t => t.primary) || (r.taxonomies || [])[0] || {};\nreturn [{ json: {\n  found: true,\n  npi: String(r.number || ''),\n  enumeration_type: r.enumeration_type || '',\n  legal_name: basic.organization_name || [basic.first_name, basic.last_name].filter(Boolean).join(' '),\n  dba_name: dba ? dba.organization_name : '',\n  address: street ? `${title(street)}, ${title(loc.city)}, ${loc.state || ''} ${zip5}`.trim() : '',\n  phone: fmtPhone(loc.telephone_number),\n  fax: fmtPhone(loc.fax_number),\n  taxonomy: tax.desc || '',\n  status: basic.status || ''\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        0
+      ],
+      "id": "dfb2ccd8-8ea0-4a55-82f3-9f77f0e482da",
+      "name": "Map Agency Data"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        350,
+        0
+      ],
+      "id": "853e5b42-b66c-4b73-8d52-f460b55d5827",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "NPPES Registry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NPPES Registry": {
+      "main": [
+        [
+          {
+            "node": "Map Agency Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Agency Data": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

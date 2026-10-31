@@ -103,12 +103,12 @@ export function Settings() {
                 });
                 setSettings({
                     id: '',
-                    clinicName: 'Clio Medical Center',
+                    clinicName: '',
                     forwardingNumber: '',
-                    phone: '(555) 123-4567',
-                    fax: '(555) 987-6543',
-                    email: user.email,
-                    address: '100 Healthcare Way, Suite 400',
+                    phone: '',
+                    fax: '',
+                    email: '', // never the user's personal email
+                    address: '',
                     website: '',
                     logoUrl: '',
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -161,6 +161,52 @@ export function Settings() {
             return { ...prev, [field]: value };
         });
         setSaved(false);
+    };
+
+    // Agency data from the public NPI registry (CMS NPPES) through n8n
+    const [npiLookupLoading, setNpiLookupLoading] = useState(false);
+    const handleNpiLookup = async () => {
+        const npi = String(settings?.npi_group || '').replace(/\D/g, '');
+        if (npi.length !== 10) {
+            toast.error(language === 'es' ? 'El NPI de la agencia tiene 10 dígitos.' : 'The agency NPI has 10 digits.');
+            return;
+        }
+        setNpiLookupLoading(true);
+        try {
+            const res = await fetch('https://n8n.clinicflow.dev/webhook/agency-npi-lookup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ npi }),
+            });
+            const raw = await res.json();
+            const data = Array.isArray(raw) ? raw[0] : raw;
+            if (!res.ok || !data?.found) {
+                toast.error(language === 'es' ? 'No se encontró ese NPI en el registro.' : 'NPI not found in the registry.');
+                return;
+            }
+            if (data.enumeration_type && data.enumeration_type !== 'NPI-2') {
+                toast.warning(language === 'es' ? 'Ese NPI es de una persona, no de una agencia. Usa el NPI de grupo (organización).' : 'That NPI belongs to an individual. Use the organization (group) NPI.');
+                return;
+            }
+            setSettings(prev => prev ? {
+                ...prev,
+                npi_group: npi,
+                legalName: data.legal_name || prev.legalName || '',
+                clinicName: prev.clinicName || data.dba_name || data.legal_name || '',
+                address: data.address || prev.address,
+                phone: data.phone || prev.phone,
+                fax: data.fax || prev.fax,
+            } : prev);
+            setSaved(false);
+            toast.success(language === 'es'
+                ? `Datos del registro NPI cargados (${data.legal_name}). Revisa y guarda.`
+                : `NPI registry data loaded (${data.legal_name}). Review and save.`);
+        } catch (err) {
+            console.error('NPI lookup failed', err);
+            toast.error(language === 'es' ? 'No se pudo consultar el registro NPI.' : 'Could not reach the NPI registry.');
+        } finally {
+            setNpiLookupLoading(false);
+        }
     };
 
     const handleProfileChange = (field: string, value: any) => {
@@ -415,6 +461,34 @@ export function Settings() {
                             </h3>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
+                                <div className="sm:col-span-2 flex flex-col sm:flex-row sm:items-end gap-2">
+                                    <div className="flex-1">
+                                        <InputField
+                                            label={language === 'es' ? "NPI de la Agencia (grupo)" : "Agency NPI (group)"}
+                                            value={settings.npi_group || ''}
+                                            onChange={(val: string) => handleClinicChange('npi_group', val)}
+                                            placeholder="1982102901"
+                                            icon={Building}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleNpiLookup}
+                                        disabled={npiLookupLoading}
+                                        className="h-11 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold disabled:opacity-60 whitespace-nowrap"
+                                    >
+                                        {npiLookupLoading
+                                            ? (language === 'es' ? 'Buscando...' : 'Searching...')
+                                            : (language === 'es' ? 'Buscar en registro NPI' : 'Look up NPI registry')}
+                                    </button>
+                                </div>
+                                {settings.legalName && (
+                                    <p className="sm:col-span-2 -mt-1 px-1 text-[11px] text-slate-500 dark:text-slate-400">
+                                        {language === 'es' ? 'Nombre legal (registro NPI): ' : 'Legal name (NPI registry): '}
+                                        <span className="font-semibold">{settings.legalName}</span>
+                                        {language === 'es' ? ' · En las notas se usa el Nombre de la Clínica.' : ' · Notes use the Clinic Name.'}
+                                    </p>
+                                )}
                                 <div className="sm:col-span-2">
                                     <InputField
                                         label={language === 'es' ? "Nombre de la Clínica" : "Clinic Name"}
@@ -448,6 +522,13 @@ export function Settings() {
                                         placeholder="contact@arcmentalhealth.com"
                                         icon={Mail}
                                     />
+                                    {settings.email && user?.email && settings.email.trim().toLowerCase() === String(user.email).trim().toLowerCase() && (
+                                        <p className="mt-1 px-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                                            {language === 'es'
+                                                ? 'Este es tu email personal. Pon el email de la agencia: es el que sale en las notas.'
+                                                : 'This is your personal email. Use the agency email: it is printed on the notes.'}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="sm:col-span-2 space-y-1.5">
