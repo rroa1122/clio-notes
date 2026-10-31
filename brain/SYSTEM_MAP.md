@@ -93,10 +93,10 @@ Official titles live in `TCM_CANONICAL_TITLES` (`clioUtils.ts`); Record forces t
 | 3 | `Develop Assessment` | `tcm_assessment_note` | `12 - Home` | `113 min` (`8u`) | `assessment_workflow.json` (`GppDFTdj19n9o3Q2`) | ✅ v2 (branch) |
 | 4 | `Adult Certification` | `tcm_adult_certification_note` | `11 - Office` | `33 min` (`2u`) | `adult_certification_workflow.json` (`K3vH8zeSNCBx6QFL`) | ✅ v2 (branch) |
 | 5 | `Initial Service Plan Development` | `tcm_service_plan_note` | `11 - Office` | `100 min` (`7u`) | `service_plan_workflow.json` (`RvtViS0iE8lV67ye`) | ✅ v2 (guía SP, `servicePlanGuide.ts`) |
-| 6 | `Discuss and Sign Initial Services Plan` | `tcm_service_plan_discussion` | `12 - Home` | `68 min` (`5u`) | `service_plan_discussion_workflow.json` (`RvtViS0iE8lV67yf`) | ✅ Exported in repo |
-| 7 | `Psychiatric Medical Records Retrieval and Coordination of Care` | `tcm_gather_psy_note` | `11 - Office` | `41 min` (`3u`) | `gather_psy_record_workflow.json` (`K3sH8zeSNCBx6QFL`) | ✅ Exported in repo |
-| 8 | `PCP Medical Records Retrieval and Coordination of Care` | `tcm_gather_pcp_note` | `11 - Office` | `41 min` (`3u`) | `gather_pcp_record_workflow.json` (`K3rH8zeSNCBx6QFL`) | ✅ Exported in repo |
-| 9 | `Emergency Contact / Gather Information` | `tcm_pc_emergency_contact_note` | `11 - Office` | `23 min` (`2u`) | `pc_emergency_contact_workflow.json` (`K3tH8zeSNCBx6QFL`) | ✅ Exported in repo |
+| 6 | `Discuss and Sign Initial Services Plan` | `tcm_service_plan_discussion` | `12 - Home` | `68 min` (`5u`) | `service_plan_discussion_workflow.json` (`RvtViS0iE8lV67yf`) | ✅ v2 |
+| 7 | `Psychiatric Medical Records Retrieval and Coordination of Care` | `tcm_gather_psy_note` | `11 - Office` | `41 min` (`3u`) | `gather_psy_record_workflow.json` (`K3sH8zeSNCBx6QFL`) | ✅ v2 |
+| 8 | `PCP Medical Records Retrieval and Coordination of Care` | `tcm_gather_pcp_note` | `11 - Office` | `41 min` (`3u`) | `gather_pcp_record_workflow.json` (`K3rH8zeSNCBx6QFL`) | ✅ v2 |
+| 9 | `Emergency Contact / Gather Information` | `tcm_pc_emergency_contact_note` | `11 - Office` | `23 min` (`2u`) | `pc_emergency_contact_workflow.json` (`K3tH8zeSNCBx6QFL`) | ✅ v2 |
 | 10 | `TCM Progress Note` (Spaced / General) | `tcm_progress_note` | Variable | Variable | `tcm_workflow.json` (`edM28zeSNCBx6QFI`) | — |
 
 ---

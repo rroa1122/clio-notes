@@ -13,7 +13,7 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { buildServicePlanDocumentPayload, injectServicePlanGoals } from '../../lib/tcm/servicePlanGuide';
+import { buildServicePlanDocumentPayload, injectServicePlanGoals, injectServicePlanGoalReview } from '../../lib/tcm/servicePlanGuide';
 import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis, getClientDisplayName, normalizeClientNameInNarrative, enforceCanonicalTitle } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
@@ -1377,7 +1377,7 @@ const Record: React.FC = () => {
                 if (linkedIhvLabel && svcTemplateId === 'tcm_case_assignment_note') {
                     formData.append('linked_initial_home_visit', linkedIhvLabel);
                 }
-                if (svcTemplateId === 'tcm_service_plan_note' && selectedPatient) {
+                if ((svcTemplateId === 'tcm_service_plan_note' || svcTemplateId === 'tcm_service_plan_discussion') && selectedPatient) {
                     // The note must match the Service Plan document (agency SP guide)
                     formData.append('service_plan_document', JSON.stringify(buildServicePlanDocumentPayload(selectedPatient)));
                 }
@@ -1475,6 +1475,7 @@ const Record: React.FC = () => {
                         enforcePrimaryBehavioralDiagnosis(normalized);
                         if (selectedPatient?.full_name) normalizeClientNameInNarrative(normalized, selectedPatient.full_name);
                         if (svcTemplateId === 'tcm_service_plan_note' && selectedPatient) injectServicePlanGoals(normalized, selectedPatient);
+                        if (svcTemplateId === 'tcm_service_plan_discussion' && selectedPatient) injectServicePlanGoalReview(normalized, selectedPatient);
                     }
                     
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations

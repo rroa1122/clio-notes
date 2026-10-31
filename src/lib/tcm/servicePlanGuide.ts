@@ -748,3 +748,35 @@ export const injectServicePlanGoals = (note: any, patient: any): void => {
     apply(note.narrative);
     if (Array.isArray(note.joint_services)) note.joint_services.forEach((s: any) => apply(s?.narrative));
 };
+
+/** "Discuss and Sign Initial Services Plan": goal-by-goal review, same order and wording as the document. */
+export const SERVICE_PLAN_GOAL_REVIEW_PLACEHOLDER = '[[SERVICE_PLAN_GOAL_REVIEW]]';
+
+export const formatServicePlanGoalReview = (patient: any): string => {
+    const doc = buildServicePlanDocumentPayload(patient);
+    if (!doc.entries.length) {
+        return '[CONFIRM: goals of the Service Plan document]';
+    }
+    return doc.entries
+        .map((e, i) => {
+            const target = e.objective_target_dates.find(Boolean);
+            return `Goal #${i + 1}: Domain #${e.domain_number} ${e.domain} (${e.description.replace(/\.$/, '')}): ${e.long_term_goal}${target ? ` Target Date: ${target}.` : ''}`;
+        })
+        .join('\n');
+};
+
+export const injectServicePlanGoalReview = (note: any, patient: any): void => {
+    if (!note || !patient) return;
+    const block = formatServicePlanGoalReview(patient);
+    const apply = (narr: any) => {
+        if (!narr || typeof narr.summary_notes !== 'string') return;
+        const text: string = narr.summary_notes;
+        if (text.includes(SERVICE_PLAN_GOAL_REVIEW_PLACEHOLDER)) {
+            narr.summary_notes = text.replace(SERVICE_PLAN_GOAL_REVIEW_PLACEHOLDER, block);
+        } else if (!/Goal #1:/.test(text)) {
+            narr.summary_notes = `${text.trimEnd()}\n${block}`;
+        }
+    };
+    apply(note.narrative);
+    if (Array.isArray(note.joint_services)) note.joint_services.forEach((s: any) => apply(s?.narrative));
+};
