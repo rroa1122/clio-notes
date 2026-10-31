@@ -32,6 +32,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { TimeSpinner } from '../../components/ui/time-spinner';
+import { UnifiedTimePicker } from '../../components/ui/unified-time-picker';
 import { Badge } from '../../components/ui/badge';
 import { Label } from '../../components/ui/label';
 import { DatePicker } from '../../components/ui/date-picker';
@@ -2301,22 +2302,19 @@ const Record: React.FC = () => {
                                                         <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeIn ? `In: ${timeIn}` : (language === 'es' ? 'Inicio' : 'Start')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl" side="bottom" align="center" sideOffset={12}>
-                                                    <div className="flex flex-col items-center">
-                                                        <div className="w-full pt-8 pb-4 text-center">
-                                                            <span className="font-medium tracking-tight text-slate-800 dark:text-slate-100 text-[18px]">{language === 'es' ? 'Seleccionar hora' : 'Select Time'}</span>
-                                                            <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 opacity-80">{language === 'es' ? 'Inicio del encuentro' : 'Encounter Start'}</div>
-                                                        </div>
-                                                        <div className="px-6 pb-6 w-full">
-                                                            <TimeSpinner 
-                                                                initialTimeStr={timeIn}
-                                                                onConfirm={(timeStr) => {
-                                                                    handleTimeInChange(timeStr);
-                                                                    setIsTimePopoverOpen(false);
-                                                                }} 
-                                                            />
-                                                        </div>
-                                                    </div>
+                                                <PopoverContent className="w-auto p-0 border-0 bg-transparent shadow-none" side="bottom" align="center" sideOffset={10}>
+                                                    <UnifiedTimePicker
+                                                        timeIn={timeIn}
+                                                        timeOut={timeOut}
+                                                        durationMin={durationMin}
+                                                        units={units}
+                                                        onTimeInChange={handleTimeInChange}
+                                                        onTimeOutChange={handleTimeOutChange}
+                                                        onDurationChange={handleDurationMinChange}
+                                                        onClose={() => setIsTimePopoverOpen(false)}
+                                                        language={language}
+                                                        initialTab="start"
+                                                    />
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
@@ -2329,22 +2327,19 @@ const Record: React.FC = () => {
                                                         <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeOut ? `Out: ${timeOut}` : (language === 'es' ? 'Fin' : 'End')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[300px] p-0 rounded-[2.5rem] overflow-hidden border-0 shadow-[0_20px_70px_-10px_rgba(0,0,0,0.15)] ring-1 ring-slate-900/5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl" side="bottom" align="center" sideOffset={12}>
-                                                    <div className="flex flex-col items-center">
-                                                        <div className="w-full pt-8 pb-4 text-center">
-                                                            <span className="font-medium tracking-tight text-slate-800 dark:text-slate-100 text-[18px]">{language === 'es' ? 'Seleccionar hora' : 'Select Time'}</span>
-                                                            <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 opacity-80">{language === 'es' ? 'Fin del encuentro' : 'Encounter End'}</div>
-                                                        </div>
-                                                        <div className="px-6 pb-6 w-full">
-                                                            <TimeSpinner 
-                                                                initialTimeStr={timeOut}
-                                                                onConfirm={(timeStr) => {
-                                                                    handleTimeOutChange(timeStr);
-                                                                    setIsTimeOutPopoverOpen(false);
-                                                                }} 
-                                                            />
-                                                        </div>
-                                                    </div>
+                                                <PopoverContent className="w-auto p-0 border-0 bg-transparent shadow-none" side="bottom" align="center" sideOffset={10}>
+                                                    <UnifiedTimePicker
+                                                        timeIn={timeIn}
+                                                        timeOut={timeOut}
+                                                        durationMin={durationMin}
+                                                        units={units}
+                                                        onTimeInChange={handleTimeInChange}
+                                                        onTimeOutChange={handleTimeOutChange}
+                                                        onDurationChange={handleDurationMinChange}
+                                                        onClose={() => setIsTimeOutPopoverOpen(false)}
+                                                        language={language}
+                                                        initialTab="end"
+                                                    />
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
