@@ -1173,3 +1173,47 @@ export function getNoteServiceDate(note: any): Date | null {
     }
 }
 
+
+/**
+ * TCM notes are plain documentation: no "Purpose:" or section labels at the start of a paragraph.
+ * "Purpose: To obtain ..." becomes "This service was provided to obtain ...". Runs before Clio inserts
+ * the Service Plan goals block (that block mirrors the SP document and keeps its labels).
+ */
+const NARRATIVE_SECTION_LABELS = [
+    'Social History', 'Mental Health / Behavioral Health', 'Mental Health', 'Behavioral Health',
+    'Physical Health / Medical / Dental', 'Physical Health', 'Activities of Daily Living', 'Housing / Living Environment',
+    'Housing', 'Economic / Financial', 'Basic Needs', 'Transportation', 'Recreational / Social Support',
+    'Vocational / Education', 'Legal / Immigration', 'Hurricane Season / Emergency Preparedness', 'Emergency Preparedness',
+    'Strengths and Barriers', 'Priorities and Medical Necessity', 'Medical Necessity', 'Safety', 'Natural Supports',
+    'Income and Benefits', 'Clinical Summary', 'Summary', 'Assessment', 'Plan', 'Intervention', 'Interventions',
+];
+const escapeRe = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const SECTION_LABEL_RE = new RegExp(`^(\\s*(?:•\\s*)?)(?:${NARRATIVE_SECTION_LABELS.map(escapeRe).join('|')})\\s*:\\s*`, 'i');
+
+export const stripNarrativeLabels = (note: any): any => {
+    if (!note || typeof note !== 'object') return note;
+    const fix = (text: any) => {
+        if (typeof text !== 'string' || !text) return text;
+        return text.split('\n').map(line => {
+            const purpose = line.match(/^(\s*)Purpose\s*:\s*(.*)$/i);
+            if (purpose) {
+                const rest = purpose[2].trim();
+                if (/^to\s/i.test(rest)) return `${purpose[1]}This service was provided to ${rest.replace(/^to\s+/i, '')}`;
+                return purpose[1] + rest.charAt(0).toUpperCase() + rest.slice(1);
+            }
+            const m = line.match(SECTION_LABEL_RE);
+            if (m) {
+                const rest = line.slice(m[0].length);
+                return m[1] + rest.charAt(0).toUpperCase() + rest.slice(1);
+            }
+            return line;
+        }).join('\n');
+    };
+    const fixNarr = (n: any) => {
+        if (!n || typeof n !== 'object') return;
+        ['summary_notes', 'outcome_of_services', 'next_steps'].forEach(k => { if (k in n) n[k] = fix(n[k]); });
+    };
+    fixNarr(note.narrative);
+    (note.joint_services || []).forEach((s: any) => fixNarr(s?.narrative));
+    return note;
+};

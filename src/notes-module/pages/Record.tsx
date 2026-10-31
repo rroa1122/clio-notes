@@ -14,7 +14,7 @@ import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
 import { buildServicePlanDocumentPayload, injectServicePlanGoals, injectServicePlanGoalReview, applyServicePlanDomains } from '../../lib/tcm/servicePlanGuide';
-import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis, getClientDisplayName, normalizeClientNameInNarrative, enforceCanonicalTitle } from '../lib/clioUtils';
+import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis, getClientDisplayName, normalizeClientNameInNarrative, enforceCanonicalTitle, stripNarrativeLabels } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
@@ -1491,6 +1491,7 @@ const Record: React.FC = () => {
                         stripGapNarration(normalized);
                         enforcePrimaryBehavioralDiagnosis(normalized);
                         if (selectedPatient?.full_name) normalizeClientNameInNarrative(normalized, selectedPatient.full_name);
+                        stripNarrativeLabels(normalized);
                         if (svcTemplateId === 'tcm_service_plan_note' && selectedPatient) injectServicePlanGoals(normalized, selectedPatient);
                         if (svcTemplateId === 'tcm_service_plan_discussion' && selectedPatient) injectServicePlanGoalReview(normalized, selectedPatient);
                         if ((svcTemplateId === 'tcm_service_plan_note' || svcTemplateId === 'tcm_service_plan_discussion') && selectedPatient) applyServicePlanDomains(normalized, selectedPatient);

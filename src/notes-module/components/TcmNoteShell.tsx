@@ -3068,9 +3068,6 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                         <div className="py-2 px-0.5 border-y border-slate-200/70 dark:!border-slate-800/80">
                                                             {/* Service Focus Header */}
                                                             <div className="flex items-center gap-1.5 sm:gap-2 mb-2 min-w-0">
-                                                                <span className="font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-[8.5px] sm:text-[10px] shrink-0">
-                                                                    Focus:
-                                                                </span>
                                                                 {isEditMode ? (
                                                                     <div className="flex-1 min-w-0 bg-slate-900/50 border border-slate-700/60 hover:border-slate-600 focus-within:border-indigo-500/80 rounded-lg px-2.5 py-1">
                                                                         <input
