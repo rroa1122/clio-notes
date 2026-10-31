@@ -9,8 +9,9 @@ import { toast } from 'sonner';
 import { 
     Save, CheckCircle2, CheckCircle, X, PenTool, Plus, Trash2, Copy, Check, AlertCircle, Lock,
     Calendar, Printer, Edit3, FileText, User, Activity, ClipboardList, MapPin, Clock, 
-    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw, ArrowLeft, Building2
+    Stethoscope, Briefcase, Info, ListTodo, History, Cpu, RefreshCw, ArrowLeft, Building2, ExternalLink, Loader2
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { DatePicker } from '../../components/ui/date-picker';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
@@ -60,7 +61,115 @@ const formatValueForPrint = (value: any): string | null => {
     return null;
 };
 
-const highlightWarnings = (text: any): React.ReactNode => {
+// Inline [CONFIRM] resolver: which inputs to show, how to phrase the value in the note,
+// and which patient-chart fields to update so future notes already have the data.
+type ConfirmKind = 'emergency_contact' | 'pcp' | 'residence' | 'income' | 'allergies' | 'pharmacy' | 'generic';
+type ConfirmField = { key: string; label: string; placeholder?: string };
+
+const CONFIRM_KIND_FIELDS: Record<ConfirmKind, ConfirmField[]> = {
+    emergency_contact: [
+        { key: 'name', label: 'Name', placeholder: 'Maria Jose Sentenat' },
+        { key: 'relationship', label: 'Relationship', placeholder: 'mother' },
+        { key: 'phone', label: 'Phone', placeholder: '786-000-0000' },
+    ],
+    pcp: [
+        { key: 'name', label: 'PCP name and credential', placeholder: 'Carlos Rodriguez, NP' },
+        { key: 'clinic', label: 'Clinic', placeholder: 'UniVida Medical Center' },
+    ],
+    residence: [
+        { key: 'housing', label: 'Type of residence', placeholder: 'rented two-bedroom apartment' },
+        { key: 'household', label: 'Lives with', placeholder: 'his mother and stepfather' },
+    ],
+    income: [
+        { key: 'ssi', label: 'SSI ($/month)', placeholder: '994' },
+        { key: 'ssa', label: 'Social Security ($/month)', placeholder: '' },
+        { key: 'snap', label: 'SNAP / Food stamps ($/month)', placeholder: '210' },
+        { key: 'other', label: 'Other income or benefits', placeholder: 'no income; depends on family' },
+    ],
+    allergies: [{ key: 'value', label: 'Allergies', placeholder: 'Penicillin (anaphylaxis)' }],
+    pharmacy: [{ key: 'value', label: 'Pharmacy', placeholder: 'Salus Pharmacy' }],
+    generic: [{ key: 'value', label: 'Value', placeholder: '' }],
+};
+
+const detectConfirmKind = (tag: string): ConfirmKind => {
+    const t = tag.toLowerCase();
+    if (t.includes('emergency contact')) return 'emergency_contact';
+    if (/\bpcp\b|primary care/.test(t)) return 'pcp';
+    if (/residence|household|lives with|living situation/.test(t)) return 'residence';
+    if (/income|benefit/.test(t)) return 'income';
+    if (t.includes('allerg')) return 'allergies';
+    if (t.includes('pharmacy')) return 'pharmacy';
+    return 'generic';
+};
+
+const money = (v: string) => {
+    const n = String(v || '').trim().replace(/^\$/, '');
+    return n ? `$${n}` : '';
+};
+
+const composeConfirmText = (kind: ConfirmKind, v: Record<string, string>): string => {
+    const g = (k: string) => String(v[k] || '').trim();
+    switch (kind) {
+        case 'emergency_contact': {
+            const who = [g('name'), g('relationship') ? `(${g('relationship')})` : ''].filter(Boolean).join(' ');
+            return [who, g('phone')].filter(Boolean).join(', ');
+        }
+        case 'pcp':
+            return [g('name'), g('clinic') ? `at ${g('clinic')}` : ''].filter(Boolean).join(' ');
+        case 'residence':
+            return [g('housing'), g('household') ? `with ${g('household')}` : ''].filter(Boolean).join(' ');
+        case 'income': {
+            const parts = [
+                g('ssi') ? `Supplemental Security Income (SSI) of ${money(g('ssi'))} per month` : '',
+                g('ssa') ? `Social Security benefits of ${money(g('ssa'))} per month` : '',
+                g('snap') ? `SNAP benefits of ${money(g('snap'))} per month` : '',
+                g('other'),
+            ].filter(Boolean);
+            if (parts.length <= 1) return parts.join('');
+            return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+        }
+        default:
+            return g('value');
+    }
+};
+
+const buildChartPatch = (kind: ConfirmKind, v: Record<string, string>, patient: any): Record<string, any> | null => {
+    const g = (k: string) => String(v[k] || '').trim();
+    const social = { ...(patient?.tcm_social_needs || {}) };
+    switch (kind) {
+        case 'emergency_contact':
+            if (g('relationship')) social.emergency_contact_relationship = g('relationship');
+            return {
+                ...(g('name') ? { emergency_contact_name: g('name') } : {}),
+                ...(g('phone') ? { emergency_contact_phone: g('phone') } : {}),
+                ...(g('relationship') ? { emergency_contact_relation: g('relationship') } : {}),
+                tcm_social_needs: social,
+            };
+        case 'pcp':
+            return { ...(g('name') ? { pcp_name: g('name') } : {}), ...(g('clinic') ? { pcp_clinic_name: g('clinic') } : {}) };
+        case 'residence':
+            if (g('housing')) social.housing_type = g('housing');
+            if (g('household')) social.co_habitants = g('household');
+            return { tcm_social_needs: social };
+        case 'income':
+            if (g('ssi')) social.ssi_amount = g('ssi');
+            if (g('ssa')) social.ssa_amount = g('ssa');
+            if (g('snap')) social.food_stamps_amount = g('snap');
+            if (g('other')) social.ssi_details = g('other');
+            return { tcm_social_needs: social };
+        case 'allergies':
+            return g('value') ? { allergies: g('value') } : null;
+        case 'pharmacy':
+            return g('value') ? { pharmacy_name: g('value') } : null;
+        default:
+            return null;
+    }
+};
+
+// Lets any rendered [CONFIRM: ...] badge open the inline resolver of the note shell.
+const ConfirmClickContext = React.createContext<((tag: string) => void) | null>(null);
+
+const highlightWarnings = (text: any, onConfirmClick?: ((tag: string) => void) | null): React.ReactNode => {
     if (text == null) return '';
     const textStr = String(text);
     const warningRegex = /(\[CONFIRM:[^\]]+\]|not reported during the visit|not reported|not documented|was not reported|were not reported|no reportado|no documentado|not available|not specified)/gi;
@@ -71,6 +180,19 @@ const highlightWarnings = (text: any): React.ReactNode => {
     return (
         <>
             {parts.map((part, idx) => {
+                if (onConfirmClick && /^\[CONFIRM:/i.test(part)) {
+                    return (
+                        <button
+                            key={idx}
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onConfirmClick(part.trim()); }}
+                            title="Click to complete this item"
+                            className="no-print-link bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-300/80 dark:border-amber-800/60 px-1.5 py-0.5 rounded font-semibold italic text-[11px] inline-flex items-center gap-0.5 mx-0.5 leading-none underline decoration-dotted underline-offset-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 cursor-pointer transition-colors"
+                        >
+                            ⚠️ {part}
+                        </button>
+                    );
+                }
                 if (part.match(warningRegex)) {
                     return (
                         <span 
@@ -568,6 +690,7 @@ const GhostInput = ({
     type?: string;
     onBlur?: () => void;
 }) => {
+    const onConfirmClick = React.useContext(ConfirmClickContext);
     return (
         <div className={`relative flex items-center w-full ${isEditMode ? 'group/ghost' : ''}`}>
             {isEditMode ? (
@@ -582,7 +705,7 @@ const GhostInput = ({
                 />
             ) : (
                 <span className={`inline-block break-words ${className}`}>
-                    {highlightWarnings(value)}
+                    {highlightWarnings(value, onConfirmClick)}
                 </span>
             )}
         </div>
@@ -603,6 +726,7 @@ const GhostTextarea = ({
     className?: string;
 }) => {
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+    const onConfirmClick = React.useContext(ConfirmClickContext);
 
     const adjustHeight = () => {
         const target = textareaRef.current;
@@ -638,7 +762,7 @@ const GhostTextarea = ({
                 />
             ) : (
                 <div className={`w-full text-[13px] font-medium text-slate-700 leading-relaxed whitespace-pre-wrap ${className}`}>
-                    {value ? highlightWarnings(value) : <span className="text-slate-300 italic">{placeholder}</span>}
+                    {value ? highlightWarnings(value, onConfirmClick) : <span className="text-slate-300 italic">{placeholder}</span>}
                 </div>
             )}
         </div>
@@ -1069,6 +1193,62 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     };
 
     const pendingConfirms = useMemo(() => findPendingConfirms(mergedNote), [mergedNote]);
+
+    // Inline [CONFIRM] resolver state
+    const [confirmEditor, setConfirmEditor] = useState<{ tag: string; kind: ConfirmKind } | null>(null);
+    const [confirmValues, setConfirmValues] = useState<Record<string, string>>({});
+    const [confirmSaveToChart, setConfirmSaveToChart] = useState(true);
+    const [isApplyingConfirm, setIsApplyingConfirm] = useState(false);
+
+    const openConfirmEditor = (tag: string) => {
+        if (isSigned) return;
+        setConfirmValues({});
+        setConfirmSaveToChart(true);
+        setConfirmEditor({ tag, kind: detectConfirmKind(tag) });
+    };
+
+    const applyConfirmEditor = async () => {
+        if (!confirmEditor) return;
+        const { tag, kind } = confirmEditor;
+        const text = composeConfirmText(kind, confirmValues);
+        if (!text) {
+            toast.error(language === 'es' ? 'Escribe el dato antes de aplicar.' : 'Enter a value before applying.');
+            return;
+        }
+        // 1) Replace the tag everywhere it appears in the note narrative
+        const replaceIn = (path: string, value: any) => {
+            if (typeof value === 'string' && value.includes(tag)) handleUpdateField(path, value.split(tag).join(text));
+        };
+        ['summary_notes', 'outcome_of_services', 'next_steps', 'for_tcm_review'].forEach(k => replaceIn(`narrative.${k}`, (mergedNote.narrative as any)?.[k]));
+        (mergedNote.joint_services || []).forEach((svc: any, i: number) => {
+            ['summary_notes', 'outcome_of_services', 'next_steps'].forEach(k => replaceIn(`joint_services.${i}.narrative.${k}`, svc?.narrative?.[k]));
+        });
+
+        // 2) Optionally persist the data in the patient chart for future notes
+        const patientId = (mergedNote as any).patient_id || (mergedNote.patient as any)?.id;
+        if (confirmSaveToChart && patientId && kind !== 'generic') {
+            setIsApplyingConfirm(true);
+            try {
+                const current = await storage.getPatient(patientId);
+                const patch = buildChartPatch(kind, confirmValues, current);
+                if (current && patch && Object.keys(patch).length > 0) {
+                    await storage.upsertPatient({ ...current, ...patch, id: patientId } as any);
+                    toast.success(language === 'es' ? 'Nota actualizada y dato guardado en la ficha del paciente.' : 'Note updated and saved to the patient chart.');
+                } else {
+                    toast.success(language === 'es' ? 'Nota actualizada.' : 'Note updated.');
+                }
+            } catch (err) {
+                console.error('Inline CONFIRM: failed to save patient chart', err);
+                toast.error(language === 'es' ? 'La nota se actualizó, pero no se pudo guardar en la ficha.' : 'Note updated, but the patient chart could not be saved.');
+            } finally {
+                setIsApplyingConfirm(false);
+            }
+        } else {
+            toast.success(language === 'es' ? 'Nota actualizada.' : 'Note updated.');
+        }
+        setIsSaved(false);
+        setConfirmEditor(null);
+    };
 
     // Required fields no longer block saving: a note missing any of them is saved as
     // "Pending TCM Review" and only signing / Amexzone sync are blocked.
@@ -1986,6 +2166,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
     })();
 
     return (
+        <ConfirmClickContext.Provider value={isEditMode || isSigned ? null : openConfirmEditor}>
         <div className={`tcm-print-shell notranslate ${!isStandalone ? 'max-w-[1050px] mx-auto' : ''}`} translate="no" style={{ minHeight: '100%' }}>
 
             {/* FLOATING TOOLBAR - MODERN CLINICAL HUD */}
@@ -3105,7 +3286,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                 {uniqueConfirms.map((item, idx) => (
                                                     <div key={idx} className="text-[12px] font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
                                                         <span>•</span>
-                                                        <span>{highlightWarnings(item)}</span>
+                                                        <span>{highlightWarnings(item, item.startsWith('[CONFIRM') ? openConfirmEditor : null)}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -3368,7 +3549,81 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 onClose={() => setIsTimeConflictModalOpen(false)}
                 conflicts={conflicts || []}
             />
+
+            {/* Inline [CONFIRM] resolver */}
+            <Dialog open={confirmEditor !== null} onOpenChange={(open) => { if (!open) setConfirmEditor(null); }}>
+                <DialogContent className="no-print max-w-[440px] p-6 rounded-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl">
+                    <DialogHeader className="pb-1 text-left">
+                        <DialogTitle className="text-base font-bold text-slate-800 dark:text-slate-100">
+                            {language === 'es' ? 'Completar dato pendiente' : 'Complete pending item'}
+                        </DialogTitle>
+                        <DialogDescription className="text-[12px] text-amber-700 dark:text-amber-400 font-semibold pt-1 break-words">
+                            {confirmEditor?.tag}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="mt-2 space-y-2.5">
+                        {(confirmEditor ? CONFIRM_KIND_FIELDS[confirmEditor.kind] : []).map((field, i) => (
+                            <label key={field.key} className="block">
+                                <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{field.label}</span>
+                                <input
+                                    autoFocus={i === 0}
+                                    value={confirmValues[field.key] || ''}
+                                    onChange={(e) => setConfirmValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyConfirmEditor(); } }}
+                                    placeholder={field.placeholder}
+                                    className="mt-1 w-full h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 text-[13px] text-slate-800 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                                />
+                            </label>
+                        ))}
+                        {confirmEditor && composeConfirmText(confirmEditor.kind, confirmValues) && (
+                            <p className="text-[11.5px] text-slate-500 dark:text-slate-400 leading-snug">
+                                <span className="font-semibold">{language === 'es' ? 'Quedará en la nota: ' : 'Will read in the note: '}</span>
+                                {composeConfirmText(confirmEditor.kind, confirmValues)}
+                            </p>
+                        )}
+                        {confirmEditor && confirmEditor.kind !== 'generic' && ((mergedNote as any).patient_id || (mergedNote.patient as any)?.id) && (
+                            <label className="flex items-center gap-2 pt-1 cursor-pointer select-none">
+                                <input type="checkbox" checked={confirmSaveToChart} onChange={(e) => setConfirmSaveToChart(e.target.checked)} className="size-4 accent-indigo-600" />
+                                <span className="text-[12.5px] text-slate-600 dark:text-slate-300">
+                                    {language === 'es' ? 'Guardar también en la ficha del paciente' : 'Also save to the patient chart'}
+                                </span>
+                            </label>
+                        )}
+                    </div>
+                    <div className="mt-4 flex items-center justify-between gap-2">
+                        {((mergedNote as any).patient_id || (mergedNote.patient as any)?.id) ? (
+                            <button
+                                type="button"
+                                onClick={() => window.open(`/patients/${(mergedNote as any).patient_id || (mergedNote.patient as any)?.id}`, '_blank', 'noopener')}
+                                className="text-[12px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1"
+                            >
+                                <ExternalLink size={13} />
+                                {language === 'es' ? 'Abrir ficha completa' : 'Open full chart'}
+                            </button>
+                        ) : <span />}
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setConfirmEditor(null)}
+                                className="h-9 px-3 rounded-xl text-[12.5px] font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                            >
+                                {language === 'es' ? 'Cancelar' : 'Cancel'}
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isApplyingConfirm}
+                                onClick={applyConfirmEditor}
+                                className="h-9 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[12.5px] font-semibold disabled:opacity-60 inline-flex items-center gap-1.5"
+                            >
+                                {isApplyingConfirm && <Loader2 size={13} className="animate-spin" />}
+                                {language === 'es' ? 'Aplicar' : 'Apply'}
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
+        </ConfirmClickContext.Provider>
     );
 };
 
