@@ -195,8 +195,10 @@ export const enforcePrimaryBehavioralDiagnosis = (note: any): any => {
     };
     const list = toList(Array.isArray(note.diagnoses) && note.diagnoses.length ? note.diagnoses : note.diagnosis);
     if (list.length === 0) return note;
-    const primary = list.find(d => /^F\d/i.test(d.icd10)) || list.find(d => d.icd10) || list[0];
-    const rest = list.filter(d => d !== primary);
+    const found = list.find(d => /^F\d/i.test(d.icd10)) || list.find(d => d.icd10) || list[0];
+    // TCM uses one diagnosis, the principal, for both the service note and the claim
+    const primary: any = { ...found, type: 'Principal' };
+    const rest = list.filter(d => d !== found);
     note.diagnoses = [primary];
     note.diagnosis = [primary];
     const prior = Array.isArray(note.medical_record_diagnoses) ? note.medical_record_diagnoses : [];
