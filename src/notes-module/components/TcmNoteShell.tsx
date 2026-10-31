@@ -78,6 +78,26 @@ const parseConfirmTag = (tag: string): { label: string; suggestion: string; exam
     return { label: inner.slice(0, idx).trim(), suggestion: extra, example: '' };
 };
 
+// Puts the TCM's text where the [CONFIRM] was, fixing sentence case and the closing period
+// ("...provider. continued medication management ... 11/09/2026 These findings" -> "...provider. Continued ... 11/09/2026. These findings").
+const insertConfirmText = (value: string, tag: string, text: string): string => {
+    const parts = value.split(tag);
+    if (parts.length === 1) return value;
+    let out = parts[0];
+    for (let i = 1; i < parts.length; i++) {
+        let t = text.trim();
+        const before = out.replace(/\s+$/, '');
+        const after = parts[i];
+        const startsSentence = before === '' || /[.!?:]$/.test(before) || /\n\s*(?:•\s*)?$/.test(out);
+        if (startsSentence) t = t.charAt(0).toUpperCase() + t.slice(1);
+        const nextStartsSentence = /^\s+[A-Z]/.test(after) || /^\s*\n/.test(after) || after.trim() === '';
+        if (startsSentence && nextStartsSentence && !/[.!?]["')]*$/.test(t)) t += '.';
+        if (/[.!?]$/.test(t) && /^\./.test(after)) t = t.slice(0, -1);
+        out += t + after;
+    }
+    return out;
+};
+
 // Removes the sentence (or bullet line) that holds a [CONFIRM] tag: used when the TCM omits that part.
 const removeSentenceWithTag = (text: string, tag: string): string => {
     if (typeof text !== 'string' || !text.includes(tag)) return text;
@@ -1324,7 +1344,7 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
         }
         // 1) Replace the tag everywhere it appears in the note narrative
         const replaceIn = (path: string, value: any) => {
-            if (typeof value === 'string' && value.includes(tag)) handleUpdateField(path, value.split(tag).join(text));
+            if (typeof value === 'string' && value.includes(tag)) handleUpdateField(path, insertConfirmText(value, tag, text));
         };
         ['summary_notes', 'outcome_of_services', 'next_steps', 'for_tcm_review'].forEach(k => replaceIn(`narrative.${k}`, (mergedNote.narrative as any)?.[k]));
         (mergedNote.joint_services || []).forEach((svc: any, i: number) => {
