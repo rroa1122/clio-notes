@@ -13,7 +13,7 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration } from '../lib/clioUtils';
+import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
 import { storage, type Template, type Patient } from '../lib/storage';
@@ -1254,6 +1254,7 @@ const Record: React.FC = () => {
                         normalized.patient_id = selectedPatient?.id;
                         (normalized as any)._frontend_service_title = svc.subTemplate;
                         if (selectedPatient) mergePatientIntoNote(normalized, selectedPatient, { primaryBehavioralOnly: svcTemplateId.startsWith('tcm_') });
+                        if (svcTemplateId.startsWith('tcm_')) enforcePrimaryBehavioralDiagnosis(normalized);
                         if (userProfile || userClinic) mergeProfileIntoNote(normalized, userProfile, userClinic);
                         generatedNotes.push(normalized);
                         lastPdfResult = { success: true, data: normalized } as any;
@@ -1437,7 +1438,10 @@ const Record: React.FC = () => {
                         clientPhone: (selectedPatient as any)?.phone || '',
                         initialHomeVisitDateTime: svcTemplateId === 'tcm_case_assignment_note' ? linkedIhvLabel : ''
                     });
-                    if (isSvcTcm) stripGapNarration(normalized);
+                    if (isSvcTcm) {
+                        stripGapNarration(normalized);
+                        enforcePrimaryBehavioralDiagnosis(normalized);
+                    }
                     
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations
                     if (!normalized.encounter) normalized.encounter = {} as any;
@@ -1517,6 +1521,9 @@ const Record: React.FC = () => {
                 }
 
                 const unifiedNote = mergeJointNotes(generatedNotes);
+                if (generatedNotes.some((n: any) => String(n?.meta?.template_id || '').startsWith('tcm_'))) {
+                    enforcePrimaryBehavioralDiagnosis(unifiedNote);
+                }
 
                 // --- Synthesis Step for Joint Notes ---
                 console.log("[JointNote] Checking for synthesis. Services count:", generatedNotes.length);

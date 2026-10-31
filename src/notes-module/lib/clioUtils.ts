@@ -127,6 +127,44 @@ export const resolveKnownConfirms = (note: any, values: KnownNoteValues): any =>
 };
 
 /**
+ * TCM rule: the encounter carries ONE diagnosis — the primary behavioral health one
+ * (ICD-10 chapter F). Works whatever the source of the list (patient chart or AI output,
+ * array or single object). Everything else is kept in medical_record_diagnoses.
+ */
+export const enforcePrimaryBehavioralDiagnosis = (note: any): any => {
+    if (!note || typeof note !== 'object') return note;
+    const toList = (src: any): Array<{ icd10: string; name: string }> => {
+        const arr = Array.isArray(src) ? src : (src && typeof src === 'object' ? [src] : []);
+        return arr.map((d: any) => {
+            if (typeof d === 'string') d = { name: d };
+            let code = String(d?.icd10 || d?.icd10_code || d?.code || '').trim();
+            let name = String(d?.name || d?.primary_diagnosis_name || d?.icd10_description || d?.description || '').trim();
+            if (!code && name) {
+                const m = name.match(/^\(?([A-Z]\d[0-9A-Z]?(?:\.[0-9A-Z]{1,4})?)\)?\s*[:-]?\s*(.*)$/i);
+                if (m) { code = m[1].toUpperCase(); name = m[2].trim() || name; }
+            }
+            return { icd10: code.toUpperCase(), name };
+        }).filter(d => d.icd10 || d.name);
+    };
+    const list = toList(Array.isArray(note.diagnoses) && note.diagnoses.length ? note.diagnoses : note.diagnosis);
+    if (list.length === 0) return note;
+    const primary = list.find(d => /^F\d/i.test(d.icd10)) || list.find(d => d.icd10) || list[0];
+    const rest = list.filter(d => d !== primary);
+    note.diagnoses = [primary];
+    note.diagnosis = [primary];
+    const prior = Array.isArray(note.medical_record_diagnoses) ? note.medical_record_diagnoses : [];
+    const seen = new Set<string>([primary, ...prior].map((d: any) => `${d.icd10}|${String(d.name).toLowerCase()}`));
+    note.medical_record_diagnoses = [...prior, ...rest.filter(d => !seen.has(`${d.icd10}|${d.name.toLowerCase()}`))];
+    (note.joint_services || []).forEach((s: any) => {
+        if (s && (Array.isArray(s.diagnoses) || s.diagnosis)) {
+            s.diagnoses = [primary];
+            s.diagnosis = [primary];
+        }
+    });
+    return note;
+};
+
+/**
  * Removes "gap narration" sentences (e.g. "No allergies were provided in the available
  * information.") that state an item is missing from the record instead of omitting it.
  * Conservative: a sentence is removed only if it BOTH says something was not available/
