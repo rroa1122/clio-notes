@@ -2301,20 +2301,15 @@ const Record: React.FC = () => {
                                                         <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeIn ? `In: ${timeIn}` : (language === 'es' ? 'Inicio' : 'Start')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[280px] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl bg-white/95 dark:bg-slate-900 backdrop-blur-xl" side="bottom" align="center" sideOffset={10}>
-                                                    <div className="flex flex-col items-center w-full">
-                                                        <div className="w-full pb-3 mb-3 text-center border-b border-slate-100 dark:border-slate-800">
-                                                            <span className="font-semibold tracking-tight text-slate-800 dark:text-slate-100 text-sm">{language === 'es' ? 'Seleccionar hora' : 'Select Time'}</span>
-                                                            <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">{language === 'es' ? 'Inicio del encuentro' : 'Encounter Start'}</div>
-                                                        </div>
-                                                        <TimeSpinner 
-                                                            initialTimeStr={timeIn}
-                                                            onConfirm={(timeStr) => {
-                                                                handleTimeInChange(timeStr);
-                                                                setIsTimePopoverOpen(false);
-                                                            }} 
-                                                        />
-                                                    </div>
+                                                <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card backdrop-blur-xl" side="bottom" align="center" sideOffset={8}>
+                                                    <TimeSpinner 
+                                                        initialTimeStr={timeIn}
+                                                        label={language === 'es' ? 'Inicio del encuentro' : 'Encounter Start'}
+                                                        onConfirm={(timeStr) => {
+                                                            handleTimeInChange(timeStr);
+                                                            setIsTimePopoverOpen(false);
+                                                        }} 
+                                                    />
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
@@ -2327,20 +2322,15 @@ const Record: React.FC = () => {
                                                         <span className="text-[13px] whitespace-nowrap text-slate-600 dark:text-slate-300">{timeOut ? `Out: ${timeOut}` : (language === 'es' ? 'Fin' : 'End')}</span>
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[280px] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl bg-white/95 dark:bg-slate-900 backdrop-blur-xl" side="bottom" align="center" sideOffset={10}>
-                                                    <div className="flex flex-col items-center w-full">
-                                                        <div className="w-full pb-3 mb-3 text-center border-b border-slate-100 dark:border-slate-800">
-                                                            <span className="font-semibold tracking-tight text-slate-800 dark:text-slate-100 text-sm">{language === 'es' ? 'Seleccionar hora' : 'Select Time'}</span>
-                                                            <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">{language === 'es' ? 'Fin del encuentro' : 'Encounter End'}</div>
-                                                        </div>
-                                                        <TimeSpinner 
-                                                            initialTimeStr={timeOut}
-                                                            onConfirm={(timeStr) => {
-                                                                handleTimeOutChange(timeStr);
-                                                                setIsTimeOutPopoverOpen(false);
-                                                            }} 
-                                                        />
-                                                    </div>
+                                                <PopoverContent className="w-[270px] p-2.5 rounded-2xl overflow-hidden border border-border/50 shadow-xl bg-card backdrop-blur-xl" side="bottom" align="center" sideOffset={8}>
+                                                    <TimeSpinner 
+                                                        initialTimeStr={timeOut}
+                                                        label={language === 'es' ? 'Fin del encuentro' : 'Encounter End'}
+                                                        onConfirm={(timeStr) => {
+                                                            handleTimeOutChange(timeStr);
+                                                            setIsTimeOutPopoverOpen(false);
+                                                        }} 
+                                                    />
                                                 </PopoverContent>
                                             </Popover>
                                         </div>
