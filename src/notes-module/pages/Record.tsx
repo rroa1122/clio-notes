@@ -39,6 +39,8 @@ import { DatePicker } from '../../components/ui/date-picker';
 import { CalendarWithTimePresets } from '../../components/ui/calendar-with-time-presets';
 import { TiltCard } from '../../components/ui/tilt-card';
 
+import { ClioPetalGuide, ClioPetalGuideToggle } from '../../components/ui/clio-petal-guide';
+
 const getLocalDateString = () => {
     const d = new Date();
     const year = d.getFullYear();
@@ -350,6 +352,7 @@ const Record: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'info' | 'capture' | 'services'>('info');
     const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
     const [showGuide, setShowGuide] = useState(() => localStorage.getItem('clio_hide_guide') !== 'true');
+
     const [isTemplatesLoading, setIsTemplatesLoading] = useState(true);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isEncounterPickerOpen, setIsEncounterPickerOpen] = useState(false);
@@ -1791,6 +1794,7 @@ const Record: React.FC = () => {
                                     <h4 className="text-[13px] font-black tracking-wider text-indigo-950 dark:text-indigo-200 uppercase flex items-center gap-2">
                                         {t('record.quick_start_guide', '✨ Quick Start Guide')}
                                     </h4>
+
                                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
                                         {language === 'es' ? 'Completa estos sencillos pasos' : 'Complete these simple steps'}
                                         <span className="text-[#6366f1] dark:text-indigo-400 font-semibold animate-pulse">
@@ -1940,7 +1944,7 @@ const Record: React.FC = () => {
                             {/* Top Tier: Mandatory Clinical Metadata */}
                             <div className="grid grid-cols-2 md:grid-cols-10 gap-2 md:gap-3 lg:gap-4 xl:gap-5 pb-3 md:pb-3.5 xl:pb-4 border-b border-slate-100 dark:border-slate-800">
                                 {/* 1. Patient Selection */}
-                                <div className="space-y-1.5 md:space-y-3 order-1 md:order-1 col-span-1 md:col-span-3 min-w-0">
+                                <div className="space-y-1.5 md:space-y-3 order-1 md:order-1 col-span-1 md:col-span-3 min-w-0" data-tour="client-identity" id="clio-tour-patient">
                                     <div className="flex items-center gap-1.5 mb-1 truncate">
                                         <User size={13} className="text-slate-400 shrink-0" />
                                         <Label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 truncate">{t('record.client_identity', 'Client identity')}</Label>
@@ -1974,7 +1978,7 @@ const Record: React.FC = () => {
                                 </div>
 
                                 {/* 2. Service Provided */}
-                                <div className="space-y-1.5 md:space-y-3 order-2 md:order-3 col-span-1 md:col-span-3 min-w-0">
+                                <div className="space-y-1.5 md:space-y-3 order-2 md:order-3 col-span-1 md:col-span-3 min-w-0" data-tour="service-provided">
                                     <div className="flex items-center gap-1.5 mb-1 truncate">
                                         <ClipboardList size={13} className="text-slate-400 shrink-0" />
                                         <Label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 truncate">{t('record.service_provided', 'Service Provided')}</Label>
@@ -2047,7 +2051,7 @@ const Record: React.FC = () => {
                                     {/* Desktop Service Dropdown (hidden md:block) */}
                                     <div ref={subTemplateDropdownRef} className="hidden md:block relative mt-1">
                                         <div 
-                                            className={cn(
+                                            id="clio-tour-service" className={cn(
                                                 "w-full h-11 flex items-center justify-between pl-5 pr-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 hover:bg-indigo-50/5 dark:hover:bg-indigo-950/5",
                                                 isDropdownOpen ? "border-indigo-500/40 ring-4 ring-indigo-500/5" : ""
                                             )}
@@ -2256,7 +2260,7 @@ const Record: React.FC = () => {
                                 </div>
 
                                 {/* 3. Encounter Date & Time */}
-                                <div className="space-y-1.5 md:space-y-3 order-3 md:order-2 col-span-2 md:col-span-4 min-w-0">
+                                <div className="space-y-1.5 md:space-y-3 order-3 md:order-2 col-span-2 md:col-span-4 min-w-0" data-tour="encounter-time">
                                     <div className="flex items-center gap-1.5 mb-1 truncate">
                                         <Calendar size={13} className="text-slate-400 shrink-0" />
                                         <Label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 truncate">{t('record.encounter_info', 'Encounter Info')}</Label>
@@ -2264,7 +2268,7 @@ const Record: React.FC = () => {
                                     </div>
                                     {/* Desktop Date & Time Pill (hidden md:flex) */}
                                     <Popover open={isEncounterPickerOpen} onOpenChange={setIsEncounterPickerOpen}>
-                                        <div className="hidden md:flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-indigo-500/40 focus-within:ring-4 focus-within:ring-indigo-500/5 overflow-hidden mt-1 h-11 items-center">
+                                        <div id="clio-tour-time" className="hidden md:flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700 focus-within:border-indigo-500/40 focus-within:ring-4 focus-within:ring-indigo-500/5 overflow-hidden mt-1 h-11 items-center">
                                             {/* Date */}
                                             <div className="flex-[1.0] min-w-[110px] border-r border-slate-100 dark:border-slate-800 h-full">
                                                 <PopoverTrigger asChild>
@@ -2414,7 +2418,7 @@ const Record: React.FC = () => {
 
 
                             {/* Middle Tier: Unified Capture Interface */}
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-7">
+                            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-7" data-tour="voice-capture">
                                 {/* Voice Capture Section */}
                                 <TiltCard intensity={5} scale={1.005} className="h-full">
                                     <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl md:rounded-[2rem] p-2.5 sm:p-4 md:p-5 lg:p-6 xl:p-7 flex flex-col gap-2 sm:gap-3 md:gap-4 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_-8px_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_36px_-6px_rgba(99,102,241,0.08)] dark:hover:shadow-[0_12px_45px_-8px_rgba(0,0,0,0.5)] hover:border-indigo-200/60 dark:hover:border-indigo-900/50 h-full min-h-[165px] sm:min-h-[190px] md:min-h-[220px] lg:min-h-[260px] xl:min-h-[280px]">
@@ -2658,7 +2662,7 @@ const Record: React.FC = () => {
                                     </div>
                                 )}
 
-                                <div className="flex flex-row items-stretch gap-2 sm:gap-3 xl:gap-4 w-full max-w-2xl xl:max-w-3xl 2xl:max-w-4xl mx-auto px-1 sm:px-2">
+                                <div className="flex flex-row items-stretch gap-2 sm:gap-3 xl:gap-4 w-full max-w-2xl xl:max-w-3xl 2xl:max-w-4xl mx-auto px-1 sm:px-2" data-tour="generate-sync">
                                     {(() => {
                                         const hasIdentity = selectedPatient || patientInfo.name.trim().length > 0;
                                         const canAdd = hasIdentity && serviceDate && selectedSubTemplate && (selectedSubTemplate !== 'Custom Template' || patientInfo.customTemplateText?.trim().length > 0);
@@ -2666,6 +2670,7 @@ const Record: React.FC = () => {
                                             <>
                                                 <Button
                                                     onClick={handleAddService}
+                                                    data-tour="add-service-btn" id="clio-tour-add-btn"
                                                     disabled={!canAdd || status === 'uploading' || status === 'processing'}
                                                     variant="ghost"
                                                     className={cn(
@@ -2706,6 +2711,7 @@ const Record: React.FC = () => {
                                     {!editingServiceId && (
                                         <Button
                                             onClick={sendToGenerate}
+                                            data-tour="finalize-btn" id="clio-tour-finalize-btn"
                                             disabled={recordedServices.length === 0 || status === 'uploading' || status === 'processing'}
                                             variant="ghost"
                                             className={cn(
@@ -2741,20 +2747,7 @@ const Record: React.FC = () => {
                                         {t('record.fill_fields_to_enable', 'Fill patient & service fields to enable')}
                                     </p>
                                 ) : null}
-                                {!showGuide && (
-                                    <div className="flex justify-center mt-1.5">
-                                        <button 
-                                            onClick={() => {
-                                                localStorage.removeItem('clio_hide_guide');
-                                                setShowGuide(true);
-                                            }}
-                                            className="text-[9px] xl:text-[10px] font-bold uppercase tracking-widest text-[#6366f1] hover:text-[#6366f1]/80 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors flex items-center gap-1.5 p-1 px-3 rounded-full hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 border border-indigo-50 dark:border-indigo-950/30"
-                                        >
-                                            <Compass className="size-3 text-[#6366f1] dark:text-indigo-400 animate-[spin_10s_linear_infinite]" />
-                                            <span>{language === 'es' ? 'Mostrar Guía de Inicio' : 'Show Quick Start Guide'}</span>
-                                        </button>
-                                    </div>
-                                )}
+                                
                             </div>
                         </div>
 
@@ -3117,6 +3110,14 @@ const Record: React.FC = () => {
                 </DialogContent>
             </Dialog>
 
+
+            <ClioPetalGuide
+                hasPatient={Boolean(selectedPatient || patientInfo.name.trim().length > 0)}
+                hasEncounterTime={Boolean(serviceDate && timeIn)}
+                hasService={Boolean(selectedSubTemplate && (selectedSubTemplate !== 'Custom Template' || Boolean(patientInfo.customTemplateText?.trim().length)))}
+                hasRecordedServices={recordedServices.length > 0}
+                isGeneratingOrDone={Boolean(status === 'uploading' || status === 'processing' || clioNote)}
+            />
         </div>
     );
 };

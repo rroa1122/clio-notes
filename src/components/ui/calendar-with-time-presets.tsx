@@ -10,6 +10,7 @@ import {
   endOfWeek,
   isSameMonth,
   isSameDay,
+  isToday,
   eachDayOfInterval,
   parseISO,
   isValid,
@@ -237,15 +238,11 @@ export function CalendarWithTimePresets({
             {calendarDays.map((day) => {
               const isSelected = isSameDay(day, selectedDate)
               const isCurrentMonthDay = isSameMonth(day, currentMonth)
+              const isCurrentToday = isToday(day)
 
               if (!isCurrentMonthDay) {
                 return (
-                  <div
-                    key={day.toISOString()}
-                    className="size-8 mx-auto flex items-center justify-center text-xs text-slate-300 dark:text-slate-700 pointer-events-none"
-                  >
-                    {format(day, "d")}
-                  </div>
+                  <div key={day.toISOString()} className="size-8 mx-auto flex items-center justify-center text-xs text-slate-300 dark:text-slate-700 pointer-events-none">{format(day, "d")}</div>
                 )
               }
 
@@ -255,13 +252,18 @@ export function CalendarWithTimePresets({
                   type="button"
                   onClick={() => handleSelectDate(day)}
                   className={cn(
-                    "size-8 mx-auto flex items-center justify-center text-xs sm:text-sm font-medium transition-all cursor-pointer",
+                    "relative size-8 mx-auto flex items-center justify-center text-xs sm:text-sm font-medium transition-all cursor-pointer rounded-xl",
                     isSelected
-                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold rounded-xl shadow-md"
-                      : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg"
+                      ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 scale-105"
+                      : isCurrentToday
+                        ? "text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
+                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
                   )}
                 >
                   {format(day, "d")}
+                  {isCurrentToday && !isSelected && (
+                    <span className="absolute bottom-0.5 size-1 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                  )}
                 </button>
               )
             })}
@@ -285,7 +287,11 @@ export function CalendarWithTimePresets({
               </div>
               <div
                 ref={inContainerRef}
-                className="overflow-y-auto max-h-[290px] p-2 space-y-2 custom-scrollbar text-center"
+                className="overflow-y-auto max-h-[290px] p-2 pb-6 space-y-2 custom-scrollbar text-center"
+                style={{
+                  maskImage: "linear-gradient(to bottom, black 82%, transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to bottom, black 82%, transparent 100%)",
+                }}
               >
                 {timeSlots.map((slot) => {
                   const isSelected =
@@ -298,7 +304,7 @@ export function CalendarWithTimePresets({
                       className={cn(
                         "w-full h-10 text-xs sm:text-sm font-medium rounded-xl flex items-center justify-center transition-all cursor-pointer",
                         isSelected
-                          ? "slot-active-in bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold shadow-md"
+                          ? "slot-active-in bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25 scale-[1.02]"
                           : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80"
                       )}
                     >
@@ -323,7 +329,11 @@ export function CalendarWithTimePresets({
               </div>
               <div
                 ref={outContainerRef}
-                className="overflow-y-auto max-h-[290px] p-2 space-y-2 custom-scrollbar text-center"
+                className="overflow-y-auto max-h-[290px] p-2 pb-6 space-y-2 custom-scrollbar text-center"
+                style={{
+                  maskImage: "linear-gradient(to bottom, black 82%, transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to bottom, black 82%, transparent 100%)",
+                }}
               >
                 {timeSlots.map((slot) => {
                   const isSelected =
@@ -336,7 +346,7 @@ export function CalendarWithTimePresets({
                       className={cn(
                         "w-full h-10 text-xs sm:text-sm font-medium rounded-xl flex items-center justify-center transition-all cursor-pointer",
                         isSelected
-                          ? "slot-active-out bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold shadow-md"
+                          ? "slot-active-out bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25 scale-[1.02]"
                           : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80"
                       )}
                     >
@@ -375,7 +385,7 @@ export function CalendarWithTimePresets({
         <button
           type="button"
           onClick={onConfirm}
-          className="w-full sm:w-auto shrink-0 h-9 px-5 text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:border dark:border-slate-700 rounded-xl transition-all cursor-pointer ml-auto shadow-xs"
+          className="w-full sm:w-auto shrink-0 h-9 px-6 text-xs sm:text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-xl transition-all cursor-pointer ml-auto shadow-md shadow-indigo-600/25"
         >
           {language === "es" ? "Continuar" : "Continue"}
         </button>

@@ -5,7 +5,7 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 ---
 
 ## Última Actualización
-- **Fecha:** 2026-10-31
+- **Fecha:** 2026-11-01
 - **Rama Actual:** `feat/tcm-templates-v2`
 - **Estado de Compilación (`npm run build`):** ✅ Limpio (0 errores)
 - **Estado de Producción (`clinicflow.dev`):** ✅ Desplegado al 100% (Frontend + n8n + RPA Bot + Selector Minimalista de Encuentro)
@@ -33,11 +33,22 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
    - Se configuró [`scratch/sync_all_workflows.cjs`](scratch/sync_all_workflows.cjs) de forma multiplataforma (Windows y Linux en GitHub Actions) para inyectar los 10 workflows en la base de datos de n8n.
 5. **Selector Unificado de Encuentro (Calendario + Horas Inicio y Fin):**
    - Creado `src/components/ui/calendar-with-time-presets.tsx` (y alias `calendar-with-time-pressets.tsx`).
-   - Integra calendario y selector de horas completamente armonizado con la paleta Slate / Azul Noche de Clio Notes (`dark:bg-slate-900`, `dark:bg-slate-950`, `border-slate-800`), con selector de día refinado de 32px, dos columnas de hora (Inicio y Fin) de 08:00 a 18:00, y footer directo (`Date • 09:00 – 09:45 (45 min)`) con botón Continuar.
-   - Integrado en desktop y mobile en `src/notes-module/pages/Record.tsx`.
-6. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
+   - Integra calendario y selector de horas completamente armonizado con la paleta Slate / Azul Noche de Clio Notes (`dark:bg-slate-900`, `dark:bg-slate-950`, `border-slate-800`), con selector de día refinado de 32px, dos columnas de hora (Inicio y Fin) de 08:00 a 18:00, y footer directo (`Date • 09:00 – 09:45 (45 min)`).
+   - **Refinamiento estético y UX:**
+     * Acentos de selección en índigo vibrante con suave halo (`bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/25 scale-[1.02]`).
+     * Indicador discreto del día actual (`isToday`) con punto índigo.
+     * Máscara suave de desvanecimiento inferior en las columnas de hora (`maskImage: linear-gradient(...)`) para evitar cortes bruscos de scroll.
+     * Botón "Continuar" como acción principal prominente (`bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/25 active:scale-95`).
+6. **Mascota Interactiva Petal Guide de Clio (`ClioPetalGuide`):**
+   - Creado `src/components/ui/clio-petal-guide.tsx`.
+   - Diseño ultra-minimalista estilo Grok: silueta monocromática pura con dos ojos verticales tipo cápsula negra (`#09090b`), parpadeo sutil y seguimiento interactivo del cursor del mouse.
+   - Apuntado calibrado:
+     * En controles superiores (Paciente, Horarios, Servicio): Apunta de arriba hacia abajo `👇` tocando sutilmente el borde superior.
+     * En botones de acción inferiores (`+ ADD SERVICE`, `FINALIZE`): Apunta desde abajo hacia arriba `☝️` con espacio limpio y despejado.
+   - Halo sutil e interactivo `clio-guide-active-glow` en el input/botón activo del recorrido. Botón "Guía Clio" integrado en el Header.
+7. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
    - Configurado para escuchar ramas `main` y `feat/**` / `feat/*`, desplegando automáticamente en cada push de Claude o el equipo.
-6. **Protocolo de Colaboración Multi-Agente (Anti-Conflicto):**
+8. **Protocolo de Colaboración Multi-Agente (Anti-Conflicto):**
    - Documentado en `brain/SYSTEM_MAP.md` sección 6 para evitar bloqueos y colisiones entre Claude y Antigravity.
 
 ---

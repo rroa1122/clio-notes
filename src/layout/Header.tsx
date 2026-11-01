@@ -160,6 +160,23 @@ export function Header() {
                 {/* 3. User Profile Dropdown & Theme Toggle */}
                 <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-3.5 shrink-0">
                     
+                    {/* Clio Petal Guide Launcher */}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            localStorage.removeItem('clio_petal_guide_disabled');
+                            window.dispatchEvent(new CustomEvent('clio-enable-petal-guide'));
+                        }}
+                        className="flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer shadow-xs bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-300/60 dark:border-indigo-600/40 active:scale-95"
+                        title={language === 'es' ? "Activar Guía Clio" : "Enable Clio Guide"}
+                    >
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+                        </span>
+                        <span className="font-bold">{language === 'es' ? "Guía Clio" : "Clio Guide"}</span>
+                    </button>
+
                     {/* Theme Toggle (Desktop only, moved to user dropdown on mobile) */}
                     <button
                         onClick={toggleTheme}
