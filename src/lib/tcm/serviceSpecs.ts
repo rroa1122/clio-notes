@@ -133,7 +133,7 @@ const MEDICAL: ServiceSpec[] = [
         {
             key: 'appointment', title: 'Coordinate Medical Appointment', desc: 'Schedule a PCP, specialist, dental or vision appointment (53 min / 4u)', minutes: 53,
             purpose: '"To coordinate [Client First Name]\'s [specialty] appointment with [provider] to ensure continuity of [his/her] medical care."',
-            must: ['Medical need and ' + NEED + '.', 'Provider contacted (name, address, phone), TCM introduced and explained the purpose.', 'Appointment date and time obtained (transcript; otherwise [CONFIRM] with an e.g. guide), preparation instructions.', 'Transportation needs reviewed; client informed and verbalized understanding.'],
+            must: ['Medical need and ' + NEED + '.', 'Provider contacted (name, address, phone), TCM introduced and explained the purpose.', 'Appointment date and time obtained (transcript; otherwise [CONFIRM] with an e.g. guide); preparation instructions only if reported (never a [CONFIRM]).', 'Transportation needs reviewed; client informed and verbalized understanding.'],
             essential: ['provider or specialty', 'appointment date and time'],
             outcome: '"[Client First Name] obtained a confirmed [specialty] appointment with [provider] for [date], supporting [his/her] continued access to medical care."',
             next: '"TCM will follow up with [Client First Name] regarding the scheduled appointment and coordinate transportation as needed."',
