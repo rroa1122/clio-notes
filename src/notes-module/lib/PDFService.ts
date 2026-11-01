@@ -32,6 +32,7 @@ const TCM_USCIS_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm
 const TCM_HOUSING_ASSISTANCE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-housing-assistance-note';
 const TCM_SNAP_RECERTIFICATION_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-snap-recertification-note';
 const TCM_MHV_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-mhv-note';
+const TCM_V2_SERVICE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-v2-service-note';
 const SYNTHESIS_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/nextSteps';
 
 const TCM_VACCINE_UPDATE_WEBHOOK_URL = 'https://n8n.clinicflow.dev/webhook/tcm-vaccine-update-note';
@@ -92,6 +93,7 @@ const TEMPLATE_WEBHOOK_URLS: Record<string, string> = {
 };
 
 export const getWebhookUrl = (templateId?: string): string =>
+    (templateId && templateId.startsWith('tcm_v2_') ? TCM_V2_SERVICE_WEBHOOK_URL : undefined) ||
     (templateId && TEMPLATE_WEBHOOK_URLS[templateId]) || PDF_WEBHOOK_URL;
 
 export class PDFServiceError extends Error {

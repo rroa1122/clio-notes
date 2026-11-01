@@ -13,7 +13,8 @@ import { getPDFServiceErrorMessage, PDFService } from '../lib/PDFService';
 import type { PDFResponse, ClinicalNoteData } from '../lib/PDFService';
 import { NotePrintPreview } from '../components/NotePrintPreview';
 import { ClioNoteViewer } from '../components/ClioNoteViewer';
-import { buildServicePlanDocumentPayload, injectServicePlanGoals, injectServicePlanGoalReview, applyServicePlanDomains } from '../../lib/tcm/servicePlanGuide';
+import { buildServicePlanDocumentPayload, injectServicePlanGoals, injectServicePlanGoalReview, applyServicePlanDomains, ensureDomainNumbers } from '../../lib/tcm/servicePlanGuide';
+import { SERVICE_SPEC_GROUPS, SERVICE_SPECS, SERVICE_SPECS_BY_ID, serviceSpecPayload, unitsForMinutes } from '../../lib/tcm/serviceSpecs';
 import { normalizeClioNote, calculateAge, mergePatientIntoNote, mergeProfileIntoNote, mergeJointNotes, getTemplateIdFromSubTemplate, resolveKnownConfirms, stripGapNarration, enforcePrimaryBehavioralDiagnosis, getClientDisplayName, normalizeClientNameInNarrative, enforceCanonicalTitle, stripNarrativeLabels, applyPsyRecordsMedicalDomain, removeConfirmsFromOutcome } from '../lib/clioUtils';
 import { extractNormalizedTimeRange, areOverlapping } from '../lib/conflictUtils';
 import { createAudioUploadPayload } from '../lib/noteRequestUtils';
@@ -82,6 +83,7 @@ const TCM_V2_DEFAULTS: Record<string, { minutes: number; units: number }> = {
     tcm_gather_psy_note: { minutes: 41, units: 3 },
     tcm_gather_pcp_note: { minutes: 41, units: 3 },
     tcm_pc_emergency_contact_note: { minutes: 23, units: 2 },
+    ...Object.fromEntries(SERVICE_SPECS.map(sp => [sp.id, { minutes: sp.minutes, units: unitsForMinutes(sp.minutes) }])),
 };
 
 // Templates whose notes are built from the TCM Social form; warn before generating if it is empty.
@@ -154,12 +156,38 @@ export const renderCategoryIcon = (id: string, className?: string) => {
         case 'basic_needs':
             return <Package className={cn("size-4 shrink-0", className)} />;
         case 'housing_legal':
+        case 'housing_benefits':
             return <Building2 className={cn("size-4 shrink-0", className)} />;
+        case 'monitoring':
+        case 'plan':
+            return <ClipboardList className={cn("size-4 shrink-0", className)} />;
+        case 'medical':
+            return <Syringe className={cn("size-4 shrink-0", className)} />;
+        case 'community':
+            return <Users className={cn("size-4 shrink-0", className)} />;
+        case 'preparedness':
+            return <Wind className={cn("size-4 shrink-0", className)} />;
         case 'other':
         default:
             return <Sparkles className={cn("size-4 shrink-0", className)} />;
     }
 };
+
+const SPEC_GROUPS: HierarchicalServiceGroup[] = SERVICE_SPEC_GROUPS.map(g => ({
+    id: g.id,
+    category: g.category,
+    categoryEs: g.category,
+    iconName: g.iconName,
+    badge: `${g.specs.length} options`,
+    items: g.specs.map(sp => ({
+        id: sp.id,
+        name: sp.title,
+        label: sp.label || sp.title,
+        desc: sp.desc,
+        pos: sp.pos,
+        stepBadge: sp.pos === '12 - Home' ? 'Home' : 'Office',
+    })),
+}));
 
 export const SERVICE_HIERARCHICAL_GROUPS: HierarchicalServiceGroup[] = [
     {
@@ -167,7 +195,7 @@ export const SERVICE_HIERARCHICAL_GROUPS: HierarchicalServiceGroup[] = [
         category: "Core Case Management",
         categoryEs: "Core Case Management",
         iconName: "ClipboardList",
-        badge: "7 options",
+        badge: "6 options",
         items: [
             { id: "core-0", name: "New Referral - Initial Telephone Contact and Coordination of Initial Home Visit", label: "New Referral - Initial Telephone Contact and Coordination of Initial Home Visit", desc: "Initial referral review, phone contact & home visit coordination (25 min / 2u)", pos: "11 - Office", stepBadge: "Office" },
             { id: "core-1", name: "Initial Home Visit / Develop Intake", label: "Initial Home Visit / Develop Intake", desc: "Initial face-to-face home visit & intake (98 min / 7u)", pos: "12 - Home", stepBadge: "Home" },
@@ -175,44 +203,6 @@ export const SERVICE_HIERARCHICAL_GROUPS: HierarchicalServiceGroup[] = [
             { id: "core-2b", name: "Adult Certification", label: "Adult Certification", desc: "Adult Certification / Appendix J (33 min / 2u)", pos: "11 - Office", stepBadge: "Office" },
             { id: "core-3", name: "Initial Service Plan Development", label: "Initial Service Plan Development", desc: "Develop the individualized Initial Service Plan (100 min / 7u)", pos: "11 - Office", stepBadge: "Plan" },
             { id: "core-4", name: "Discuss and Sign Initial Services Plan", label: "Discuss and Sign Initial Services Plan", desc: "Review and sign the Service Plan at home (68 min / 5u)", pos: "12 - Home", stepBadge: "Sign" },
-            { id: "core-5", name: "Monthly Home Visit", label: "Monthly Home Visit (MHV)", desc: "Monthly face-to-face follow-up visit at home", pos: "12 - Home", stepBadge: "Monthly" },
-        ]
-    },
-    {
-        id: "vaccination",
-        category: "Vaccination Assistance",
-        categoryEs: "Vaccination Assistance",
-        iconName: "Syringe",
-        badge: "3 steps",
-        items: [
-            { id: "vax-1", name: "TCM Update Vaccine Record", label: "Update Vaccine Record", desc: "Update immunization record and assess clinical need", pos: "11 - Office", stepBadge: "Step 1" },
-            { id: "vax-2", name: "TCM Coordinate Vaccine Appointment", label: "Coordinate Vaccine Appointment", desc: "Coordinate appointment with pharmacy provider", pos: "11 - Office", stepBadge: "Step 2" },
-            { id: "vax-3", name: "TCM Assist Vaccine Administration", label: "Assist Vaccine Administration", desc: "In-person assistance during vaccine administration", pos: "11 - Office", stepBadge: "Step 3" },
-        ]
-    },
-    {
-        id: "hurricane",
-        category: "Hurricane Preparedness",
-        categoryEs: "Hurricane Preparedness",
-        iconName: "Wind",
-        badge: "4 options",
-        items: [
-            { id: "hurr-1", name: "TCM Hurricane Addendum: Develop Plan", label: "Hurricane Addendum: Develop Plan", desc: "Develop disaster & hurricane emergency plan", pos: "11 - Office", stepBadge: "Addendum" },
-            { id: "hurr-2", name: "TCM Hurricane Addendum: Discuss & Sign", label: "Hurricane Addendum: Discuss & Sign", desc: "In-person plan review and patient signature", pos: "12 - Home", stepBadge: "Sign" },
-            { id: "hurr-3", name: "TCM Hurricane Update: Develop Plan", label: "Hurricane Update: Develop Plan", desc: "Annual update of emergency disaster plan", pos: "11 - Office", stepBadge: "Update" },
-            { id: "hurr-4", name: "TCM Hurricane Update: Discuss & Sign", label: "Hurricane Update: Discuss & Sign", desc: "In-home update review and patient signature", pos: "12 - Home", stepBadge: "Sign" },
-        ]
-    },
-    {
-        id: "otc",
-        category: "OTC Benefit Assistance",
-        categoryEs: "OTC Benefit Assistance",
-        iconName: "Pill",
-        badge: "3 steps",
-        items: [
-            { id: "otc-1", name: "TCM OTC Obtain Form", label: "Obtain Catalog & Balance", desc: "Check OTC card balance and pharmacy catalog", pos: "11 - Office", stepBadge: "Step 1" },
-            { id: "otc-2", name: "TCM OTC Complete Items", label: "Complete Item Selection", desc: "Select health and hygiene items with patient", pos: "12 - Home", stepBadge: "Step 2" },
-            { id: "otc-3", name: "TCM OTC Submit Order", label: "Submit Order to Pharmacy", desc: "Submit finalized OTC order to pharmacy", pos: "11 - Office", stepBadge: "Step 3" },
         ]
     },
     {
@@ -227,44 +217,19 @@ export const SERVICE_HIERARCHICAL_GROUPS: HierarchicalServiceGroup[] = [
             { id: "col-3", name: "Emergency Contact / Gather Information", label: "Emergency Contact / Gather Information", desc: "Collateral contact with the emergency contact (23 min / 2u)", pos: "11 - Office", stepBadge: "Contact" },
         ]
     },
+    // Spec-driven services built from the agency's Amexzone notes (src/lib/tcm/serviceSpecs.ts)
+    ...SPEC_GROUPS,
     {
-        id: "transportation",
-        category: "Transportation & Mobility",
-        categoryEs: "Transportation & Mobility",
-        iconName: "Car",
-        badge: "7 options",
-        items: [
-            { id: "sts-1", name: "TCM Complete STS Application", label: "Complete STS Application", desc: "Fill out Special Transportation Service form", pos: "11 - Office", stepBadge: "STS 1" },
-            { id: "sts-2", name: "TCM Collect STS from PCP", label: "Collect STS Certification", desc: "Retrieve signed medical certification from PCP", pos: "11 - Office", stepBadge: "STS 2" },
-            { id: "sts-3", name: "TCM Submit STS", label: "Submit STS Application", desc: "Submit completed STS package to transit office", pos: "11 - Office", stepBadge: "STS 3" },
-            { id: "dpp-1", name: "TCM Obtain Disabled Parking Permit", label: "Obtain Parking Permit Form", desc: "Obtain Disabled Parking Permit application", pos: "11 - Office", stepBadge: "DPP 1" },
-            { id: "dpp-2", name: "TCM Complete Disabled Parking Permit", label: "Complete Parking Permit Form", desc: "Complete patient section of DPP application", pos: "11 - Office", stepBadge: "DPP 2" },
-            { id: "dpp-3", name: "TCM Submit DPP to PCP", label: "Submit DPP Form to PCP", desc: "Deliver DPP form to physician for certification", pos: "11 - Office", stepBadge: "DPP 3" },
-            { id: "trans-gen", name: "Coordinate Transportation", label: "General Transportation Coordination", desc: "Coordinate non-emergency medical transportation", pos: "11 - Office", stepBadge: "General" },
-        ]
-    },
-    {
-        id: "basic_needs",
-        category: "Basic Needs & Donations",
-        categoryEs: "Basic Needs & Donations",
-        iconName: "Package",
-        badge: "2 options",
-        items: [
-            { id: "bn-1", name: "Obtain Supply Donation", label: "Obtain Supply Donation", desc: "Coordinate & obtain basic supply donation", pos: "11 - Office", stepBadge: "Supplies" },
-            { id: "bn-2", name: "TCM MHV + Provide Donation", label: "MHV + Deliver Donation", desc: "In-home visit delivering donated supplies", pos: "12 - Home", stepBadge: "Delivery" },
-        ]
-    },
-    {
-        id: "housing_legal",
-        category: "Housing & Community Support",
-        categoryEs: "Housing & Community Support",
-        iconName: "Building2",
+        id: "hurricane",
+        category: "Hurricane Plan Addendum / Update",
+        categoryEs: "Hurricane Plan Addendum / Update",
+        iconName: "Wind",
         badge: "4 options",
         items: [
-            { id: "hl-1", name: "TCM Housing Application Assistance", label: "Housing Application Assistance", desc: "Assist with community housing application", pos: "11 - Office", stepBadge: "Housing" },
-            { id: "hl-2", name: "USCIS / Immigration Process Assistance", label: "USCIS / Immigration Assistance", desc: "Assist with legal and immigration forms", pos: "11 - Office", stepBadge: "Legal" },
-            { id: "hl-3", name: "TCM SNAP Recertification", label: "SNAP Recertification", desc: "Assist with food assistance renewal", pos: "11 - Office", stepBadge: "SNAP" },
-            { id: "hl-4", name: "Provider Appointment Coordination", label: "Provider Appointment Coordination", desc: "Coordinate clinical and specialty appointments", pos: "11 - Office", stepBadge: "Appt" },
+            { id: "hurr-1", name: "TCM Hurricane Addendum: Develop Plan", label: "Hurricane Addendum: Develop Plan", desc: "Develop disaster & hurricane emergency plan", pos: "11 - Office", stepBadge: "Addendum" },
+            { id: "hurr-2", name: "TCM Hurricane Addendum: Discuss & Sign", label: "Hurricane Addendum: Discuss & Sign", desc: "In-person plan review and patient signature", pos: "12 - Home", stepBadge: "Sign" },
+            { id: "hurr-3", name: "TCM Hurricane Update: Develop Plan", label: "Hurricane Update: Develop Plan", desc: "Annual update of emergency disaster plan", pos: "11 - Office", stepBadge: "Update" },
+            { id: "hurr-4", name: "TCM Hurricane Update: Discuss & Sign", label: "Hurricane Update: Discuss & Sign", desc: "In-home update review and patient signature", pos: "12 - Home", stepBadge: "Sign" },
         ]
     },
     {
@@ -1399,6 +1364,12 @@ const Record: React.FC = () => {
                 if (linkedIhvLabel && svcTemplateId === 'tcm_case_assignment_note') {
                     formData.append('linked_initial_home_visit', linkedIhvLabel);
                 }
+                const svcSpec = SERVICE_SPECS_BY_ID[svcTemplateId];
+                if (svcSpec) {
+                    // Generic v2 service workflow: the spec drives structure, POS, units, domains and Outcome/Next
+                    formData.append('service_spec', JSON.stringify(serviceSpecPayload(svcSpec)));
+                    if (selectedPatient) formData.append('service_plan_document', JSON.stringify(buildServicePlanDocumentPayload(selectedPatient)));
+                }
                 if ((svcTemplateId === 'tcm_service_plan_note' || svcTemplateId === 'tcm_service_plan_discussion') && selectedPatient) {
                     // The note must match the Service Plan document (agency SP guide)
                     formData.append('service_plan_document', JSON.stringify(buildServicePlanDocumentPayload(selectedPatient)));
@@ -1502,6 +1473,7 @@ const Record: React.FC = () => {
                         if (svcTemplateId === 'tcm_service_plan_note' && selectedPatient) injectServicePlanGoals(normalized, selectedPatient);
                         if (svcTemplateId === 'tcm_service_plan_discussion' && selectedPatient) injectServicePlanGoalReview(normalized, selectedPatient);
                         if ((svcTemplateId === 'tcm_service_plan_note' || svcTemplateId === 'tcm_service_plan_discussion') && selectedPatient) applyServicePlanDomains(normalized, selectedPatient);
+                        if (SERVICE_SPECS_BY_ID[svcTemplateId]) ensureDomainNumbers(normalized, SERVICE_SPECS_BY_ID[svcTemplateId].domains);
                     }
                     
                     // Always enforce the frontend-selected service date to override AI omissions or hallucinations

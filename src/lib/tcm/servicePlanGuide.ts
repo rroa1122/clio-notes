@@ -797,6 +797,19 @@ const DOMAIN_SELECTED_KEYS: Record<number, string> = {
 };
 
 /** SP notes: the domains checked are exactly #1 plus the domains of the Service Plan document. */
+/** Ensures the spec domains are checked (keeps any other domain the note actually worked). */
+export const ensureDomainNumbers = (note: any, domains: number[]): void => {
+    if (!note || !domains?.length) return;
+    const apply = (svc: any) => {
+        if (!svc) return;
+        if (!svc.services) svc.services = {};
+        const sel: Record<string, boolean> = { ...(svc.services.domains_selected || {}) };
+        Object.entries(DOMAIN_SELECTED_KEYS).forEach(([n, k]) => { if (domains.includes(Number(n))) sel[k] = true; else if (sel[k] !== true) sel[k] = false; });
+        svc.services.domains_selected = sel;
+    };
+    apply(note);
+};
+
 export const applyServicePlanDomains = (note: any, patient: any): void => {
     if (!note || !patient) return;
     const numbers = new Set<number>([1, ...buildServicePlanDocumentPayload(patient).entries.map(e => e.domain_number)]);

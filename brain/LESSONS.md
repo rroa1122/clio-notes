@@ -64,3 +64,9 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
 4. **Convivencia en Equipo (Idioma y Bloqueo de Alcance / Scope Lock):**
    - Nunca guardar preferencias personales de un desarrollador (como forzar español o inglés) en las reglas compartidas de GitHub (`AGENTS.md`, `GEMINI.md`, `.agents/rules/`). El agente responde en el idioma en que le escriba cada desarrollador (respetando la regla local `user_global` de cada máquina).
    - **Scope Lock estricto:** Ningún agente puede modificar templates, pantallas o funciones que no pertenezcan a la tarea pedida por el usuario en ese momento.
+
+## Servicios v2 por spec (todos los servicios de Amexzone)
+- Cada servicio de tarea sigue el patrón de los CMs: "To ..." + por qué necesita ayuda (diagnóstico/síntomas → barrera, meta del SP); dónde/cómo y a quién contactó el TCM (dirección, teléfono, web) con la presentación; paso a paso; educación y entendimiento; Outcome concreto y Next = la siguiente fase (obtain → complete → submit → monitor).
+- Nunca inventar lugares, direcciones, organizaciones, representantes, números de confirmación, fechas, balances ni artículos: solo transcript/notas o datos del chart. Los esenciales de cada servicio llevan un [CONFIRM] agrupado con guía.
+- Las frases por excepción de visita (presentación, SI/HI, casa) solo aplican si el spec tiene face_to_face_visit.
+- Los dominios del spec siempre van marcados (ensureDomainNumbers) y el sync a Amexzone usa los dominios explícitos de la nota para `tcm_v2_*`.

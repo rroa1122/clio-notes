@@ -1,5 +1,6 @@
 import type { ClioNote } from '../types';
 import type { Patient } from './storage';
+import { SERVICE_SPECS, getServiceSpecForTitle } from '../../lib/tcm/serviceSpecs';
 
 /**
  * Merges Supabase patient data into the CloNote structure.
@@ -526,7 +527,7 @@ export const normalizeClioNote = (rawResponse: any): ClioNote | null => {
 
         // Handle Specialized Templates
         const templateId = clioData.template_id || clioData.templateId || clioData.meta?.template_id || clioData.meta?.templateId;
-        if (['tcm_progress_note', 'tcm_case_assignment_note', 'tcm_assessment_note', 'tcm_adult_certification_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_gather_pcp_note', 'tcm_gather_psy_note', 'tcm_pc_emergency_contact_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_donation_obtain_note', 'tcm_cleaning_donation_gather_note', 'tcm_cleaning_donation_obtain_note', 'tcm_clothing_donation_gather_note', 'tcm_clothing_donation_obtain_note', 'tcm_food_donation_gather_note', 'tcm_food_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note', 'tcm_mhv_note', 'tcm_ltc_phase1_note', 'tcm_ltc_phase2_note', 'tcm_ltc_phase3_note', 'tcm_ltc_phase4_note'].includes(templateId)) {
+        if (['tcm_progress_note', 'tcm_case_assignment_note', 'tcm_assessment_note', 'tcm_adult_certification_note', 'tcm_service_plan_note', 'tcm_initial_home_visit_note', 'tcm_collateral_note', 'tcm_gather_pcp_note', 'tcm_gather_psy_note', 'tcm_pc_emergency_contact_note', 'tcm_service_plan_discussion', 'tcm_hurricane_addendum_note', 'tcm_hurricane_update_note', 'tcm_sts_complete_note', 'tcm_sts_collect_note', 'tcm_sts_submit_note', 'tcm_dpp_obtain_note', 'tcm_dpp_complete_note', 'tcm_dpp_submit_pcp_note', 'tcm_donation_obtain_note', 'tcm_cleaning_donation_gather_note', 'tcm_cleaning_donation_obtain_note', 'tcm_clothing_donation_gather_note', 'tcm_clothing_donation_obtain_note', 'tcm_food_donation_gather_note', 'tcm_food_donation_obtain_note', 'tcm_vaccination_assistance_note', 'tcm_provider_appt_coord_note', 'tcm_uscis_assistance_note', 'tcm_housing_assistance_note', 'tcm_snap_recertification_note', 'tcm_mhv_note', 'tcm_ltc_phase1_note', 'tcm_ltc_phase2_note', 'tcm_ltc_phase3_note', 'tcm_ltc_phase4_note'].includes(templateId) || String(templateId || '').startsWith('tcm_v2_')) {
             return normalizeTcmNote(clioData);
         }
 
@@ -550,6 +551,8 @@ export const TCM_CANONICAL_TITLES: Record<string, string> = {
     tcm_adult_certification_note: 'Adult Certification',
     tcm_service_plan_note: 'Initial Service Plan Development',
     tcm_service_plan_discussion: 'Discuss and Sign Initial Services Plan',
+    // Spec-driven services (serviceSpecs.ts)
+    ...Object.fromEntries(SERVICE_SPECS.map(s => [s.id, s.title])),
 };
 
 /** Forces the official title on a generated note (and its joint services) by template id. */
@@ -577,6 +580,9 @@ export const getTemplateIdFromSubTemplate = (subTemplate: string): string => {
     if (s === 'PCP Medical Records Retrieval and Coordination of Care') return 'tcm_gather_pcp_note';
     if (s === 'Emergency Contact / Gather Information') return 'tcm_pc_emergency_contact_note';
     if (s === 'Initial Home Visit / Develop Intake' || s === 'TCM Initial Home Visit' || s === 'Initial Home Visit') return 'tcm_initial_home_visit_note';
+    // Spec-driven v2 services (and the old selector names they replace)
+    const spec = getServiceSpecForTitle(s);
+    if (spec) return spec.id;
     if (s === 'TCM Collateral & Contact Note' || s === 'Collateral & Contact Note') return 'tcm_collateral_note';
     if (s === 'TCM Gather PCP Record' || s.includes('Gather PCP Record')) return 'tcm_gather_pcp_note';
     if (s === 'TCM Gather PSY Record' || s.includes('Gather PSY Record')) return 'tcm_gather_psy_note';
@@ -918,7 +924,10 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     };
     (V2_REQUIRED_DOMAINS[activeTemplateId] || []).forEach(k => { services.domains_selected[k] = true; });
  
-    if (isHurricane) {
+    if (String(activeTemplateId || '').startsWith('tcm_v2_')) {
+        // Spec-driven services: keep the domains the workflow set (the spec domains are enforced in Record)
+        domainKeys.forEach(k => { services.domains_selected[k] = Boolean(rawDomainsSelected[k]); });
+    } else if (isHurricane) {
         services.domains_selected["12_other"] = true;
     } else if (isOtc || isVaccinationAssistance) {
         services.domains_selected["2_physical_health_medical_dental"] = true;

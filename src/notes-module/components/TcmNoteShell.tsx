@@ -1974,9 +1974,14 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                 (note._frontend_service_title || "").toLowerCase().includes("vaccin")
             );
 
+            // Spec-driven v2 services carry their own domains: send them as checked in the note
+            const useExplicitDomains = String(templateId || '').startsWith('tcm_v2_') && Boolean(note.services?.domains_selected);
             TCM_DOMAINS.forEach((domain) => {
                 let isChecked = false;
-                if (isHurricaneNote) {
+                if (useExplicitDomains) {
+                    const domainKey = domain.path.split('.').pop() || '';
+                    isChecked = Boolean(note.services?.domains_selected?.[domainKey]);
+                } else if (isHurricaneNote) {
                     isChecked = domain.path === 'services.domains_selected.12_other';
                 } else if (isOtcNote || isVaccinationAssistanceNote) {
                     isChecked = domain.path === 'services.domains_selected.2_physical_health_medical_dental';

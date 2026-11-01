@@ -101,6 +101,9 @@ Official titles live in `TCM_CANONICAL_TITLES` (`clioUtils.ts`); Record forces t
 | 8 | `PCP Medical Records Retrieval and Coordination of Care` | `tcm_gather_pcp_note` | `11 - Office` | `41 min` (`3u`) | `gather_pcp_record_workflow.json` (`K3rH8zeSNCBx6QFL`) | ✅ v2 |
 | 9 | `Emergency Contact / Gather Information` | `tcm_pc_emergency_contact_note` | `11 - Office` | `23 min` (`2u`) | `pc_emergency_contact_workflow.json` (`K3tH8zeSNCBx6QFL`) | ✅ v2 |
 | 10 | `TCM Progress Note` (Spaced / General) | `tcm_progress_note` | Variable | Variable | `tcm_workflow.json` (`edM28zeSNCBx6QFI`) | — |
+| 11 | 77 spec-driven services (MHV, medical appointments, pharmacy, vaccines, transportation/STS/DPP/Golden Passport, housing, LIHEAP, free phone, DCF/SNAP, SSA, insurance, bank, ID/legal, donations x4, OTC, recreation, EEP, SP addendum/review, discharge, staffing) | `tcm_v2_*` | per spec | per spec (Amexzone median) | `tcm_v2_service_workflow.json` (`TcmSvcV2zeSNCBx1`, webhook `tcm-v2-service-note`) | ✅ v2 (testing) |
+
+**Spec-driven services:** one spec per service in `src/lib/tcm/serviceSpecs.ts` (title, POS, minutes, domains, opening sentence, mandatory statements, essential items, Outcome/Next formulas). Record sends it as `service_spec` (+ `service_plan_document`); the generic workflow applies the shared rules A-T + P and the spec. To add or fix a service, edit the spec only. Built by `build_service_workflow.py` from the IHV v2 prompt (rebuild after changing shared rules in IHV).
 
 ---
 

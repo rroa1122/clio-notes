@@ -1,0 +1,360 @@
+{
+  "updatedAt": "2026-10-29T22:13:39.285Z",
+  "createdAt": "2026-01-28T04:18:10.983Z",
+  "id": "TcmSvcV2zeSNCBx1",
+  "name": "TCM V2 SERVICE NOTE (generic, spec-driven)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1050,
+        -416
+      ],
+      "id": "f9306858-640c-5643-84c8-c537a3d95588",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tcm-v2-service-note",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "audio"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -416
+      ],
+      "id": "33df7f55-5296-5156-be55-7cf3db0537d7",
+      "name": "Webhook",
+      "webhookId": "00dbff85-84d7-565e-b13d-4a669941cacc"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "audio0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        150,
+        -500
+      ],
+      "id": "a411f90f-d6b2-50e0-857b-d4dacfa2e7b8",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.4",
+          "mode": "list",
+          "cachedResultName": "GPT-5.4"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a clinical writer specialized in Florida Medicaid Mental Health Targeted Case Management (TCM). Your role is to write the \"{{ ((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })()).title || 'TCM Service' }}\" progress note in professional, objective, audit-ready English, following the agency case managers' house style.\n\n------------------------------------------------\nINPUTS (AUTHORITATIVE)\n\nHEADER & STAFF INPUTS\n- Primary service provided: {{ ((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })()).title || 'TCM Service' }}\n- Service Date (DOS): {{ $('Normalize & Prepare Context').item.json.body.service_date }}\n- Time In: {{ $('Normalize & Prepare Context').item.json.body.time_in }}\n- Time Out: {{ $('Normalize & Prepare Context').item.json.body.time_out }}\n- Agency / Clinic Name: {{ $('Normalize & Prepare Context').item.json.agency_name }}\n- Agency Legal Name (for the TCM introduction): {{ $('Normalize & Prepare Context').item.json.body.agency_legal_name }}\n- Facility Address: {{ $('Normalize & Prepare Context').item.json.body.facility_address }}\n- Facility Phone: {{ $('Normalize & Prepare Context').item.json.body.facility_phone }}\n- Facility Fax: {{ $('Normalize & Prepare Context').item.json.body.facility_fax }}\n- Facility Email: {{ $('Normalize & Prepare Context').item.json.body.facility_email }}\n- TCM / Case Manager Name: {{ $('Normalize & Prepare Context').item.json.case_manager_name }}\n- TCM License: {{ $('Normalize & Prepare Context').item.json.body.case_manager_lic }}\n- Supervisor Name: {{ $('Normalize & Prepare Context').item.json.body.supervisor_name }}\n- Supervisor License: {{ $('Normalize & Prepare Context').item.json.body.supervisor_lic }}\n\nCLIENT IDENTITY & SOCIAL INPUTS\n- Client Full Name: {{ $('Normalize & Prepare Context').item.json.patient_full_name }}\n- Client First Name: {{ $('Normalize & Prepare Context').item.json.patient_first_name }}\n- Client DOB: {{ $('Normalize & Prepare Context').item.json.patient_dob }}\n- Client Gender: {{ $('Normalize & Prepare Context').item.json.patient_gender }}\n- Client Full Address: {{ $('Normalize & Prepare Context').item.json.patient_address }}\n- Client Phone: {{ $('Normalize & Prepare Context').item.json.patient_phone }}\n- Session Language (default Spanish): {{ $('Normalize & Prepare Context').item.json.body.session_language || $('Normalize & Prepare Context').item.json.patient_full_object.preferred_language || 'Spanish' }}\n- Wording Variant (1, 2 or 3): {{ $('Normalize & Prepare Context').item.json.body.wording_variant || '1' }}\n- Ethnicity: {{ $('Normalize & Prepare Context').item.json.patient_full_object.ethnicity }}\n- Citizenship / Legal Status: {{ $('Normalize & Prepare Context').item.json.patient_citizenship }}\n- Marital Status: {{ $('Normalize & Prepare Context').item.json.patient_marital_status }}\n- Education Level: {{ $('Normalize & Prepare Context').item.json.patient_education }}\n- Employment Status: {{ $('Normalize & Prepare Context').item.json.patient_employment }}\n- Income Sources: {{ $('Normalize & Prepare Context').item.json.patient_income_sources }}\n- Household Size: {{ $('Normalize & Prepare Context').item.json.patient_household_size }}\n- Insurance: {{ $('Normalize & Prepare Context').item.json.patient_insurance_company }}\n\nCLINICAL, PROVIDERS & MEDICATIONS INPUTS\n- Diagnoses (ICD-10): {{ JSON.stringify($('Normalize & Prepare Context').item.json.patient_diagnoses) }}\n- Presenting Problems: {{ JSON.stringify($('Normalize & Prepare Context').item.json.patient_presenting_problems) }}\n- Physical Conditions: {{ JSON.stringify($('Normalize & Prepare Context').item.json.patient_physical_conditions) }}\n- Allergies: {{ $('Normalize & Prepare Context').item.json.patient_allergies }}\n- PCP Name: {{ $('Normalize & Prepare Context').item.json.patient_pcp_name }}\n- PCP Phone: {{ $('Normalize & Prepare Context').item.json.patient_pcp_phone }}\n- PCP Address: {{ $('Normalize & Prepare Context').item.json.patient_pcp_address }}\n- PCP Medications: {{ JSON.stringify($('Normalize & Prepare Context').item.json.patient_pcp_medications) }}\n- Psychiatrist Name: {{ $('Normalize & Prepare Context').item.json.patient_psych_name }}\n- Psychiatrist Phone: {{ $('Normalize & Prepare Context').item.json.patient_psych_phone }}\n- Psychiatrist Address: {{ $('Normalize & Prepare Context').item.json.patient_psych_address }}\n- Psych Record Date (date of the psychiatric note used to create the client in Clio): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.psych_record_date }}\n- Psych Clinic Name (where the psychiatrist practices, from that note): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.psych_clinic_name }}\n- Psych Record Type (evaluation, progress note..., from that note): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.psych_record_type }}\n- Psychiatrist Medications: {{ JSON.stringify($('Normalize & Prepare Context').item.json.patient_psych_medications) }}\n- Pharmacy Name: {{ $('Normalize & Prepare Context').item.json.patient_pharmacy_name }}\n- Pharmacy Phone: {{ $('Normalize & Prepare Context').item.json.patient_pharmacy_phone }}\n- Pharmacy Address: {{ $('Normalize & Prepare Context').item.json.patient_pharmacy_address }}\n- Emergency Contact Name: {{ $('Normalize & Prepare Context').item.json.patient_full_object.emergency_contact_name }}\n- Emergency Contact Relationship: {{ ($('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.emergency_contact_relationship || $('Normalize & Prepare Context').item.json.patient_full_object.emergency_contact_relation) }}\n- Emergency Contact Phone: {{ $('Normalize & Prepare Context').item.json.patient_full_object.emergency_contact_phone }}\n\nTCM SOCIAL FORM INPUTS (from the client's TCM Social tab in Clio; authoritative)\n- Country of Origin: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.origin_country }}\n- Date of Entry into US: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.us_entry_date }}\n- Citizen (year): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.citizenship_status }}\n- Resident: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.residence_status }}\n- Education Level: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.education_level }}\n- Marital Status: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.marital_status }}\n- Who they live with (name, relationship, age): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.co_habitants }}\n- Number of Children: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.children_count }}\n- Where Children Live: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.children_location }}\n- Religious Beliefs: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.religion }}\n- Occupation (current or pre-retirement): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.occupation }}\n- Retirement / Disability Date: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.retirement_date }}\n- Food Stamps Amount: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.food_stamps_amount }}\n- Food Stamps Since: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.food_stamps_since }}\n- Medicaid Status / No.: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.medicaid_details }}\n- Medicare Status / No.: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.medicare_details }}\n- SSI Details: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.ssi_details }}\n- Supplemental SSI Amount: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.ssi_amount }}\n- SSA Amount: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.ssa_amount }}\n- Living Situation (type, # of rooms): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.housing_type }}\n- Rent Amount: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.rent_payment }}\n- Regular Rent (true/false): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.regular_rent }}\n- Plan 8 / Section 8 (true/false): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.plan_8 }}\n- Low Income Housing (true/false): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.low_income }}\n- Drives?: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.drives }}\n- Bank Name (where benefits are deposited): {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.bank_name }}\n- Special Accommodations: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.special_accommodation }}\n- Emergency Contact Relationship: {{ $('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs?.emergency_contact_relationship }}\n- Full TCM Social object (use any additional field present): {{ JSON.stringify($('Normalize & Prepare Context').item.json.patient_full_object.tcm_social_needs ?? null) }}\n\nAPPROVED DOCUMENTATION RULES FOR THIS TCM (from supervisor feedback, approved by Clio admins)\n{{ $('Normalize & Prepare Context').item.json.body.profile_rules || 'None' }}\n\nJOINT NOTE: Is Joint Note = {{ $('Normalize & Prepare Context').item.json.body.is_joint_note || 'false' }} (service {{ $('Normalize & Prepare Context').item.json.body.joint_note_index || '1' }} of {{ $('Normalize & Prepare Context').item.json.body.joint_note_total || '1' }})\n\nCLIENT RECORD IN CLIO (MEDICAL / PSYCHIATRIC tabs; use any field present, e.g. providers, clinics, phones, conditions, medications, referrals)\n{{ JSON.stringify((() => { const p = { ...($('Normalize & Prepare Context').item.json.patient_full_object || {}) }; delete p.tcm_social_needs; return p; })()) }}\n\nSERVICE PLAN DOCUMENT (the client's active Individualized Service Plan: domains, goals and objectives)\n{{ $('Normalize & Prepare Context').item.json.body.service_plan_document || '{}' }}\n\nENCOUNTER CONTEXT / FORM / NOTES\n{{ $('Normalize & Prepare Context').item.json.body.patient_context }}\n\nCUSTOM TEMPLATE / EXTRA TEXT\n{{ $('Normalize & Prepare Context').item.json.body.custom_template_text }}\n\nVISIT TRANSCRIPT\n<<<TRANSCRIPT_START>>>\n{{ $json.text }}\n<<<TRANSCRIPT_END>>>\n\n------------------------------------------------\nSERVICE SPECIFICATION (AUTHORITATIVE for this note; built from the agency's real notes for this service)\n{{ JSON.stringify((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })(), null, 2) }}\n\n0a. HOW CLIO RECEIVES INFORMATION:\nThe TCM may provide information via structured form fields, audio recording transcript, free text notes, patient EMR profile fields, or a combination of all of them. Combine all sources into a single coherent narrative without repeating facts.\n\n0b. RULE FOR [Agency Name]:\nWherever [Agency Name] is needed in the note, use the exact Agency / Clinic Name from the TCM's profile in the inputs above (\"Agency / Clinic Name\"). Never use a hardcoded agency name. If the Agency / Clinic Name is empty in the inputs and not mentioned in the transcript/notes, write [CONFIRM: Agency Name] and include it in FOR TCM REVIEW.\n\nDOCUMENTATION STANDARDS v2 (CRITICAL — read before writing):\n\nA. KNOWN VALUES — never write [CONFIRM] for these; take them from the inputs:\nTCM / Case Manager name, Supervisor name, Agency / Clinic name, client name, age/DOB, address, date and time of service, and session language. Session language: use \"Session Language\" from the inputs; if empty, it is Spanish.\n\nB. DATA CLIO COLLECTS BUT IS EMPTY (TCM Social, CLIENT, MEDICAL, PSYCHIATRIC tabs):\n- Non-essential details (country of origin, date of entry, citizenship/residency, education, occupation, retirement date, marital status, children, religion, bank, pharmacy, special accommodations, client phone number): if empty, OMIT them. Do not write that they are unknown and do not write [CONFIRM] for them.\n- Essential details for this service: write at most ONE grouped [CONFIRM: ...] per section, never a chain of [CONFIRM] tags in one paragraph.\n- Never say \"is documented as\", \"is recorded as\" or \"requires confirmation\" to describe a missing value.\n- NO GAP NARRATION: never write sentences saying that information was not available, provided, listed, reported or documented in the record, inputs, materials or transcript (e.g., \"No allergies were provided in the available information.\", \"No transcript details were available regarding...\"). If a non-essential item is missing, simply leave it out.\n- Every [CONFIRM] must sit inside a complete clinical sentence, never alone as a fragment. Use these forms: \"The client resides in [CONFIRM: type of residence and household members].\" / \"The client's income and benefits include [CONFIRM: income and benefit sources and amounts].\" / \"The client's emergency contact is [CONFIRM: name, relationship and phone].\" / \"The client receives primary care from [CONFIRM: PCP name and clinic, or no PCP].\"\n\nC. DATA CLIO NEVER COLLECTS (it can only come from the transcript / TCM notes): if it is not in the transcript, either reformulate the sentence as the action the TCM performed without stating any finding, or omit it. Never invent a finding.\n\nD. NO CONTRADICTIONS: patient fields may contain old boilerplate such as \"The client reports no current prescribed medications\" or \"No acute physical medical conditions reported\". If the inputs list medications or medical conditions, ignore that boilerplate; never state both.\n\nE. TCM PRONOUNS: never write \"themselves\", \"he/she\" or \"his/her\" for the TCM. Write TCM sentences that need no pronoun, e.g., in person: \"Upon arrival, the TCM presented employee identification as [Client First Name]'s assigned Targeted Case Manager from [Agency Name].\"; by phone: \"The TCM identified the call as coming from [Client First Name]'s assigned Targeted Case Manager at [Agency Name].\" Never write \"the TCM introduced as\" with the pronoun missing.\n\nF. NEVER invent or estimate facts: no fictitious names, medications, doses, amounts, dates, providers, scores, quotes, observations or signatures. These notes are billed and audited. Unresolved [CONFIRM] items keep the note in \"Pending TCM Review\" until the TCM resolves them.\n\nG. SERVICE NOTE STRUCTURE (the agency CMs' pattern for task services; plain paragraphs, no labels):\n- Paragraph 1: the opening sentence from \"opening_sentence\" (start with \"To\", fill every bracket with real data; drop a bracketed part that has no data instead of writing a placeholder), followed by why TCM assistance is needed: the client's primary diagnosis and the symptoms or conditions documented in the inputs that create the barrier (e.g., difficulty concentrating, low energy, anxiety, limited mobility, language barrier, limited income) and the related Service Plan goal or domain when the Service Plan document has one.\n- Paragraph 2: what the TCM did and where or how: the place with its full address (or \"by telephone\" with the number, or the website), who was contacted, and the TCM introduction (rule T) with the purpose explained. For phone or online contacts never write a physical presence.\n- Paragraph 3 (and more if needed): step by step what happened, in order: forms, documents presented, information provided, the representative's instructions, confirmation numbers, appointment dates and times, items obtained. Only facts from the transcript, notes or inputs (rules C and F).\n- Last paragraph: client education and understanding (what the TCM explained, the client's response and agreement), and the follow-up planned.\n- Cover every item in \"mandatory_statements\". When a mandatory datum is missing: if it is in \"essential_items\", write ONE grouped [CONFIRM: ... || e.g. ...] inside the sentence (rule P); otherwise reformulate as the action the TCM performed or omit it.\n- Use \"data_sources\" to know where each datum lives in the inputs (TCM Social, MEDICAL / PSYCHIATRIC tabs, Service Plan document, transcript).\n- face_to_face_visit = false: the client may or may not have been present; never apply the by-exception visit statements below and never describe the client's home, appearance or mental status unless the transcript reports it.\n- face_to_face_visit = true (visit with the client), BY EXCEPTION (agency documentation standard):\n  - Presentation: if nothing is reported, document that the client was alert, oriented, appropriately dressed and groomed, calm and cooperative. Describe mood, affect or symptoms only if the transcript states them.\n  - SI/HI: if the transcript and records do not report it, document: \"No suicidal or homicidal ideation, intent or plan was reported or observed during the visit.\" If risk indicators are reported, document them with their source.\n  - Home (only when the visit takes place at the client's residence): if no concerns are reported, document that the residence was clean, organized and adequately maintained, with functioning utilities, food available and no visible safety hazards.\n- Never invent places, addresses, phone numbers, organizations, representatives, confirmation numbers, dates, balances or items. Use the client's address, phone, providers, pharmacy and benefits from the inputs; anything else comes only from the transcript or notes.\n- Joint note (Is Joint Note = true): write only this service; never repeat the other services of the same visit.\n\nH. LENGTH: aim for the \"target_words\" range of the specification when data is available. Reach it with real data and the standard statements, never with filler, repetition or [CONFIRM] chains.\n\nI. DIAGNOSES: the encounter carries ONE diagnosis only — the primary behavioral health diagnosis (ICD-10 chapter F; if several, the first listed). Put only that one in the \"diagnosis\" object. Every other diagnosis or medical condition from the records (insomnia, hypertension, dialysis, joint replacements, mobility, etc.) is mentioned in the narrative for medical-record and documentation purposes, never as an encounter diagnosis.\n\nJ. RESPECT DOCUMENTED DATA: write documents and manually entered client data exactly as given. Do not question, \"correct\" or flag values that look unusual but are valid (e.g., a psychiatrist phone identical to the agency phone is normal for an internal referral within the same behavioral health facility).\n\nK. PARAGRAPH FORMAT: inside \"narrative.summary_notes\", start each paragraph on a new line separated by a SINGLE line break \"\\n\". Never leave a blank line between paragraphs (no \"\\n\\n\"). Medication bullets go one per line with a single \"\\n\".\n\nL. CLIENT NAME: the client's name may be stored as \"LAST, First\" (e.g., \"POIRIER, Stephane\"). In the narrative, outcome and next steps write it as \"First Last\" (e.g., \"Stephane Poirier\") on first mention and use the first name afterwards (e.g., \"Stephane\"). Never write the \"LAST, First\" format or the surname in capitals.\n\nM. NO REPEATED IDEAS: each statement appears once. Never use two wording options for the same statement back to back (e.g., two sentences in a row about barriers). Citizenship status and residence status describe one fact: write it once (e.g., \"He is a U.S. Permanent Resident.\").\nN. NO EMPTY SLOTS: never leave a blank inside a sentence (e.g., \"reviewed is .\" or \"reported .\"). Write the fact, a [CONFIRM: ...] inside the sentence, or rewrite the sentence without it.\nO. MEDICATION NAMES: normal capitalization (\"Trazodone HCl 50 mg\"), never pharmacy tall-man lettering (\"traZODone\"); keep dose, form, route and frequency exactly as listed.\nQ. WORDING VARIANT (agency comfort zone: same structure, different wording): the input \"Wording Variant\" decides the phrasing only. Variant 1: use the wording bank sentences as written. Variant 2 and variant 3: keep the same sentences but change connectors, sentence openings and verbs (e.g., \"The TCM reviewed\" / \"The TCM went over\" / \"The TCM discussed\"), each variant in its own consistent way. In every variant the note structure, paragraph order, section labels, the mandatory statements, the key phrases of this template (Purpose, the standard statements, the by-exception wording, Outcome and Next Steps formulas) and all data stay exactly the same. Never add or drop content because of the variant.\nR. APPROVED DOCUMENTATION RULES: follow every rule listed under \"APPROVED DOCUMENTATION RULES FOR THIS TCM\". They add requirements the supervisor asked for (e.g., a point that must always be mentioned). They never override rules A-Q: never invent data to satisfy them; use [CONFIRM] with a guide when the data is missing.\nS. NO LABELS OR HEADINGS IN THE NARRATIVE (overrides any NOTE STRUCTURE above that shows one): never start a paragraph with \"Purpose:\", a section name (e.g., \"Social History:\", \"Mental Health / Behavioral Health:\", \"Strengths and Barriers:\") or any other \"Label:\". Write the purpose as a plain first sentence (e.g., \"To obtain and review ...\") and every section as a plain paragraph, in the same order and with the same content.\nT. CM HOUSE STYLE (from the agency's real notes):\n- Open the narrative with the purpose sentence itself, starting with \"To\" and no label (e.g., \"To obtain and review [Client Full Name]'s psychiatric medical records from ... to ...\"; \"To communicate with [Client Full Name]'s [relationship] and primary emergency contact, [name], to gather information regarding ...\"; \"To conduct an initial home visit with ...\").\n- TCM introduction: \"... as [Client First Name]'s Targeted Case Manager from [Agency Legal Name], Mental Health Targeted Case Management Program\" when \"Agency Legal Name\" is present; otherwise use the Agency / Clinic Name. Elsewhere use the Agency / Clinic Name.\n- Terms: \"Comprehensive Initial Assessment\" and \"Individualized Service Plan\" (never just \"Comprehensive Assessment\" or \"service plan\" in the narrative, Outcome or Next Steps).\n- Diagnoses from records: list each on its own line starting with \"- \" (e.g., \"- F33.2 – Major Depressive Disorder, Recurrent, Severe, Without Psychotic Features.\"). Medications: one per line with dose, route, frequency and, when the records state it, its purpose (e.g., \"for insomnia\"). Plain text only: never use ** or other markdown.\n- Chart wording: rewrite chart abbreviations and fragments into plain clinical English without changing any fact (MWF = Monday, Wednesday and Friday; FA = forearm; \"wheelchair bound\" = requires wheelchair use; \"HTN\" = hypertension). Name each diagnosis or condition once per note. In the TCM introduction write \"from [Agency Legal Name], Mental Health Targeted Case Management Program\" and never repeat the agency name right after it.\n- Develop each point with the real facts available (symptoms, screening scores such as PHQ-9 / GAD-7 when present, medical history, functional limits, financial and support situation) and close each service with why TCM coordination is needed. Never pad without facts.\nU. OUTCOME AND NEXT STEPS (CM house style; overrides any other formula). One or two sentences each, specific to this client:\n- Outcome: follow \"outcome_formula\" (the concrete result of this service). Next Steps: follow \"next_steps_formula\" (the next phase of the same need, e.g., obtain -> complete -> submit -> monitor).\n- Fill every bracket with facts from the narrative. Outcome and Next Steps NEVER contain [CONFIRM] or bracket placeholders: when a fact is still pending in the narrative, use general wording instead (e.g., \"the requested appointment\", \"the selected program\", \"the required documents\").\nP. EVERY [CONFIRM] CARRIES A GUIDE after \" || \" (the TCM reviews, edits and confirms every item; empty items are left out of the note):\n- Standard agency action or statement from this template (e.g., the signed authorization was presented, hurricane preparedness was reviewed, the client received a copy, the TCM role was explained): write [CONFIRM: short label || the exact sentence fragment as it should read in the note]. Clio pre-fills it.\n- Client-specific fact (dates, amounts, names, phone numbers, diagnoses, medications, scores, what the client or another person reported, support available, concerns): write [CONFIRM: short label || e.g. a realistic example taken from this template's wording bank and typical cases, written so it fits the sentence]. The \"e.g.\" example is only a guide shown to the TCM; it is never pre-filled and never uses this client's data as if it were verified.\n- If the tag stands for a whole sentence, the guide is a whole sentence (capitalized, with its period); if it stands for part of a sentence, the guide is only that part.\n- The guide never contains \"]\" or another [CONFIRM]. Place the tag where its text belongs in the sentence. In \"for_tcm_review\" and \"meta.missing_fields\" list only the label.\n\nDOMAINS: set to true in \"services.domains_selected\" every domain number listed in the specification's \"domains\" (1 = mental health, 2 = physical health, 3 = vocational, 4 = education, 5 = recreational/social support, 6 = daily living, 7 = housing, 8 = economic/financial, 9 = basic needs, 10 = transportation, 11 = legal/immigration, 12 = other), plus any other domain actually worked in this note; all others false.\n\nSTANDARD VALUES:\n- Service title (Clio, note and Amexzone): always exactly the specification \"title\". Never rephrase, shorten, translate or invent a title.\n- Place of Service (POS): the specification \"pos\", unless the transcript clearly states another place.\n- Duration: the specification \"minutes\" / \"units\" if not otherwise specified by Time In / Time Out.\n- Billing Code: T1017.\n\nOUTPUT JSON SCHEMA (Return ONLY valid JSON matching these exact keys):\n{\n  \"template_id\": \"{{ ((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })()).id || 'tcm_progress_note' }}\",\n  \"encounter\": {\n    \"dos_date\": \"\",\n    \"pos\": \"{{ ((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })()).pos || '11 - Office' }}\",\n    \"service_location\": \"{{ ((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })()).pos === '12 - Home' ? 'Home' : 'Office' }}\",\n    \"time_in\": \"\",\n    \"time_out\": \"\",\n    \"duration_minutes\": \"{{ ((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })()).minutes || '' }}\",\n    \"units\": \"{{ ((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })()).units || '' }}\"\n  },\n  \"patient\": {\n    \"full_name\": \"\",\n    \"dob\": \"\",\n    \"sex\": \"\",\n    \"emr\": \"\",\n    \"case_no\": \"\",\n    \"mobile\": \"\"\n  },\n  \"facility\": {\n    \"name\": \"{{ $('Normalize & Prepare Context').item.json.agency_name }}\",\n    \"address\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_address }}\",\n    \"phone\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_phone }}\",\n    \"fax\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_fax }}\",\n    \"email\": \"{{ $('Normalize & Prepare Context').item.json.body.facility_email }}\"\n  },\n  \"staff\": {\n    \"case_manager_name\": \"{{ $('Normalize & Prepare Context').item.json.case_manager_name }}\",\n    \"case_manager_lic\": \"{{ $('Normalize & Prepare Context').item.json.body.case_manager_lic }}\",\n    \"supervisor_name\": \"{{ $('Normalize & Prepare Context').item.json.body.supervisor_name }}\",\n    \"supervisor_lic\": \"{{ $('Normalize & Prepare Context').item.json.body.supervisor_lic }}\"\n  },\n  \"services\": {\n    \"service_focus_title\": \"{{ ((() => { try { const s = $('Normalize & Prepare Context').item.json.body.service_spec; return (typeof s === 'string' ? JSON.parse(s) : s) || {}; } catch (e) { return {}; } })()).title || 'TCM Service' }}\",\n    \"domains_selected\": {\n      \"1_mental_health_substance_abuse\": false,\n      \"2_physical_health_medical_dental\": false,\n      \"3_vocational_employment_job_training\": false,\n      \"4_school_education\": false,\n      \"5_recreational_social_support\": false,\n      \"6_activities_of_daily_living\": false,\n      \"7_housing_shelter\": false,\n      \"8_economic_financial\": false,\n      \"9_basic_needs\": false,\n      \"10_transportation\": false,\n      \"11_legal_immigration\": false,\n      \"12_other\": false\n    },\n    \"other_specify\": \"\"\n  },\n  \"narrative\": {\n    \"summary_notes\": \"\",\n    \"outcome_of_services\": \"\",\n    \"next_steps\": \"\",\n    \"for_tcm_review\": \"\"\n  },\n  \"diagnosis\": {\n    \"primary_diagnosis_name\": \"\",\n    \"icd10_code\": \"\",\n    \"icd10_description\": \"\",\n    \"type\": \"Rule-Out\"\n  },\n  \"signatures\": {\n    \"case_manager_signature_date\": \"\",\n    \"supervisor_signature_date\": \"\"\n  },\n  \"evidence\": {\n    \"key_facts_quotes\": []\n  },\n  \"meta\": {\n    \"confidence_overall\": \"\",\n    \"missing_fields\": [],\n    \"warnings\": []\n  }\n}\n\nReturn JSON only."
+            },
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        550,
+        -416
+      ],
+      "id": "8dd878d6-595f-5e27-93c2-6040ac891786",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rs5I2HRPkABGxSc5",
+          "name": "OpenAi account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node — Parse OpenAI \"Message a model\" output (new Responses shape)\n * Extracts: item.json.output[0].content[0].text\n * Returns: parsed note JSON at root, plus ok/meta helpers\n */\n\nfunction extractJsonString(raw) {\n  if (raw == null) return null;\n\n  let s = String(raw).trim();\n\n  // Remove ```json fences if present\n  s = s.replace(/^```(?:json)?\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\n  // Try direct object extraction\n  const firstBrace = s.indexOf(\"{\");\n  const lastBrace = s.lastIndexOf(\"}\");\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    return s.slice(firstBrace, lastBrace + 1).trim();\n  }\n\n  // Try array extraction\n  const firstBracket = s.indexOf(\"[\");\n  const lastBracket = s.lastIndexOf(\"]\");\n  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {\n    return s.slice(firstBracket, lastBracket + 1).trim();\n  }\n\n  return null;\n}\n\nfunction safeJsonParseFromText(text) {\n  const jsonStr = extractJsonString(text);\n  if (!jsonStr) throw new Error(\"Could not locate JSON in model output text.\");\n  return JSON.parse(jsonStr);\n}\n\nreturn items.map((item) => {\n  // ✅ This is the actual model text in your screenshot\n  const text =\n    item.json?.output?.[0]?.content?.[0]?.text ??\n    item.json?.output?.[0]?.content?.find?.((c) => c?.type === \"output_text\")?.text ??\n    item.json?.content ??\n    item.json?.message?.content ??\n    item.json?.text;\n\n  try {\n    const note = safeJsonParseFromText(text);\n\n    return {\n      json: {\n        ok: true,\n        ...note, // <-- IMPORTANT: put the note fields at the root for the UI\n        meta: {\n          ...(note.meta || {}),\n          confidence_overall: note.meta?.confidence_overall || \"\",\n        },\n      },\n    };\n  } catch (e) {\n    return {\n      json: {\n        ok: false,\n        error: e.message,\n        raw_preview: (text ? String(text).slice(0, 2000) : null),\n      },\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "cbee6772-b149-580b-82a4-76dd730b4fbd",
+      "name": "Parse OpenAI Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Canonical preprocessor for clinical note workflows\nconst results = [];\n\nfor (const item of items) {\n  const j = item.json ?? {};\n  const outerBody = j.body ?? {};\n\n  let inner = {};\n  if (typeof outerBody.body === \"string\") {\n    try {\n      inner = JSON.parse(outerBody.body);\n    } catch (e) {\n      inner = {};\n    }\n  } else if (typeof outerBody.body === \"object\" && outerBody.body) {\n    inner = outerBody.body;\n  }\n\n  // Combined body parameters\n  const body = {\n    ...outerBody,\n    ...inner,\n  };\n\n  // Safely parse patient_clinical_context if present\n  let patientData = {};\n  const contextString = body.patient_clinical_context || j.patient_clinical_context;\n  if (contextString) {\n    try {\n      patientData = typeof contextString === \"string\" ? JSON.parse(contextString) : contextString;\n    } catch (e) {\n      patientData = {};\n    }\n  }\n\n  // Check binary audio presence\n  const hasAudio = Boolean(item.binary && (item.binary.audio || item.binary.audio0 || item.binary.data));\n\n  const agencyName = body.agency_name || body.facility_name || j.agency_name || j.facility_name || \"\";\n  const caseManagerName = body.case_manager_name || body.provider_name || patientData.case_manager || body.case_manager || \"\";\n\n  // Build clean root properties\n  const normalizedJson = {\n    ...j,\n    body: body,\n    agency_name: agencyName,\n    case_manager_name: caseManagerName,\n    // Client provided text/transcript fallback\n    text: j.text ?? body.text ?? body.transcript ?? body.transcription ?? body.context ?? \"\",\n    // Patient Fields\n    patient_full_name: patientData.full_name || body.patient_name || body.name || \"\",\n    patient_first_name: patientData.first_name || (patientData.full_name || body.patient_name || \"\").split(\" \")[0] || \"\",\n    patient_last_name: patientData.last_name || \"\",\n    patient_dob: patientData.dob || body.dob || \"\",\n    patient_gender: patientData.gender || \"\",\n    patient_phone: patientData.phone || \"\",\n    patient_email: patientData.email || \"\",\n    patient_ssn: patientData.ssn || \"\",\n    patient_emr_id: patientData.emr_id || body.emr_id || \"\",\n    patient_address: patientData.address || \"\",\n    patient_citizenship: patientData.citizenship || \"\",\n    patient_marital_status: patientData.marital_status || \"\",\n    patient_education: patientData.education_level || patientData.education || \"\",\n    patient_employment: patientData.employment_status || \"\",\n    patient_income_sources: patientData.income_sources || \"\",\n    patient_household_size: patientData.household_size || \"\",\n    patient_allergies: patientData.allergies || \"\",\n    patient_physical_conditions: patientData.physical_conditions || patientData.pcp_conditions || [],\n    // Coordination & Insurance\n    patient_case_manager: caseManagerName,\n    patient_insurance_company: patientData.insurance_company || body.insurance || \"\",\n    patient_diagnoses: patientData.diagnoses || body.diagnoses || [],\n    patient_presenting_problems: patientData.presenting_problems || [],\n    // PCP\n    patient_pcp_name: patientData.pcp_name || \"\",\n    patient_pcp_phone: patientData.pcp_phone || \"\",\n    patient_pcp_address: patientData.pcp_address || \"\",\n    patient_pcp_conditions: patientData.pcp_conditions || [],\n    patient_pcp_medications: patientData.pcp_medications || [],\n    // Psych\n    patient_psych_name: patientData.psych_name || \"\",\n    patient_psych_phone: patientData.psych_phone || \"\",\n    patient_psych_address: patientData.psych_address || \"\",\n    patient_psych_conditions: patientData.psych_conditions || [],\n    patient_psych_medications: patientData.psych_medications || [],\n    // Pharmacy\n    patient_pharmacy_name: patientData.pharmacy_name || \"\",\n    patient_pharmacy_phone: patientData.pharmacy_phone || \"\",\n    patient_pharmacy_fax: patientData.pharmacy_fax || \"\",\n    patient_pharmacy_address: patientData.pharmacy_address || \"\",\n    // Full object\n    patient_full_object: patientData,\n    // Audio flag\n    has_audio: hasAudio,\n  };\n\n  // Ensure audio metadata is valid if binary exists\n  const binaryObj = item.binary ? { ...item.binary } : {};\n  if (binaryObj.audio0) {\n    binaryObj.audio0.fileName = binaryObj.audio0.fileName || \"recording.webm\";\n    binaryObj.audio0.mimeType = binaryObj.audio0.mimeType || \"audio/webm\";\n  } else if (binaryObj.audio) {\n    binaryObj.audio0 = {\n      ...binaryObj.audio,\n      fileName: binaryObj.audio.fileName || \"recording.webm\",\n      mimeType: binaryObj.audio.mimeType || \"audio/webm\",\n    };\n  }\n\n  results.push({\n    json: normalizedJson,\n    binary: binaryObj,\n  });\n}\n\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -350,
+        -416
+      ],
+      "id": "07d90bf3-ea87-5cdf-b975-8047c4b18e0b",
+      "name": "Normalize & Prepare Context"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "audio-check-K3aJ8zeSNCBx6QFL",
+              "leftValue": "={{ $json.has_audio }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -100,
+        -416
+      ],
+      "id": "dd1da294-4f13-5b8c-b743-03af47cb33e8",
+      "name": "If Has Audio"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge transcription text while preserving all patient context from Normalize node\nconst normalized = $('Normalize & Prepare Context').item.json;\nconst transcriptionText = items[0]?.json?.text || '';\n\nreturn [{\n  json: {\n    ...normalized,\n    text: transcriptionText || normalized.text || ''\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        -500
+      ],
+      "id": "fb3d403b-f2a9-5cf7-8d54-f00d25aaa566",
+      "name": "Merge Transcription"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code node — Parse OpenAI \"Message a model\" output (new Responses shape)\n * Extracts: item.json.output[0].content[0].text\n * Returns: parsed note JSON at root, plus ok/meta helpers\n */\n\nfunction extractJsonString(raw) {\n  if (raw == null) return null;\n\n  let s = String(raw).trim();\n\n  // Remove ```json fences if present\n  s = s.replace(/^```(?:json)?\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\n  // Try direct object extraction\n  const firstBrace = s.indexOf(\"{\");\n  const lastBrace = s.lastIndexOf(\"}\");\n  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n    return s.slice(firstBrace, lastBrace + 1).trim();\n  }\n\n  // Try array extraction\n  const firstBracket = s.indexOf(\"[\");\n  const lastBracket = s.lastIndexOf(\"]\");\n  if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {\n    return s.slice(firstBracket, lastBracket + 1).trim();\n  }\n\n  return null;\n}\n\nfunction safeJsonParseFromText(text) {\n  const jsonStr = extractJsonString(text);\n  if (!jsonStr) throw new Error(\"Could not locate JSON in model output text.\");\n  return JSON.parse(jsonStr);\n}\n\nreturn items.map((item) => {\n  // ✅ This is the actual model text in your screenshot\n  const text =\n    item.json?.output?.[0]?.content?.[0]?.text ??\n    item.json?.output?.[0]?.content?.find?.((c) => c?.type === \"output_text\")?.text ??\n    item.json?.content ??\n    item.json?.message?.content ??\n    item.json?.text;\n\n  try {\n    const note = safeJsonParseFromText(text);\n\n    return {\n      json: {\n        ok: true,\n        ...note, // <-- IMPORTANT: put the note fields at the root for the UI\n        meta: {\n          ...(note.meta || {}),\n          confidence_overall: note.meta?.confidence_overall || \"\",\n        },\n      },\n    };\n  } catch (e) {\n    return {\n      json: {\n        ok: false,\n        error: e.message,\n        raw_preview: (text ? String(text).slice(0, 2000) : null),\n      },\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -416
+      ],
+      "id": "cbee6772-b149-580b-82a4-76dd730b4fbd",
+      "name": "Parse OpenAI Response"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Prepare Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Prepare Context": {
+      "main": [
+        [
+          {
+            "node": "If Has Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Has Audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Merge Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Transcription": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse OpenAI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse OpenAI Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.clinicflow.dev",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+            "content-length": "2106",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "es-419,es;q=0.9",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryBXqDi94h66wCe70e",
+            "origin": "http://localhost:5173",
+            "priority": "u=1, i",
+            "referer": "http://localhost:5173/",
+            "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "via": "2.0 Caddy",
+            "x-forwarded-for": "71.38.84.91",
+            "x-forwarded-host": "n8n.clinicflow.dev",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "text": "dsfsdf",
+            "custom_template_text": "sdfsdfsdfdsfsdfsdfsdffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "patient_name": "as",
+            "patient_dob": "",
+            "patient_context": "Encounter Context:\r\ndsfsdf\r\n\r\nDate: 2026-04-15\r\nTime In: Not specified\r\nTime Out: Not specified",
+            "service_id": "manual-1776305617296",
+            "joint_note_index": "1",
+            "joint_note_total": "1",
+            "is_joint_note": "false",
+            "template_id": "tcm_progress_note",
+            "service_date": "2026-04-15",
+            "time_in": "",
+            "time_out": "",
+            "primary_service_provided": "Custom Template",
+            "user_id": "12022246-87fb-4d3b-ace0-1ed2836133a0"
+          },
+          "webhookUrl": "https://n8n.clinicflow.dev/webhook/tcm-note",
+          "executionMode": "production"
+        },
+        "binary": {
+          "audio0": {
+            "mimeType": "audio/webm",
+            "fileType": "audio",
+            "fileExtension": "weba",
+            "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+            "fileName": "encounter_audio.webm",
+            "fileSize": "100 B"
+          }
+        }
+      }
+    ]
+  },
+  "versionId": "538f656d-72bb-42bb-9a9f-8d8730f260b5",
+  "triggerCount": 1,
+  "tags": []
+}
