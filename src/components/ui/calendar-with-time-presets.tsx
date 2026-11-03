@@ -184,6 +184,15 @@ export function CalendarWithTimePresets({
     }
   }
 
+  // Exact time typed by the TCM (e.g. 07:07), not limited to the 15-minute slots
+  const handleTypedTime = (value: string, which: "in" | "out") => {
+    const m = value.match(/^(\d{1,2}):(\d{2})$/)
+    if (!m) return
+    const mins = parseInt(m[1], 10) * 60 + parseInt(m[2], 10)
+    if (which === "in") handleSelectTimeIn(minsToFormattedTime(mins), mins)
+    else handleSelectTimeOut(minsToFormattedTime(mins), mins)
+  }
+
   const weekDayLabels = language === "es"
     ? ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
     : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -279,11 +288,14 @@ export function CalendarWithTimePresets({
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
                   {language === "es" ? "Inicio" : "Start"}
                 </span>
-                {timeIn && (
-                  <div className="text-xs font-bold text-slate-900 dark:text-white mt-0.5">
-                    {displayTimeIn}
-                  </div>
-                )}
+                <input
+                  type="time"
+                  aria-label={language === "es" ? "Hora de inicio exacta" : "Exact start time"}
+                  title={language === "es" ? "Escribe la hora exacta" : "Type the exact time"}
+                  value={currentInMins !== null ? minsTo24hDisplay(currentInMins) : ""}
+                  onChange={(e) => handleTypedTime(e.target.value, "in")}
+                  className="mt-1 w-full max-w-[112px] mx-auto block h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-1.5 text-center text-xs font-bold text-slate-900 dark:text-white select-text [color-scheme:light] dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
               </div>
               <div
                 ref={inContainerRef}
@@ -321,11 +333,14 @@ export function CalendarWithTimePresets({
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
                   {language === "es" ? "Fin" : "End"}
                 </span>
-                {timeOut && (
-                  <div className="text-xs font-bold text-slate-900 dark:text-white mt-0.5">
-                    {displayTimeOut}
-                  </div>
-                )}
+                <input
+                  type="time"
+                  aria-label={language === "es" ? "Hora de fin exacta" : "Exact end time"}
+                  title={language === "es" ? "Escribe la hora exacta" : "Type the exact time"}
+                  value={currentOutMins !== null ? minsTo24hDisplay(currentOutMins) : ""}
+                  onChange={(e) => handleTypedTime(e.target.value, "out")}
+                  className="mt-1 w-full max-w-[112px] mx-auto block h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-1.5 text-center text-xs font-bold text-slate-900 dark:text-white select-text [color-scheme:light] dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
               </div>
               <div
                 ref={outContainerRef}
