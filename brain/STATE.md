@@ -13,6 +13,7 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 ---
 
 ## Lo que ya está Completado y Desplegado en Producción
+0. **Incidente 2026-11-02 (resuelto): conexión Amexzone siempre "EXPIRED"** — Xvfb `:99` caído en el VPS; el bot ahora cae a headless, el deploy copia `src/core`/`src/tasks` y levanta Xvfb, y Sync muestra el error real. Detalle y pendientes de seguridad en `brain/INCIDENT_2026-11-02_amexzone_connect.md`.
 1. **Platform Admins & Pantalla de Reglas (`/admin/rules`):**
    - Flag `is_platform_admin` configurado en `profiles` para `reinier.roa2.0@gmail.com` y `asleylegidos@gmail.com`.
    - Pantalla `src/pages/DocumentationRules.tsx` desplegada en `https://notes.clinicflow.dev/admin/rules`.
