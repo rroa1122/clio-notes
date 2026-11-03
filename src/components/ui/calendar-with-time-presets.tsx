@@ -114,11 +114,11 @@ export function CalendarWithTimePresets({
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
 
-  // Time slots from 08:00 to 18:00 (41 slots, 15 min increments)
+  // Time slots from 06:00 to 22:00 (65 slots, 15 min increments): TCM services can start early or run late
   const timeSlots = React.useMemo(() => {
     const slots: { display: string; formatted: string; minutes: number }[] = []
-    const startHour = 8 // 8:00 AM
-    const totalSlots = 41 // up to 18:00 (6:00 PM)
+    const startHour = 6 // 6:00 AM
+    const totalSlots = 65 // up to 22:00 (10:00 PM)
     for (let i = 0; i < totalSlots; i++) {
       const totalMinutes = startHour * 60 + i * 15
       slots.push({
