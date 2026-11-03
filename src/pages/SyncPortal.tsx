@@ -33,6 +33,23 @@ import {
 } from 'lucide-react';
 import { formatSyncError } from '../lib/services/syncErrorFormatter';
 
+// Plain-language reason for the last failed Amexzone connection (the bot stores the raw error on the [CONNECT] task)
+const describeConnectError = (raw: string, es: boolean): string => {
+    const m = String(raw || '');
+    if (/Missing X server|XServer|\$DISPLAY|launchPersistentContext|browser has been closed/i.test(m))
+        return es ? 'El navegador del bot no pudo abrirse en el servidor. Reintenta en unos minutos; si se repite, avisa al administrador.' : 'The bot browser could not start on the server. Retry in a few minutes; if it repeats, contact the administrator.';
+    if (/Tiempo de espera agotado/i.test(m))
+        return es ? 'No se recibió el código de verificación a tiempo (10 min). Vuelve a conectar y escribe el código apenas llegue.' : 'The verification code was not entered in time (10 min). Connect again and type the code as soon as it arrives.';
+    if (/credentials do not match|Credenciales inválidas|password you entered is incorrect/i.test(m))
+        return es ? 'Amexzone rechazó el email o la contraseña. Revísalos y vuelve a conectar.' : 'Amexzone rejected the email or password. Check them and connect again.';
+    if (/cancelada por el usuario/i.test(m))
+        return es ? 'La conexión se canceló.' : 'The connection was cancelled.';
+    if (/No se pudo completar el inicio de sesión/i.test(m))
+        return es ? 'El bot no pudo completar el inicio de sesión en Amexzone (PIN o código). Vuelve a intentarlo.' : 'The bot could not finish signing in to Amexzone (PIN or code). Try again.';
+    const first = m.split('\n')[0].trim();
+    return first ? (es ? `Error de conexión: ${first.slice(0, 160)}` : `Connection error: ${first.slice(0, 160)}`) : '';
+};
+
 export function SyncPortal() {
     const { user } = useAuth();
     const { language } = useLanguage();
@@ -64,6 +81,23 @@ export function SyncPortal() {
     const [selectedTask, setSelectedTask] = useState<any | null>(null);
     const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
     const [isDisconnecting, setIsDisconnecting] = useState(false);
+    const [lastConnectError, setLastConnectError] = useState('');
+
+    // Reason of the last failed connection attempt, shown instead of a generic "expired"
+    const loadLastConnectError = async () => {
+        if (!user?.id) return '';
+        const { data } = await supabase
+            .from('amexzone_note_tasks')
+            .select('status, error_message')
+            .eq('user_id', user.id)
+            .eq('note_text', '[CONNECT]')
+            .order('created_at', { ascending: false })
+            .limit(1);
+        const t = data && data[0];
+        const msg = t && t.status === 'failed' ? describeConnectError(t.error_message || '', language === 'es') : '';
+        setLastConnectError(msg);
+        return msg;
+    };
 
     // Fetch Integration credentials and status
     useEffect(() => {
@@ -80,7 +114,8 @@ export function SyncPortal() {
 
                 if (data && !rpcError) {
                     setEmail(data.amexzone_email || '');
-                    setPassword(data.amexzone_password || '');
+                    // Never show the stored password: keep it masked; handleConnect resends the saved one
+                    setPassword(data.amexzone_password ? '••••••••••••' : '');
                     setSavedPassword(data.amexzone_password || '');
                     setPin(data.amexzone_pin || '1206');
                     setMfaStatus(data.mfa_status || 'not_connected');
@@ -97,7 +132,7 @@ export function SyncPortal() {
 
                     if (rawData) {
                         setEmail(rawData.amexzone_email || '');
-                        setPassword(rawData.amexzone_password || '');
+                        setPassword(rawData.amexzone_password ? '••••••••••••' : '');
                         setSavedPassword(rawData.amexzone_password || '');
                         setPin(rawData.amexzone_pin || '1206');
                         setMfaStatus(rawData.mfa_status || 'not_connected');
@@ -111,7 +146,7 @@ export function SyncPortal() {
             }
         };
 
-        fetchIntegration();
+        fetchIntegration().then(() => loadLastConnectError());
     }, [user?.id]);
 
     // Fetch Logged Clinical Tasks (Excluding internal bot connection tasks)
@@ -192,7 +227,8 @@ export function SyncPortal() {
                         setMfaCode('');
                     } else if (data.mfa_status === 'expired' || data.mfa_status === 'not_connected') {
                         setMfaCode('');
-                        toast.error(language === 'es' ? "Fallo en la conexión o código expirado. Intenta de nuevo." : "Connection failed or code expired. Please try again.");
+                        const reason = await loadLastConnectError();
+                        toast.error(reason || (language === 'es' ? "Fallo en la conexión. Intenta de nuevo." : "Connection failed. Please try again."));
                     }
                 }
             } finally {
@@ -582,18 +618,18 @@ export function SyncPortal() {
                                     {mfaStatus === 'connected' && (language === 'es'
                                         ? "Sesión activa. Notas firmadas se sincronizan al instante."
                                         : "Active session. Signed notes sync automatically.")}
-                                    {mfaStatus === 'expired' && (language === 'es'
+                                    {mfaStatus === 'expired' && (lastConnectError || (language === 'es'
                                         ? "Sesión caducada. Reconecta tu cuenta."
-                                        : "Session expired. Please reconnect your account.")}
+                                        : "Session expired. Please reconnect your account."))}
                                     {mfaStatus === 'awaiting_2fa' && (language === 'es'
                                         ? "Ingresa el código de 6 dígitos a la derecha."
                                         : "Enter the 6-digit code on the right panel.")}
                                     {mfaStatus === 'processing' && (language === 'es'
                                         ? "Validando credenciales con Amexzone..."
                                         : "Verifying credentials with Amexzone...")}
-                                    {mfaStatus === 'not_connected' && (language === 'es'
+                                    {mfaStatus === 'not_connected' && (lastConnectError || (language === 'es'
                                         ? "Autorización válida por 90 días al conectar."
-                                        : "90-day session authorization upon connection.")}
+                                        : "90-day session authorization upon connection."))}
                                 </span>
                             </div>
 

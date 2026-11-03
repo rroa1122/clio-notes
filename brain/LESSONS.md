@@ -76,3 +76,9 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
 - New Referral: 220-380 palabras; solo diagnóstico principal y síntomas/razón del referido, una oración de condiciones médicas que afectan el acceso; sin lista médica, medicamentos ni seguro.
 - "No recibe TCM de otra agencia": confirmado solo si lo dice el transcript; si no, [CONFIRM ... || frase] para que el CM lo confirme.
 - Nombre guardado como "First Last": nombre completo una vez y luego el primer nombre (normalizeClientNameInNarrative).
+
+## Bot de Amexzone: pantalla virtual y conexión
+- El bot abre Chrome visible sobre Xvfb :99 en el VPS. Si Xvfb no corre, Chrome muere ("Missing X server or $DISPLAY"). browser.js ahora cae a headless si no hay pantalla, y el deploy levanta Xvfb.
+- El deploy debe copiar amexzone-bot/src/core y src/tasks además de worker.js y src/amexzone (antes no se copiaban).
+- [CONNECT] fallido: 'expired' solo si no llegó el código a tiempo (10 min); cualquier otro fallo = 'not_connected'. El motivo real está en amexzone_note_tasks.error_message y Sync lo muestra.
+- Nunca usar credenciales de otro usuario como respaldo. Sync nunca muestra la contraseña descifrada.

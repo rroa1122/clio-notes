@@ -79,8 +79,22 @@ const waitForLoader = async (page) => {
     } catch (e) {}
 };
 
+// True when the X display the bot uses (Xvfb :99 on the VPS) is running
+const hasXServer = () => {
+    if (process.platform !== 'linux') return true;
+    const m = String(process.env.DISPLAY || '').match(/:(\d+)/);
+    if (!m) return false;
+    return fs.existsSync(`/tmp/.X11-unix/X${m[1]}`);
+};
+const isMissingDisplayError = (err) => /Missing X server|XServer|\$DISPLAY|ozone_platform_x11|platform failed to initialize/i.test(String(err && err.message || err));
+
 const launchBrowserContext = async (userDataDir, launchOptions, userId = null) => {
     cleanStaleLocks(userDataDir);
+    // Headed mode needs the virtual display (Xvfb). If it is down, run headless instead of failing.
+    if (launchOptions && launchOptions.headless === false && !hasXServer()) {
+        console.log(`⚠️ No hay pantalla virtual (${process.env.DISPLAY || 'sin DISPLAY'}). Abriendo Chrome en modo headless.`);
+        launchOptions = { ...launchOptions, headless: true };
+    }
     let context;
 
     // Stealth arguments
@@ -105,7 +119,11 @@ const launchBrowserContext = async (userDataDir, launchOptions, userId = null) =
     try {
         context = await chromium.launchPersistentContext(userDataDir, augmentedLaunchOptions);
     } catch (err) {
-        if (err.message.includes('ProcessSingleton') || err.message.includes('Lock file') || err.message.includes('already in use')) {
+        if (!augmentedLaunchOptions.headless && isMissingDisplayError(err)) {
+            console.log("⚠️ Chrome no pudo abrir la pantalla virtual. Reintentando en modo headless...");
+            augmentedLaunchOptions.headless = true;
+            context = await chromium.launchPersistentContext(userDataDir, augmentedLaunchOptions);
+        } else if (err.message.includes('ProcessSingleton') || err.message.includes('Lock file') || err.message.includes('already in use')) {
             console.log("⚠️ Perfil principal bloqueado por Chrome activo. Creando contexto temporal de sesión...");
             const tempDir = userDataDir + '_runner_temp';
             try {

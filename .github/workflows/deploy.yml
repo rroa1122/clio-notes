@@ -70,5 +70,10 @@ jobs:
             echo "-> Desplegando RPA Bot y reiniciando PM2..."
             scp amexzone-bot/worker.js root@clinicflow.dev:/root/amexzone-notes-bot/worker.js
             scp amexzone-bot/src/amexzone/*.js root@clinicflow.dev:/root/amexzone-notes-bot/src/amexzone/
+            ssh root@clinicflow.dev "mkdir -p /root/amexzone-notes-bot/src/core /root/amexzone-notes-bot/src/tasks"
+            scp amexzone-bot/src/core/*.js root@clinicflow.dev:/root/amexzone-notes-bot/src/core/
+            scp amexzone-bot/src/tasks/*.js root@clinicflow.dev:/root/amexzone-notes-bot/src/tasks/
+            # Virtual display :99 for the headed browser (the bot falls back to headless if it is down)
+            ssh root@clinicflow.dev "pgrep -x Xvfb >/dev/null || (command -v Xvfb >/dev/null && (nohup Xvfb :99 -screen 0 1920x1080x24 >/dev/null 2>&1 &) ; sleep 1) || true"
             ssh root@clinicflow.dev "pm2 restart amexzone-worker"
           fi
