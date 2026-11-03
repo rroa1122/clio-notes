@@ -68,3 +68,11 @@ Consequence: the bot must not solve the reCAPTCHA. A person (the TCM) has to tic
 - Bot (server, Playwright, staff session): creates forms 136/135/79/61 with the IHV date and 78 x2 with the SP date; can update the patient custom fields in Amexzone so the Intake prefills.
 - Final step in the TCM's own browser: open each pending form, Clio fills the text fields, the TCM checks the reCAPTCHA, presses Sign Consent (saved signature) and Save. Options: Clio Sync browser extension autofill, or a guided checklist with copy buttons.
 - Patients without a saved signature (new clients) need it captured once (Amexzone canvas, or in Clio and uploaded).
+
+## 6. Decisions (2026-11-02, pending implementation — do not build yet)
+
+1. Investigate the path the other CMs use (Consents module, `addConsentsToDestinatario`) or uploading a document: check whether it avoids the reCAPTCHA before choosing between Forms and Consents.
+2. Investigate whether a form can be left filled (all text fields) so the TCM only signs and saves.
+3. Signatures stay in Amexzone. If the patient has no saved signature, the documents are created and left ready for the patient to sign there.
+4. SSN stays only in Amexzone (not stored in Clio).
+5. SP-Authorization entities: fixed list per domain.
