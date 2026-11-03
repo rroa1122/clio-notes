@@ -70,3 +70,9 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
 - Nunca inventar lugares, direcciones, organizaciones, representantes, números de confirmación, fechas, balances ni artículos: solo transcript/notas o datos del chart. Los esenciales de cada servicio llevan un [CONFIRM] agrupado con guía.
 - Las frases por excepción de visita (presentación, SI/HI, casa) solo aplican si el spec tiene face_to_face_visit.
 - Los dominios del spec siempre van marcados (ensureDomainNumbers) y el sync a Amexzone usa los dominios explícitos de la nota para `tcm_v2_*`.
+
+## Opening (New Referral e Initial Home Visit)
+- Dominios: solo #1 y #2 (práctica de los CMs en Amexzone, octubre 2026). Los "Services Needed" del TCM Social son para el Assessment y el Service Plan, nunca para el opening. normalizeTcmNote lo fuerza.
+- New Referral: 220-380 palabras; solo diagnóstico principal y síntomas/razón del referido, una oración de condiciones médicas que afectan el acceso; sin lista médica, medicamentos ni seguro.
+- "No recibe TCM de otra agencia": confirmado solo si lo dice el transcript; si no, [CONFIRM ... || frase] para que el CM lo confirme.
+- Nombre guardado como "First Last": nombre completo una vez y luego el primer nombre (normalizeClientNameInNarrative).

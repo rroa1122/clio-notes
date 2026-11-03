@@ -150,7 +150,25 @@ export const normalizeClientNameInNarrative = (note: any, storedFullName: string
     if (!note || typeof note !== 'object') return note;
     const raw = String(storedFullName || '').trim();
     const m = raw.match(/^([^,]+),\s*(.+)$/);
-    if (!m) return note;
+    if (!m) {
+        // Stored as "First Last": keep the full name on first mention, first name afterwards
+        const dn = getClientDisplayName(raw);
+        if (!dn.full || !dn.first || dn.full.split(/\s+/).length < 2) return note;
+        const fullRe = new RegExp(`\\b${dn.full.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')}(?![A-Za-zÀ-ÿ])`, 'gi');
+        const fixFull = (text: any, keepFirst: boolean) => {
+            if (typeof text !== 'string') return text;
+            let seen = !keepFirst;
+            return text.replace(fullRe, (mm: string) => { if (!seen) { seen = true; return mm; } return dn.first; });
+        };
+        const fixN = (n: any) => {
+            if (!n || typeof n !== 'object') return;
+            n.summary_notes = fixFull(n.summary_notes, true);
+            ['outcome_of_services', 'next_steps'].forEach(k => { if (k in n) n[k] = fixFull(n[k], false); });
+        };
+        fixN(note.narrative);
+        (note.joint_services || []).forEach((sv: any) => fixN(sv?.narrative));
+        return note;
+    }
     const { full, first } = getClientDisplayName(raw);
     const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const lastEsc = esc(m[1].trim());
@@ -1030,6 +1048,14 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         } else {
             services.domains_selected["1_mental_health_substance_abuse"] = true;
         }
+    }
+
+    // Opening services (New Referral, Initial Home Visit): the agency CMs check #1 and #2 only
+    // (October 2026 Amexzone notes); the TCM Social "Services Needed" belong to the Assessment and Service Plan.
+    if (isInitialHomeVisit || isCaseAssignment) {
+        domainKeys.forEach(k => { services.domains_selected[k] = false; });
+        services.domains_selected["1_mental_health_substance_abuse"] = true;
+        services.domains_selected["2_physical_health_medical_dental"] = true;
     }
     return applyBaseNormalization({
         ...raw,
