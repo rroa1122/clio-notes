@@ -12,7 +12,7 @@ Read-only research, November 2026. No data was created or changed in Amexzone.
 | Coordination of Care | 61 | IHV date | 1 consent segment (301) — PCP |
 | SP-Authorization for Use and Disclosure (TCM) | 78 | Service Plan signature date (IHV + ~4 days), x2 | 8 consent segments (224) each = 16 entities |
 
-- Only one CM (Gisselle) uses Forms/Intake. Other CMs add the same consents directly (Consents module: `addConsentsToDestinatario`) without the Intake TCM form. Same legal result.
+- CORRECTED 2026-11-02 (sweep of the 1,109 active ARC patients created May–Nov 2026, see §7): Forms/Intake is the agency standard (84%), not a Gisselle-only habit. The Consents module alone (`addConsentsToDestinatario`) is rare (2%) and used mostly for loose 224 authorizations.
 - Each signed consent segment also becomes a row in the patient's Consents list (11 fixed + ~20 authorizations per opening).
 - Extra single Authorizations (79) appear during the year when a new provider is added.
 
@@ -76,3 +76,25 @@ Consequence: the bot must not solve the reCAPTCHA. A person (the TCM) has to tic
 3. Signatures stay in Amexzone. If the patient has no saved signature, the documents are created and left ready for the patient to sign there.
 4. SSN stays only in Amexzone (not stored in Clio).
 5. SP-Authorization entities: fixed list per domain.
+
+## 7. Consents sweep (2026-11-02, read-only) — reference CM Claudia Leyva + whole agency
+
+Active ARC patients with a CM, created 2026-05-01 → 2026-11-02: 1,109.
+
+| Path | Patients | Notes |
+|---|---|---|
+| Forms/Intake (135/136, old 50) | 927 (84%) | 925 forms 135, 915 completed (99%). Same packet as Gisselle: 136 + 135 on IHV date, 78 on SP date, extra 79 when a provider is added. |
+| Consents module only | 22 (2%) | 246 consents, 100% signed, 94% created by the CM's own user. 230/246 are 224 Authorizations; the full 11-consent set appears only once. |
+| Nothing in Amexzone | 160 (14%) | 103 no visits yet, 23 only Case Assigned (pending IHV) → normal. ~35–45 already had their IHV and have NO consents, forms or upload (gap). |
+
+By month the "nothing" bucket grows: Aug 34, Sep 38, Oct 67 (Oct mostly pending IHV).
+
+Claudia Leyva (cm_trabajador_id 1038, 28 patients):
+- Same Forms packet as Gisselle, usually 1× 78 (Gisselle 2×) + 1–3 extra 79. 21–24 consents per opening, all signed. Old patients: template 50 + 303.
+- 2 patients with only 136 + 135 (no SP authorization).
+- 9 patients with 0 forms / 0 consents (Orlando Martinez Velazquez, Marta Rodriguez, Esneldo Gomez Gomez, Beatriz Perez, Nieves Diaz, Rebeca Diaz, Raimundo Marquez Arocha, Nieve Murillo, Dolores Umaran Alonso). Their More Documents only hold IDs / eligibility / PCP-PSY records / auths (older ones a migrated "Intake and Progress Notes" .zip from April 2025). No scanned consent packet anywhere.
+- Example Dolores Umaran Alonso (AMH7077): Case Assigned + First Home Visit 07/20/2026, the note says "All required admission forms were completed during the visit, and initial consents were signed", TCM Documentation has Assessment/SP/Certification, but Amexzone has no consents → documentation gap, not an alternative method.
+
+Gap CMs (IHV done, nothing in Amexzone): Yasmay Casanas 5, Yuneisy Gil 3, Claudia Leyva (9 incl. older), plus 1 each for Aymee Travieso, Yudit Abreu, Sady Mora Gonzalez, Dailys Almeida, Pedro Alvarez, Yanet Milanes Teruel, Yisabel Viera, Yanisleidy Hernandez. GISSELLE QUINTERO CASTELLON 6 are transfers (monthly visits, opening done elsewhere).
+
+Decision 1 status: nobody uses an upload path for consents, so "upload a document" is not the agency's alternative. The Consents module sends consents to the patient (`addConsentsToDestinatario`, optional email); the patient-side signing page and whether it needs reCAPTCHA is still unverified (needs one test on a test patient, e.g. Testthiago Six 27510, with permission).
