@@ -69,6 +69,31 @@ const minsTo24hDisplay = (minutes: number): string => {
   return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
 }
 
+// Exact time field: keeps what the TCM is typing (hour first, then minutes) and only commits a complete time
+function ExactTimeField({ minutes, label, onCommit }: { minutes: number | null; label: string; onCommit: (value: string) => void }) {
+  const external = minutes !== null ? minsTo24hDisplay(minutes) : ""
+  const [value, setValue] = React.useState(external)
+  const focused = React.useRef(false)
+  React.useEffect(() => {
+    if (!focused.current) setValue(external)
+  }, [external])
+  return (
+    <input
+      type="time"
+      aria-label={label}
+      title={label}
+      value={value}
+      onFocus={() => { focused.current = true }}
+      onBlur={() => { focused.current = false; setValue(external) }}
+      onChange={(e) => {
+        setValue(e.target.value)
+        if (/^\d{2}:\d{2}$/.test(e.target.value)) onCommit(e.target.value)
+      }}
+      className="mt-1 w-full max-w-[112px] mx-auto block h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-1.5 text-center text-xs font-bold text-slate-900 dark:text-white select-text [color-scheme:light] dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
+  )
+}
+
 export function CalendarWithTimePresets({
   date,
   onDateChange,
@@ -288,13 +313,10 @@ export function CalendarWithTimePresets({
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
                   {language === "es" ? "Inicio" : "Start"}
                 </span>
-                <input
-                  type="time"
-                  aria-label={language === "es" ? "Hora de inicio exacta" : "Exact start time"}
-                  title={language === "es" ? "Escribe la hora exacta" : "Type the exact time"}
-                  value={currentInMins !== null ? minsTo24hDisplay(currentInMins) : ""}
-                  onChange={(e) => handleTypedTime(e.target.value, "in")}
-                  className="mt-1 w-full max-w-[112px] mx-auto block h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-1.5 text-center text-xs font-bold text-slate-900 dark:text-white select-text [color-scheme:light] dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                <ExactTimeField
+                  minutes={currentInMins}
+                  label={language === "es" ? "Hora de inicio exacta" : "Exact start time"}
+                  onCommit={(v) => handleTypedTime(v, "in")}
                 />
               </div>
               <div
@@ -333,13 +355,10 @@ export function CalendarWithTimePresets({
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
                   {language === "es" ? "Fin" : "End"}
                 </span>
-                <input
-                  type="time"
-                  aria-label={language === "es" ? "Hora de fin exacta" : "Exact end time"}
-                  title={language === "es" ? "Escribe la hora exacta" : "Type the exact time"}
-                  value={currentOutMins !== null ? minsTo24hDisplay(currentOutMins) : ""}
-                  onChange={(e) => handleTypedTime(e.target.value, "out")}
-                  className="mt-1 w-full max-w-[112px] mx-auto block h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-1.5 text-center text-xs font-bold text-slate-900 dark:text-white select-text [color-scheme:light] dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                <ExactTimeField
+                  minutes={currentOutMins}
+                  label={language === "es" ? "Hora de fin exacta" : "Exact end time"}
+                  onCommit={(v) => handleTypedTime(v, "out")}
                 />
               </div>
               <div
