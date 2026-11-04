@@ -37,14 +37,13 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 5. **Exportación e Integración de los 10 Workflows de n8n:**
    - Todos los 10 workflows ahora residen formalmente en `scratch/`.
    - Se configuró [`scratch/sync_all_workflows.cjs`](scratch/sync_all_workflows.cjs) de forma multiplataforma (Windows y Linux en GitHub Actions) para inyectar los 10 workflows en la base de datos de n8n.
-6. **Selector Unificado de Encuentro (Calendario + Horas Inicio y Fin):**
-   - Creado `src/components/ui/calendar-with-time-presets.tsx` (y alias `calendar-with-time-pressets.tsx`).
-7. **Mascota Interactiva Petal Guide de Clio (`ClioPetalGuide`):**
+6. **Mascota Interactiva Petal Guide de Clio (`ClioPetalGuide`):**
    - Creado `src/components/ui/clio-petal-guide.tsx`.
    - Diseño ultra-minimalista estilo Grok: silueta monocromática pura con dos ojos verticales tipo cápsula negra (`#09090b`), parpadeo sutil y seguimiento interactivo del cursor del mouse.
-8. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
+7. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
    - Configurado para escuchar ramas `main` y `feat/**` / `feat/*`, desplegando automáticamente en cada push de Claude o el equipo.
-9. **Protocolo de Colaboración Multi-Agente (Anti-Conflicto):**
+   - Se configuró el secreto `VPS_SSH_KEY` en GitHub Actions.
+8. **Protocolo de Colaboración Multi-Agente (Anti-Conflicto):**
    - Documentado en `brain/SYSTEM_MAP.md` sección 6 para evitar bloqueos y colisiones entre Claude y Antigravity.
 
 ---
