@@ -103,7 +103,7 @@ function ExactTimeField({
         setValue(e.target.value)
         if (/^\d{2}:\d{2}$/.test(e.target.value)) onCommit(e.target.value)
       }}
-      className="mt-1.5 w-full max-w-[115px] mx-auto block h-9 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-slate-900/90 px-2 text-center text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white select-text [color-scheme:light] dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 shadow-xs transition-all cursor-pointer"
+      className="mt-1.5 w-full max-w-[115px] mx-auto block h-9 rounded-lg border border-slate-700 bg-slate-850 dark:bg-slate-800 px-2 text-center text-sm font-bold text-white select-text [color-scheme:dark] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors cursor-pointer"
     />
   )
 }
@@ -233,8 +233,8 @@ export function CalendarWithTimePresets({
   }
 
   const weekDayLabels = language === "es"
-    ? ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"]
-    : ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
+    ? ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+    : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   const displayTimeIn = currentInMins !== null ? minsTo24hDisplay(currentInMins) : (timeIn || null)
   const displayTimeOut = currentOutMins !== null ? minsTo24hDisplay(currentOutMins) : (timeOut || null)
@@ -242,30 +242,30 @@ export function CalendarWithTimePresets({
   return (
     <div
       className={cn(
-        "rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c111d]/95 backdrop-blur-2xl text-slate-900 dark:text-slate-100 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)] dark:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.95)] ring-1 ring-black/5 dark:ring-white/10 overflow-hidden max-w-[570px] w-full font-sans select-none transition-all",
+        "rounded-2xl border border-slate-700/80 bg-slate-900 text-slate-100 shadow-2xl overflow-hidden max-w-[560px] w-full font-sans select-none",
         className
       )}
     >
-      <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800/80">
+      <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-800">
         {/* Left Side: Calendar */}
-        <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between min-w-[285px] bg-transparent">
+        <div className="p-5 flex-1 flex flex-col justify-between min-w-[285px] bg-slate-900">
           {/* Calendar Header: < Month Year > */}
           <div className="flex items-center justify-between mb-4 px-1">
             <button
               type="button"
               onClick={prevMonth}
-              className="size-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 active:scale-95 transition-all cursor-pointer"
+              className="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               title={language === "es" ? "Mes anterior" : "Previous month"}
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-sm font-extrabold text-slate-900 dark:text-white capitalize tracking-wide">
+            <span className="text-sm font-bold text-white capitalize tracking-wide">
               {format(currentMonth, "MMMM yyyy", { locale: language === "es" ? es : undefined })}
             </span>
             <button
               type="button"
               onClick={nextMonth}
-              className="size-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/80 active:scale-95 transition-all cursor-pointer"
+              className="size-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               title={language === "es" ? "Mes siguiente" : "Next month"}
             >
               <ChevronRight size={16} />
@@ -273,9 +273,9 @@ export function CalendarWithTimePresets({
           </div>
 
           {/* Weekday Labels Header */}
-          <div className="grid grid-cols-7 text-center mb-3">
+          <div className="grid grid-cols-7 text-center mb-2.5">
             {weekDayLabels.map((day) => (
-              <div key={day} className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider py-1">
+              <div key={day} className="text-xs text-slate-400 font-semibold py-1">
                 {day}
               </div>
             ))}
@@ -292,7 +292,7 @@ export function CalendarWithTimePresets({
                 return (
                   <div
                     key={day.toISOString()}
-                    className="size-8 sm:size-8.5 mx-auto flex items-center justify-center text-xs text-slate-300 dark:text-slate-700 pointer-events-none font-normal"
+                    className="size-9 mx-auto flex items-center justify-center text-xs text-slate-600 pointer-events-none font-normal"
                   >
                     {format(day, "d")}
                   </div>
@@ -305,17 +305,17 @@ export function CalendarWithTimePresets({
                   type="button"
                   onClick={() => handleSelectDate(day)}
                   className={cn(
-                    "relative size-8 sm:size-8.5 mx-auto flex items-center justify-center text-xs sm:text-[13px] font-semibold transition-all cursor-pointer rounded-full",
+                    "relative size-9 mx-auto flex items-center justify-center text-sm font-semibold transition-colors cursor-pointer rounded-lg",
                     isSelected
-                      ? "bg-gradient-to-tr from-indigo-600 via-indigo-600 to-violet-500 text-white font-bold shadow-lg shadow-indigo-500/35 scale-105 rounded-full ring-2 ring-indigo-400/30"
+                      ? "bg-indigo-600 text-white font-bold shadow-sm"
                       : isCurrentToday
-                        ? "text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/70 hover:bg-indigo-100 dark:hover:bg-indigo-900/40"
-                        : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white"
+                        ? "text-indigo-400 font-bold bg-indigo-950/50 border border-indigo-750/70 hover:bg-indigo-900/50"
+                        : "text-slate-200 hover:bg-slate-800 hover:text-white"
                   )}
                 >
                   {format(day, "d")}
                   {isCurrentToday && !isSelected && (
-                    <span className="absolute bottom-1 size-1 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                    <span className="absolute bottom-1 size-1 rounded-full bg-indigo-400" />
                   )}
                 </button>
               )
@@ -324,12 +324,12 @@ export function CalendarWithTimePresets({
         </div>
 
         {/* Right Side: Two Time Columns (START & END) */}
-        <div className="flex-1 flex flex-col min-w-[250px] bg-slate-50/40 dark:bg-slate-950/40">
-          <div className="grid grid-cols-2 flex-1 divide-x divide-slate-100 dark:divide-slate-800/80">
+        <div className="flex-1 flex flex-col min-w-[250px] bg-slate-950">
+          <div className="grid grid-cols-2 flex-1 divide-x divide-slate-800">
             {/* Column 1: START */}
             <div className="flex flex-col">
-              <div className="p-3 text-center border-b border-slate-100 dark:border-slate-800/80">
-                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-400">
+              <div className="p-3 text-center border-b border-slate-800">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   {language === "es" ? "Inicio" : "Start"}
                 </span>
                 <ExactTimeField
@@ -340,11 +340,7 @@ export function CalendarWithTimePresets({
               </div>
               <div
                 ref={inContainerRef}
-                className="overflow-y-auto max-h-[290px] p-2.5 pb-6 space-y-2 custom-scrollbar text-center"
-                style={{
-                  maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
-                  WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
-                }}
+                className="overflow-y-auto max-h-[290px] p-2.5 pb-4 space-y-1.5 custom-scrollbar text-center"
               >
                 {timeSlots.map((slot) => {
                   const isSelected =
@@ -355,10 +351,10 @@ export function CalendarWithTimePresets({
                       type="button"
                       onClick={() => handleSelectTimeIn(slot.formatted, slot.minutes)}
                       className={cn(
-                        "w-full h-10 text-xs sm:text-[13px] font-semibold rounded-2xl flex items-center justify-center transition-all cursor-pointer tracking-wide",
+                        "w-full h-9 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-colors cursor-pointer tracking-wide",
                         isSelected
-                          ? "slot-active-in bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold shadow-md shadow-indigo-600/30 scale-[1.02] ring-1 ring-white/20"
-                          : "bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100/70 dark:hover:bg-slate-800/90 active:scale-[0.98]"
+                          ? "slot-active-in bg-indigo-600 border border-indigo-500 text-white font-bold shadow-sm"
+                          : "bg-slate-800/90 border border-slate-700/80 hover:border-slate-500 hover:bg-slate-700 text-slate-100"
                       )}
                     >
                       {slot.display}
@@ -370,8 +366,8 @@ export function CalendarWithTimePresets({
 
             {/* Column 2: END */}
             <div className="flex flex-col">
-              <div className="p-3 text-center border-b border-slate-100 dark:border-slate-800/80">
-                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-400">
+              <div className="p-3 text-center border-b border-slate-800">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   {language === "es" ? "Fin" : "End"}
                 </span>
                 <ExactTimeField
@@ -382,11 +378,7 @@ export function CalendarWithTimePresets({
               </div>
               <div
                 ref={outContainerRef}
-                className="overflow-y-auto max-h-[290px] p-2.5 pb-6 space-y-2 custom-scrollbar text-center"
-                style={{
-                  maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
-                  WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
-                }}
+                className="overflow-y-auto max-h-[290px] p-2.5 pb-4 space-y-1.5 custom-scrollbar text-center"
               >
                 {timeSlots.map((slot) => {
                   const isSelected =
@@ -397,10 +389,10 @@ export function CalendarWithTimePresets({
                       type="button"
                       onClick={() => handleSelectTimeOut(slot.formatted, slot.minutes)}
                       className={cn(
-                        "w-full h-10 text-xs sm:text-[13px] font-semibold rounded-2xl flex items-center justify-center transition-all cursor-pointer tracking-wide",
+                        "w-full h-9 text-xs sm:text-sm font-semibold rounded-lg flex items-center justify-center transition-colors cursor-pointer tracking-wide",
                         isSelected
-                          ? "slot-active-out bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold shadow-md shadow-indigo-600/30 scale-[1.02] ring-1 ring-white/20"
-                          : "bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100/70 dark:hover:bg-slate-800/90 active:scale-[0.98]"
+                          ? "slot-active-out bg-indigo-600 border border-indigo-500 text-white font-bold shadow-sm"
+                          : "bg-slate-800/90 border border-slate-700/80 hover:border-slate-500 hover:bg-slate-700 text-slate-100"
                       )}
                     >
                       {slot.display}
@@ -413,21 +405,21 @@ export function CalendarWithTimePresets({
         </div>
       </div>
 
-      {/* Footer in Clio Obsidian Palette */}
-      <div className="border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/70 px-5 sm:px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-        <div className="text-slate-600 dark:text-slate-300 flex-1 min-w-0 text-left leading-relaxed flex items-center flex-wrap gap-2">
-          <span className="font-extrabold text-slate-900 dark:text-white capitalize text-xs sm:text-[13px] tracking-tight">
+      {/* Footer in Crisp Palette */}
+      <div className="border-t border-slate-800 bg-slate-950 px-5 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="text-slate-300 flex-1 min-w-0 text-left leading-relaxed flex items-center flex-wrap gap-2">
+          <span className="font-bold text-white capitalize text-sm tracking-tight">
             {format(selectedDate, "EEEE, MMMM d", {
               locale: language === "es" ? es : undefined,
             })}
           </span>
           {(displayTimeIn || displayTimeOut) && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] sm:text-xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-indigo-300 font-bold text-xs">
               <span>{displayTimeIn || "--:--"}</span>
               <span className="opacity-60">–</span>
               <span>{displayTimeOut || "--:--"}</span>
               {durationMin && (
-                <span className="ml-1 opacity-75 font-medium text-[10px]">({durationMin}m)</span>
+                <span className="ml-1 opacity-75 font-normal text-[11px]">({durationMin}m)</span>
               )}
             </span>
           )}
@@ -436,7 +428,7 @@ export function CalendarWithTimePresets({
         <button
           type="button"
           onClick={onConfirm}
-          className="w-full sm:w-auto shrink-0 h-10 px-6 text-xs sm:text-[13px] font-bold bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-95 text-white rounded-2xl transition-all cursor-pointer ml-auto shadow-md shadow-indigo-600/30 hover:shadow-indigo-600/40 tracking-wide"
+          className="w-full sm:w-auto shrink-0 h-9 px-6 text-xs sm:text-sm font-bold bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-lg transition-all cursor-pointer ml-auto shadow-sm tracking-wide"
         >
           {language === "es" ? "Continuar" : "Continue"}
         </button>
