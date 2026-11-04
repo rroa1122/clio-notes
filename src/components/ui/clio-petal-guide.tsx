@@ -191,15 +191,17 @@ export function ClioPetalGuide({
             const rotation = isBottomButton ? 180 : 0;
             const direction: 'down' | 'up' = isBottomButton ? 'up' : 'down';
 
-            // Center horizontally on target, or align over search input
-            let targetX = rect.left + rect.width / 2;
-            if (currentStep === 'patient') {
-                targetX = rect.left + Math.min(130, rect.width / 2);
-            }
+            // Detect page CSS zoom (e.g. html { zoom: 0.9 }) to prevent coordinate drift on fixed elements
+            const docZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
 
-            // For top inputs: tip points DOWN onto top edge (rect.top + 8)
-            // For bottom buttons: tip points UP onto bottom edge, placed with generous clearance below
-            const targetY = isBottomButton ? (rect.bottom + 102) : (rect.top + 8);
+            // Center horizontally exactly on target element, divided by docZoom to neutralize CSS zoom scaling
+            const targetX = (rect.left + rect.width / 2) / docZoom;
+
+            // For top inputs: tip points DOWN onto top edge (rect.top + 6)
+            // For bottom buttons: tip points UP onto bottom edge (rect.bottom + 8)
+            const targetY = isBottomButton
+                ? ((rect.bottom + 8) / docZoom)
+                : ((rect.top + 6) / docZoom);
 
             setCoords({
                 x: targetX,
@@ -281,7 +283,7 @@ export function ClioPetalGuide({
                         )}
                     >
                         {/* Ambient Glow Aura */}
-                        <div className="absolute inset-0 size-12 rounded-full bg-indigo-500/35 blur-md pointer-events-none" />
+                        <div className="absolute -inset-1 rounded-full bg-indigo-500/35 blur-md pointer-events-none" />
 
                         {/* SVG Petal Body */}
                         <svg

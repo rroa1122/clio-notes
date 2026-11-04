@@ -41,6 +41,7 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 6. **Mascota Interactiva Petal Guide de Clio (`ClioPetalGuide`):**
    - Creado `src/components/ui/clio-petal-guide.tsx`.
    - Diseño ultra-minimalista estilo Grok: silueta monocromática pura con dos ojos verticales tipo cápsula negra (`#09090b`), parpadeo sutil y seguimiento interactivo del cursor del mouse.
+   - **Corrección de Centrado Absoluto:** Neutralización de la deriva horizontal causada por el `zoom: 0.9` global en `html` (`src/index.css`), dividiendo `targetX` y `targetY` entre el factor de zoom dinámico, eliminando el límite rígido de 130px en Client Identity, y alineando al centro horizontal exacto (`rect.left + rect.width / 2`) y vertical de cada campo y botón.
 7. **CI/CD Automático de GitHub Actions (`deploy.yml`):**
    - Configurado para escuchar ramas `main` y `feat/**` / `feat/*`, desplegando automáticamente en cada push de Claude o el equipo.
    - Se configuró el secreto `VPS_SSH_KEY` en GitHub Actions.
