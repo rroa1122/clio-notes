@@ -82,3 +82,10 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
 - El deploy debe copiar amexzone-bot/src/core y src/tasks además de worker.js y src/amexzone (antes no se copiaban).
 - [CONNECT] fallido: 'expired' solo si no llegó el código a tiempo (10 min); cualquier otro fallo = 'not_connected'. El motivo real está en amexzone_note_tasks.error_message y Sync lo muestra.
 - Nunca usar credenciales de otro usuario como respaldo. Sync nunca muestra la contraseña descifrada.
+
+## Amexzone sync: patient identity, duplicates and overlaps (2026-11-03)
+- The ONLY trusted Amexzone patient key is `patients.amexzone_id` from the patient's Clio record. The patient object stored inside a note has no amexzone_id; its account number/EMR (e.g. 28372) must never be sent or used as the Amexzone id. Clio blocks the sync when the record has no amexzone_id.
+- The bot opens `/patient/info?id=<amexzone_id>` and verifies id, name and DOB against Clio before writing anything. No name-search fallback and never "first result": a wrong pick writes a note into another person's chart.
+- Before creating the appointment the bot cancels the sync if (1) the patient already has a non-cancelled encounter that date, or (2) the logged-in CM (worker id read from the page scripts) has any encounter overlapping the note's service times. If the check can't run, the sync is cancelled.
+- If Amexzone rejects a service (e.g. SUPERPOSICIÓN), the sync stops. Never move a service to another time slot; documented times must stay as in Clio.
+- A note already entered by hand in Amexzone (e.g. Severo PN309002, 10/29) must not be synced again from Clio.

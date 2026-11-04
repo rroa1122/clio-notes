@@ -589,6 +589,11 @@ async function fillServiceModal(page, mappedService, svcItem, isEditMode = false
         }).catch(() => {});
         await page.waitForTimeout(400);
 
+        // Overlap or any other Amexzone error while saving a service: cancel the sync.
+        // Never move the service to another time slot (the documented times must stay as in Clio).
+        throw new Error(`Amexzone rechazó el servicio "${exactTitle}" (${tIn12} - ${tOut12}): ${alertText.replace(/\n+/g, ' ').trim()}. Sincronización cancelada; revisa el encuentro pendiente en Amexzone.`);
+
+        // eslint-disable-next-line no-unreachable
         let nextSlot = null;
         try {
             const { checkAndRecommendSlot } = require('./availabilityService');

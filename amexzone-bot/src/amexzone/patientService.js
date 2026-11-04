@@ -1,134 +1,74 @@
-const { supabase } = require('../config/supabase');
 const { handlePin, handleCompanySelection, isLoggedOut, matchPatientName } = require('../core/sessionManager');
 const { waitForLoader, safeGoto } = require('../core/browser');
 
-const navigateToPatient = async (page, patientEmrId, patientName, pin, userId) => {
-    let needsSearch = false;
-    
-    if (patientEmrId) {
-        try {
-            console.log(`🌐 Navegando a Amexzone - Detalles del Paciente (ID: ${patientEmrId}&v=2)...`);
-            await safeGoto(page, `https://www.amexzone.com/patient/info?id=${patientEmrId}&v=2`, { waitUntil: 'domcontentloaded', timeout: 60000 });
-            await waitForLoader(page);
-            await handleCompanySelection(page);
-            await handlePin(page, pin);
-            await waitForLoader(page);
-
-            if (isLoggedOut(page)) {
-                console.log("⚠️ La sesión de Amexzone no está activa o requiere renovación.");
-                throw new Error("Tu sesión de Amexzone no está activa o ha expirado. Por favor ve a Sync Portal para conectar tu sesión de 90 días.");
-            }
-
-            const pageTitle = (await page.title().catch(() => "")).toLowerCase();
-            const headingText = (await page.locator('h1, h2, h3, .error-content, .card-title').allInnerTexts().catch(() => [])).join(' ').toLowerCase();
-
-            if (
-                pageTitle.includes('404') || 
-                pageTitle.includes('not found') || 
-                pageTitle.includes('no encontrada') || 
-                headingText.includes('page not found') || 
-                headingText.includes('página no encontrada') || 
-                headingText.includes('pagina no encontrada') || 
-                headingText.includes('no existe o ha sido movida') || 
-                headingText.includes('access restricted') ||
-                page.url().includes('404')
-            ) {
-                console.log("⚠️ Acceso directo restringido o ID inválido (Página no encontrada). Buscaremos al paciente por nombre...");
-                needsSearch = true;
-            }
-        } catch (err) {
-            if (err.message.includes('Sync Portal') || err.message.includes('sesión de Amexzone')) {
-                throw err;
-            }
-            console.log(`⚠️ Error al navegar directamente (${err.message}). Buscaremos al paciente por nombre...`);
-            needsSearch = true;
-        }
-    } else {
-        needsSearch = true;
+/**
+ * Opens the patient's Amexzone chart by its Amexzone id and VERIFIES it is the right person
+ * (name and, when known, date of birth) before anything is written.
+ *
+ * There is no name-search fallback any more: picking a patient from a search list could write
+ * a note into another person's chart. If the id is wrong or the identity does not match, the
+ * task stops without touching Amexzone.
+ *
+ * Returns { amexzoneId, name, dob, cmTrabajadorId }.
+ */
+const navigateToPatient = async (page, amexzoneId, patientName, pin, userId, expectedDob = '') => {
+    if (!amexzoneId) {
+        throw new Error('El paciente no está vinculado a Amexzone (falta el Amexzone ID). No se creó nada en Amexzone.');
     }
 
-    if (needsSearch) {
-        console.log("🌐 Navegando a la sección de Pacientes de Amexzone...");
-        await safeGoto(page, "https://www.amexzone.com/patient", { waitUntil: 'domcontentloaded', timeout: 60000 });
-        await page.waitForTimeout(4000);
-        await handleCompanySelection(page);
-        await handlePin(page, pin);
-        await waitForLoader(page);
+    console.log(`🌐 Abriendo el chart del paciente en Amexzone (ID: ${amexzoneId})...`);
+    await safeGoto(page, `https://www.amexzone.com/patient/info?id=${amexzoneId}&v=2`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await waitForLoader(page);
+    await handleCompanySelection(page);
+    await handlePin(page, pin);
+    await waitForLoader(page);
 
-        // Click on 'Pacientes' menu link
-        const pacientesMenu = page.locator('a, button').filter({ hasText: /^Pacientes$|^Patients$/i }).first();
-        if (await pacientesMenu.isVisible().catch(() => false)) {
-            await pacientesMenu.click();
-            await page.waitForTimeout(3000);
-            await handlePin(page, pin);
-            await waitForLoader(page);
-        }
+    if (isLoggedOut(page)) {
+        throw new Error('Tu sesión de Amexzone no está activa o ha expirado. Por favor ve a Sync Portal para conectar tu sesión de 90 días.');
+    }
 
-        if (isLoggedOut(page)) {
-            console.log("⚠️ La sesión de Amexzone no está activa o requiere renovación.");
-            throw new Error("Tu sesión de Amexzone ha expirado. Por favor ve a Sync Portal para conectar tu sesión de 90 días.");
-        }
+    const pageTitle = (await page.title().catch(() => '')).toLowerCase();
+    if (pageTitle.includes('404') || pageTitle.includes('not found') || pageTitle.includes('no encontrada') || page.url().includes('404')) {
+        throw new Error(`El Amexzone ID ${amexzoneId} guardado en Clio no abre ningún paciente (404). Revisa el Amexzone ID en la ficha del paciente. No se creó nada en Amexzone.`);
+    }
 
-        console.log(`🔍 Buscando al paciente "${patientName}" en la lista...`);
-        let searchInput = page.locator('#patient_search, input[type="search"], .dataTables_filter input, input[name*="search"], #search_patient, #patient_filter_name, input[placeholder*="Buscar"], input[placeholder*="Search"], input[type="text"]').first();
-        await searchInput.waitFor({ state: 'visible', timeout: 30000 });
-        await searchInput.click();
-        const nameParts = patientName.trim().split(/\s+/);
-        const searchWord = nameParts[nameParts.length - 1];
-        await page.keyboard.type(searchWord, { delay: 100 });
-        await page.waitForTimeout(4000);
-
-        const matches = await page.evaluate(() => {
-            const rows = Array.from(document.querySelectorAll('table tbody tr, ul li, div.media'));
-            return rows.map(row => {
-                const links = Array.from(row.querySelectorAll('a'));
-                const infoLink = links.find(l => l.href && (l.href.includes('/patient/info') || l.href.includes('/patient/documentation/fill/')));
-                if (infoLink) {
-                    let patientId = '';
-                    if (infoLink.href.includes('id=')) {
-                        patientId = infoLink.href.split('id=')[1];
-                    } else {
-                        const match = infoLink.href.match(/\/fill\/\d+\/(\d+)/);
-                        if (match) {
-                            patientId = match[1];
-                        }
-                    }
+    // Read the patient record straight from the Amexzone page (Vue data), retrying while it loads.
+    let info = null;
+    for (let i = 0; i < 15 && !info; i++) {
+        info = await page.evaluate(() => {
+            const els = Array.from(document.querySelectorAll('*')).filter((e) => e.__vue__);
+            for (const e of els) {
+                const p = e.__vue__ && e.__vue__.paciente;
+                if (p && p.id) {
                     return {
-                        name: row.innerText.trim(),
-                        url: infoLink.href,
-                        id: patientId
+                        id: String(p.id),
+                        name: p.nombre_apellidos || p.name_last || [p.first_name, p.first_last_name, p.second_last_name].filter(Boolean).join(' '),
+                        dob: p.birth || '',
+                        cmTrabajadorId: p.cm_trabajador_id ? String(p.cm_trabajador_id) : ''
                     };
                 }
-                return null;
-            }).filter(Boolean);
-        });
-
-        console.log(`📋 Candidatos encontrados: ${matches.length}`);
-        const selectedMatch = matches.find(m => matchPatientName(patientName, m.name)) || matches[0];
-        
-        if (!selectedMatch) {
-            throw new Error(`No se encontró el paciente "${patientName}" en la lista de Amexzone.`);
-        }
-
-        console.log(`🎯 Paciente encontrado en la lista: ${selectedMatch.name.split('\n')[0]} (ID: ${selectedMatch.id || 'N/A'})`);
-        const resolvedId = selectedMatch.id ? String(selectedMatch.id).replace('&v=2', '').trim() : '';
-        
-        if (resolvedId && userId) {
-            try {
-                await supabase
-                    .from('patients')
-                    .update({ amexzone_id: resolvedId })
-                    .ilike('full_name', patientName)
-                    .eq('user_id', userId);
-                console.log(`✅ Amexzone ID ${resolvedId} guardado en la base de datos para ${patientName}.`);
-            } catch (dbErr) {}
-        }
-        
-        await page.goto(selectedMatch.url, { waitUntil: 'load', timeout: 60000 });
-        await page.waitForTimeout(4000);
-        await handlePin(page, pin);
-        await waitForLoader(page);
+            }
+            return null;
+        }).catch(() => null);
+        if (!info) await page.waitForTimeout(1000);
     }
+
+    if (!info) {
+        throw new Error(`No se pudo leer el paciente de Amexzone (ID ${amexzoneId}) para verificar su identidad. No se creó nada en Amexzone.`);
+    }
+    if (info.id !== String(amexzoneId)) {
+        throw new Error(`Amexzone abrió otro paciente (ID ${info.id}) en lugar del ${amexzoneId}. Sincronización cancelada.`);
+    }
+    if (patientName && !matchPatientName(patientName, info.name)) {
+        throw new Error(`El paciente de Amexzone (ID ${amexzoneId}) es "${info.name}" y la nota es de "${patientName}". Sincronización cancelada para no escribir en el chart equivocado.`);
+    }
+    const normDob = (d) => String(d || '').slice(0, 10);
+    if (expectedDob && info.dob && normDob(expectedDob) !== normDob(info.dob)) {
+        throw new Error(`La fecha de nacimiento no coincide (Clio ${normDob(expectedDob)}, Amexzone ${normDob(info.dob)}) para el ID ${amexzoneId}. Sincronización cancelada.`);
+    }
+
+    console.log(`✅ Paciente verificado en Amexzone: ${info.name} (ID ${info.id}${info.dob ? ', DOB ' + info.dob : ''}).`);
+    return { amexzoneId: info.id, name: info.name, dob: info.dob, cmTrabajadorId: info.cmTrabajadorId };
 };
 
 module.exports = {
