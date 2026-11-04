@@ -97,4 +97,11 @@ Claudia Leyva (cm_trabajador_id 1038, 28 patients):
 
 Gap CMs (IHV done, nothing in Amexzone): Yasmay Casanas 5, Yuneisy Gil 3, Claudia Leyva (9 incl. older), plus 1 each for Aymee Travieso, Yudit Abreu, Sady Mora Gonzalez, Dailys Almeida, Pedro Alvarez, Yanet Milanes Teruel, Yisabel Viera, Yanisleidy Hernandez. GISSELLE QUINTERO CASTELLON 6 are transfers (monthly visits, opening done elsewhere).
 
+## 8. Test on Testthiago Six (27510), 2026-11-03 — form 135 token bb0ce504
+
+- `addFormToDestinatario` (staff session) creates the form without captcha → bot can do it.
+- The fill page comes with all 24 text fields empty (nothing prefilled from the chart). Setting the textarea values + input event in the page updates the Vue model (`getFormToDraft` contains them) → Clio can autofill in the CM's browser.
+- `saveDraftFormSentTemplate` and `saveFormSentTemplate` both need the reCAPTCHA. After the user ticked the captcha and pressed "Save as Draft", a fresh reload kept all 22 values → decision 2 = YES: a form can be left filled (draft) so it only needs the signatures later.
+- Saved patient signature: "use saved signature" + one "Sign Consent" click per segment. The form also has a public link (SMS/email/QR) so the patient can sign on their phone.
+
 Decision 1 status: nobody uses an upload path for consents, so "upload a document" is not the agency's alternative. The Consents module sends consents to the patient (`addConsentsToDestinatario`, optional email); the patient-side signing page and whether it needs reCAPTCHA is still unverified (needs one test on a test patient, e.g. Testthiago Six 27510, with permission).
