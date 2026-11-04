@@ -89,3 +89,4 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
 - Before creating the appointment the bot cancels the sync if (1) the patient already has a non-cancelled encounter that date, or (2) the logged-in CM (worker id read from the page scripts) has any encounter overlapping the note's service times. If the check can't run, the sync is cancelled.
 - If Amexzone rejects a service (e.g. SUPERPOSICIÓN), the sync stops. Never move a service to another time slot; documented times must stay as in Clio.
 - A note already entered by hand in Amexzone (e.g. Severo PN309002, 10/29) must not be synced again from Clio.
+- Verified 2026-11-03 on test patient Testthiago Six (Amexzone 27510) with Gisselle's account: overlap with PN258710 on 08/10 cancelled before creating anything; clean slot created PN309031 (pending, unsigned); a second task for the same date was cancelled as duplicate. Test note PN309031 must be deleted by a person in Amexzone.
