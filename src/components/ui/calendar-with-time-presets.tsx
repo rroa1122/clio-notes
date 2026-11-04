@@ -407,19 +407,20 @@ export function CalendarWithTimePresets({
 
       {/* Footer in Crisp Palette */}
       <div className="border-t border-slate-800 bg-slate-950 px-5 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-        <div className="text-slate-300 flex-1 min-w-0 text-left leading-relaxed flex items-center flex-wrap gap-2">
+        <div className="text-slate-300 flex-1 min-w-0 text-left leading-relaxed flex items-center flex-wrap gap-2.5">
           <span className="font-bold text-white capitalize text-sm tracking-tight">
             {format(selectedDate, "EEEE, MMMM d", {
               locale: language === "es" ? es : undefined,
             })}
           </span>
           {(displayTimeIn || displayTimeOut) && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-indigo-300 font-bold text-xs">
+            <span className="inline-flex items-center gap-1.5 text-indigo-400 font-semibold text-xs sm:text-sm tracking-tight">
+              <span className="text-slate-600 font-normal select-none">•</span>
               <span>{displayTimeIn || "--:--"}</span>
-              <span className="opacity-60">–</span>
+              <span className="text-indigo-400/60">–</span>
               <span>{displayTimeOut || "--:--"}</span>
               {durationMin && (
-                <span className="ml-1 opacity-75 font-normal text-[11px]">({durationMin}m)</span>
+                <span className="text-indigo-400/80 font-normal text-[11px] sm:text-xs">({durationMin}m)</span>
               )}
             </span>
           )}
