@@ -13,11 +13,12 @@ Este archivo registra el **Estado Actual del Trabajo** para que cualquier nueva 
 ---
 
 ## Lo que ya está Completado y Desplegado en Producción
+0. **Incidente 2026-11-02 (resuelto): conexión Amexzone siempre "EXPIRED"** — Xvfb `:99` caído en el VPS; el bot ahora cae a headless, el deploy copia `src/core`/`src/tasks` y levanta Xvfb, y Sync muestra el error real. Detalle y pendientes de seguridad en `brain/INCIDENT_2026-11-02_amexzone_connect.md`.
 1. **Rediseño Estético del Popover de Calendario & Horas (`CalendarWithTimePresets`):**
    - **Glassmorphism HUD:** Fondo obsidiana profundo `dark:bg-[#0c111d]/95` con `backdrop-blur-2xl`, borde `border-slate-800/80`, esquinas `rounded-3xl` (`24px`) y sombra con aura violeta.
    - **Tipografía y Jerarquía:** Encabezados uppercase con espaciado amplio `tracking-[0.12em]`, días de la semana `SUN, MON, TUE...` compactos y limpios.
-   - **Visualización START / END:** Cajas tipo píldora `--:--` en la cabecera que reflejan el estado de hora seleccionado.
-   - **Rango ampliado:** Soporte desde las **06:00 AM** hasta las **21:00 (9:00 PM)** con slots de 15 min para cubrir visitas y citas tempranas.
+   - **Visualización START / END y ExactTimeField:** Píldoras con entrada exacta de hora y sincronización de estado.
+   - **Rango ampliado:** Soporte desde las **06:00 AM** hasta las **22:00 (10:00 PM)** con slots de 15 min y hora libre manual para cubrir visitas tempranas o tardías.
    - **Botones y Acciones:** Botones de hora redondeados (`rounded-2xl`), gradiente característico de Clio (`from-indigo-600 to-violet-600`), indicador discreto para `isToday` y botón "Continuar / Continue" en píldora con micro-interacción `active:scale-95`.
 2. **Platform Admins & Pantalla de Reglas (`/admin/rules`):**
    - Flag `is_platform_admin` configurado en `profiles` para `reinier.roa2.0@gmail.com` y `asleylegidos@gmail.com`.

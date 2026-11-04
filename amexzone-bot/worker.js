@@ -3167,19 +3167,8 @@ async function run() {
                 amexzone_username: fallbackIntegration.username || fallbackIntegration.amexzone_username || '',
                 amexzone_password: fallbackIntegration.password || fallbackIntegration.amexzone_password || ''
             };
-        } else {
-            const { data: anyInt } = await supabase
-                .from('user_integrations')
-                .select('*')
-                .limit(1)
-                .maybeSingle();
-            if (anyInt) {
-                integration = {
-                    amexzone_username: anyInt.username || anyInt.amexzone_username || '',
-                    amexzone_password: anyInt.password || anyInt.amexzone_password || ''
-                };
-            }
         }
+        // Never fall back to another user's credentials.
     }
 
     if (!integration) {
@@ -3238,8 +3227,12 @@ async function run() {
             err_msg: err.message
         });
         if (task.note_text === '[CONNECT]') {
-            await supabase.from('provider_integrations').update({ mfa_status: 'expired', mfa_code: null }).eq('user_id', task.user_id);
-            console.log('⚠️ Estado de integración actualizado a expired por fallo en conexión.');
+            // 'expired' only when the 2FA code did not arrive in time; any other failure means not connected
+            // (the real reason is in this task's error_message and is shown in Clio > Sync).
+            const timedOut = /Tiempo de espera agotado/i.test(err.message || '');
+            const newStatus = timedOut ? 'expired' : 'not_connected';
+            await supabase.from('provider_integrations').update({ mfa_status: newStatus, mfa_code: null }).eq('user_id', task.user_id);
+            console.log(`⚠️ Estado de integración actualizado a ${newStatus} por fallo en conexión.`);
         }
     }
 }

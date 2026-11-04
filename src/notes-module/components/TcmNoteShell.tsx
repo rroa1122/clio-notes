@@ -2142,6 +2142,30 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             const patAny = (note.patient as any) || {};
 
+            // The Amexzone patient id comes ONLY from the patient's Clio record (patients.amexzone_id).
+            // The patient object stored inside the note has no amexzone_id; its account number must never
+            // be sent as the Amexzone id (it opened the wrong/non-existent chart on 2026-11-03).
+            const linkedPatientId: string = note.patient_id || patAny.id || '';
+            let linkedPatient: any = null;
+            if (linkedPatientId) {
+                const { data: pRow } = await supabase
+                    .from('patients')
+                    .select('id, amexzone_id, full_name, dob')
+                    .eq('id', linkedPatientId)
+                    .maybeSingle();
+                linkedPatient = pRow;
+            }
+            const amexzoneId = String(linkedPatient?.amexzone_id || '').trim();
+            if (!/^\d+$/.test(amexzoneId)) {
+                toast.error(
+                    language === 'es'
+                        ? 'Este paciente no está vinculado a Amexzone (falta el Amexzone ID en su ficha). Vincúlalo antes de sincronizar.'
+                        : 'This patient is not linked to Amexzone (the Amexzone ID is missing in the patient record). Link it before syncing.',
+                    { duration: 8000 }
+                );
+                return;
+            }
+
             const calculateEndTime = (timeInStr: string, durationMin: number): string => {
                 if (!timeInStr) return "10:15 AM";
                 const match = timeInStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
@@ -2236,11 +2260,11 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
 
             // Construct single unified payload with all services
             const payload = {
-                patient_emr_id: patAny.emr_id || patAny.id || patAny.account_number || (patAny.emr ? patAny.emr.replace(/\D/g, '') : '') || "",
-                amexzone_id: patAny.amexzone_id || patAny.id_amexzone || "",
-                patient_id: patAny.id || "",
-                patient_name: patAny.full_name || "",
-                patient_dob: patAny.dob || "",
+                patient_emr_id: amexzoneId,
+                amexzone_id: amexzoneId,
+                patient_id: linkedPatient?.id || linkedPatientId,
+                patient_name: linkedPatient?.full_name || patAny.full_name || "",
+                patient_dob: linkedPatient?.dob || patAny.dob || "",
                 visit_date: primaryVisitDate,
                 services: compiledServices,
                 outcome_of_services: globalOutcomeText,
@@ -2270,8 +2294,8 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                     note_id: noteIdToSync,
                     user_id: user?.id,
                     clinic_id: user?.clinic_id || clinicSettings?.id || null,
-                    patient_name: mergedNote.patient?.full_name || note.patient?.full_name || 'Desconocido',
-                    patient_dob: mergedNote.patient?.dob || note.patient?.dob || null,
+                    patient_name: payload.patient_name || mergedNote.patient?.full_name || note.patient?.full_name || 'Desconocido',
+                    patient_dob: payload.patient_dob || mergedNote.patient?.dob || note.patient?.dob || null,
                     visit_date: primaryVisitDate,
                     note_text: '[TCM_PROGRESS_NOTE]\n' + JSON.stringify(payload),
                     status: 'pending'

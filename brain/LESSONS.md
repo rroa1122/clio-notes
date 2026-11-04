@@ -70,3 +70,23 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
 - Nunca inventar lugares, direcciones, organizaciones, representantes, números de confirmación, fechas, balances ni artículos: solo transcript/notas o datos del chart. Los esenciales de cada servicio llevan un [CONFIRM] agrupado con guía.
 - Las frases por excepción de visita (presentación, SI/HI, casa) solo aplican si el spec tiene face_to_face_visit.
 - Los dominios del spec siempre van marcados (ensureDomainNumbers) y el sync a Amexzone usa los dominios explícitos de la nota para `tcm_v2_*`.
+
+## Opening (New Referral e Initial Home Visit)
+- Dominios: solo #1 y #2 (práctica de los CMs en Amexzone, octubre 2026). Los "Services Needed" del TCM Social son para el Assessment y el Service Plan, nunca para el opening. normalizeTcmNote lo fuerza.
+- New Referral: 220-380 palabras; solo diagnóstico principal y síntomas/razón del referido, una oración de condiciones médicas que afectan el acceso; sin lista médica, medicamentos ni seguro.
+- "No recibe TCM de otra agencia": confirmado solo si lo dice el transcript; si no, [CONFIRM ... || frase] para que el CM lo confirme.
+- Nombre guardado como "First Last": nombre completo una vez y luego el primer nombre (normalizeClientNameInNarrative).
+
+## Bot de Amexzone: pantalla virtual y conexión
+- El bot abre Chrome visible sobre Xvfb :99 en el VPS. Si Xvfb no corre, Chrome muere ("Missing X server or $DISPLAY"). browser.js ahora cae a headless si no hay pantalla, y el deploy levanta Xvfb.
+- El deploy debe copiar amexzone-bot/src/core y src/tasks además de worker.js y src/amexzone (antes no se copiaban).
+- [CONNECT] fallido: 'expired' solo si no llegó el código a tiempo (10 min); cualquier otro fallo = 'not_connected'. El motivo real está en amexzone_note_tasks.error_message y Sync lo muestra.
+- Nunca usar credenciales de otro usuario como respaldo. Sync nunca muestra la contraseña descifrada.
+
+## Amexzone sync: patient identity, duplicates and overlaps (2026-11-03)
+- The ONLY trusted Amexzone patient key is `patients.amexzone_id` from the patient's Clio record. The patient object stored inside a note has no amexzone_id; its account number/EMR (e.g. 28372) must never be sent or used as the Amexzone id. Clio blocks the sync when the record has no amexzone_id.
+- The bot opens `/patient/info?id=<amexzone_id>` and verifies id, name and DOB against Clio before writing anything. No name-search fallback and never "first result": a wrong pick writes a note into another person's chart.
+- Before creating the appointment the bot cancels the sync if (1) the patient already has a non-cancelled encounter that date, or (2) the logged-in CM (worker id read from the page scripts) has any encounter overlapping the note's service times. If the check can't run, the sync is cancelled.
+- If Amexzone rejects a service (e.g. SUPERPOSICIÓN), the sync stops. Never move a service to another time slot; documented times must stay as in Clio.
+- A note already entered by hand in Amexzone (e.g. Severo PN309002, 10/29) must not be synced again from Clio.
+- Verified 2026-11-03 on test patient Testthiago Six (Amexzone 27510) with Gisselle's account: overlap with PN258710 on 08/10 cancelled before creating anything; clean slot created PN309031 (pending, unsigned); a second task for the same date was cancelled as duplicate. Test note PN309031 must be deleted by a person in Amexzone.

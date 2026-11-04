@@ -256,56 +256,8 @@ const createNewAppointment = async (page, patientEmrId, patientName, visitDate, 
     await ensureCitasTab(page);
     await page.waitForTimeout(1000);
 
-    // 1.1 Check if an appointment already exists for this visit date
-    const monthNamesSpa = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-    const monthNamesEng = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-    const dNum = parseInt(dd, 10);
-    const mIdx = parseInt(mm, 10) - 1;
-    const yNum = parseInt(y, 10);
-
-    const existingAppointment = await page.evaluate(({ dNum, mIdx, yNum, monthNamesSpa, monthNamesEng, isoDate }) => {
-        const rows = Array.from(document.querySelectorAll('table tbody tr'));
-        
-        const mSpa = monthNamesSpa[mIdx];
-        const mSpaShort = mSpa.slice(0, 3);
-        const mEng = monthNamesEng[mIdx];
-        const mEngShort = mEng.slice(0, 3);
-
-        // Strict day match regex: ensures day number has boundary (^|[^0-9]) and ($|[^0-9])
-        const spaRegex = new RegExp(`(^|[^0-9])${dNum}\\s+de\\s+(${mSpa}|${mSpaShort})(\\s+de\\s+${yNum})?([^0-9]|$)`, 'i');
-        const engRegex = new RegExp(`(^|[^0-9])(${mEng}|${mEngShort})\\s+${dNum}(,?\\s+${yNum})?([^0-9]|$)`, 'i');
-        const isoRegex = new RegExp(`(^|[^0-9])${isoDate}([^0-9]|$)`);
-
-        for (const row of rows) {
-            const text = (row.innerText || '').toLowerCase();
-            const dateMatch = spaRegex.test(text) || engRegex.test(text) || isoRegex.test(text);
-            const statusMatch = /pendiente|pending/i.test(text);
-            const isTcm = /progress note|tcm/i.test(text);
-            if (dateMatch && (statusMatch || isTcm)) {
-                const link = row.querySelector('a[href*="/attend/appointment/"], a[href*="/encounter/"]');
-                if (link && link.href) {
-                    return { found: true, url: link.href };
-                }
-                const clickable = row.querySelector('a, button, span');
-                if (clickable) {
-                    clickable.click();
-                    return { found: true, clicked: true };
-                }
-            }
-        }
-        return { found: false };
-    }, { dNum, mIdx, yNum, monthNamesSpa, monthNamesEng, isoDate });
-
-    if (existingAppointment && existingAppointment.found) {
-        console.log(`🎯 Cita existente detectada en la tabla para el ${dNum} de ${monthNamesSpa[mIdx]} de ${yNum}. Entrando directamente a gestionar la cita...`);
-        if (existingAppointment.url) {
-            await page.goto(existingAppointment.url, { waitUntil: 'domcontentloaded' });
-            await waitForLoader(page);
-            return;
-        }
-        await waitForLoader(page);
-        return;
-    }
+    // 1.1 Existing encounters for this date are handled BEFORE this point by
+    //     assertNoDuplicateOrOverlap(): the sync is cancelled, never merged into an existing note.
 
     // 2. Open modal cleanly via DOM button click or fallback
     console.log(`➕ Abriendo modal de Nueva Cita con paciente ${patientName} (${patientEmrId})...`);
@@ -600,34 +552,10 @@ const createNewAppointment = async (page, patientEmrId, patientName, visitDate, 
             lowerReport.includes('has a progress note open') ||
             lowerReport.includes('has an open progress note')
         ) {
-            console.log("👉 Amexzone indicó que ya existe un encuentro abierto para esta fecha. Entrando a gestionar el encuentro existente...");
-            const clickLink = notiflixReport.locator('a').first();
-            const href = await clickLink.getAttribute('href').catch(() => null);
-            if (href) {
-                const fullUrl = href.startsWith('http') ? href : `https://www.amexzone.com${href.startsWith('/') ? '' : '/'}${href}`;
-                console.log(`🌐 Navegando directamente al encuentro existente: ${fullUrl}...`);
-                await page.goto(fullUrl, { waitUntil: 'domcontentloaded' });
-            } else if (await clickLink.isVisible().catch(() => false)) {
-                await clickLink.click();
-            } else {
-                const closeBtn = notiflixReport.locator('button, a').filter({ hasText: /Cerrar|Close|OK|Entendido/i }).first();
-                if (await closeBtn.isVisible().catch(() => false)) {
-                    await closeBtn.click();
-                }
-            }
-            await page.evaluate(() => {
-                const m = document.querySelector('#gestion_cita_modal');
-                if (m) {
-                    m.classList.remove('show');
-                    m.style.display = 'none';
-                    if (window.jQuery) window.jQuery(m).modal('hide');
-                }
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                backdrops.forEach(b => b.remove());
-                document.body.classList.remove('modal-open');
-            }).catch(() => {});
-            await waitForLoader(page);
-            return;
+            // Never write into an encounter that already exists: cancel the sync.
+            const closeExisting = notiflixReport.locator('button, a').filter({ hasText: /Cerrar|Close|OK|Entendido/i }).first();
+            if (await closeExisting.isVisible().catch(() => false)) await closeExisting.click().catch(() => {});
+            throw new Error(`Amexzone indica que ya existe un encuentro abierto para el ${visitDate}. Sincronización cancelada para no duplicar la nota: ${reportText.replace(/\n+/g, ' ').trim()}`);
         }
 
         if (lowerReport.includes('no tiene unidades aprobadas') || lowerReport.includes('no tiene unidades') || lowerReport.includes('no approved units')) {
@@ -863,7 +791,108 @@ const updateAppointmentDate = async (page, appointmentRow, visitDate, pin) => {
     }
 };
 
+/**
+ * Cancels the sync (throws) BEFORE anything is created when:
+ *  1. the patient already has an encounter (any non-cancelled status) on the visit date, or
+ *  2. the Case Manager already has an encounter (any patient) whose time overlaps any service of this note.
+ * If the check itself cannot be completed, the sync is also cancelled (fail-safe).
+ */
+const assertNoDuplicateOrOverlap = async (page, { patientId, cmTrabajadorId, visitDate, services }) => {
+    const toMin = (t) => {
+        if (!t) return null;
+        const m = String(t).trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+        if (!m) return null;
+        let h = parseInt(m[1], 10);
+        const mi = parseInt(m[2], 10);
+        const mer = (m[3] || '').toUpperCase();
+        if (mer === 'PM' && h < 12) h += 12;
+        if (mer === 'AM' && h === 12) h = 0;
+        return h * 60 + mi;
+    };
+    const ranges = (services || []).map((s) => {
+        const enc = s.encounter || {};
+        const start = toMin(enc.time_in);
+        let end = toMin(enc.time_out);
+        if (start !== null && (end === null || end <= start)) end = start + (parseInt(enc.duration, 10) || 15);
+        return start === null ? null : { start, end, label: `${enc.time_in}-${enc.time_out || ''}` };
+    }).filter(Boolean);
+
+    const date = String(visitDate || '').slice(0, 10);
+    console.log(`🛡️ Verificando duplicados y solapes para ${date} (paciente ${patientId}, CM ${cmTrabajadorId || 'n/a'})...`);
+
+    const result = await page.evaluate(async ({ patientId, cmTrabajadorId: patientCm, date }) => {
+        let cmTrabajadorId = patientCm;
+        const H = { 'X-Requested-With': 'XMLHttpRequest' };
+        const isCancelled = (c) => {
+            const v = `${(c.status_info && (c.status_info.val || c.status_info.name_en)) || ''} ${c.status || ''}`.toLowerCase();
+            return Number(c.deleted) === 1 || /cancel|no.?show|deleted|anulad/.test(v);
+        };
+        const flatten = (obj) => {
+            const out = [];
+            const walk = (o) => {
+                if (Array.isArray(o)) o.forEach(walk);
+                else if (o && typeof o === 'object') {
+                    if (o.fecha_hora && o.id && ('tareas' in o || 'paciente_id' in o)) out.push(o);
+                    else Object.values(o).forEach(walk);
+                }
+            };
+            walk(obj);
+            return out;
+        };
+        try {
+            const r1 = await fetch(`/getCitasXFechas?paciente_id=${patientId}&sort_by=id_desc`, { headers: H });
+            if (!r1.ok) return { error: `getCitasXFechas HTTP ${r1.status}` };
+            const patientCitas = flatten(await r1.json())
+                .filter((c) => String(c.fecha_hora).slice(0, 10) === date && !isCancelled(c))
+                .map((c) => ({ id: c.id, cod: c.cod, start: c.hora_inicio, end: c.hora_fin, status: (c.status_info && c.status_info.name_en) || c.status }));
+
+            // The note is documented by the logged-in Case Manager: use their worker id (server-rendered
+            // in the page scripts); fall back to the patient's assigned CM.
+            const scr = Array.from(document.querySelectorAll('script:not([src])')).map((s) => s.textContent).join('\n');
+            const mUser = scr.match(/for_all_patients:\s*'[^']*',\s*trabajador_id:\s*'(\d+)'/) || scr.match(/\btrabajador_id:\s*'(\d+)'/);
+            if (mUser) cmTrabajadorId = mUser[1];
+            let cmCitas = [];
+            if (cmTrabajadorId) {
+                const tok = document.querySelector('meta[name=csrf-token]') && document.querySelector('meta[name=csrf-token]').content;
+                const body = new URLSearchParams();
+                body.set('draw', '1'); body.set('start', '0'); body.set('length', '200');
+                body.set('emp_id', '106'); body.set('emp_tipo_id', '7');
+                body.set('filtros[fecha][d]', date); body.set('filtros[fecha][h]', date);
+                body.append('filtros[trabajadores_ids][]', String(cmTrabajadorId));
+                const r2 = await fetch('/citas/empresa/datatable', { method: 'POST', headers: { ...H, 'X-CSRF-TOKEN': tok || '', 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() });
+                if (!r2.ok) return { error: `citas/empresa/datatable HTTP ${r2.status}` };
+                const j2 = await r2.json();
+                cmCitas = (j2.data || [])
+                    .filter((c) => String(c.fecha_hora).slice(0, 10) === date && !isCancelled(c))
+                    .map((c) => ({ id: c.id, cod: c.cod, paciente_id: c.paciente_id, start: c.hora_inicio, end: c.hora_fin }));
+            }
+            return { patientCitas, cmCitas, cmTrabajadorId };
+        } catch (e) {
+            return { error: String(e && e.message || e) };
+        }
+    }, { patientId: String(patientId), cmTrabajadorId: cmTrabajadorId ? String(cmTrabajadorId) : '', date });
+
+    if (!result || result.error) {
+        throw new Error(`No se pudo verificar si ya existe una nota o un solape en Amexzone (${(result && result.error) || 'sin respuesta'}). Sincronización cancelada por seguridad.`);
+    }
+    if (result.patientCitas.length > 0) {
+        const c = result.patientCitas[0];
+        throw new Error(`Ya existe un encuentro para este paciente el ${date} en Amexzone (${c.cod || c.id}, ${c.start || ''}-${c.end || ''}, ${c.status || ''}). Sincronización cancelada para no duplicar la nota.`);
+    }
+    for (const c of result.cmCitas) {
+        const cs = toMin(c.start);
+        const ce = toMin(c.end);
+        if (cs === null || ce === null) continue;
+        const hit = ranges.find((r) => r.start < ce && cs < r.end);
+        if (hit) {
+            throw new Error(`El horario ${hit.label} se solapa con otro encuentro del Case Manager el ${date} (${c.cod || c.id}, ${c.start}-${c.end}). Sincronización cancelada.`);
+        }
+    }
+    console.log(`✅ Sin duplicados ni solapes (CM ${result.cmTrabajadorId || 'n/a'}: ${result.cmCitas.length} encuentro(s) ese día revisados).`);
+};
+
 module.exports = {
+    assertNoDuplicateOrOverlap,
     generateDateVariants,
     ensureCitasTab,
     findExistingAppointment,

@@ -118,8 +118,8 @@ const performAmexzoneLogin = async (page, context, userId, pin, integration) => 
                 .update({ mfa_status: 'awaiting_2fa', mfa_code: null })
                 .eq('user_id', userId);
 
-            // Esperar hasta 4 minutos (80 intentos de 3 segundos) para no bloquear recursos indefinidamente
-            for (let i = 0; i < 80; i++) {
+            // Esperar hasta 10 minutos (200 intentos de 3 segundos): el código llega al teléfono del TCM
+            for (let i = 0; i < 200; i++) {
                 const { data, error: pollError } = await supabase
                     .from('provider_integrations')
                     .select('mfa_code, mfa_status')
@@ -149,7 +149,7 @@ const performAmexzoneLogin = async (page, context, userId, pin, integration) => 
                 .from('provider_integrations')
                 .update({ mfa_status: 'expired', mfa_code: null })
                 .eq('user_id', userId);
-            throw new Error(`Tiempo de espera agotado (4 min) sin recibir el código de ${channel.toUpperCase()} en Clio.`);
+            throw new Error(`Tiempo de espera agotado (10 min) sin recibir el código de ${channel.toUpperCase()} en Clio.`);
         }
 
         if (await codeInput.isVisible()) {
@@ -216,6 +216,12 @@ const triggerProviderLogin = async (userId, existingIntegration = null) => {
             integration = rawInt;
         }
     }
+
+    // The decrypt RPC does not return the 2FA channel: read it from the row
+    try {
+        const { data: chan } = await supabase.from('provider_integrations').select('mfa_channel').eq('user_id', userId).maybeSingle();
+        if (integration && chan && chan.mfa_channel) integration = { ...integration, mfa_channel: chan.mfa_channel };
+    } catch (e) {}
 
     if (!integration || !integration.amexzone_email) {
         console.error(`❌ No se encontró integración válida para el usuario ${userId}`);

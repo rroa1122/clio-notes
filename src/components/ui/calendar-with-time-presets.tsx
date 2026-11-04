@@ -69,6 +69,45 @@ const minsTo24hDisplay = (minutes: number): string => {
   return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
 }
 
+// Exact time field: keeps what the TCM is typing (hour first, then minutes) and only commits a complete time
+function ExactTimeField({
+  minutes,
+  label,
+  onCommit,
+}: {
+  minutes: number | null
+  label: string
+  onCommit: (value: string) => void
+}) {
+  const external = minutes !== null ? minsTo24hDisplay(minutes) : ""
+  const [value, setValue] = React.useState(external)
+  const focused = React.useRef(false)
+  React.useEffect(() => {
+    if (!focused.current) setValue(external)
+  }, [external])
+
+  return (
+    <input
+      type="time"
+      aria-label={label}
+      title={label}
+      value={value}
+      onFocus={() => {
+        focused.current = true
+      }}
+      onBlur={() => {
+        focused.current = false
+        setValue(external)
+      }}
+      onChange={(e) => {
+        setValue(e.target.value)
+        if (/^\d{2}:\d{2}$/.test(e.target.value)) onCommit(e.target.value)
+      }}
+      className="mt-1.5 w-full max-w-[115px] mx-auto block h-9 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-slate-900/90 px-2 text-center text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white select-text [color-scheme:light] dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 shadow-xs transition-all cursor-pointer"
+    />
+  )
+}
+
 export function CalendarWithTimePresets({
   date,
   onDateChange,
@@ -114,11 +153,11 @@ export function CalendarWithTimePresets({
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
 
-  // Time slots from 06:00 to 21:00 (61 slots, 15 min increments)
+  // Time slots from 06:00 to 22:00 (65 slots, 15 min increments): TCM services can start early or run late
   const timeSlots = React.useMemo(() => {
     const slots: { display: string; formatted: string; minutes: number }[] = []
     const startHour = 6 // 6:00 AM
-    const totalSlots = 61 // up to 21:00 (9:00 PM)
+    const totalSlots = 65 // up to 22:00 (10:00 PM)
     for (let i = 0; i < totalSlots; i++) {
       const totalMinutes = startHour * 60 + i * 15
       slots.push({
@@ -182,6 +221,15 @@ export function CalendarWithTimePresets({
       if (diff < 0) diff += 24 * 60
       onDurationChange?.(diff.toString())
     }
+  }
+
+  // Exact time typed by the TCM (e.g. 07:07), not limited to the 15-minute slots
+  const handleTypedTime = (value: string, which: "in" | "out") => {
+    const m = value.match(/^(\d{1,2}):(\d{2})$/)
+    if (!m) return
+    const mins = parseInt(m[1], 10) * 60 + parseInt(m[2], 10)
+    if (which === "in") handleSelectTimeIn(minsToFormattedTime(mins), mins)
+    else handleSelectTimeOut(minsToFormattedTime(mins), mins)
   }
 
   const weekDayLabels = language === "es"
@@ -284,14 +332,11 @@ export function CalendarWithTimePresets({
                 <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-400">
                   {language === "es" ? "Inicio" : "Start"}
                 </span>
-                <div className="mt-1.5 h-9 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 flex items-center justify-center px-2.5 shadow-xs transition-all">
-                  <span className={cn(
-                    "text-xs sm:text-[13px] font-bold tracking-wider",
-                    displayTimeIn ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-400"
-                  )}>
-                    {displayTimeIn || "--:--"}
-                  </span>
-                </div>
+                <ExactTimeField
+                  minutes={currentInMins}
+                  label={language === "es" ? "Hora de inicio exacta" : "Exact start time"}
+                  onCommit={(v) => handleTypedTime(v, "in")}
+                />
               </div>
               <div
                 ref={inContainerRef}
@@ -329,14 +374,11 @@ export function CalendarWithTimePresets({
                 <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-400">
                   {language === "es" ? "Fin" : "End"}
                 </span>
-                <div className="mt-1.5 h-9 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 flex items-center justify-center px-2.5 shadow-xs transition-all">
-                  <span className={cn(
-                    "text-xs sm:text-[13px] font-bold tracking-wider",
-                    displayTimeOut ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-slate-400"
-                  )}>
-                    {displayTimeOut || "--:--"}
-                  </span>
-                </div>
+                <ExactTimeField
+                  minutes={currentOutMins}
+                  label={language === "es" ? "Hora de fin exacta" : "Exact end time"}
+                  onCommit={(v) => handleTypedTime(v, "out")}
+                />
               </div>
               <div
                 ref={outContainerRef}
