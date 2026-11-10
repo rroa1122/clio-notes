@@ -261,6 +261,16 @@ const HOUSING_BENEFITS: ServiceSpec[] = [
         outcome: '"TCM verified [Client First Name]\'s insurance eligibility and benefits with [plan]."', next: '"TCM will monitor [Client First Name]\'s coverage and coordinate the benefits identified."',
     },
     {
+        // Gisselle Rosales Martinez: "Assisting in opening an online Medicaid account" (11 Office, 54-85 min)
+        id: 'tcm_v2_medicaid_online_account', group: 'insurance', title: 'Open Medicaid Online Account', label: 'Medicaid Online Account',
+        desc: 'Create the Florida Medicaid member portal account and verify benefits (54 min / 4u)', pos: '11 - Office', minutes: 54, domains: [2, 8],
+        purpose: '"To assist [Client First Name] in creating [his/her] Florida Medicaid online member account so [he/she] can verify [his/her] Medicaid eligibility and benefits."',
+        must: ['Why the account is needed and ' + NEED + '.', 'Where it was done (office, client\'s home or medical center) and the portal used; account created step by step with the client\'s information (no passwords or ID numbers written in the note).', 'Eligibility, coverage and plan verified in the account (as reported) and how to use the portal explained (notices, providers, personal information).', 'Client\'s understanding and reaction.'],
+        sources: 'Insurance (Medicaid ID, plan), TCM Social (Medicaid recipient), transcript.',
+        outcome: '"[Client First Name] created [his/her] Florida Medicaid online account with TCM assistance and verified [his/her] Medicaid benefits."',
+        next: '"TCM will monitor [Client First Name]\'s use of the Medicaid online account and coordinate the benefits identified."',
+    },
+    {
         id: 'tcm_v2_bank_documents', group: 'finances', title: 'Obtain Bank Statement', desc: 'Bank statements for applications (56 min / 4u)', pos: '11 - Office', minutes: 56, domains: [8],
         purpose: '"To assist [Client First Name] in obtaining [his/her] bank statements for [application]."',
         must: ['Why the statements are needed.', 'Bank branch (address) or online banking; statements obtained.'],
