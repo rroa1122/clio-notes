@@ -15,11 +15,11 @@ Then the plan needs start (LIHEAP, Assurance Wireless, DCF/SSA letters, housing.
 ## Domains checked (other CMs, frequency)
 - Records: #1 #2 (28/43). Assessment: #1 (10), #1 #2 (8), or all plan domains (~9). Certification: #1 #2 (10), #1 (7), all plan domains (~9). SP development/discussion: #1 #2 most common, then all plan domains.
 - Gisselle: #1 #2 on every opening service.
-- Larger bank (2026-11-10): ~370 cases opened Sep 22-Oct 30, ~2,070 encounters, ~100 CMs. Most common domains per service:
-  - New Referral: #1 (61/126), #1 #2 (32). IHV/Intake: #1 (74/189), #1 #2 (71).
-  - Psychiatric records: #1 only (98/146). PCP records: #2 only (64/123).
-  - Emergency Contact: #1 #2 (23/62), #1 (18).
-  - Assessment: #1 (60/175), #1 #2 (49). Certification: #1 #2 (64/210), #1 (56). SP development: #1 #2 (49/191), #1 (40), all plan domains (~60).
+- Larger bank (2026-11-10, domains read from the checkbox labels: the summary view only lists the patient's plan domains, so position-based reading is wrong): ~370 cases opened Sep 22-Oct 30, first 4 service days, ~100 CMs. Most common domains per service:
+  - New Referral: #1 (81/122), #1 #2 (33). IHV/Intake: #1 (85/191), #1 #2 (78).
+  - Psychiatric records: #1 only (129/151). PCP records: #2 only (90/128).
+  - Emergency Contact: #1 #2 (30/64), #1 (23).
+  - Assessment: #1 (76/178), #1 #2 (48). Certification: #1 (81/202), #1 #2 (69).
 - Clio rule now: #1 #2 for referral, IHV, emergency contact, assessment, certification and SP notes; psych records #1; PCP records #2 (clioUtils OPENING_SEQUENCE_TEMPLATES).
 
 ## Outcome / Next Steps patterns
