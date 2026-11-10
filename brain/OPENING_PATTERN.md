@@ -31,3 +31,4 @@ Then the plan needs start (LIHEAP, Assurance Wireless, DCF/SSA letters, housing.
 5. SP discussion: never "all 0 service goals" (prompt + frontend guard).
 6. Header age computed on the date of service.
 Open: Clio has no Service Plan document for Severo, so SP development/discussion notes come out with [CONFIRM] for domains/goals; the Service Plan builder (fixed entity list per domain) is the next piece.
+7. Service Plan notes (development/discussion): domains = #1 #2 + every domain with goals in the Service Plan document (servicePlanGuide.applyServicePlanDomains). The Service Plan document comes from the patient's TCM Social "Services Needed" flags + plan date/target date; Severo has none set yet, so his SP notes show [CONFIRM] for goals.

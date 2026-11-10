@@ -812,7 +812,8 @@ export const ensureDomainNumbers = (note: any, domains: number[]): void => {
 
 export const applyServicePlanDomains = (note: any, patient: any): void => {
     if (!note || !patient) return;
-    const numbers = new Set<number>([1, ...buildServicePlanDocumentPayload(patient).entries.map(e => e.domain_number)]);
+    // #1 and #2 always (agency opening pattern), plus every domain that has goals in the Service Plan document.
+    const numbers = new Set<number>([1, 2, ...buildServicePlanDocumentPayload(patient).entries.map(e => e.domain_number)]);
     const apply = (svc: any) => {
         if (!svc) return;
         if (!svc.services) svc.services = {};
