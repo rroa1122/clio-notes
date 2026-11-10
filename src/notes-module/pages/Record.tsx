@@ -1175,6 +1175,43 @@ const Record: React.FC = () => {
             return;
         }
 
+        // Clinic settings and the CM profile load asynchronously after the page opens. Resolve them here so a
+        // quick Finalize never sends an empty agency name (the note would show [CONFIRM: Agency Name]).
+        let agencySettings: any = clinicSettings;
+        let agencyClinic: any = userClinic;
+        let cmProfile: any = userProfile;
+        try {
+            if (!cmProfile || (!agencyClinic && cmProfile?.clinic_id)) {
+                const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+                if (profile) {
+                    cmProfile = profile;
+                    setUserProfile(profile);
+                    if (profile.clinic_id && !agencyClinic) {
+                        const { data: clinic } = await supabase.from('clinics').select('*').eq('id', profile.clinic_id).single();
+                        if (clinic) {
+                            agencyClinic = clinic;
+                            setUserClinic(clinic);
+                        }
+                    }
+                }
+            }
+            if (!agencySettings && user.clinic_id) {
+                agencySettings = await settingsService.fetchSettings(user.clinic_id);
+                setClinicSettings(agencySettings);
+            }
+        } catch (err) {
+            console.error('Record: failed to resolve agency/profile before generating:', err);
+        }
+        const cmLicense = String(cmProfile?.license_id || '').trim();
+        const missingProfileFields: string[] = [];
+        if (!(agencySettings?.clinicName || agencyClinic?.name)) missingProfileFields.push(language === 'es' ? 'nombre de la agencia' : 'agency name');
+        if (!cmLicense || cmLicense.includes('@')) missingProfileFields.push(language === 'es' ? 'licencia del CM' : 'CM license number');
+        if (missingProfileFields.length > 0) {
+            toast.warning(language === 'es'
+                ? `Completa el perfil: falta ${missingProfileFields.join(', ')}. La nota lo marcará como pendiente.`
+                : `Complete your profile: missing ${missingProfileFields.join(', ')}. The note will flag it as pending.`);
+        }
+
         // Preflight: warn when the TCM Social form is empty for templates that depend on it.
         const plannedTemplateIds = (recordedServices.length > 0
             ? recordedServices.map((s: any) => s.templateId || getTemplateIdFromSubTemplate(s.subTemplate))
@@ -1246,7 +1283,7 @@ const Record: React.FC = () => {
                         (normalized as any)._frontend_service_title = svc.subTemplate;
                         if (selectedPatient) mergePatientIntoNote(normalized, selectedPatient, { primaryBehavioralOnly: svcTemplateId.startsWith('tcm_') });
                         if (svcTemplateId.startsWith('tcm_')) enforcePrimaryBehavioralDiagnosis(normalized);
-                        if (userProfile || userClinic) mergeProfileIntoNote(normalized, userProfile, userClinic);
+                        if (cmProfile || agencyClinic) mergeProfileIntoNote(normalized, cmProfile, agencyClinic);
                         generatedNotes.push(normalized);
                         lastPdfResult = { success: true, data: normalized } as any;
                         continue;
@@ -1324,19 +1361,19 @@ const Record: React.FC = () => {
                 formData.append('joint_note_total', allServicesToProcess.length.toString());
                 formData.append('is_joint_note', allServicesToProcess.length > 1 ? 'true' : 'false');
 
-                const resolvedAgencyName = clinicSettings?.clinicName || userClinic?.name || '';
-                const resolvedAddress = clinicSettings?.physicalAddress || (clinicSettings as any)?.address || userClinic?.address || '';
-                const resolvedPhone = clinicSettings?.mainPhone || (clinicSettings as any)?.phone || userClinic?.phone || '';
-                const resolvedFax = clinicSettings?.faxNumber || (clinicSettings as any)?.fax || userClinic?.fax || '';
-                const resolvedEmail = clinicSettings?.clinicEmail || (clinicSettings as any)?.email || userClinic?.email || '';
-                const resolvedCmName = userProfile?.full_name || (user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.name) || '';
-                const resolvedCmLic = userProfile?.license_id || '';
-                const resolvedSupName = clinicSettings?.supervisorName || userClinic?.supervisor_name || '';
-                const resolvedSupLic = clinicSettings?.supervisorNpi || userClinic?.supervisor_license || '';
+                const resolvedAgencyName = agencySettings?.clinicName || agencyClinic?.name || '';
+                const resolvedAddress = agencySettings?.physicalAddress || (agencySettings as any)?.address || agencyClinic?.address || '';
+                const resolvedPhone = agencySettings?.mainPhone || (agencySettings as any)?.phone || agencyClinic?.phone || '';
+                const resolvedFax = agencySettings?.faxNumber || (agencySettings as any)?.fax || agencyClinic?.fax || '';
+                const resolvedEmail = agencySettings?.clinicEmail || (agencySettings as any)?.email || agencyClinic?.email || '';
+                const resolvedCmName = cmProfile?.full_name || (user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.name) || '';
+                const resolvedCmLic = (cmLicense.includes('@') ? '' : cmLicense);
+                const resolvedSupName = agencySettings?.supervisorName || agencyClinic?.supervisor_name || '';
+                const resolvedSupLic = agencySettings?.supervisorNpi || agencyClinic?.supervisor_license || '';
 
                 formData.append('agency_name', resolvedAgencyName);
                 // Legal name (NPI registry) for the TCM introduction, as the CMs write it
-                formData.append('agency_legal_name', (clinicSettings as any)?.legalName || (userClinic as any)?.settings?.legal_name || '');
+                formData.append('agency_legal_name', (agencySettings as any)?.legalName || (agencyClinic as any)?.settings?.legal_name || '');
                 formData.append('facility_name', resolvedAgencyName);
                 formData.append('facility_address', resolvedAddress);
                 formData.append('facility_phone', resolvedPhone);
@@ -1455,7 +1492,7 @@ const Record: React.FC = () => {
                     (normalized as any)._frontend_service_title = svc.subTemplate;
 
                     if (selectedPatient) mergePatientIntoNote(normalized, selectedPatient, { primaryBehavioralOnly: svcTemplateId.startsWith('tcm_') });
-                    if (userProfile || userClinic) mergeProfileIntoNote(normalized, userProfile, userClinic);
+                    if (cmProfile || agencyClinic) mergeProfileIntoNote(normalized, cmProfile, agencyClinic);
 
                     resolveKnownConfirms(normalized, {
                         caseManagerName: resolvedCmName,
