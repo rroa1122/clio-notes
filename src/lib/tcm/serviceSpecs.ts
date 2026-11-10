@@ -267,6 +267,7 @@ const HOUSING_BENEFITS: ServiceSpec[] = [
         purpose: '"To assist [Client First Name] in creating [his/her] Florida Medicaid online member account so [he/she] can verify [his/her] Medicaid eligibility and benefits."',
         must: ['Why the account is needed and ' + NEED + '.', 'Where it was done (office, client\'s home or medical center) and the portal used; account created step by step with the client\'s information (no passwords or ID numbers written in the note).', 'Eligibility, coverage and plan verified in the account (as reported) and how to use the portal explained (notices, providers, personal information).', 'Client\'s understanding and reaction.'],
         sources: 'Insurance (Medicaid ID, plan), TCM Social (Medicaid recipient), transcript.',
+        essential: ['where the account was created'],
         outcome: '"[Client First Name] created [his/her] Florida Medicaid online account with TCM assistance and verified [his/her] Medicaid benefits."',
         next: '"TCM will monitor [Client First Name]\'s use of the Medicaid online account and coordinate the benefits identified."',
     },
