@@ -3008,7 +3008,15 @@ const TcmNoteShell: React.FC<TcmNoteShellProps> = ({
                                                     {mergedNote.patient?.dob ? new Date(mergedNote.patient.dob + 'T12:00:00').toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : "—"}
                                                 </span>
                                                 <span className="text-slate-400 font-semibold text-[9px] hidden sm:inline ml-0.5 leading-none shrink-0">
-                                                    ({mergedNote.patient?.dob ? Math.floor((new Date().getTime() - new Date(mergedNote.patient.dob + 'T12:00:00').getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : "--"}yo)
+                                                    ({mergedNote.patient?.dob ? (() => {
+                                                        // Age on the date of service (not today): a note for 10/30 shows the age the client had that day.
+                                                        const dos = mergedNote.encounter?.dos_date ? new Date(String(mergedNote.encounter.dos_date).slice(0, 10) + 'T12:00:00') : new Date();
+                                                        const ref = isNaN(dos.getTime()) ? new Date() : dos;
+                                                        const b = new Date(String(mergedNote.patient.dob).slice(0, 10) + 'T12:00:00');
+                                                        let a = ref.getFullYear() - b.getFullYear();
+                                                        if (ref.getMonth() < b.getMonth() || (ref.getMonth() === b.getMonth() && ref.getDate() < b.getDate())) a--;
+                                                        return a;
+                                                    })() : "--"}yo)
                                                 </span>
                                             </div>
                                         </div>

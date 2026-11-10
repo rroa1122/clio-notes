@@ -1050,9 +1050,16 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         }
     }
 
-    // Opening services (New Referral, Initial Home Visit): the agency CMs check #1 and #2 only
-    // (October 2026 Amexzone notes); the TCM Social "Services Needed" belong to the Assessment and Service Plan.
-    if (isInitialHomeVisit || isCaseAssignment) {
+    // Opening sequence (New Referral, Initial Home Visit, PCP/PSY records, Assessment, Adult Certification,
+    // Service Plan development and discussion): the agency CMs check #1 and #2 (Gisselle in every opening;
+    // most common pattern in 146 opening services of 40 other CMs, Sep-Oct 2026). The TCM Social
+    // "Services Needed" are written as Service Plan goals, not checked as domains of these notes.
+    // Never a zero goal count ("reviewed all 0 service goals") when the Service Plan document has no goals yet.
+    if (typeof narrative.outcome_of_services === 'string') {
+        narrative.outcome_of_services = narrative.outcome_of_services.replace(/\ball\s+0\s+(service\s+)?goals\b/gi, 'the service goals');
+    }
+    const OPENING_SEQUENCE_TEMPLATES =['tcm_gather_pcp_note', 'tcm_gather_psy_note', 'tcm_assessment_note', 'tcm_adult_certification_note', 'tcm_service_plan_note', 'tcm_service_plan_discussion'];
+    if (isInitialHomeVisit || isCaseAssignment || OPENING_SEQUENCE_TEMPLATES.includes(activeTemplateId)) {
         domainKeys.forEach(k => { services.domains_selected[k] = false; });
         services.domains_selected["1_mental_health_substance_abuse"] = true;
         services.domains_selected["2_physical_health_medical_dental"] = true;
