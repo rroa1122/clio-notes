@@ -54,7 +54,14 @@ const navigateToPatient = async (page, amexzoneId, patientName, pin, userId, exp
     }
 
     if (!info) {
-        throw new Error(`No se pudo leer el paciente de Amexzone (ID ${amexzoneId}) para verificar su identidad. No se creó nada en Amexzone.`);
+        const where = await page.evaluate(() => ({
+            url: location.href,
+            title: document.title,
+            text: (document.body && document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 160),
+        })).catch(() => ({ url: page.url(), title: '', text: '' }));
+        console.log(`⚠️ No se pudo leer el paciente ${amexzoneId}. Página: ${where.url} | ${where.title} | ${where.text}`);
+        await page.screenshot({ path: '/root/amexzone-notes-bot/screenshots/patient_read_failed.png' }).catch(() => {});
+        throw new Error(`No se pudo leer el paciente de Amexzone (ID ${amexzoneId}) para verificar su identidad. No se creó nada en Amexzone. [Página: ${where.url} | ${where.title} | ${where.text}]`);
     }
     if (info.id !== String(amexzoneId)) {
         throw new Error(`Amexzone abrió otro paciente (ID ${info.id}) en lugar del ${amexzoneId}. Sincronización cancelada.`);
