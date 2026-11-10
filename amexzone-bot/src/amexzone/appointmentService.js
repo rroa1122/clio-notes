@@ -864,7 +864,25 @@ const assertNoDuplicateOrOverlap = async (page, { patientId, cmTrabajadorId, vis
                 const j2 = await r2.json();
                 cmCitas = (j2.data || [])
                     .filter((c) => String(c.fecha_hora).slice(0, 10) === date && !isCancelled(c))
-                    .map((c) => ({ id: c.id, cod: c.cod, paciente_id: c.paciente_id, start: c.hora_inicio, end: c.hora_fin }));
+                    .map((c) => ({ id: c.id, cod: c.cod, paciente_id: c.paciente_id, token: c.token, start: c.hora_inicio, end: c.hora_fin }));
+                // An encounter's start/end spans all of its services (e.g. 7:56 AM-6:33 PM for a morning and an
+                // evening service). Read each service's own time from the encounter summary so only real
+                // overlaps cancel the sync; if the summary can't be read, the whole span is used.
+                for (const c of cmCitas) {
+                    c.services = [];
+                    if (!c.token || !c.paciente_id) continue;
+                    try {
+                        const r3 = await fetch(`/appointment/view/summary/106/${c.paciente_id}/142/${c.id}/${c.token}/en`);
+                        if (!r3.ok) continue;
+                        const html = await r3.text();
+                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                        doc.querySelectorAll('script,style').forEach((e) => e.remove());
+                        const txt = (doc.body && doc.body.innerText) || '';
+                        const re = /Time:\s*(\d{1,2}:\d{2}\s*[AP]M)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)/gi;
+                        let m;
+                        while ((m = re.exec(txt))) c.services.push({ start: m[1], end: m[2] });
+                    } catch (e) { /* fall back to the encounter span */ }
+                }
             }
             return { patientCitas, cmCitas, cmTrabajadorId };
         } catch (e) {
@@ -880,12 +898,15 @@ const assertNoDuplicateOrOverlap = async (page, { patientId, cmTrabajadorId, vis
         throw new Error(`Ya existe un encuentro para este paciente el ${date} en Amexzone (${c.cod || c.id}, ${c.start || ''}-${c.end || ''}, ${c.status || ''}). Sincronización cancelada para no duplicar la nota.`);
     }
     for (const c of result.cmCitas) {
-        const cs = toMin(c.start);
-        const ce = toMin(c.end);
-        if (cs === null || ce === null) continue;
-        const hit = ranges.find((r) => r.start < ce && cs < r.end);
-        if (hit) {
-            throw new Error(`El horario ${hit.label} se solapa con otro encuentro del Case Manager el ${date} (${c.cod || c.id}, ${c.start}-${c.end}). Sincronización cancelada.`);
+        const blocks = (c.services && c.services.length ? c.services : [{ start: c.start, end: c.end }]);
+        for (const b of blocks) {
+            const cs = toMin(b.start);
+            const ce = toMin(b.end);
+            if (cs === null || ce === null) continue;
+            const hit = ranges.find((r) => r.start < ce && cs < r.end);
+            if (hit) {
+                throw new Error(`El horario ${hit.label} se solapa con otro encuentro del Case Manager el ${date} (${c.cod || c.id}, ${b.start}-${b.end}). Sincronización cancelada.`);
+            }
         }
     }
     console.log(`✅ Sin duplicados ni solapes (CM ${result.cmTrabajadorId || 'n/a'}: ${result.cmCitas.length} encuentro(s) ese día revisados).`);
