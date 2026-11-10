@@ -38,3 +38,10 @@ Then the plan needs start (LIHEAP, Assurance Wireless, DCF/SSA letters, housing.
 6. Header age computed on the date of service.
 Open: Clio has no Service Plan document for Severo, so SP development/discussion notes come out with [CONFIRM] for domains/goals; the Service Plan builder (fixed entity list per domain) is the next piece.
 7. Service Plan notes (development/discussion): domains = #1 #2 + every domain with goals in the Service Plan document (servicePlanGuide.applyServicePlanDomains). The Service Plan document comes from the patient's TCM Social "Services Needed" flags + plan date/target date; Severo has none set yet, so his SP notes show [CONFIRM] for goals.
+
+## Week after the opening (Gisselle Rosales Martinez, Amexzone, 2026 notes)
+- Food donation: "Food Donation Center new + update" / "Link food donation program", 11 Office, ~44 min (3u); lists named distribution sites with addresses. Clio: Food: Gather Info / Obtain.
+- Medicaid online account: "Assisting in opening an online Medicaid account", 11 Office (often at the client's medical center), 69-85 min (5-6u); Florida Medicaid Member Portal, step-by-step, verify eligibility/coverage. Clio has no dedicated service: closest is Insurance Eligibility Verification (54 min default).
+- OTC: Obtain OTC list/form (11 Office ~40 min, 3u) -> Complete OTC form (Home ~75 min or Office ~55) -> Submit/deliver at the pharmacy (11 Office ~54 min, 4u). Clio: OTC Catalog & Balance / Complete Order / Submit Order / Monitor.
+- Free phone: "Obtaining the Assurance Wireless application form online" (11 Office ~39-44 min, 3u) -> DCF/TPQY letter -> complete -> submit (post office). Clio: Free Phone: Obtain / Apply / Monitor.
+- Gisselle's domains on these services are inconsistent (often #2-#7 together); Clio keeps the service's own domains (food #9, OTC #2, phone #8 #9, insurance #2 #8).
