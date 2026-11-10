@@ -90,3 +90,8 @@ Este archivo es la **Memoria Episódica** del proyecto. Contiene errores ya resu
 - If Amexzone rejects a service (e.g. SUPERPOSICIÓN), the sync stops. Never move a service to another time slot; documented times must stay as in Clio.
 - A note already entered by hand in Amexzone (e.g. Severo PN309002, 10/29) must not be synced again from Clio.
 - Verified 2026-11-03 on test patient Testthiago Six (Amexzone 27510) with Gisselle's account: overlap with PN258710 on 08/10 cancelled before creating anything; clean slot created PN309031 (pending, unsigned); a second task for the same date was cancelled as duplicate. Test note PN309031 must be deleted by a person in Amexzone.
+
+## Clio timeline from existing Amexzone notes (Stephane Poirier, 2026-11-10)
+- Rebuilt Stephane's 10/12–10/16 opening in Clio with the same dates, times, POS and units as Amexzone (10, 6, 9, 5, 5 = 35 units). Not synced.
+- The Clio patient record had data that contradicted Amexzone (origin Haiti vs San José, Costa Rica; mother "Marie Poirier" 555 number; PCP phone 555-0182; occupation "cashier" vs "worked independently"). Always check the Clio record against the CM's Amexzone notes before generating: the note copies the record.
+- Agency name race: if Finalize is pressed before clinic settings load, agency_name/agency_legal_name go out empty and the note shows [CONFIRM: Agency Name] and a placeholder facility. Happened twice in fast automation (10/14, 10/16), fixed by hand in the saved notes. Proposed fix: disable Finalize until clinic settings are loaded.
