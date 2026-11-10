@@ -935,7 +935,7 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
     const V2_REQUIRED_DOMAINS: Record<string, string[]> = {
         tcm_gather_psy_note: ['1_mental_health_substance_abuse'],
         tcm_gather_pcp_note: ['2_physical_health_medical_dental'],
-        tcm_pc_emergency_contact_note: ['1_mental_health_substance_abuse', '5_recreational_social_support'],
+        tcm_pc_emergency_contact_note: ['1_mental_health_substance_abuse', '2_physical_health_medical_dental'],
         tcm_adult_certification_note: ['1_mental_health_substance_abuse'],
         tcm_service_plan_note: ['1_mental_health_substance_abuse'],
         tcm_service_plan_discussion: ['1_mental_health_substance_abuse'],
@@ -1050,19 +1050,21 @@ export const normalizeTcmNote = (raw: any): ClioNote => {
         }
     }
 
-    // Opening sequence (New Referral, Initial Home Visit, PCP/PSY records, Assessment, Adult Certification,
-    // Service Plan development and discussion): the agency CMs check #1 and #2 (Gisselle in every opening;
-    // most common pattern in 146 opening services of 40 other CMs, Sep-Oct 2026). The TCM Social
-    // "Services Needed" are written as Service Plan goals, not checked as domains of these notes.
+    // Opening sequence (New Referral, Initial Home Visit, Assessment, Adult Certification, Service Plan
+    // development and discussion): the agency CMs check #1 and #2 (#1 alone is the other common choice).
+    // Records follow the provider: Psychiatric records #1 only (98 of 146 services), PCP records #2 only
+    // (64 of 123). Emergency Contact: #1 #2 (most common, 23 of 62). Bank: ~370 cases opened Sep 22-Oct 30 2026,
+    // about 100 CMs (brain/OPENING_PATTERN.md). The TCM Social "Services Needed" are written as Service Plan
+    // goals, not checked as domains of these notes.
     // Never a zero goal count ("reviewed all 0 service goals") when the Service Plan document has no goals yet.
     if (typeof narrative.outcome_of_services === 'string') {
         narrative.outcome_of_services = narrative.outcome_of_services.replace(/\ball\s+0\s+(service\s+)?goals\b/gi, 'the service goals');
     }
-    const OPENING_SEQUENCE_TEMPLATES =['tcm_gather_pcp_note', 'tcm_gather_psy_note', 'tcm_assessment_note', 'tcm_adult_certification_note', 'tcm_service_plan_note', 'tcm_service_plan_discussion'];
+    const OPENING_SEQUENCE_TEMPLATES =['tcm_gather_pcp_note', 'tcm_gather_psy_note', 'tcm_pc_emergency_contact_note', 'tcm_assessment_note', 'tcm_adult_certification_note', 'tcm_service_plan_note', 'tcm_service_plan_discussion'];
     if (isInitialHomeVisit || isCaseAssignment || OPENING_SEQUENCE_TEMPLATES.includes(activeTemplateId)) {
         domainKeys.forEach(k => { services.domains_selected[k] = false; });
-        services.domains_selected["1_mental_health_substance_abuse"] = true;
-        services.domains_selected["2_physical_health_medical_dental"] = true;
+        services.domains_selected["1_mental_health_substance_abuse"] = activeTemplateId !== 'tcm_gather_pcp_note';
+        services.domains_selected["2_physical_health_medical_dental"] = activeTemplateId !== 'tcm_gather_psy_note';
     }
     return applyBaseNormalization({
         ...raw,

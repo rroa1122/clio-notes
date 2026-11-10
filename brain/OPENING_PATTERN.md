@@ -14,7 +14,13 @@ Then the plan needs start (LIHEAP, Assurance Wireless, DCF/SSA letters, housing.
 
 ## Domains checked (other CMs, frequency)
 - Records: #1 #2 (28/43). Assessment: #1 (10), #1 #2 (8), or all plan domains (~9). Certification: #1 #2 (10), #1 (7), all plan domains (~9). SP development/discussion: #1 #2 most common, then all plan domains.
-- Gisselle: #1 #2 on every opening service. Clio rule: #1 and #2 for the whole opening sequence (clioUtils OPENING_SEQUENCE_TEMPLATES).
+- Gisselle: #1 #2 on every opening service.
+- Larger bank (2026-11-10): ~370 cases opened Sep 22-Oct 30, ~2,070 encounters, ~100 CMs. Most common domains per service:
+  - New Referral: #1 (61/126), #1 #2 (32). IHV/Intake: #1 (74/189), #1 #2 (71).
+  - Psychiatric records: #1 only (98/146). PCP records: #2 only (64/123).
+  - Emergency Contact: #1 #2 (23/62), #1 (18).
+  - Assessment: #1 (60/175), #1 #2 (49). Certification: #1 #2 (64/210), #1 (56). SP development: #1 #2 (49/191), #1 (40), all plan domains (~60).
+- Clio rule now: #1 #2 for referral, IHV, emergency contact, assessment, certification and SP notes; psych records #1; PCP records #2 (clioUtils OPENING_SEQUENCE_TEMPLATES).
 
 ## Outcome / Next Steps patterns
 - Records: Outcome "TCM gathered and reviewed [Client]'s PCP and psychiatric records…"; Next "TCM will complete [Client]'s (Comprehensive Initial) Assessment" (incorporating the information).
@@ -24,7 +30,7 @@ Then the plan needs start (LIHEAP, Assurance Wireless, DCF/SSA letters, housing.
 - How records were obtained is usually not described (Gisselle: "initiated coordination with CareVantage to obtain…"). Clio must not invent a visit, call or fax.
 
 ## Clio fixes from the Severo test (2026-11-09)
-1. Domains #1 #2 for records, assessment, certification, SP development and discussion.
+1. Domains #1 #2 for assessment, certification, SP development and discussion (records corrected 2026-11-10: psych #1, PCP #2).
 2. Only records dated on or before the date of service (prompt rule "RECORD DATES vs DATE OF SERVICE").
 3. Records: default modality NOT STATED (no visit/ID/thank-you unless the transcript says so).
 4. Records Next Steps: complete the Comprehensive Initial Assessment (never "gather" what was just gathered).
